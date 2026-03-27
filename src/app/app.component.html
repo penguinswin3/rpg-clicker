@@ -1,58 +1,74 @@
-<div class="game-container">
-  <header>
-    <h1>{{ title }}</h1>
-  </header>
+<div class="root-layout">
+  <app-wallet-sidebar />
 
-  <section class="stats">
-    <div class="stat-card">
-      <span class="stat-label">Gold</span>
-      <span class="stat-value">{{ gold }}</span>
-    </div>
-    <div class="stat-card">
-      <span class="stat-label">Per Click</span>
-      <span class="stat-value">{{ goldPerClick }}</span>
-    </div>
-    <div class="stat-card">
-      <span class="stat-label">Per Second</span>
-      <span class="stat-value">{{ autoGoldPerSecond }}</span>
-    </div>
-  </section>
+  <div class="game-wrapper">
+    <div class="game-container">
 
-  <section class="click-area">
-    <button class="hero-btn" (click)="clickHero()">
-      Adventure!
-    </button>
-  </section>
+      <header>
+        <pre class="ascii-title">
+____________ _____   _____  _     _____ _____  _   __ ___________
+| ___ \ ___ \  __ \ /  __ \| |   |_   _/  __ \| | / /|  ___| ___ \
+| |_/ / |_/ / |  \/ | /  \/| |     | | | /  \/| |/ / | |__ | |_/ /
+|    /|  __/| | __  | |    | |     | | | |    |    \ |  __||    /
+| |\ \| |   | |_\ \ | \__/\| |_____| |_| \__/\| |\  \| |___| |\ \
+\_| \_\_|    \____/  \____/\_____/\___/ \____/\_| \_/\____/\_| \_|
+        </pre>
+        <div class="divider">+===========================================================+</div>
+      </header>
 
-  <section class="upgrades">
-    <h2>Upgrades</h2>
+      <section class="click-area">
+        <button class="hero-btn" (click)="clickHero()">
+          [ >>> ADVENTURE! <<< ]
+        </button>
+      </section>
 
-    <div class="upgrade-card">
-      <div class="upgrade-info">
-        <h3>Sharper Sword</h3>
-        <p>+1 gold per click | Level {{ clickUpgradeLevel }}</p>
-      </div>
-      <button
-        class="upgrade-btn"
-        [disabled]="gold < clickUpgradeCost"
-        (click)="buyClickUpgrade()">
-        Buy ({{ clickUpgradeCost }} Gold)
-      </button>
+      <section class="upgrades">
+        <div class="divider">+===========================================================+</div>
+        <div class="section-title">[ UPGRADES ]</div>
+
+        <div class="upgrade-card">
+          <div class="upgrade-info">
+            <span class="upgrade-name cyan-text">/( Sharper Sword )\</span>
+            <span class="upgrade-desc">+1 gold per click | Lv.{{ clickUpgradeLevel }}</span>
+          </div>
+          <button
+            class="upgrade-btn"
+            [disabled]="gold < clickUpgradeCost"
+            (click)="buyClickUpgrade()">
+            [BUY: {{ clickUpgradeCost }}g]
+          </button>
+        </div>
+
+        <div class="upgrade-card">
+          <div class="upgrade-info">
+            <span class="upgrade-name cyan-text">/( Gold Mine )\</span>
+            <span class="upgrade-desc">+1 gold/sec | Lv.{{ autoUpgradeLevel }}</span>
+          </div>
+          <button
+            class="upgrade-btn"
+            [disabled]="gold < autoUpgradeCost"
+            (click)="buyAutoUpgrade()">
+            [BUY: {{ autoUpgradeCost }}g]
+          </button>
+        </div>
+
+        <div class="divider">+===========================================================+</div>
+      </section>
+
+      <!-- Character unlock panel — only renders when XP requirement is met -->
+      <app-character-unlock />
+
+      <!-- spacer so content isn't hidden behind the fixed log panel -->
+      <div class="log-spacer"></div>
+
     </div>
+  </div>
 
-    <div class="upgrade-card">
-      <div class="upgrade-info">
-        <h3>Gold Mine</h3>
-        <p>+1 gold per second | Level {{ autoUpgradeLevel }}</p>
-      </div>
-      <button
-        class="upgrade-btn"
-        [disabled]="gold < autoUpgradeCost"
-        (click)="buyAutoUpgrade()">
-        Buy ({{ autoUpgradeCost }} Gold)
-      </button>
-    </div>
-  </section>
+  <!-- Right sidebar -->
+  <app-character-sidebar
+    [goldPerClick]="goldPerClick"
+    [autoGoldPerSecond]="autoGoldPerSecond" />
 </div>
 
 <router-outlet />
+<app-activity-log />

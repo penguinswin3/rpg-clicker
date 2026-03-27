@@ -1,0 +1,22 @@
+<ng-container *ngIf="available.length > 0">
+  <div class="divider">+===========================================================+</div>
+  <div class="section-title">[ CHARACTER UNLOCK ]</div>
+  <div class="xp-note">XP requirement met! New recruits available.</div>
+
+  <div class="unlock-card" *ngFor="let c of available">
+    <div class="unlock-left">
+      <span class="unlock-name" [style.color]="c.color">/( {{ c.name }} )\</span>
+      <span class="unlock-desc">{{ c.description }}</span>
+      <span class="xp-req">Requires {{ c.xpRequirement }} XP</span>
+    </div>
+    <button
+      class="unlock-btn"
+      [disabled]="!canAfford(c)"
+      (click)="buy(c)">
+      [UNLOCK: {{ c.unlockCostGold }}g]
+    </button>
+  </div>
+
+  <div class="divider">+===========================================================+</div>
+</ng-container>
+

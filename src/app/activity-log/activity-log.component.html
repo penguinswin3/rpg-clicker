@@ -1,0 +1,23 @@
+<div class="log-panel" [class.minimized]="minimized">
+
+  <div class="log-header" (click)="toggle()">
+    <span class="log-title">[ ACTIVITY LOG ]</span>
+    <span class="log-meta" *ngIf="!minimized">{{ messages.length }}/100 entries</span>
+    <span class="log-toggle">{{ minimized ? '[+]' : '[-]' }}</span>
+  </div>
+
+  <div class="log-body" *ngIf="!minimized" #logBody>
+    <div *ngIf="messages.length === 0" class="log-empty">
+      -- No activity yet --
+    </div>
+    <div
+      class="log-entry"
+      *ngFor="let msg of messages; trackBy: trackById"
+      [ngClass]="'type-' + msg.type">
+      <span class="log-time">[{{ msg.timestamp }}]</span>
+      <span class="log-text">> {{ msg.text }}</span>
+    </div>
+  </div>
+
+</div>
+

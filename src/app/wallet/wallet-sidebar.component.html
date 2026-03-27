@@ -1,0 +1,34 @@
+<aside class="sidebar" [class.collapsed]="collapsed">
+
+  <!-- Header / toggle bar -->
+  <div class="sidebar-header" (click)="toggle()">
+    <span class="sidebar-title" *ngIf="!collapsed">[ WALLET ]</span>
+    <span class="sidebar-toggle">{{ collapsed ? '[&gt;]' : '[&lt;]' }}</span>
+  </div>
+
+  <!-- ── Expanded view ───────────────────── -->
+  <ng-container *ngIf="!collapsed">
+    <div class="currency-row" *ngFor="let c of currencies">
+      <div class="currency-header">
+        <span class="currency-name" [style.color]="c.color">{{ c.name }}</span>
+        <span class="currency-short">{{ c.shorthand }}</span>
+      </div>
+      <div class="currency-data">
+        <span class="currency-amount">{{ fmt(getEntry(c.id).amount) }}</span>
+        <span class="currency-rate" [class.inactive]="getEntry(c.id).perSecond === 0">
+          {{ getEntry(c.id).perSecond > 0 ? '+' + getEntry(c.id).perSecond + '/s' : '--/s' }}
+        </span>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── Collapsed view ─────────────────── -->
+  <ng-container *ngIf="collapsed">
+    <div class="currency-compact" *ngFor="let c of currencies">
+      <span class="compact-amount" [style.color]="c.color">{{ fmt(getEntry(c.id).amount) }}</span>
+      <span class="compact-short">{{ c.shorthand }}</span>
+    </div>
+  </ng-container>
+
+</aside>
+

@@ -1,144 +1,205 @@
-$primary: #4f46e5;
-$primary-dark: #3730a3;
-$gold: #f59e0b;
-$bg: #1e1b2e;
-$card-bg: rgba(255, 255, 255, 0.07);
-$text: #e2e8f0;
-$muted: #94a3b8;
+// Plain ASCII / terminal aesthetic
+// Colors: white on black, with cyan and yellow accents
+
+// ── Page layout ───────────────────────────
+
+.root-layout {
+  display: flex;
+  align-items: stretch;
+  min-height: 100vh;
+}
+
+.game-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
 
 .game-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
+  width: 100%;
+  max-width: 600px;
   padding: 2rem 1rem;
-  background: $bg;
-  color: $text;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #000;
+  color: #fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
   box-sizing: border-box;
 }
 
-header h1 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: $gold;
-  margin-bottom: 2rem;
-  letter-spacing: -0.05em;
+// ---- Header ----
+
+.ascii-title {
+  color: #fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  line-height: 1.3;
+  margin: 0 0 0.5rem;
   text-align: center;
+  white-space: pre;
 }
+
+.divider {
+  color: #555;
+  text-align: center;
+  margin: 0.75rem 0;
+  letter-spacing: 0;
+  white-space: pre;
+}
+
+// ---- Stats ----
 
 .stats {
+  margin: 1rem 0 1.5rem;
+  width: 100%;
+  max-width: 480px;
+}
+
+.stats-box {
+  border: 1px solid #fff;
+  padding: 0.75rem 1.25rem;
+  position: relative;
+
+  .stats-box-title {
+    position: absolute;
+    top: -0.6rem;
+    left: 1rem;
+    background: #000;
+    padding: 0 0.4rem;
+    color: #aaa;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+}
+
+.stat-row {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.3rem 0;
 }
 
-.stat-card {
-  background: $card-bg;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 0.75rem;
-  padding: 1rem 1.5rem;
-  min-width: 110px;
-  text-align: center;
-
-  .stat-label {
-    display: block;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: $muted;
-    margin-bottom: 0.4rem;
-  }
-
-  .stat-value {
-    display: block;
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: $gold;
-  }
+.stat-label {
+  color: #aaa;
+  min-width: 130px;
 }
+
+.stat-value {
+  color: #fff;
+  font-weight: bold;
+}
+
+.gold-text {
+  color: #ffcc00;
+}
+
+// Spacer to prevent content from being hidden behind the fixed log panel
+.log-spacer {
+  height: 185px;
+  flex-shrink: 0;
+}
+
+// ---- Click Area ----
 
 .click-area {
-  margin-bottom: 3rem;
+  margin: 1.5rem 0;
 }
 
 .hero-btn {
-  background: $primary;
+  background: #000;
   color: #fff;
-  font-size: 1.25rem;
-  font-weight: 700;
-  padding: 1rem 3rem;
-  border: none;
-  border-radius: 0.75rem;
+  border: 2px solid #fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0.6rem 2rem;
   cursor: pointer;
-  letter-spacing: 0.02em;
-  transition: background 0.2s, transform 0.1s;
-  box-shadow: 0 4px 24px rgba(79, 70, 229, 0.4);
+  letter-spacing: 0.1em;
+  transition: background 0.1s, color 0.1s;
 
-  &:hover { background: $primary-dark; }
-  &:active { transform: scale(0.97); }
+  &:hover {
+    background: #fff;
+    color: #000;
+  }
+
+  &:active {
+    outline: 2px dashed #fff;
+    outline-offset: 3px;
+  }
+}
+
+// ---- Upgrades ----
+
+.section-title {
+  color: #aaa;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  margin: 0.5rem 0 1rem;
+  text-align: center;
 }
 
 .upgrades {
   width: 100%;
-  max-width: 600px;
-
-  h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: $muted;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
+  max-width: 480px;
 }
 
 .upgrade-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: $card-bg;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 0.75rem;
-  padding: 1rem 1.25rem;
-  margin-bottom: 0.75rem;
-  transition: border-color 0.2s;
+  border: 1px solid #333;
+  border-left: 3px solid #fff;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.6rem;
 
-  &:hover { border-color: rgba(255,255,255,0.25); }
-
-  .upgrade-info {
-    h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0 0 0.25rem;
-    }
-    p {
-      font-size: 0.8rem;
-      color: $muted;
-      margin: 0;
-    }
+  &:hover {
+    border-left-color: #0ff;
+    background: #0a0a0a;
   }
 }
 
+.upgrade-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.upgrade-name {
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.upgrade-desc {
+  color: #888;
+  font-size: 0.8rem;
+}
+
+.cyan-text {
+  color: #0ff;
+}
+
 .upgrade-btn {
-  background: $primary;
+  background: #000;
   color: #fff;
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 0.5rem 1.1rem;
-  border: none;
-  border-radius: 0.5rem;
+  border: 1px solid #fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
   cursor: pointer;
   white-space: nowrap;
   margin-left: 1rem;
-  transition: background 0.2s;
+  transition: background 0.1s, color 0.1s;
 
-  &:hover:not(:disabled) { background: $primary-dark; }
+  &:hover:not(:disabled) {
+    background: #fff;
+    color: #000;
+  }
+
   &:disabled {
-    background: #374151;
-    color: #6b7280;
+    border-color: #333;
+    color: #444;
     cursor: not-allowed;
   }
 }

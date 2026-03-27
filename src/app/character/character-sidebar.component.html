@@ -1,0 +1,64 @@
+<aside class="char-sidebar" [class.collapsed]="collapsed">
+
+  <!-- Toggle bar -->
+  <div class="sidebar-header" (click)="toggle()">
+    <span class="sidebar-toggle">{{ collapsed ? '[<]' : '[>]' }}</span>
+    <span class="sidebar-title" *ngIf="!collapsed">[ CHARACTERS ]</span>
+  </div>
+
+  <!-- ══ Expanded ════════════════════════ -->
+  <div class="sidebar-content" *ngIf="!collapsed">
+
+    <!-- Hero Stats -->
+    <div class="hero-stats-box">
+      <div class="box-label">[ HERO STATS ]</div>
+      <div class="stat-row">
+        <span class="stat-key">Per Click  :</span>
+        <span class="stat-val">{{ goldPerClick }}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">Per Second :</span>
+        <span class="stat-val">{{ autoGoldPerSecond }}</span>
+      </div>
+    </div>
+
+    <div class="rule">---[ PARTY ]---</div>
+
+    <!-- Only unlocked characters -->
+    <div
+      class="char-card"
+      *ngFor="let c of unlockedCharacters"
+      [class.is-active]="c.id === activeId">
+
+      <div class="char-header">
+        <span class="char-name" [style.color]="c.color">{{ c.name }}</span>
+        <span class="badge-active" *ngIf="c.id === activeId">[ACT]</span>
+      </div>
+
+      <p class="char-desc">{{ c.description }}</p>
+
+      <button
+        class="use-btn"
+        *ngIf="c.id !== activeId"
+        (click)="setActive(c.id)">
+        [ SET ACTIVE ]
+      </button>
+
+    </div>
+
+  </div><!-- /sidebar-content -->
+
+  <!-- ══ Collapsed ══════════════════════ -->
+  <div class="collapsed-list" *ngIf="collapsed">
+    <div
+      class="compact-char"
+      *ngFor="let c of unlockedCharacters"
+      [class.is-active]="c.id === activeId"
+      [title]="c.name + (c.id === activeId ? ' (active)' : '')">
+      <span class="compact-initial" [style.color]="c.color">{{ c.name[0] }}</span>
+      <span class="compact-pip">{{ c.id === activeId ? '*' : 'o' }}</span>
+    </div>
+  </div>
+
+</aside>
+
