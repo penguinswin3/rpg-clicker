@@ -1,0 +1,58 @@
+<div class="game-container">
+  <header>
+    <h1>{{ title }}</h1>
+  </header>
+
+  <section class="stats">
+    <div class="stat-card">
+      <span class="stat-label">Gold</span>
+      <span class="stat-value">{{ gold }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Per Click</span>
+      <span class="stat-value">{{ goldPerClick }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Per Second</span>
+      <span class="stat-value">{{ autoGoldPerSecond }}</span>
+    </div>
+  </section>
+
+  <section class="click-area">
+    <button class="hero-btn" (click)="clickHero()">
+      Adventure!
+    </button>
+  </section>
+
+  <section class="upgrades">
+    <h2>Upgrades</h2>
+
+    <div class="upgrade-card">
+      <div class="upgrade-info">
+        <h3>Sharper Sword</h3>
+        <p>+1 gold per click | Level {{ clickUpgradeLevel }}</p>
+      </div>
+      <button
+        class="upgrade-btn"
+        [disabled]="gold < clickUpgradeCost"
+        (click)="buyClickUpgrade()">
+        Buy ({{ clickUpgradeCost }} Gold)
+      </button>
+    </div>
+
+    <div class="upgrade-card">
+      <div class="upgrade-info">
+        <h3>Gold Mine</h3>
+        <p>+1 gold per second | Level {{ autoUpgradeLevel }}</p>
+      </div>
+      <button
+        class="upgrade-btn"
+        [disabled]="gold < autoUpgradeCost"
+        (click)="buyAutoUpgrade()">
+        Buy ({{ autoUpgradeCost }} Gold)
+      </button>
+    </div>
+  </section>
+</div>
+
+<router-outlet />

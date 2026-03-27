@@ -1,0 +1,145 @@
+$primary: #4f46e5;
+$primary-dark: #3730a3;
+$gold: #f59e0b;
+$bg: #1e1b2e;
+$card-bg: rgba(255, 255, 255, 0.07);
+$text: #e2e8f0;
+$muted: #94a3b8;
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  background: $bg;
+  color: $text;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  box-sizing: border-box;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: $gold;
+  margin-bottom: 2rem;
+  letter-spacing: -0.05em;
+  text-align: center;
+}
+
+.stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat-card {
+  background: $card-bg;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  min-width: 110px;
+  text-align: center;
+
+  .stat-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $muted;
+    margin-bottom: 0.4rem;
+  }
+
+  .stat-value {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $gold;
+  }
+}
+
+.click-area {
+  margin-bottom: 3rem;
+}
+
+.hero-btn {
+  background: $primary;
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 1rem 3rem;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 4px 24px rgba(79, 70, 229, 0.4);
+
+  &:hover { background: $primary-dark; }
+  &:active { transform: scale(0.97); }
+}
+
+.upgrades {
+  width: 100%;
+  max-width: 600px;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+}
+
+.upgrade-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: $card-bg;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: rgba(255,255,255,0.25); }
+
+  .upgrade-info {
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.25rem;
+    }
+    p {
+      font-size: 0.8rem;
+      color: $muted;
+      margin: 0;
+    }
+  }
+}
+
+.upgrade-btn {
+  background: $primary;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 1.1rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: 1rem;
+  transition: background 0.2s;
+
+  &:hover:not(:disabled) { background: $primary-dark; }
+  &:disabled {
+    background: #374151;
+    color: #6b7280;
+    cursor: not-allowed;
+  }
+}
+
