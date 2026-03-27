@@ -1,0 +1,136 @@
+$border: #333;
+$bg: #000;
+$bg-header: #111;
+$muted: #555;
+
+.sidebar {
+  width: 190px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: $bg;
+  border-right: 1px solid $border;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  transition: width 0.15s ease;
+
+  &.collapsed {
+    width: 46px;
+  }
+}
+
+// ── Header ────────────────────────────────
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  background: $bg-header;
+  border-bottom: 1px solid $border;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  min-height: 28px;
+
+  &:hover { background: #1a1a1a; }
+}
+
+.sidebar-title {
+  color: #aaa;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  overflow: hidden;
+}
+
+.sidebar-toggle {
+  color: #0ff;
+  font-weight: bold;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+// ── Expanded rows ─────────────────────────
+
+.currency-row {
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid #1a1a1a;
+
+  &:last-child { border-bottom: none; }
+}
+
+.currency-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.currency-name {
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.currency-short {
+  color: $muted;
+  font-size: 10px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.currency-data {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.currency-amount {
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.currency-rate {
+  color: #0f0;
+  font-size: 10px;
+
+  &.inactive { color: #2a2a2a; }
+}
+
+// ── Collapsed icons ───────────────────────
+
+.currency-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 6px;
+  border-bottom: 1px dotted #1e1e1e;
+
+  &:last-child { border-bottom: none; }
+}
+
+.compact-amount {
+  font-weight: bold;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 42px;
+  text-align: center;
+  text-overflow: ellipsis;
+}
+
+.compact-short {
+  color: $muted;
+  font-size: 9px;
+  text-align: center;
+}
+
