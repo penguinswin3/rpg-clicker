@@ -1,0 +1,22 @@
+- Savegame
+- Replace currency shorthand with a symbol?
+- More characters
+  - Chef
+  - Thief
+  - Artisan
+  - Mage
+  - Warlock
+  - Chimeramancer
+  - Party Face
+
+- More upgrades
+  - Questing Automation
+  - Exp bonuses
+
+- Make the minigame buttons move less so yuo can spam click and not have to move your mouse
+
+- General Wording and thematic changes
+
+- Code Refactors
+  - Try to but dynamic values in a config file or something so it's easier to tweak
+- Make things not selectable by dragging mouse?
