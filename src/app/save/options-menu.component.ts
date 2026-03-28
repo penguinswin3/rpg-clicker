@@ -17,16 +17,20 @@ export class OptionsMenuComponent {
   private saveService = inject(SaveService);
   private log         = inject(ActivityLogService);
 
-  isOpen       = false;
-  importString = '';
-  statusMsg    = '';
+  isOpen            = false;
+  importString      = '';
+  statusMsg         = '';
   statusType: StatusType = 'idle';
+
+  /** Controls whether the clear-save confirmation overlay is visible. */
+  showClearConfirm  = false;
 
   toggle(): void {
     this.isOpen = !this.isOpen;
     if (!this.isOpen) {
       this.importString = '';
       this.clearStatus();
+      this.showClearConfirm = false;
     }
   }
 
@@ -66,6 +70,25 @@ export class OptionsMenuComponent {
     } else {
       this.setStatus('Invalid save data.', 'error');
     }
+  }
+
+  /** Step 1 — show the confirmation overlay. */
+  requestClearSave(): void {
+    this.showClearConfirm = true;
+  }
+
+  /** Step 2 — user confirmed: wipe localStorage and reload. */
+  confirmClearSave(): void {
+    this.showClearConfirm = false;
+    this.saveService.deleteSave();
+    this.log.log('[SAVE] Browser save data erased. Reloading…', 'warn');
+    // Short delay so the log message is visible before the page reloads.
+    setTimeout(() => window.location.reload(), 800);
+  }
+
+  /** Step 2 (cancel) — dismiss the overlay with no action. */
+  cancelClear(): void {
+    this.showClearConfirm = false;
   }
 
   private setStatus(msg: string, type: StatusType): void {
