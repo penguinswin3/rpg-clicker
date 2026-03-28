@@ -1,0 +1,73 @@
+<div class="fighter-mg">
+
+  <!-- ── Fighter HP ─────────────────────── -->
+  <div class="combatant">
+    <div class="c-label">[ FIGHTER ]</div>
+    <div class="hp-track">
+      <div class="hp-fill"
+           [class.hp-low]="fighterHpPct < 30"
+           [class.hp-mid]="fighterHpPct >= 30 && fighterHpPct < 60"
+           [style.width.%]="fighterHpPct">
+      </div>
+    </div>
+    <div class="hp-text">{{ fighterHp }} / {{ maxHp }} HP</div>
+  </div>
+
+  <div class="vs-row">-- vs --</div>
+
+  <!-- ── Enemy ─────────────────────────── -->
+  <div class="combatant">
+    <div class="c-label enemy-label">[ {{ enemy.name | uppercase }} ]</div>
+    <pre class="enemy-ascii">{{ enemy.ascii }}</pre>
+    <div class="hp-track">
+      <div class="hp-fill enemy-fill"
+           [class.hp-low]="enemyHpPct < 30"
+           [style.width.%]="enemyHpPct">
+      </div>
+    </div>
+    <div class="hp-text">{{ enemy.hp }} / {{ enemy.maxHp }} HP</div>
+  </div>
+
+  <!-- ── Last combat event ─────────────── -->
+  <div class="combat-msg" [ngClass]="msgClass">
+    <span class="msg-line1">{{ lastMsg }}</span>
+    <span class="msg-line2" *ngIf="msgLine2">{{ msgLine2 }}</span>
+  </div>
+
+  <!-- ── Fixed action zone ─────────────── -->
+  <!-- Attack and Retry share the exact same slot: one overlays the other.
+       Heal is always directly below, invisible (not removed) when defeated. -->
+  <div class="action-zone">
+
+    <!-- Primary slot: both buttons occupy the same space via absolute overlay -->
+    <div class="primary-slot">
+      <button class="action-btn atk-btn"
+              [class.slot-inactive]="defeated"
+              [disabled]="actionsDisabled"
+              (click)="attack()">
+        [&gt; ATTACK ]
+      </button>
+      <button class="action-btn retry-btn"
+              [class.slot-inactive]="!defeated"
+              (click)="retry()">
+        [ RETRY ]
+      </button>
+    </div>
+
+    <!-- Heal: always below the primary slot; hidden (not removed) when defeated -->
+    <button class="action-btn heal-btn"
+            [class.slot-invisible]="defeated"
+            [disabled]="healDisabled"
+            (click)="heal()">
+      [+ HEAL +10]
+    </button>
+
+  </div>
+
+  <!-- ── Potion count ─────────────────── -->
+  <div class="potion-row" [class.depleted]="potions === 0 || defeated">
+    potions: {{ potions }}
+  </div>
+
+</div>
+
