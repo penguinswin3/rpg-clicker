@@ -1,0 +1,132 @@
+.options-anchor {
+  // Sits as a flex item between game-wrapper and character-sidebar.
+  // align-self: flex-end pushes it to the bottom of the row.
+  // position: sticky keeps it in view while scrolling.
+  position: sticky;
+  bottom: 210px;           // clear the activity log (≈ 210px tall when expanded)
+  align-self: flex-end;
+  flex-shrink: 0;
+  z-index: 200;
+  font-family: 'Courier New', Courier, monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.options-toggle {
+  background: #111;
+  color: #ccc;
+  border: 1px solid #555;
+  padding: 4px 12px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: #fff;
+    border-color: #888;
+  }
+}
+
+.options-panel {
+  // Expands upward from the toggle button
+  order: -1;
+  background: #111;
+  border: 1px solid #555;
+  padding: 10px 14px 12px;
+  min-width: 280px;
+  max-width: 360px;
+  color: #ccc;
+  font-size: 0.8rem;
+  margin-bottom: 2px;
+}
+
+.options-title {
+  color: #aaa;
+  margin-bottom: 10px;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+}
+
+.opt-section {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.opt-label {
+  color: #888;
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+}
+
+.opt-btn {
+  background: #1a1a1a;
+  color: #ccc;
+  border: 1px solid #444;
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+
+  &:hover {
+    color: #fff;
+    border-color: #777;
+    background: #222;
+  }
+
+  &:active {
+    background: #2a2a2a;
+  }
+}
+
+.opt-import-box {
+  background: #0d0d0d;
+  color: #ddd;
+  border: 1px solid #444;
+  font-family: inherit;
+  font-size: 0.72rem;
+  padding: 5px;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+  line-height: 1.4;
+
+  &::placeholder {
+    color: #555;
+  }
+}
+
+.opt-import-btn {
+  border-color: #558855;
+  color: #88cc88;
+
+  &:hover {
+    border-color: #88cc88;
+    color: #aaffaa;
+    background: #0f1f0f;
+  }
+}
+
+.opt-status {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  padding: 3px 6px;
+  border-left: 2px solid #555;
+
+  &.status-success {
+    color: #66cc66;
+    border-color: #66cc66;
+  }
+
+  &.status-error {
+    color: #cc4444;
+    border-color: #cc4444;
+  }
+}

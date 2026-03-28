@@ -1,0 +1,41 @@
+<div class="options-anchor">
+
+  <!-- Collapsed toggle -->
+  <button class="options-toggle" (click)="toggle()">
+    [ OPTIONS {{ isOpen ? '▲' : '▼' }} ]
+  </button>
+
+  <!-- Expanded panel -->
+  <div class="options-panel" *ngIf="isOpen">
+    <div class="options-title">+--[ OPTIONS ]+</div>
+
+    <!-- Save -->
+    <div class="opt-section">
+      <div class="opt-label">// SAVE</div>
+      <button class="opt-btn" (click)="saveToCache()">[ Save to Browser ]</button>
+      <button class="opt-btn" (click)="copyToClipboard()">[ Copy to Clipboard ]</button>
+      <button class="opt-btn" (click)="exportFile()">[ Export as File ]</button>
+    </div>
+
+    <!-- Import -->
+    <div class="opt-section">
+      <div class="opt-label">// IMPORT</div>
+      <textarea
+        class="opt-import-box"
+        [(ngModel)]="importString"
+        placeholder="Paste base64 save string here..."
+        rows="3">
+      </textarea>
+      <button class="opt-btn opt-import-btn" (click)="importSave()">[ Load Save ]</button>
+    </div>
+
+    <!-- Status message -->
+    <div class="opt-status" *ngIf="statusMsg"
+         [class.status-success]="statusType === 'success'"
+         [class.status-error]="statusType === 'error'">
+      &gt; {{ statusMsg }}
+    </div>
+  </div>
+
+</div>
+

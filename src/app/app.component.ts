@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { ActivityLogComponent } from './activity-log/activity-log.component';
@@ -10,6 +10,8 @@ import { CharacterUnlockComponent } from './character/character-unlock.component
 import { CharacterService } from './character/character.service';
 import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { MINIGAME_XP_THRESHOLD } from './minigame/minigame-panel.component';
+import { OptionsMenuComponent } from './save/options-menu.component';
+import { SaveService, UpgradeState } from './save/save.service';
 
 @Component({
   selector: 'app-root',
@@ -22,11 +24,12 @@ import { MINIGAME_XP_THRESHOLD } from './minigame/minigame-panel.component';
     CharacterSidebarComponent,
     CharacterUnlockComponent,
     MinigamePanelComponent,
+    OptionsMenuComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'RPG Clicker';
 
   // Synced from wallet
@@ -104,6 +107,7 @@ export class AppComponent {
   private log        = inject(ActivityLogService);
   private wallet     = inject(WalletService);
   private charService = inject(CharacterService);
+  private saveService = inject(SaveService);
 
   constructor() {
     this.wallet.state$.subscribe(state => {
@@ -123,6 +127,65 @@ export class AppComponent {
         this.wallet.add('gold', total);
       }
     }, 1000);
+  }
+
+  ngOnInit(): void {
+    // Register upgrade-state getter/setter so SaveService can snapshot them.
+    this.saveService.registerUpgradeHandlers(
+      () => this.getUpgradeState(),
+      (s) => this.setUpgradeState(s),
+    );
+    // Auto-load from localStorage if a save exists.
+    if (this.saveService.hasSave()) {
+      this.saveService.loadFromLocalStorage();
+    }
+  }
+
+  getUpgradeState(): UpgradeState {
+    return {
+      goldPerClick:             this.goldPerClick,
+      clickUpgradeCost:         this.clickUpgradeCost,
+      clickUpgradeLevel:        this.clickUpgradeLevel,
+      autoGoldPerSecond:        this.autoGoldPerSecond,
+      autoUpgradeCost:          this.autoUpgradeCost,
+      autoUpgradeLevel:         this.autoUpgradeLevel,
+      potionChuggingLevel:      this.potionChuggingLevel,
+      potionChuggingCost:       this.potionChuggingCost,
+      herbsPerFind:             this.herbsPerFind,
+      moreHerbsCost:            this.moreHerbsCost,
+      moreHerbsLevel:           this.moreHerbsLevel,
+      betterTrackingLevel:      this.betterTrackingLevel,
+      betterTrackingCost:       this.betterTrackingCost,
+      herbSaveChance:           this.herbSaveChance,
+      potionTitrationCost:      this.potionTitrationCost,
+      potionTitrationLevel:     this.potionTitrationLevel,
+      potionAutoGoldPerSecond:  this.potionAutoGoldPerSecond,
+      potionMarketingCost:      this.potionMarketingCost,
+      potionMarketingLevel:     this.potionMarketingLevel,
+    };
+  }
+
+  setUpgradeState(s: UpgradeState): void {
+    this.goldPerClick            = s.goldPerClick;
+    this.clickUpgradeCost        = s.clickUpgradeCost;
+    this.clickUpgradeLevel       = s.clickUpgradeLevel;
+    this.autoGoldPerSecond       = s.autoGoldPerSecond;
+    this.autoUpgradeCost         = s.autoUpgradeCost;
+    this.autoUpgradeLevel        = s.autoUpgradeLevel;
+    this.potionChuggingLevel     = s.potionChuggingLevel;
+    this.potionChuggingCost      = s.potionChuggingCost;
+    this.herbsPerFind            = s.herbsPerFind;
+    this.moreHerbsCost           = s.moreHerbsCost;
+    this.moreHerbsLevel          = s.moreHerbsLevel;
+    this.betterTrackingLevel     = s.betterTrackingLevel;
+    this.betterTrackingCost      = s.betterTrackingCost;
+    this.herbSaveChance          = s.herbSaveChance;
+    this.potionTitrationCost     = s.potionTitrationCost;
+    this.potionTitrationLevel    = s.potionTitrationLevel;
+    this.potionAutoGoldPerSecond = s.potionAutoGoldPerSecond;
+    this.potionMarketingCost     = s.potionMarketingCost;
+    this.potionMarketingLevel    = s.potionMarketingLevel;
+    this.updateGoldPerSecond();
   }
 
   private updateGoldPerSecond(): void {
