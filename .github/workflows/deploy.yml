@@ -32,7 +32,7 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build -- --base-href /rpg-clicker/
+        run: npm run build -- --base-href "https://penguinswin3.github.io/rpg-clicker/"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
