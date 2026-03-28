@@ -14,7 +14,8 @@ export interface UpgradeState {
   potionChuggingLevel: number;
   potionChuggingCost: number;
   // Ranger
-  herbsPerFind: number;
+  /** @deprecated herbsPerFind is now derived via the doubling formula; kept optional for old-save compat */
+  herbsPerFind?: number;
   moreHerbsCost: number;
   moreHerbsLevel: number;
   betterTrackingLevel: number;

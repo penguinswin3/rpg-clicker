@@ -11,7 +11,7 @@ import { CharacterService } from './character/character.service';
 import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './save/options-menu.component';
 import { SaveService, UpgradeState } from './save/save.service';
-import { XP_THRESHOLDS, BASE_COSTS, COST_SCALE, YIELDS } from './game-config';
+import { XP_THRESHOLDS, BASE_COSTS, COST_SCALE, YIELDS, UPGRADE_MAX } from './game-config';
 
 @Component({
   selector: 'app-root',
@@ -63,9 +63,28 @@ export class AppComponent implements OnInit {
   potionChuggingCost: number = BASE_COSTS.POTION_CHUGGING;
 
   // ── Ranger upgrades ───────────────────────
-  herbsPerFind: number      = YIELDS.RANGER_BASE_HERBS;
-  moreHerbsCost: number     = BASE_COSTS.MORE_HERBS;
-  moreHerbsLevel            = 0;
+  /** Total doubling-chance percentage. Each level = +1%.
+   *  ≥100% guarantees at least one doubling; every full 100 = one more guaranteed. */
+  moreHerbsCost: number = BASE_COSTS.MORE_HERBS;
+  moreHerbsLevel        = 0;
+
+  /** Compute the herb yield for one ranger forage using the doubling formula. */
+  private computeHerbYield(): number {
+    const base = YIELDS.RANGER_BASE_HERBS;
+    const guaranteedDoublings = Math.floor(this.moreHerbsLevel / 100);
+    const remainder           = this.moreHerbsLevel % 100;
+    const extraDoubling       = Math.random() * 100 < remainder ? 1 : 0;
+    return base * Math.pow(2, guaranteedDoublings + extraDoubling);
+  }
+
+  /** Display string for hero stats – e.g. "3× + 25%" */
+  get herbDoublingDisplay(): string {
+    const guaranteed = Math.floor(this.moreHerbsLevel / 100);
+    const remainder  = this.moreHerbsLevel % 100;
+    if (guaranteed === 0) return `${remainder}% chance`;
+    if (remainder  === 0) return `${guaranteed}× (guaranteed)`;
+    return `${guaranteed}× + ${remainder}% again`;
+  }
 
   betterTrackingLevel       = 0;
   betterTrackingCost: number = BASE_COSTS.BETTER_TRACKING;
@@ -86,13 +105,24 @@ export class AppComponent implements OnInit {
   /** Derived — 1 gold/sec per Potion Marketing level. Never stored directly. */
   get potionAutoGoldPerSecond(): number { return this.potionMarketingLevel; }
 
+  // ── Upgrade max levels (sourced from game-config) ─────────────
+  readonly upgradeMax = UPGRADE_MAX;
+
+  get sharperSwordMaxed():    boolean { return this.clickUpgradeLevel    >= UPGRADE_MAX.SHARPER_SWORD;    }
+  get contractKillingMaxed(): boolean { return this.autoUpgradeLevel     >= UPGRADE_MAX.CONTRACT_KILLING; }
+  get potionChuggingMaxed():  boolean { return this.potionChuggingLevel  >= UPGRADE_MAX.POTION_CHUGGING;  }
+  get moreHerbsMaxed():       boolean { return this.moreHerbsLevel       >= UPGRADE_MAX.MORE_HERBS;       }
+  get betterTrackingMaxed():  boolean { return this.betterTrackingLevel  >= UPGRADE_MAX.BETTER_TRACKING;  }
+  get potionTitrationMaxed(): boolean { return this.potionTitrationLevel >= UPGRADE_MAX.POTION_TITRATION; }
+  get potionMarketingMaxed(): boolean { return this.potionMarketingLevel >= UPGRADE_MAX.POTION_MARKETING; }
+
   // ── Hero Stats (feeds character sidebar) ──
   get heroStats(): HeroStat[] {
     if (this.activeCharacterId === 'ranger') {
       return [
-        { label: 'Herb Chance  :', value: `50%`                       },
-        { label: 'Beast Chance :', value: `${this.beastFindChance}%`  },
-        { label: 'Herbs / Find :', value: `${this.herbsPerFind}`      },
+        { label: 'Herb Chance  :', value: `50%`                           },
+        { label: 'Beast Chance :', value: `${this.beastFindChance}%`      },
+        { label: 'Herb Double  :', value: this.herbDoublingDisplay        },
       ];
     }
     if (this.activeCharacterId === 'apothecary') {
@@ -154,7 +184,6 @@ export class AppComponent implements OnInit {
       autoUpgradeLevel:         this.autoUpgradeLevel,
       potionChuggingLevel:      this.potionChuggingLevel,
       potionChuggingCost:       this.potionChuggingCost,
-      herbsPerFind:             this.herbsPerFind,
       moreHerbsCost:            this.moreHerbsCost,
       moreHerbsLevel:           this.moreHerbsLevel,
       betterTrackingLevel:      this.betterTrackingLevel,
@@ -175,7 +204,7 @@ export class AppComponent implements OnInit {
     this.autoUpgradeLevel        = s.autoUpgradeLevel;
     this.potionChuggingLevel     = s.potionChuggingLevel;
     this.potionChuggingCost      = s.potionChuggingCost;
-    this.herbsPerFind            = s.herbsPerFind;
+    // herbsPerFind is no longer stored — yield is computed from moreHerbsLevel
     this.moreHerbsCost           = s.moreHerbsCost;
     this.moreHerbsLevel          = s.moreHerbsLevel;
     this.betterTrackingLevel     = s.betterTrackingLevel;
@@ -185,8 +214,6 @@ export class AppComponent implements OnInit {
     this.potionTitrationLevel    = s.potionTitrationLevel;
     this.potionMarketingCost     = s.potionMarketingCost;
     this.potionMarketingLevel    = s.potionMarketingLevel;
-    // autoGoldPerSecond and potionAutoGoldPerSecond are derived getters —
-    // updateGoldPerSecond() reads them and syncs the wallet display.
     this.updateGoldPerSecond();
   }
 
@@ -219,10 +246,11 @@ export class AppComponent implements OnInit {
     const targetHerb = Math.random() < 0.5;
 
     if (targetHerb) {
-      // Second roll: always succeeds for herb foraging; More Herbs raises the yield
-      this.wallet.add('herb', this.herbsPerFind);
+      // Apply the More Herbs doubling formula
+      const herbs = this.computeHerbYield();
+      this.wallet.add('herb', herbs);
       this.log.log(
-        `You targeted herbs and foraged ${this.herbsPerFind} herb(s). (+1 XP)`
+        `You targeted herbs and foraged ${herbs} herb(s). (+1 XP)`
       );
     } else {
       // Second roll: beastFindChance% to successfully bring down a beast
@@ -287,6 +315,7 @@ export class AppComponent implements OnInit {
   }
 
   buyClickUpgrade(): void {
+    if (this.sharperSwordMaxed) { return; }
     if (this.wallet.canAfford('gold', this.clickUpgradeCost)) {
       this.wallet.remove('gold', this.clickUpgradeCost);
       this.clickUpgradeLevel++;
@@ -305,6 +334,7 @@ export class AppComponent implements OnInit {
   }
 
   buyAutoUpgrade(): void {
+    if (this.contractKillingMaxed) { return; }
     if (this.wallet.canAfford('gold', this.autoUpgradeCost)) {
       this.wallet.remove('gold', this.autoUpgradeCost);
       this.autoUpgradeLevel++;
@@ -323,6 +353,7 @@ export class AppComponent implements OnInit {
   }
 
   buyPotionChugging(): void {
+    if (this.potionChuggingMaxed) { return; }
     if (this.wallet.canAfford('potion', this.potionChuggingCost)) {
       this.wallet.remove('potion', this.potionChuggingCost);
       this.potionChuggingLevel++;
@@ -342,13 +373,13 @@ export class AppComponent implements OnInit {
   // ── Ranger upgrade methods ────────────────
 
   buyMoreHerbs(): void {
+    if (this.moreHerbsMaxed) { return; }
     if (this.wallet.canAfford('gold', this.moreHerbsCost)) {
       this.wallet.remove('gold', this.moreHerbsCost);
       this.moreHerbsLevel++;
-      this.herbsPerFind++;
       this.moreHerbsCost = Math.floor(this.moreHerbsCost * COST_SCALE.MORE_HERBS);
       this.log.log(
-        `More Herbs upgraded to Lv.${this.moreHerbsLevel}. Now finding ${this.herbsPerFind} herb(s) per forage.`,
+        `More Herbs upgraded to Lv.${this.moreHerbsLevel}. Doubling chance now ${this.moreHerbsLevel}%.`,
         'success'
       );
     } else {
@@ -360,6 +391,7 @@ export class AppComponent implements OnInit {
   }
 
   buyBetterTracking(): void {
+    if (this.betterTrackingMaxed) { return; }
     if (this.wallet.canAfford('gold', this.betterTrackingCost)) {
       this.wallet.remove('gold', this.betterTrackingCost);
       this.betterTrackingLevel++;
@@ -379,6 +411,7 @@ export class AppComponent implements OnInit {
   // ── Apothecary upgrade methods ────────────
 
   buyPotionTitration(): void {
+    if (this.potionTitrationMaxed) { return; }
     if (this.wallet.canAfford('gold', this.potionTitrationCost)) {
       this.wallet.remove('gold', this.potionTitrationCost);
       this.potionTitrationLevel++;
@@ -397,6 +430,7 @@ export class AppComponent implements OnInit {
   }
 
   buyPotionMarketing(): void {
+    if (this.potionMarketingMaxed) { return; }
     if (this.wallet.canAfford('gold', this.potionMarketingCost)) {
       this.wallet.remove('gold', this.potionMarketingCost);
       this.potionMarketingLevel++;

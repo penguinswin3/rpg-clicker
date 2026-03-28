@@ -24,6 +24,27 @@ export const UNLOCK_COSTS = {
   APOTHECARY_HERBS:  250,
 } as const;
 
+// ── Upgrade Maximum Levels ───────────────────────────────────
+// Once an upgrade reaches its max level, the buy button is disabled.
+export const UPGRADE_MAX = {
+  // Fighter
+  SHARPER_SWORD:    999,
+  CONTRACT_KILLING: 999,
+  POTION_CHUGGING:  999,
+
+  // Ranger
+  MORE_HERBS:       999,
+  /** At level 45 the beast-find chance already hits the 95% hard cap,
+   *  but the level counter itself is allowed to run to 999. */
+  BETTER_TRACKING:  999,
+
+  // Apothecary
+  /** 400 levels × +1% each = 400% save-chance.
+   *  At 400% you can save all 4 out of 5 herbs consumed per brew. */
+  POTION_TITRATION: 400,
+  POTION_MARKETING: 999,
+} as const;
+
 // ── Upgrade Base Costs (gold unless noted) ────────────────────
 export const BASE_COSTS = {
   // Fighter
@@ -79,12 +100,12 @@ export const FIGHTER_MG = {
   /** HP restored when the Fighter consumes one Potion */
   POTION_HEAL:       10,
 
-  // Goblin — the current (and only) enemy
-  GOBLIN_HP:         20,
-  GOBLIN_GOLD_MIN:   5,
-  GOBLIN_GOLD_MAX:   10,
-  GOBLIN_XP_REWARD:  3,
-  GOBLIN_EAR_REWARD: 1,
+  // Kobold — the current (and only) enemy
+  KOBOLD_HP:         20,
+  KOBOLD_GOLD_MIN:   5,
+  KOBOLD_GOLD_MAX:   10,
+  KOBOLD_XP_REWARD:  3,
+  KOBOLD_EAR_REWARD: 1,
 
   /** Enemy damage roll: random value from 1 to ENEMY_DMG_MAX, then minus DEFENSE */
   ENEMY_DMG_MAX:     8,

@@ -46,10 +46,11 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   firstKillDone = false;
 
   // ── Enemy ─────────────────────────────────
-  enemy: Enemy = this.buildGoblin();
+  enemy: Enemy = this.buildKobold();
 
   // ── Combat message ────────────────────────
   lastMsg  = '-- Ready to fight --';
+  msgLine2 = '';
   msgClass = 'msg-neutral';
 
   // ── Computed ──────────────────────────────
@@ -99,7 +100,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     }
 
     const eDmg = this.rollEnemyDamage();
-    this.lastMsg = `You deal ${dmg} dmg. ${this.enemy.name} hits ${eDmg}!`;
+    this.lastMsg  = `You deal ${dmg} dmg.`;
+    this.msgLine2 = `${this.enemy.name} hits ${eDmg}!`;
     this.applyEnemyDamage(eDmg);
   }
 
@@ -111,16 +113,18 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.fighterHp += healed;
 
     const eDmg = this.rollEnemyDamage();
-    this.lastMsg = `You heal ${healed} HP. ${this.enemy.name} hits ${eDmg}!`;
+    this.lastMsg  = `You heal ${healed} HP.`;
+    this.msgLine2 = `${this.enemy.name} hits ${eDmg}!`;
     this.msgClass = 'msg-neutral';
     this.applyEnemyDamage(eDmg);
   }
 
   retry(): void {
     this.fighterHp = this.maxHp;
-    this.enemy     = this.buildGoblin();
+    this.enemy     = this.buildKobold();
     this.defeated  = false;
     this.lastMsg   = '-- Ready to fight --';
+    this.msgLine2  = '';
     this.msgClass  = 'msg-neutral';
   }
 
@@ -136,6 +140,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.fighterHp = 0;
       this.defeated  = true;
       this.lastMsg   = `!! DEFEATED by ${this.enemy.name} !!`;
+      this.msgLine2  = '';
       this.msgClass  = 'msg-bad';
       this.log.log(`The Fighter was slain by a ${this.enemy.name}!`, 'warn');
     }
@@ -165,30 +170,32 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     }
 
     this.lastMsg      = `${this.enemy.name} defeated!`;
+    this.msgLine2     = '';
     this.msgClass     = 'msg-good';
     this.awaitingSpawn = true;
 
     this.spawnTimer = setTimeout(() => {
-      this.enemy        = this.buildGoblin();
+      this.enemy        = this.buildKobold();
       this.awaitingSpawn = false;
       this.lastMsg      = '-- New enemy! --';
+      this.msgLine2     = '';
       this.msgClass     = 'msg-neutral';
     }, FIGHTER_MG.SPAWN_DELAY_MS);
   }
 
-  private buildGoblin(): Enemy {
+  private buildKobold(): Enemy {
     return {
-      name:      'Goblin',
-      hp:        FIGHTER_MG.GOBLIN_HP,
-      maxHp:     FIGHTER_MG.GOBLIN_HP,
-      goldMin:   FIGHTER_MG.GOBLIN_GOLD_MIN,
-      goldMax:   FIGHTER_MG.GOBLIN_GOLD_MAX,
-      xpReward:  FIGHTER_MG.GOBLIN_XP_REWARD,
-      earReward: FIGHTER_MG.GOBLIN_EAR_REWARD,
+      name:      'Kobold',
+      hp:        FIGHTER_MG.KOBOLD_HP,
+      maxHp:     FIGHTER_MG.KOBOLD_HP,
+      goldMin:   FIGHTER_MG.KOBOLD_GOLD_MIN,
+      goldMax:   FIGHTER_MG.KOBOLD_GOLD_MAX,
+      xpReward:  FIGHTER_MG.KOBOLD_XP_REWARD,
+      earReward: FIGHTER_MG.KOBOLD_EAR_REWARD,
       ascii:
-        '  (>_<)  \n' +
-        '  /||\\   \n' +
-        '  d  b   ',
+        ' <(>_<)>↟  \n' +
+        '   /||-- |   \n' +
+        '   d  b  |   ',
     };
   }
 }

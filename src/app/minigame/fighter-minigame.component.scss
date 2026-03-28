@@ -1,11 +1,20 @@
 // Fighter minigame — compact combat UI for 180 px wide panel
 $font: 'Courier New', Courier, monospace;
 
+// Anchor the component to its flex-parent slot so width: 100% resolves
+// against the panel, not the intrinsic content width.
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .fighter-mg {
   display: flex;
   flex-direction: column;
   gap: 7px;
   width: 100%;
+  box-sizing: border-box;
   font-family: $font;
   font-size: 11px;
   color: #ccc;
@@ -80,28 +89,76 @@ $font: 'Courier New', Courier, monospace;
 // ── Combat message ────────────────────────
 
 .combat-msg {
+  /* Fixed size: always fits exactly two lines (font 10px × lh 1.4 × 2 lines +
+     2px gap + 8px vertical padding + 2px border = 40px total).
+     Extra 4px breathing room → 44px. */
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
   padding: 4px 6px;
   border: 1px solid #2a2a2a;
   background: #060606;
   font-size: 10px;
   text-align: center;
-  min-height: 22px;
   word-break: break-word;
+  overflow: hidden;
   line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
 
   &.msg-good    { color: #0e0;  border-color: #030; }
   &.msg-bad     { color: #f44;  border-color: #400; }
   &.msg-neutral { color: #777;  border-color: #2a2a2a; }
 }
 
-// ── Action buttons ────────────────────────
+.msg-line1 { display: block; }
 
-.actions {
+/* Enemy hit line is always shown in red regardless of the overall msg class */
+.msg-line2 {
+  display: block;
+  color: #f66;
+}
+
+// ── Fixed action zone ────────────────────
+// The zone always occupies the same vertical space regardless of game state.
+
+.action-zone {
   display: flex;
   flex-direction: column;
   gap: 5px;
   width: 100%;
 }
+
+// Primary slot: attack and retry sit in the same position.
+// atk-btn stays in normal flow (sizes the slot);
+// retry-btn is absolutely positioned on top of it.
+.primary-slot {
+  position: relative;
+  width: 100%;
+
+  .retry-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// Toggling helpers — opacity/visibility so layout space is always preserved.
+.slot-inactive {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.slot-invisible {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+// ── Action buttons ────────────────────────
 
 .action-btn {
   background: #000;
@@ -113,7 +170,8 @@ $font: 'Courier New', Courier, monospace;
   cursor: pointer;
   width: 100%;
   text-align: center;
-  transition: background 0.08s, color 0.08s;
+  box-sizing: border-box;
+  transition: background 0.08s, color 0.08s, opacity 0.08s;
 
   &:hover:not(:disabled) {
     background: #ccc;
@@ -154,20 +212,4 @@ $font: 'Courier New', Courier, monospace;
   &.depleted { color: #444; }
 }
 
-// ── Defeated panel ────────────────────────
-
-.defeated-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.defeated-title {
-  color: #f44;
-  font-size: 12px;
-  font-weight: bold;
-  text-align: center;
-  letter-spacing: 0.1em;
-}
 

@@ -5,11 +5,20 @@ $meat:   #e8739a;
 $herb:   #44dd44;
 $pixie:  #ffe066;
 
+// Make the host element a full-width block so width: 100% inside resolves
+// correctly and never depends on cell content.
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .ranger-mg {
   display: flex;
   flex-direction: column;
   gap: 7px;
   width: 100%;
+  box-sizing: border-box;
   font-family: $font;
   font-size: 11px;
   color: #ccc;
@@ -31,9 +40,11 @@ $pixie:  #ffe066;
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* minmax(0,1fr) prevents cell content from inflating column tracks */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .cell {
@@ -49,6 +60,8 @@ $pixie:  #ffe066;
   justify-content: center;
   gap: 1px;
   padding: 0;
+  overflow: hidden;          /* prevent revealed content from pushing column width */
+  box-sizing: border-box;
   transition: background 0.07s, border-color 0.07s, color 0.07s;
 
   // Hoverable hidden cells

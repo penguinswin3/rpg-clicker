@@ -29,33 +29,44 @@
   </div>
 
   <!-- ── Last combat event ─────────────── -->
-  <div class="combat-msg" [ngClass]="msgClass">{{ lastMsg }}</div>
+  <div class="combat-msg" [ngClass]="msgClass">
+    <span class="msg-line1">{{ lastMsg }}</span>
+    <span class="msg-line2" *ngIf="msgLine2">{{ msgLine2 }}</span>
+  </div>
 
-  <!-- ── Actions (normal state) ────────── -->
-  <ng-container *ngIf="!defeated">
-    <div class="actions">
+  <!-- ── Fixed action zone ─────────────── -->
+  <!-- Attack and Retry share the exact same slot: one overlays the other.
+       Heal is always directly below, invisible (not removed) when defeated. -->
+  <div class="action-zone">
+
+    <!-- Primary slot: both buttons occupy the same space via absolute overlay -->
+    <div class="primary-slot">
       <button class="action-btn atk-btn"
+              [class.slot-inactive]="defeated"
               [disabled]="actionsDisabled"
               (click)="attack()">
         [&gt; ATTACK ]
       </button>
-      <button class="action-btn heal-btn"
-              [disabled]="healDisabled"
-              (click)="heal()">
-        [+ HEAL +10]
+      <button class="action-btn retry-btn"
+              [class.slot-inactive]="!defeated"
+              (click)="retry()">
+        [ RETRY ]
       </button>
     </div>
-    <div class="potion-row" [class.depleted]="potions === 0">
-      potions: {{ potions }}
-    </div>
-  </ng-container>
 
-  <!-- ── Defeated state ────────────────── -->
-  <div class="defeated-panel" *ngIf="defeated">
-    <div class="defeated-title">!! DEFEATED !!</div>
-    <button class="action-btn retry-btn" (click)="retry()">
-      [ RETRY ]
+    <!-- Heal: always below the primary slot; hidden (not removed) when defeated -->
+    <button class="action-btn heal-btn"
+            [class.slot-invisible]="defeated"
+            [disabled]="healDisabled"
+            (click)="heal()">
+      [+ HEAL +10]
     </button>
+
+  </div>
+
+  <!-- ── Potion count ─────────────────── -->
+  <div class="potion-row" [class.depleted]="potions === 0 || defeated">
+    potions: {{ potions }}
   </div>
 
 </div>

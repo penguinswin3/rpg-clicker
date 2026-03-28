@@ -282,5 +282,16 @@
     color: #444;
     cursor: not-allowed;
   }
+
+  &.upgrade-maxed {
+    border-color: #856404;
+    color: #856404;
+    cursor: default;
+
+    &:hover {
+      background: #000;
+      color: #856404;
+    }
+  }
 }
 
