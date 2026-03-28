@@ -8,7 +8,7 @@ export interface UpgradeState {
   goldPerClick: number;
   clickUpgradeCost: number;
   clickUpgradeLevel: number;
-  autoGoldPerSecond: number;
+  // autoGoldPerSecond is derived: autoUpgradeLevel × 1g/s — not saved
   autoUpgradeCost: number;
   autoUpgradeLevel: number;
   potionChuggingLevel: number;
@@ -23,7 +23,7 @@ export interface UpgradeState {
   herbSaveChance: number;
   potionTitrationCost: number;
   potionTitrationLevel: number;
-  potionAutoGoldPerSecond: number;
+  // potionAutoGoldPerSecond is derived: potionMarketingLevel × 1g/s — not saved
   potionMarketingCost: number;
   potionMarketingLevel: number;
 }
@@ -32,7 +32,8 @@ export interface SaveSnapshot {
   /** Bump this if the schema ever changes incompatibly. */
   version: number;
   timestamp: number;
-  wallet: Record<string, { amount: number; perSecond: number }>;
+  /** Only currency amounts are persisted. perSecond rates are re-derived from upgrade levels on load. */
+  wallet: Record<string, { amount: number }>;
   characters: { id: string; unlocked: boolean }[];
   activeCharacterId: string;
   manualUnlocks: string[];
@@ -63,8 +64,13 @@ export class SaveService {
   // ── Snapshot building ─────────────────────────────────────────
 
   buildSnapshot(): SaveSnapshot {
-    const walletState = this.wallet['stateSource'].getValue() as
+    const rawState = this.wallet['stateSource'].getValue() as
       Record<string, { amount: number; perSecond: number }>;
+    // Only persist amounts — perSecond rates are derived from upgrade levels on load.
+    const walletAmounts: Record<string, { amount: number }> = {};
+    for (const [id, entry] of Object.entries(rawState)) {
+      walletAmounts[id] = { amount: entry.amount };
+    }
     const manualUnlocks = Array.from(
       this.wallet['manualUnlocksSource'].getValue() as Set<string>
     );
@@ -77,7 +83,7 @@ export class SaveService {
     return {
       version: CURRENT_VERSION,
       timestamp: Date.now(),
-      wallet: walletState,
+      wallet: walletAmounts,
       characters,
       activeCharacterId,
       manualUnlocks,
@@ -86,10 +92,9 @@ export class SaveService {
   }
 
   applySnapshot(snap: SaveSnapshot): void {
-    // 1 — Wallet amounts
+    // 1 — Wallet amounts only; perSecond is re-derived from upgrade levels below.
     for (const [id, entry] of Object.entries(snap.wallet)) {
       this.wallet.set(id, entry.amount);
-      this.wallet.setPerSecond(id, entry.perSecond);
     }
 
     // 2 — Manual unlocks

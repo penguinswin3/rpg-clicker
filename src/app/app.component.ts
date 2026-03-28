@@ -51,9 +51,11 @@ export class AppComponent implements OnInit {
   clickUpgradeCost  = 10;
   clickUpgradeLevel = 0;
 
-  autoGoldPerSecond = 0;
   autoUpgradeCost   = 25;
   autoUpgradeLevel  = 0;
+
+  /** Derived — 1 gold/sec per Contract Killing level. Never stored directly. */
+  get autoGoldPerSecond(): number { return this.autoUpgradeLevel; }
 
   /** Shown only once the Apothecary is unlocked (potion currency available). */
   apothecaryUnlocked      = false;
@@ -78,9 +80,11 @@ export class AppComponent implements OnInit {
   potionTitrationCost     = 20;
   potionTitrationLevel    = 0;
 
-  potionAutoGoldPerSecond = 0;
   potionMarketingCost     = 30;
   potionMarketingLevel    = 0;
+
+  /** Derived — 1 gold/sec per Potion Marketing level. Never stored directly. */
+  get potionAutoGoldPerSecond(): number { return this.potionMarketingLevel; }
 
   // ── Hero Stats (feeds character sidebar) ──
   get heroStats(): HeroStat[] {
@@ -146,7 +150,6 @@ export class AppComponent implements OnInit {
       goldPerClick:             this.goldPerClick,
       clickUpgradeCost:         this.clickUpgradeCost,
       clickUpgradeLevel:        this.clickUpgradeLevel,
-      autoGoldPerSecond:        this.autoGoldPerSecond,
       autoUpgradeCost:          this.autoUpgradeCost,
       autoUpgradeLevel:         this.autoUpgradeLevel,
       potionChuggingLevel:      this.potionChuggingLevel,
@@ -159,7 +162,6 @@ export class AppComponent implements OnInit {
       herbSaveChance:           this.herbSaveChance,
       potionTitrationCost:      this.potionTitrationCost,
       potionTitrationLevel:     this.potionTitrationLevel,
-      potionAutoGoldPerSecond:  this.potionAutoGoldPerSecond,
       potionMarketingCost:      this.potionMarketingCost,
       potionMarketingLevel:     this.potionMarketingLevel,
     };
@@ -169,7 +171,6 @@ export class AppComponent implements OnInit {
     this.goldPerClick            = s.goldPerClick;
     this.clickUpgradeCost        = s.clickUpgradeCost;
     this.clickUpgradeLevel       = s.clickUpgradeLevel;
-    this.autoGoldPerSecond       = s.autoGoldPerSecond;
     this.autoUpgradeCost         = s.autoUpgradeCost;
     this.autoUpgradeLevel        = s.autoUpgradeLevel;
     this.potionChuggingLevel     = s.potionChuggingLevel;
@@ -182,9 +183,10 @@ export class AppComponent implements OnInit {
     this.herbSaveChance          = s.herbSaveChance;
     this.potionTitrationCost     = s.potionTitrationCost;
     this.potionTitrationLevel    = s.potionTitrationLevel;
-    this.potionAutoGoldPerSecond = s.potionAutoGoldPerSecond;
     this.potionMarketingCost     = s.potionMarketingCost;
     this.potionMarketingLevel    = s.potionMarketingLevel;
+    // autoGoldPerSecond and potionAutoGoldPerSecond are derived getters —
+    // updateGoldPerSecond() reads them and syncs the wallet display.
     this.updateGoldPerSecond();
   }
 
@@ -306,7 +308,6 @@ export class AppComponent implements OnInit {
     if (this.wallet.canAfford('gold', this.autoUpgradeCost)) {
       this.wallet.remove('gold', this.autoUpgradeCost);
       this.autoUpgradeLevel++;
-      this.autoGoldPerSecond++;
       this.autoUpgradeCost = Math.floor(this.autoUpgradeCost * 1.5);
       this.updateGoldPerSecond();
       this.log.log(
@@ -399,7 +400,6 @@ export class AppComponent implements OnInit {
     if (this.wallet.canAfford('gold', this.potionMarketingCost)) {
       this.wallet.remove('gold', this.potionMarketingCost);
       this.potionMarketingLevel++;
-      this.potionAutoGoldPerSecond++;
       this.potionMarketingCost = Math.floor(this.potionMarketingCost * 1.5);
       this.updateGoldPerSecond();
       this.log.log(
