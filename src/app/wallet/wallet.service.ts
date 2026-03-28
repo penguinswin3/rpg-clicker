@@ -24,7 +24,7 @@ export type WalletState = Record<string, CurrencyEntry>;
 
 @Injectable({ providedIn: 'root' })
 export class WalletService {
-  /** All currencies recognised by the wallet. Add new ones here. */
+  /** All currencies recognized by the wallet. Add new ones here. */
   readonly currencies: Currency[] = [
     { id: 'gold',        name: 'Gold',          shorthand: 'gp', color: '#ffcc00' },
     { id: 'xp',          name: 'Experience',    shorthand: 'xp', color: '#00ff88' },
@@ -34,7 +34,7 @@ export class WalletService {
     { id: 'pixie-dust',    name: 'Pixie Dust',     shorthand: 'pd', color: '#ffe066', requiredCharacterId: 'ranger', manualUnlock: true },
     { id: 'potion',         name: 'Potion',         shorthand: 'pt', color: '#c37ef0', requiredCharacterId: 'apothecary' },
     { id: 'perfect-potion', name: 'Perfect Potion', shorthand: 'pp', color: '#f5d0ff', requiredCharacterId: 'apothecary', manualUnlock: true },
-    { id: 'monster-ear',    name: 'Monster Ear',    shorthand: 'me', color: '#e07820', requiredCharacterId: 'fighter',    manualUnlock: true },
+    { id: 'kobold-ear',    name: 'Kobold Ear',    shorthand: 'ke', color: '#e07820', requiredCharacterId: 'fighter',    manualUnlock: true },
   ];
 
   private readonly stateSource = new BehaviorSubject<WalletState>(

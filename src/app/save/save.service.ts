@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { WalletService } from '../wallet/wallet.service';
 import { CharacterService } from '../character/character.service';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 /** All upgrade / progression state managed by AppComponent. */
 export interface UpgradeState {
@@ -43,15 +44,33 @@ export interface SaveSnapshot {
 
 const SAVE_KEY = 'rpg-clicker-save';
 const CURRENT_VERSION = 1;
+/** Auto-save interval: every 5 minutes of play time. */
+const AUTO_SAVE_MS = 5 * 60 * 1000;
 
 @Injectable({ providedIn: 'root' })
 export class SaveService {
   private wallet      = inject(WalletService);
   private charService = inject(CharacterService);
+  private log         = inject(ActivityLogService);
 
   // Callbacks registered by AppComponent so we can capture / restore upgrade state.
   private upgradeGetter: (() => UpgradeState) | null = null;
   private upgradeSetter: ((s: UpgradeState) => void) | null = null;
+
+  private autoSaveTimer?: ReturnType<typeof setInterval>;
+
+  /** When true the next beforeunload save is skipped (used by dev clear-save). */
+  private _skipNextSave = false;
+
+  /** Tell the service to skip the very next beforeunload save. */
+  suppressNextSave(): void { this._skipNextSave = true; }
+
+  /** Returns true if the next save should be suppressed (resets the flag). */
+  consumeSuppression(): boolean {
+    const suppress = this._skipNextSave;
+    this._skipNextSave = false;
+    return suppress;
+  }
 
   /** Called once by AppComponent to plug in upgrade-state access. */
   registerUpgradeHandlers(
@@ -60,6 +79,28 @@ export class SaveService {
   ): void {
     this.upgradeGetter = getter;
     this.upgradeSetter = setter;
+  }
+
+  // ── Auto-save ─────────────────────────────────────────────────
+
+  /**
+   * Start the 5-minute auto-save interval.
+   * Safe to call multiple times — clears any existing timer first.
+   */
+  startAutoSave(): void {
+    this.stopAutoSave();
+    this.autoSaveTimer = setInterval(() => {
+      this.saveToLocalStorage();
+      this.log.log('[ AUTO-SAVE ] Game state saved to browser cache.', 'success');
+    }, AUTO_SAVE_MS);
+  }
+
+  /** Stop the auto-save interval. */
+  stopAutoSave(): void {
+    if (this.autoSaveTimer !== undefined) {
+      clearInterval(this.autoSaveTimer);
+      this.autoSaveTimer = undefined;
+    }
   }
 
   // ── Snapshot building ─────────────────────────────────────────

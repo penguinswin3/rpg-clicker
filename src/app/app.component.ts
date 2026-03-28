@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { ActivityLogComponent } from './activity-log/activity-log.component';
@@ -29,7 +29,7 @@ import { XP_THRESHOLDS, BASE_COSTS, COST_SCALE, YIELDS, UPGRADE_MAX } from './ga
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'RPG Clicker';
 
   // Synced from wallet
@@ -173,8 +173,22 @@ export class AppComponent implements OnInit {
     if (this.saveService.hasSave()) {
       this.saveService.loadFromLocalStorage();
     }
+    // Begin auto-saving every 5 minutes.
+    this.saveService.startAutoSave();
   }
 
+  ngOnDestroy(): void {
+    this.saveService.stopAutoSave();
+  }
+
+  /** Save synchronously whenever the tab is closed or the page is navigated away from. */
+  @HostListener('window:beforeunload')
+  onBeforeUnload(): void {
+    // Skip if a dev action explicitly suppressed the next save (e.g. clear-save + reload).
+    if (!this.saveService.consumeSuppression()) {
+      this.saveService.saveToLocalStorage();
+    }
+  }
   getUpgradeState(): UpgradeState {
     return {
       goldPerClick:             this.goldPerClick,
@@ -312,6 +326,12 @@ export class AppComponent implements OnInit {
   devMaxXp(): void {
     this.wallet.set('xp', 2_000_000_000);
     this.log.log('[DEV] XP set to 2,000,000,000.', 'warn');
+  }
+
+  devClearSave(): void {
+    this.saveService.suppressNextSave();  // stop beforeunload from re-saving
+    this.saveService.deleteSave();
+    window.location.reload();
   }
 
   buyClickUpgrade(): void {

@@ -103,6 +103,7 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
 
   confirmClearSave(): void {
     this.showClearConfirm = false;
+    this.saveService.suppressNextSave();  // prevent beforeunload from re-saving
     this.saveService.deleteSave();
     this.log.log('[SAVE] Browser save data erased. Reloading…', 'warn');
     setTimeout(() => window.location.reload(), 800);

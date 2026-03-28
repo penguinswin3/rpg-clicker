@@ -187,6 +187,16 @@
   }
 }
 
+.dev-clrsave-btn {
+  color: #fa0;
+  border-color: #643200;
+
+  &:hover {
+    background: #fa0;
+    color: #000;
+  }
+}
+
 .hero-btn {
   background: #000;
   color: #fff;
