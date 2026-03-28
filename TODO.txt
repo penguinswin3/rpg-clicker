@@ -2,12 +2,19 @@
 - Replace currency shorthand with a symbol?
 - More characters
   - Chef
+    - Like that mastermind game / spicy stew to cook
   - Thief
+    - Lockpick minigame
   - Artisan
+    - Odd One Out Gems
   - Mage
+    - Memory matching / Simon Says
   - Warlock
+    - Connect the dots spellcasting
   - Chimeramancer
+    - Animal parts combination mix and match synnergy?
   - Party Face
+    - Card game Blackjack?
 
 - More upgrades
   - Questing Automation
