@@ -61,7 +61,6 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
 
   saveToCache(): void {
     this.saveService.saveToLocalStorage();
-    this.setStatus('Game saved to browser cache.', 'success');
     this.log.log('Game saved to browser cache.', 'success');
   }
 
@@ -103,8 +102,9 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
 
   confirmClearSave(): void {
     this.showClearConfirm = false;
-    this.saveService.suppressNextSave();  // prevent beforeunload from re-saving
+    this.saveService.suppressNextSave();
     this.saveService.deleteSave();
+    document.body.classList.add('screen-shake');
     this.log.log('[SAVE] Browser save data erased. Reloading…', 'warn');
     setTimeout(() => window.location.reload(), 800);
   }

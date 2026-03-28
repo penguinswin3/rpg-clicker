@@ -329,9 +329,10 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   devClearSave(): void {
-    this.saveService.suppressNextSave();  // stop beforeunload from re-saving
+    this.saveService.suppressNextSave();
     this.saveService.deleteSave();
-    window.location.reload();
+    document.body.classList.add('screen-shake');
+    setTimeout(() => window.location.reload(), 800);
   }
 
   buyClickUpgrade(): void {
