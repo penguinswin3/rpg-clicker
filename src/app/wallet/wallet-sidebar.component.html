@@ -8,23 +8,50 @@
 
   <!-- ── Expanded view ───────────────────── -->
   <ng-container *ngIf="!collapsed">
-    <div class="currency-row" *ngFor="let c of currencies">
-      <div class="currency-header">
-        <span class="currency-name" [style.color]="c.color">{{ c.name }}</span>
-        <span class="currency-short">{{ c.shorthand }}</span>
+
+    <!-- Filter bar (only when multiple filter groups exist) -->
+    <div class="filter-bar" *ngIf="characterFilters.length > 1" (click)="$event.stopPropagation()">
+      <button
+        class="filter-btn"
+        [class.active]="allFiltersActive"
+        (click)="clearCharacterFilters()">
+        ALL
+      </button>
+      <span class="filter-sep">|</span>
+      <button
+        class="filter-btn"
+        *ngFor="let f of characterFilters"
+        [class.active]="activeCharacterFilters.has(f.key)"
+        [style.--btn-color]="f.color"
+        (click)="toggleCharacterFilter(f.key)">
+        {{ f.label }}
+      </button>
+    </div>
+
+    <!-- Currency rows -->
+    <div class="currency-list">
+      <div class="currency-row" *ngFor="let c of filteredCurrencies">
+        <div class="currency-header">
+          <span class="currency-name" [style.color]="c.color">{{ c.name }}</span>
+          <span class="currency-short">{{ c.shorthand }}</span>
+        </div>
+        <div class="currency-data">
+          <span class="currency-amount">{{ fmt(getEntry(c.id).amount) }}</span>
+          <span class="currency-rate" [class.inactive]="getEntry(c.id).perSecond === 0">
+            {{ getEntry(c.id).perSecond > 0 ? '+' + getEntry(c.id).perSecond + '/s' : '--/s' }}
+          </span>
+        </div>
       </div>
-      <div class="currency-data">
-        <span class="currency-amount">{{ fmt(getEntry(c.id).amount) }}</span>
-        <span class="currency-rate" [class.inactive]="getEntry(c.id).perSecond === 0">
-          {{ getEntry(c.id).perSecond > 0 ? '+' + getEntry(c.id).perSecond + '/s' : '--/s' }}
-        </span>
+      <div class="currency-empty" *ngIf="filteredCurrencies.length === 0">
+        -- none --
       </div>
     </div>
+
   </ng-container>
 
   <!-- ── Collapsed view ─────────────────── -->
   <ng-container *ngIf="collapsed">
-    <div class="currency-compact" *ngFor="let c of currencies">
+    <div class="currency-compact" *ngFor="let c of visibleCurrencies">
       <span class="compact-amount" [style.color]="c.color">{{ fmt(getEntry(c.id).amount) }}</span>
       <span class="compact-short">{{ c.shorthand }}</span>
     </div>

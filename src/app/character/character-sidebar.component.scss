@@ -205,11 +205,18 @@ $cyan: #0ff;
   align-items: center;
   padding: 7px 0;
   border-bottom: 1px dotted #1e1e1e;
-  cursor: default;
+  cursor: pointer;
+  transition: background 0.1s;
 
   &:last-child { border-bottom: none; }
-  &.is-active   { color: $cyan; }
+  &.is-active   { color: $cyan; cursor: default; }
   &.is-locked   { color: #3a3a3a; }
+
+  &.is-inactive:hover {
+    background: #0d0d0d;
+
+    .compact-initial { filter: brightness(1.4); }
+  }
 }
 
 .compact-initial {

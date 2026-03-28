@@ -97,7 +97,7 @@
 
 // Spacer to prevent content from being hidden behind the fixed log panel
 .log-spacer {
-  height: 185px;
+  height: 210px;
   flex-shrink: 0;
 }
 
@@ -105,6 +105,86 @@
 
 .click-area {
   margin: 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dev-menu-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dev-toggle-btn {
+  background: #000;
+  color: #f0f;
+  border: 1px dashed #f0f;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.1s, background 0.1s, color 0.1s;
+
+  &:hover, &:focus {
+    opacity: 1;
+    background: #f0f;
+    color: #000;
+  }
+}
+
+.dev-menu {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 200;
+  background: #000;
+  border: 1px dashed #f0f;
+  padding: 5px;
+  min-width: 100%;
+  opacity: 0.9;
+}
+
+.dev-action-btn {
+  background: #000;
+  color: #f0f;
+  border: 1px solid #600060;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s;
+
+  &:hover {
+    background: #f0f;
+    color: #000;
+  }
+}
+
+.dev-zero-btn {
+  color: #f44;
+  border-color: #600;
+
+  &:hover {
+    background: #f44;
+    color: #000;
+  }
+}
+
+.dev-xp-btn {
+  color: #0ff;
+  border-color: #006060;
+
+  &:hover {
+    background: #0ff;
+    color: #000;
+  }
 }
 
 .hero-btn {

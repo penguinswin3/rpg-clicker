@@ -6,6 +6,13 @@ export interface Currency {
   name: string;
   shorthand: string;
   color: string;
+  /** If set, this currency is hidden in the wallet until the named character is unlocked. */
+  requiredCharacterId?: string;
+  /**
+   * If true, this currency is hidden until `unlockCurrency(id)` is called explicitly.
+   * The wallet entry still exists and can accumulate amounts — only the sidebar hides it.
+   */
+  manualUnlock?: boolean;
 }
 
 export interface CurrencyEntry {
@@ -19,13 +26,24 @@ export type WalletState = Record<string, CurrencyEntry>;
 export class WalletService {
   /** All currencies recognised by the wallet. Add new ones here. */
   readonly currencies: Currency[] = [
-    { id: 'gold', name: 'Gold',       shorthand: 'gp', color: '#ffcc00' },
-    { id: 'xp',   name: 'Experience', shorthand: 'xp', color: '#00ff88' },
+    { id: 'gold',        name: 'Gold',          shorthand: 'gp', color: '#ffcc00' },
+    { id: 'xp',          name: 'Experience',    shorthand: 'xp', color: '#00ff88' },
+    { id: 'herb',          name: 'Herb',          shorthand: 'hr', color: '#44dd44', requiredCharacterId: 'ranger' },
+    { id: 'beast',         name: 'Raw Beast Meat', shorthand: 'bm', color: '#e8739a', requiredCharacterId: 'ranger' },
+    { id: 'cooked-meat',   name: 'Cooked Meat',    shorthand: 'cm', color: '#c0732a', requiredCharacterId: 'ranger', manualUnlock: true },
+    { id: 'pixie-dust',    name: 'Pixie Dust',     shorthand: 'pd', color: '#ffe066', requiredCharacterId: 'ranger', manualUnlock: true },
+    { id: 'potion',         name: 'Potion',         shorthand: 'pt', color: '#c37ef0', requiredCharacterId: 'apothecary' },
+    { id: 'perfect-potion', name: 'Perfect Potion', shorthand: 'pp', color: '#f5d0ff', requiredCharacterId: 'apothecary', manualUnlock: true },
+    { id: 'monster-ear',    name: 'Monster Ear',    shorthand: 'me', color: '#e07820', requiredCharacterId: 'fighter',    manualUnlock: true },
   ];
 
   private readonly stateSource = new BehaviorSubject<WalletState>(
     Object.fromEntries(this.currencies.map(c => [c.id, { amount: 0, perSecond: 0 }]))
   );
+
+  /** Tracks currencies whose `manualUnlock` gate has been opened. */
+  private readonly manualUnlocksSource = new BehaviorSubject<Set<string>>(new Set<string>());
+  readonly manualUnlocks$ = this.manualUnlocksSource.asObservable();
 
   /** Observable of the full wallet state. */
   readonly state$ = this.stateSource.asObservable();
@@ -60,6 +78,23 @@ export class WalletService {
   /** Set the passive generation rate for `currencyId` (used for display only). */
   setPerSecond(currencyId: string, rate: number): void {
     this._patch(currencyId, e => ({ ...e, perSecond: rate }));
+  }
+
+  /** Hard-set `currencyId` to an exact `amount` (clamped to ≥ 0). */
+  set(currencyId: string, amount: number): void {
+    this._patch(currencyId, e => ({ ...e, amount: Math.max(0, amount) }));
+  }
+
+  /**
+   * Lift the `manualUnlock` gate for a currency, making it visible in the wallet sidebar.
+   * Safe to call multiple times.
+   */
+  unlockCurrency(id: string): void {
+    const current = this.manualUnlocksSource.getValue();
+    if (current.has(id)) return;
+    const next = new Set(current);
+    next.add(id);
+    this.manualUnlocksSource.next(next);
   }
 
   // ── Private ───────────────────────────────────────────────────

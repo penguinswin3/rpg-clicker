@@ -13,7 +13,7 @@
       class="unlock-btn"
       [disabled]="!canAfford(c)"
       (click)="buy(c)">
-      [UNLOCK: {{ c.unlockCostGold }}g]
+      [UNLOCK: {{ formatCosts(c) }}]
     </button>
   </div>
 

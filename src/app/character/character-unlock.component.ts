@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription, combineLatest } from 'rxjs';
-import { CharacterService, Character } from './character.service';
+import { CharacterService, Character, UnlockCost } from './character.service';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 
@@ -14,21 +14,19 @@ import { ActivityLogService } from '../activity-log/activity-log.service';
 })
 export class CharacterUnlockComponent implements OnInit, OnDestroy {
   private charService = inject(CharacterService);
-  private wallet     = inject(WalletService);
-  private log        = inject(ActivityLogService);
-  private sub        = new Subscription();
+  private wallet      = inject(WalletService);
+  private log         = inject(ActivityLogService);
+  private sub         = new Subscription();
 
   /** Locked characters whose XP requirement has been reached. */
   available: Character[] = [];
-  gold = 0;
-  xp   = 0;
+  xp = 0;
 
   ngOnInit(): void {
     this.sub.add(
       combineLatest([this.charService.characters$, this.wallet.state$])
         .subscribe(([chars, state]) => {
-          this.gold = Math.floor(state['gold']?.amount ?? 0);
-          this.xp   = Math.floor(state['xp']?.amount  ?? 0);
+          this.xp = Math.floor(state['xp']?.amount ?? 0);
           this.available = chars.filter(
             c => !c.unlocked && this.xp >= c.xpRequirement
           );
@@ -41,19 +39,34 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
   }
 
   canAfford(char: Character): boolean {
-    return this.gold >= char.unlockCostGold;
+    return char.unlockCosts.every(cost => this.wallet.canAfford(cost.currencyId, cost.amount));
   }
 
   buy(char: Character): void {
-    if (!this.wallet.remove('gold', char.unlockCostGold)) {
-      this.log.log(
-        `Not enough gold to unlock ${char.name}. Need ${char.unlockCostGold}g, have ${this.gold}g.`,
-        'warn'
-      );
+    if (!this.canAfford(char)) {
+      const missing = char.unlockCosts
+        .filter(cost => !this.wallet.canAfford(cost.currencyId, cost.amount))
+        .map(cost => `${cost.amount} ${this.shorthand(cost.currencyId)}`)
+        .join(', ');
+      this.log.log(`Can't unlock ${char.name} — still need: ${missing}.`, 'warn');
       return;
+    }
+    for (const cost of char.unlockCosts) {
+      this.wallet.remove(cost.currencyId, cost.amount);
     }
     this.charService.unlock(char.id);
     this.log.log(`${char.name} has been unlocked! Welcome to the party.`, 'rare');
   }
-}
 
+  /** Returns a formatted cost label, e.g. "1500 gp + 250 hr". */
+  formatCosts(char: Character): string {
+    if (char.unlockCosts.length === 0) return 'FREE';
+    return char.unlockCosts
+      .map(cost => `${cost.amount} ${this.shorthand(cost.currencyId)}`)
+      .join(' + ');
+  }
+
+  private shorthand(currencyId: string): string {
+    return this.wallet.currencies.find(c => c.id === currencyId)?.shorthand ?? currencyId;
+  }
+}

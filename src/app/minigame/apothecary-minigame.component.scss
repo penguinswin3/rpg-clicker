@@ -1,0 +1,207 @@
+// Apothecary minigame — alchemy rhythm UI for 180 px wide panel
+$font: 'Courier New', Courier, monospace;
+$purple: #c37ef0;
+$green:  #44dd44;
+
+.apoth-mg {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  font-family: $font;
+  font-size: 11px;
+  color: #ccc;
+}
+
+// ── Resource row ──────────────────────────
+
+.resource-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0 4px;
+  border-bottom: 1px solid #1e1e1e;
+}
+
+.res-label { color: #555; font-size: 10px; }
+.res-val   { color: $green; font-weight: bold; }
+.res-low   { color: #f44; }
+
+// ── Quality block ─────────────────────────
+
+.quality-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.q-label {
+  color: #666;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.q-ascii {
+  color: $purple;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.q-fraction {
+  color: #555;
+  font-size: 9px;
+  text-align: right;
+}
+
+// ── Beat bar ──────────────────────────────
+
+.beat-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.beat-label {
+  color: #555;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-align: center;
+}
+
+.beat-track {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  background: #0a0a0a;
+  border: 1px solid #222;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.beat-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 180, 0, 0.12);
+  border-left: 1px solid #090;
+  border-right: 1px solid #090;
+}
+
+.beat-cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: #fff;
+  box-shadow: 0 0 4px #fff;
+}
+
+// Zone indicator text
+
+.zone-status {
+  font-size: 9px;
+  text-align: center;
+  letter-spacing: 0.05em;
+  transition: color 0.05s;
+
+  &.in-zone  { color: #0d0; }
+  &.out-zone { color: #333; }
+}
+
+// ── Action buttons ────────────────────────
+
+.action-btn {
+  background: #000;
+  border: 1px solid #333;
+  color: #888;
+  font-family: $font;
+  font-size: 11px;
+  padding: 6px 4px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: background 0.08s, color 0.08s, border-color 0.08s;
+
+  &:hover:not(:disabled) {
+    background: #888;
+    color: #000;
+  }
+
+  &:disabled {
+    color: #2a2a2a;
+    border-color: #1a1a1a;
+    cursor: not-allowed;
+  }
+}
+
+// Brew button — neutral state
+.brew-btn {
+  border-color: #444;
+  color: #666;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+
+  // Hot state: cursor is inside the target zone
+  &.btn-hot {
+    border-color: $purple;
+    color: $purple;
+    background: #0d0011;
+    box-shadow: 0 0 6px rgba(195, 126, 240, 0.3);
+
+    &:hover {
+      background: $purple;
+      color: #000;
+      box-shadow: none;
+    }
+  }
+}
+
+.start-btn {
+  border-color: $green;
+  color: $green;
+  &:hover:not(:disabled) { background: $green; color: #000; }
+}
+
+// ── Idle block ────────────────────────────
+
+.idle-block {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+}
+
+.cost-hint {
+  color: #444;
+  font-size: 9px;
+  text-align: center;
+}
+
+.herb-warn {
+  color: #f44;
+  font-size: 9px;
+  text-align: center;
+}
+
+// ── Result / status message ───────────────
+
+.brew-msg {
+  padding: 4px 6px;
+  border: 1px solid #1e1e1e;
+  background: #050505;
+  font-size: 10px;
+  text-align: center;
+  min-height: 22px;
+  word-break: break-word;
+  line-height: 1.5;
+
+  &.msg-good    { color: #0d0;  border-color: #020; }
+  &.msg-bad     { color: #f55;  border-color: #300; }
+  &.msg-neutral { color: #666;  border-color: #1e1e1e; }
+}
+

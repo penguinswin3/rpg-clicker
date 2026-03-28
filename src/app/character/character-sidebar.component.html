@@ -12,13 +12,9 @@
     <!-- Hero Stats -->
     <div class="hero-stats-box">
       <div class="box-label">[ HERO STATS ]</div>
-      <div class="stat-row">
-        <span class="stat-key">Per Click  :</span>
-        <span class="stat-val">{{ goldPerClick }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Per Second :</span>
-        <span class="stat-val">{{ autoGoldPerSecond }}</span>
+      <div class="stat-row" *ngFor="let s of heroStats">
+        <span class="stat-key">{{ s.label }}</span>
+        <span class="stat-val">{{ s.value }}</span>
       </div>
     </div>
 
@@ -54,7 +50,9 @@
       class="compact-char"
       *ngFor="let c of unlockedCharacters"
       [class.is-active]="c.id === activeId"
-      [title]="c.name + (c.id === activeId ? ' (active)' : '')">
+      [class.is-inactive]="c.id !== activeId"
+      [title]="c.name + (c.id === activeId ? ' (active)' : ' — click to switch')"
+      (click)="setActive(c.id)">
       <span class="compact-initial" [style.color]="c.color">{{ c.name[0] }}</span>
       <span class="compact-pip">{{ c.id === activeId ? '*' : 'o' }}</span>
     </div>

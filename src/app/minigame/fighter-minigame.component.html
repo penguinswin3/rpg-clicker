@@ -1,0 +1,62 @@
+<div class="fighter-mg">
+
+  <!-- ── Fighter HP ─────────────────────── -->
+  <div class="combatant">
+    <div class="c-label">[ FIGHTER ]</div>
+    <div class="hp-track">
+      <div class="hp-fill"
+           [class.hp-low]="fighterHpPct < 30"
+           [class.hp-mid]="fighterHpPct >= 30 && fighterHpPct < 60"
+           [style.width.%]="fighterHpPct">
+      </div>
+    </div>
+    <div class="hp-text">{{ fighterHp }} / {{ maxHp }} HP</div>
+  </div>
+
+  <div class="vs-row">-- vs --</div>
+
+  <!-- ── Enemy ─────────────────────────── -->
+  <div class="combatant">
+    <div class="c-label enemy-label">[ {{ enemy.name | uppercase }} ]</div>
+    <pre class="enemy-ascii">{{ enemy.ascii }}</pre>
+    <div class="hp-track">
+      <div class="hp-fill enemy-fill"
+           [class.hp-low]="enemyHpPct < 30"
+           [style.width.%]="enemyHpPct">
+      </div>
+    </div>
+    <div class="hp-text">{{ enemy.hp }} / {{ enemy.maxHp }} HP</div>
+  </div>
+
+  <!-- ── Last combat event ─────────────── -->
+  <div class="combat-msg" [ngClass]="msgClass">{{ lastMsg }}</div>
+
+  <!-- ── Actions (normal state) ────────── -->
+  <ng-container *ngIf="!defeated">
+    <div class="actions">
+      <button class="action-btn atk-btn"
+              [disabled]="actionsDisabled"
+              (click)="attack()">
+        [&gt; ATTACK ]
+      </button>
+      <button class="action-btn heal-btn"
+              [disabled]="healDisabled"
+              (click)="heal()">
+        [+ HEAL +10]
+      </button>
+    </div>
+    <div class="potion-row" [class.depleted]="potions === 0">
+      potions: {{ potions }}
+    </div>
+  </ng-container>
+
+  <!-- ── Defeated state ────────────────── -->
+  <div class="defeated-panel" *ngIf="defeated">
+    <div class="defeated-title">!! DEFEATED !!</div>
+    <button class="action-btn retry-btn" (click)="retry()">
+      [ RETRY ]
+    </button>
+  </div>
+
+</div>
+

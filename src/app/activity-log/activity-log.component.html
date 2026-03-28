@@ -2,22 +2,44 @@
 
   <div class="log-header" (click)="toggle()">
     <span class="log-title">[ ACTIVITY LOG ]</span>
-    <span class="log-meta" *ngIf="!minimized">{{ messages.length }}/100 entries</span>
     <span class="log-toggle">{{ minimized ? '[+]' : '[-]' }}</span>
   </div>
 
-  <div class="log-body" *ngIf="!minimized" #logBody>
-    <div *ngIf="messages.length === 0" class="log-empty">
-      -- No activity yet --
+  <ng-container *ngIf="!minimized">
+    <!-- Filter bar -->
+    <div class="filter-bar" (click)="$event.stopPropagation()">
+      <button
+        class="filter-btn"
+        [class.active]="allActive"
+        data-type="all"
+        (click)="clearFilters()">
+        ALL
+      </button>
+      <span class="filter-sep">|</span>
+      <button
+        class="filter-btn"
+        *ngFor="let f of filters"
+        [class.active]="activeFilters.has(f.value)"
+        [attr.data-type]="f.value"
+        (click)="toggleFilter(f.value)">
+        {{ f.label }}
+      </button>
     </div>
-    <div
-      class="log-entry"
-      *ngFor="let msg of messages; trackBy: trackById"
-      [ngClass]="'type-' + msg.type">
-      <span class="log-time">[{{ msg.timestamp }}]</span>
-      <span class="log-text">> {{ msg.text }}</span>
+
+    <!-- Log body -->
+    <div class="log-body" #logBody>
+      <div *ngIf="filteredMessages.length === 0" class="log-empty">
+        -- No {{ allActive ? 'activity' : 'matching' }} entries --
+      </div>
+      <div
+        class="log-entry"
+        *ngFor="let msg of filteredMessages; trackBy: trackById"
+        [ngClass]="'type-' + (msg.type ?? 'default')">
+        <span class="log-time">[{{ msg.timestamp }}]</span>
+        <span class="log-text">> {{ msg.text }}</span>
+      </div>
     </div>
-  </div>
+  </ng-container>
 
 </div>
 

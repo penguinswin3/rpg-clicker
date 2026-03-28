@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { CharacterService, Character } from './character.service';
 
+export interface HeroStat {
+  label: string;
+  value: string;
+}
+
 @Component({
   selector: 'app-character-sidebar',
   standalone: true,
@@ -11,8 +16,7 @@ import { CharacterService, Character } from './character.service';
   styleUrl: './character-sidebar.component.scss',
 })
 export class CharacterSidebarComponent implements OnInit, OnDestroy {
-  @Input() goldPerClick = 1;
-  @Input() autoGoldPerSecond = 0;
+  @Input() heroStats: HeroStat[] = [];
 
   private charService = inject(CharacterService);
   private sub = new Subscription();

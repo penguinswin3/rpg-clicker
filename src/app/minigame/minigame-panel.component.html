@@ -1,0 +1,51 @@
+<aside class="minigame-panel" *ngIf="shown">
+
+  <!-- Header -->
+  <div class="panel-header">
+    <span class="panel-title">[ {{ activeMinigame.title | uppercase }} ]</span>
+  </div>
+
+  <div class="panel-body">
+
+    <!-- ── Fighter: live combat minigame ── -->
+    <ng-container *ngIf="activeCharacterId === 'fighter'">
+      <app-fighter-minigame [attackPower]="fighterAttack" />
+    </ng-container>
+
+    <!-- ── Apothecary: alchemy rhythm minigame ── -->
+    <ng-container *ngIf="activeCharacterId === 'apothecary'">
+      <app-apothecary-minigame />
+    </ng-container>
+
+    <!-- ── Ranger: scouting grid minigame ─── -->
+    <ng-container *ngIf="activeCharacterId === 'ranger'">
+      <app-ranger-minigame />
+    </ng-container>
+
+    <!-- ── Other characters: placeholder ── -->
+    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger'">
+
+      <div class="ascii-frame">
+        <pre class="minigame-ascii">{{ activeMinigame.ascii }}</pre>
+      </div>
+
+      <div class="mg-divider">+----------+</div>
+
+      <div class="mg-description">
+        <span class="mg-desc-line" *ngFor="let line of descLines">{{ line }}</span>
+      </div>
+
+      <div class="mg-divider">+----------+</div>
+
+      <div class="mg-coming-soon">
+        <span class="cs-label">&gt;&gt; MINIGAME &lt;&lt;</span>
+        <span class="cs-sub">[ Under Construction ]</span>
+        <span class="cs-hint">// more content soon //</span>
+      </div>
+
+    </ng-container>
+
+  </div>
+
+</aside>
+

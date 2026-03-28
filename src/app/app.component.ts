@@ -5,8 +5,11 @@ import { ActivityLogComponent } from './activity-log/activity-log.component';
 import { ActivityLogService } from './activity-log/activity-log.service';
 import { WalletSidebarComponent } from './wallet/wallet-sidebar.component';
 import { WalletService } from './wallet/wallet.service';
-import { CharacterSidebarComponent } from './character/character-sidebar.component';
+import { CharacterSidebarComponent, HeroStat } from './character/character-sidebar.component';
 import { CharacterUnlockComponent } from './character/character-unlock.component';
+import { CharacterService } from './character/character.service';
+import { MinigamePanelComponent } from './minigame/minigame-panel.component';
+import { MINIGAME_XP_THRESHOLD } from './minigame/minigame-panel.component';
 
 @Component({
   selector: 'app-root',
@@ -18,6 +21,7 @@ import { CharacterUnlockComponent } from './character/character-unlock.component
     WalletSidebarComponent,
     CharacterSidebarComponent,
     CharacterUnlockComponent,
+    MinigamePanelComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -25,38 +29,196 @@ import { CharacterUnlockComponent } from './character/character-unlock.component
 export class AppComponent {
   title = 'RPG Clicker';
 
-  // Synced from wallet state
-  gold = 0;
+  // Synced from wallet
+  gold    = 0;
+  xp      = 0;
+  potions = 0;
 
-  // Game-mechanic fields (not wallet state)
-  goldPerClick = 1;
-  clickUpgradeCost = 10;
+  readonly minigameXpThreshold = MINIGAME_XP_THRESHOLD;
+
+  get minigameShown(): boolean {
+    return this.xp >= this.minigameXpThreshold;
+  }
+
+  // Active character (synced from CharacterService)
+  activeCharacterId = 'fighter';
+
+  // ── Fighter upgrades ──────────────────────
+  goldPerClick      = 1;
+  clickUpgradeCost  = 10;
   clickUpgradeLevel = 0;
 
   autoGoldPerSecond = 0;
-  autoUpgradeCost = 25;
-  autoUpgradeLevel = 0;
+  autoUpgradeCost   = 25;
+  autoUpgradeLevel  = 0;
 
-  private log = inject(ActivityLogService);
-  private wallet = inject(WalletService);
+  /** Shown only once the Apothecary is unlocked (potion currency available). */
+  apothecaryUnlocked      = false;
+  potionChuggingLevel     = 0;
+  potionChuggingCost      = 5;   // scales in potions
+
+  // ── Ranger upgrades ───────────────────────
+  herbsPerFind         = 1;
+  moreHerbsCost        = 15;
+  moreHerbsLevel       = 0;
+
+  betterTrackingLevel  = 0;
+  betterTrackingCost   = 20;
+
+  get beastFindChance(): number {
+    return Math.min(95, 50 + this.betterTrackingLevel);
+  }
+
+  // ── Apothecary upgrades ───────────────────
+  /** Percentage chance (0-100) to save 1 herb when brewing. */
+  herbSaveChance          = 0;
+  potionTitrationCost     = 20;
+  potionTitrationLevel    = 0;
+
+  potionAutoGoldPerSecond = 0;
+  potionMarketingCost     = 30;
+  potionMarketingLevel    = 0;
+
+  // ── Hero Stats (feeds character sidebar) ──
+  get heroStats(): HeroStat[] {
+    if (this.activeCharacterId === 'ranger') {
+      return [
+        { label: 'Herb Chance  :', value: `50%`                       },
+        { label: 'Beast Chance :', value: `${this.beastFindChance}%`  },
+        { label: 'Herbs / Find :', value: `${this.herbsPerFind}`      },
+      ];
+    }
+    if (this.activeCharacterId === 'apothecary') {
+      return [
+        { label: 'Herbs/Brew   :', value: '5'                            },
+        { label: 'Save Chance  :', value: `${this.herbSaveChance}%`      },
+        { label: 'Sell Rate    :', value: `${this.potionAutoGoldPerSecond}g/s` },
+      ];
+    }
+    return [
+      { label: 'Per Click   :', value: `${this.goldPerClick}`      },
+      { label: 'Per Second  :', value: `${this.autoGoldPerSecond}` },
+    ];
+  }
+
+  private log        = inject(ActivityLogService);
+  private wallet     = inject(WalletService);
+  private charService = inject(CharacterService);
 
   constructor() {
-    // Keep local gold in sync with wallet for template bindings
     this.wallet.state$.subscribe(state => {
-      this.gold = Math.floor(state['gold']?.amount ?? 0);
+      this.gold    = Math.floor(state['gold']?.amount   ?? 0);
+      this.xp      = Math.floor(state['xp']?.amount     ?? 0);
+      this.potions = Math.floor(state['potion']?.amount ?? 0);
     });
-
+    this.charService.activeId$.subscribe(id => {
+      this.activeCharacterId = id;
+    });
+    this.charService.characters$.subscribe(chars => {
+      this.apothecaryUnlocked = chars.find(c => c.id === 'apothecary')?.unlocked ?? false;
+    });
     setInterval(() => {
-      if (this.autoGoldPerSecond > 0) {
-        this.wallet.add('gold', this.autoGoldPerSecond);
+      const total = this.autoGoldPerSecond + this.potionAutoGoldPerSecond;
+      if (total > 0) {
+        this.wallet.add('gold', total);
       }
     }, 1000);
   }
 
+  private updateGoldPerSecond(): void {
+    this.wallet.setPerSecond('gold', this.autoGoldPerSecond + this.potionAutoGoldPerSecond);
+  }
+
+  // ── Adventure click ───────────────────────
+
   clickHero(): void {
+    if (this.activeCharacterId === 'ranger') {
+      this.clickRanger();
+    } else if (this.activeCharacterId === 'apothecary') {
+      this.clickApothecary();
+    } else {
+      this.clickFighter();
+    }
+  }
+
+  private clickFighter(): void {
     this.wallet.add('gold', this.goldPerClick);
     this.wallet.add('xp', 1);
     this.log.log(`You ventured forth and found ${this.goldPerClick} gold.`);
+  }
+
+  private clickRanger(): void {
+    this.wallet.add('xp', 1);
+
+    // First roll: 50/50 determines the target — herb or beast
+    const targetHerb = Math.random() < 0.5;
+
+    if (targetHerb) {
+      // Second roll: always succeeds for herb foraging; More Herbs raises the yield
+      this.wallet.add('herb', this.herbsPerFind);
+      this.log.log(
+        `You targeted herbs and foraged ${this.herbsPerFind} herb(s). (+1 XP)`
+      );
+    } else {
+      // Second roll: beastFindChance% to successfully bring down a beast
+      const gotBeast = Math.random() < this.beastFindChance / 100;
+      if (gotBeast) {
+        this.wallet.add('beast', 1);
+        this.log.log(`You tracked a beast and claimed its meat. (+1 XP)`);
+      } else {
+        this.log.log(`You targeted a beast but it escaped. (+1 XP)`);
+      }
+    }
+  }
+
+  private clickApothecary(): void {
+    const herbCost = 5;
+    if (!this.wallet.canAfford('herb', herbCost)) {
+      const have = Math.floor(this.wallet.get('herb'));
+      this.log.log(
+        `Not enough herbs to brew. Need ${herbCost}, have ${have}.`,
+        'warn'
+      );
+      return;
+    }
+
+    this.wallet.remove('herb', herbCost);
+    this.wallet.add('potion', 1);
+    this.wallet.add('xp', 1);
+
+    // Herb-save roll (Potion Titration upgrade)
+    if (this.herbSaveChance > 0 && Math.random() * 100 < this.herbSaveChance) {
+      this.wallet.add('herb', 1);
+      this.log.log(
+        `You brewed a potion and recovered a herb! (+1 XP)`,
+        'success'
+      );
+    } else {
+      this.log.log(`You brewed a potion from ${herbCost} herbs. (+1 XP)`);
+    }
+  }
+
+  // ── DEV ──────────────────────────────────
+
+  devMenuOpen = false;
+
+  devGrant(): void {
+    for (const c of this.wallet.currencies) {
+      this.wallet.add(c.id, 250);
+    }
+    this.log.log('[DEV] +250 granted to all resources.', 'warn');
+  }
+
+  devZero(): void {
+    for (const c of this.wallet.currencies) {
+      this.wallet.set(c.id, 0);
+    }
+    this.log.log('[DEV] All resources set to 0.', 'warn');
+  }
+
+  devMaxXp(): void {
+    this.wallet.set('xp', 2_000_000_000);
+    this.log.log('[DEV] XP set to 2,000,000,000.', 'warn');
   }
 
   buyClickUpgrade(): void {
@@ -83,14 +245,107 @@ export class AppComponent {
       this.autoUpgradeLevel++;
       this.autoGoldPerSecond++;
       this.autoUpgradeCost = Math.floor(this.autoUpgradeCost * 1.5);
-      this.wallet.setPerSecond('gold', this.autoGoldPerSecond);
+      this.updateGoldPerSecond();
       this.log.log(
-        `Gold Mine upgraded to Lv.${this.autoUpgradeLevel}. Now earning ${this.autoGoldPerSecond}g/sec.`,
+        `Contract Killing upgraded to Lv.${this.autoUpgradeLevel}. Now earning ${this.autoGoldPerSecond}g/sec.`,
         'success'
       );
     } else {
       this.log.log(
-        `Not enough gold for Gold Mine. Need ${this.autoUpgradeCost}g, have ${this.gold}g.`,
+        `Not enough gold for Contract Killing. Need ${this.autoUpgradeCost}g, have ${this.gold}g.`,
+        'warn'
+      );
+    }
+  }
+
+  buyPotionChugging(): void {
+    if (this.wallet.canAfford('potion', this.potionChuggingCost)) {
+      this.wallet.remove('potion', this.potionChuggingCost);
+      this.potionChuggingLevel++;
+      this.potionChuggingCost = Math.ceil(this.potionChuggingCost * 1.5);
+      this.log.log(
+        `Potion Chugging upgraded to Lv.${this.potionChuggingLevel}. The Fighter feels stronger...`,
+        'success'
+      );
+    } else {
+      this.log.log(
+        `Not enough potions for Potion Chugging. Need ${this.potionChuggingCost}pt, have ${this.potions}pt.`,
+        'warn'
+      );
+    }
+  }
+
+  // ── Ranger upgrade methods ────────────────
+
+  buyMoreHerbs(): void {
+    if (this.wallet.canAfford('gold', this.moreHerbsCost)) {
+      this.wallet.remove('gold', this.moreHerbsCost);
+      this.moreHerbsLevel++;
+      this.herbsPerFind++;
+      this.moreHerbsCost = Math.floor(this.moreHerbsCost * 1.5);
+      this.log.log(
+        `More Herbs upgraded to Lv.${this.moreHerbsLevel}. Now finding ${this.herbsPerFind} herb(s) per forage.`,
+        'success'
+      );
+    } else {
+      this.log.log(
+        `Not enough gold for More Herbs. Need ${this.moreHerbsCost}g, have ${this.gold}g.`,
+        'warn'
+      );
+    }
+  }
+
+  buyBetterTracking(): void {
+    if (this.wallet.canAfford('gold', this.betterTrackingCost)) {
+      this.wallet.remove('gold', this.betterTrackingCost);
+      this.betterTrackingLevel++;
+      this.betterTrackingCost = Math.floor(this.betterTrackingCost * 1.5);
+      this.log.log(
+        `Better Tracking upgraded to Lv.${this.betterTrackingLevel}. Beast find chance now ${this.beastFindChance}%.`,
+        'success'
+      );
+    } else {
+      this.log.log(
+        `Not enough gold for Better Tracking. Need ${this.betterTrackingCost}g, have ${this.gold}g.`,
+        'warn'
+      );
+    }
+  }
+
+  // ── Apothecary upgrade methods ────────────
+
+  buyPotionTitration(): void {
+    if (this.wallet.canAfford('gold', this.potionTitrationCost)) {
+      this.wallet.remove('gold', this.potionTitrationCost);
+      this.potionTitrationLevel++;
+      this.herbSaveChance++;   // +1% per level
+      this.potionTitrationCost = Math.floor(this.potionTitrationCost * 1.5);
+      this.log.log(
+        `Potion Titration upgraded to Lv.${this.potionTitrationLevel}. Herb save chance now ${this.herbSaveChance}%.`,
+        'success'
+      );
+    } else {
+      this.log.log(
+        `Not enough gold for Potion Titration. Need ${this.potionTitrationCost}g, have ${this.gold}g.`,
+        'warn'
+      );
+    }
+  }
+
+  buyPotionMarketing(): void {
+    if (this.wallet.canAfford('gold', this.potionMarketingCost)) {
+      this.wallet.remove('gold', this.potionMarketingCost);
+      this.potionMarketingLevel++;
+      this.potionAutoGoldPerSecond++;
+      this.potionMarketingCost = Math.floor(this.potionMarketingCost * 1.5);
+      this.updateGoldPerSecond();
+      this.log.log(
+        `Potion Marketing upgraded to Lv.${this.potionMarketingLevel}. Now passively earning ${this.potionAutoGoldPerSecond}g/sec from sales.`,
+        'success'
+      );
+    } else {
+      this.log.log(
+        `Not enough gold for Potion Marketing. Need ${this.potionMarketingCost}g, have ${this.gold}g.`,
         'warn'
       );
     }

@@ -1,0 +1,133 @@
+$border: #333;
+$bg: #000;
+$bg-header: #111;
+$muted: #555;
+$accent: #0ff;
+
+// ── Shell ─────────────────────────────────
+
+.minigame-panel {
+  width: 180px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  // Stop before the fixed activity log (~210px tall when expanded)
+  height: calc(100vh - 210px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: $bg;
+  border-right: 1px solid $border;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+}
+
+// ── Header ────────────────────────────────
+
+.panel-header {
+  flex-shrink: 0;
+  padding: 5px 8px;
+  background: $bg-header;
+  border-bottom: 1px solid $border;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.panel-title {
+  color: #aaa;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+// ── Body ──────────────────────────────────
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: #000; }
+  &::-webkit-scrollbar-thumb { background: #333; }
+}
+
+// ── ASCII art ─────────────────────────────
+
+.ascii-frame {
+  border: 1px solid $border;
+  padding: 6px 8px;
+  width: 100%;
+  box-sizing: border-box;
+  background: #050505;
+}
+
+.minigame-ascii {
+  color: #0ff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 0;
+  white-space: pre;
+  text-align: center;
+}
+
+// ── Divider ───────────────────────────────
+
+.mg-divider {
+  color: $muted;
+  font-size: 10px;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+// ── Description ───────────────────────────
+
+.mg-description {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  text-align: center;
+}
+
+.mg-desc-line {
+  color: #888;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+// ── Coming-soon placeholder ───────────────
+
+.mg-coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.cs-label {
+  color: #ffcc00;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  font-weight: bold;
+}
+
+.cs-sub {
+  color: #555;
+  font-size: 10px;
+}
+
+.cs-hint {
+  color: #333;
+  font-size: 9px;
+  font-style: italic;
+}
+

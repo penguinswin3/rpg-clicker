@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
+export interface UnlockCost {
+  currencyId: string;
+  amount: number;
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -8,8 +13,8 @@ export interface Character {
   color: string;
   description: string;
   unlocked: boolean;
-  /** Gold cost to unlock. 0 = starts unlocked. */
-  unlockCostGold: number;
+  /** Costs required to unlock. Empty array = free / starts unlocked. */
+  unlockCosts: UnlockCost[];
   /** Minimum XP required before the unlock option is shown. */
   xpRequirement: number;
 }
@@ -20,20 +25,32 @@ export class CharacterService {
     {
       id: 'fighter',
       name: 'Fighter',
-      color: '#0ff',
+      color: '#c87941',
       description: 'A seasoned warrior armed with blade and shield.',
       unlocked: true,
-      unlockCostGold: 0,
+      unlockCosts: [],
       xpRequirement: 0,
     },
     {
       id: 'ranger',
       name: 'Ranger',
-      color: '#f90',
+      color: '#2d7a2d',
       description: 'A swift archer who strikes from the shadows.',
       unlocked: false,
-      unlockCostGold: 250,
+      unlockCosts: [{ currencyId: 'gold', amount: 250 }],
       xpRequirement: 100,
+    },
+    {
+      id: 'apothecary',
+      name: 'Apothecary',
+      color: '#9d6ec7',
+      description: 'A skilled brewer who turns rare ingredients into powerful potions.',
+      unlocked: false,
+      unlockCosts: [
+        { currencyId: 'gold', amount: 1500 },
+        { currencyId: 'herb', amount: 250 },
+      ],
+      xpRequirement: 1000,
     },
   ];
 
@@ -73,4 +90,3 @@ export class CharacterService {
     }
   }
 }
-

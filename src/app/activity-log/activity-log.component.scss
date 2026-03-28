@@ -47,6 +47,45 @@
   flex-shrink: 0;
 }
 
+// ── Filter bar ───────────────────────────
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 12px;
+  background: #0a0a0a;
+  border-bottom: 1px solid #222;
+}
+
+.filter-sep {
+  color: #2a2a2a;
+  padding: 0 4px;
+  font-size: 11px;
+  user-select: none;
+}
+
+.filter-btn {
+  background: #000;
+  color: #444;
+  border: 1px solid #2a2a2a;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  padding: 1px 7px;
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s, background 0.1s;
+
+  &:hover { color: #aaa; border-color: #555; }
+
+  &.active                       { color: #fff;    border-color: #fff;    background: #111; }
+  &.active[data-type="all"]      { color: #fff;    border-color: #fff;    background: #111; }
+  &.active[data-type="success"]  { color: #0f0;    border-color: #0f0;    background: #001a00; }
+  &.active[data-type="warn"]     { color: #ffee88; border-color: #ffee88; background: #1a1900; }
+  &.active[data-type="error"]    { color: #f44;    border-color: #f44;    background: #1a0000; }
+  &.active[data-type="rare"]     { color: #ffd700; border-color: #ffd700; background: #1a1100; }
+  &.active[data-type="default"]  { color: #bbb;    border-color: #bbb;    background: #111;    }
+}
+
 .log-body {
   height: 150px;
   overflow-y: auto;
@@ -91,7 +130,7 @@
 
   // type variants
   &.type-success .log-text { color: #0f0; }
-  &.type-warn    .log-text { color: #ffcc00; }
+  &.type-warn    .log-text { color: #ffee88; }
   &.type-error   .log-text { color: #f44; }
   &.type-rare {
     .log-time { color: #a07800; }
