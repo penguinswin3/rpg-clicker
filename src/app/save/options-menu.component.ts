@@ -1,10 +1,18 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { SaveService } from './save.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import { CharacterService } from '../character/character.service';
 
 type StatusType = 'success' | 'error' | 'idle';
+
+/** px width of the character sidebar in each state (must match character-sidebar.component.scss) */
+const SIDEBAR_EXPANDED  = 220;
+const SIDEBAR_COLLAPSED =  46;
+/** Extra gap between options panel right edge and sidebar left edge */
+const SIDEBAR_GAP = 4;
 
 @Component({
   selector: 'app-options-menu',
@@ -13,17 +21,34 @@ type StatusType = 'success' | 'error' | 'idle';
   templateUrl: './options-menu.component.html',
   styleUrls: ['./options-menu.component.scss'],
 })
-export class OptionsMenuComponent {
+export class OptionsMenuComponent implements OnInit, OnDestroy {
   private saveService = inject(SaveService);
   private log         = inject(ActivityLogService);
+  private charService = inject(CharacterService);
+  private sub         = new Subscription();
 
-  isOpen            = false;
-  importString      = '';
-  statusMsg         = '';
+  isOpen           = false;
+  importString     = '';
+  statusMsg        = '';
   statusType: StatusType = 'idle';
+  showClearConfirm = false;
 
-  /** Controls whether the clear-save confirmation overlay is visible. */
-  showClearConfirm  = false;
+  /** Bound to [style.right] on the anchor — follows the sidebar width. */
+  rightOffset = `${SIDEBAR_EXPANDED + SIDEBAR_GAP}px`;
+
+  ngOnInit(): void {
+    this.sub.add(
+      this.charService.sidebarCollapsed$.subscribe(collapsed => {
+        this.rightOffset = collapsed
+          ? `${SIDEBAR_COLLAPSED + SIDEBAR_GAP}px`
+          : `${SIDEBAR_EXPANDED  + SIDEBAR_GAP}px`;
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+  }
 
   toggle(): void {
     this.isOpen = !this.isOpen;
@@ -72,21 +97,17 @@ export class OptionsMenuComponent {
     }
   }
 
-  /** Step 1 — show the confirmation overlay. */
   requestClearSave(): void {
     this.showClearConfirm = true;
   }
 
-  /** Step 2 — user confirmed: wipe localStorage and reload. */
   confirmClearSave(): void {
     this.showClearConfirm = false;
     this.saveService.deleteSave();
     this.log.log('[SAVE] Browser save data erased. Reloading…', 'warn');
-    // Short delay so the log message is visible before the page reloads.
     setTimeout(() => window.location.reload(), 800);
   }
 
-  /** Step 2 (cancel) — dismiss the overlay with no action. */
   cancelClear(): void {
     this.showClearConfirm = false;
   }
@@ -102,4 +123,3 @@ export class OptionsMenuComponent {
     this.statusType = 'idle';
   }
 }
-

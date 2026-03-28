@@ -1,4 +1,3 @@
-- Savegame
 
 - Game Icon
 
@@ -30,7 +29,5 @@
   - Rename perfect potion to concentrated potion. This could be a whole upgrade chain later
 
 - Code Refactors
-  - Try to but dynamic values in a config file or something so it's easier to tweak
-- Make things not selectable by dragging mouse?
 
-- Options menu save/load etc
+- Make things not selectable by dragging mouse?

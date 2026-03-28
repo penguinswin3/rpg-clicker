@@ -1,13 +1,13 @@
-<div class="options-anchor">
+<div class="options-anchor" [style.right]="rightOffset">
 
   <!-- Collapsed toggle -->
   <button class="options-toggle" (click)="toggle()">
-    [ OPTIONS {{ isOpen ? '▲' : '▼' }} ]
+    [ OPTIONS {{ isOpen ? '▼' : '▲' }} ]
   </button>
 
   <!-- Expanded panel -->
   <div class="options-panel" *ngIf="isOpen">
-    <div class="options-title">+--[ OPTIONS ]+</div>
+    <div class="options-title">+[ OPTIONS ]+</div>
 
     <!-- Save -->
     <div class="opt-section">
@@ -24,7 +24,7 @@
       <textarea
         class="opt-import-box"
         [(ngModel)]="importString"
-        placeholder="Paste base64 save string here..."
+        placeholder="Paste save string here..."
         rows="3">
       </textarea>
       <button class="opt-btn opt-import-btn" (click)="importSave()">[ Load Save ]</button>

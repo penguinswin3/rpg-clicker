@@ -1,12 +1,11 @@
 .options-anchor {
-  // Sits as a flex item between game-wrapper and character-sidebar.
-  // align-self: flex-end pushes it to the bottom of the row.
-  // position: sticky keeps it in view while scrolling.
-  position: sticky;
-  bottom: 210px;           // clear the activity log (≈ 210px tall when expanded)
-  align-self: flex-end;
-  flex-shrink: 0;
-  z-index: 200;
+  // Fixed to the viewport — completely outside document flow.
+  position: fixed;
+  bottom: 210px;
+  // right is set dynamically via [style.right] binding in the template.
+  // The transition matches the character sidebar's own width transition.
+  transition: right 0.15s ease;
+  z-index: 500;
   font-family: 'Courier New', Courier, monospace;
   display: flex;
   flex-direction: column;
@@ -32,8 +31,11 @@
 }
 
 .options-panel {
-  // Expands upward from the toggle button
-  order: -1;
+  // Absolutely positioned so it floats above the toggle — zero layout impact.
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 2px;
   background: #111;
   border: 1px solid #555;
   padding: 10px 14px 12px;
@@ -41,7 +43,7 @@
   max-width: 360px;
   color: #ccc;
   font-size: 0.8rem;
-  margin-bottom: 2px;
+  white-space: normal;
 }
 
 .options-title {

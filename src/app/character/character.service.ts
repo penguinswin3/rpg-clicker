@@ -63,6 +63,18 @@ export class CharacterService {
   private readonly activeIdSource = new BehaviorSubject<string>('fighter');
   readonly activeId$ = this.activeIdSource.asObservable();
 
+  private readonly sidebarCollapsedSource = new BehaviorSubject<boolean>(false);
+  /** Emits true when the character sidebar is collapsed. */
+  readonly sidebarCollapsed$ = this.sidebarCollapsedSource.asObservable();
+
+  get sidebarCollapsed(): boolean {
+    return this.sidebarCollapsedSource.getValue();
+  }
+
+  toggleSidebar(): void {
+    this.sidebarCollapsedSource.next(!this.sidebarCollapsedSource.getValue());
+  }
+
   get activeId(): string {
     return this.activeIdSource.getValue();
   }

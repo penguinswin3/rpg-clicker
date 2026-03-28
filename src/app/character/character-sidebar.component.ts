@@ -22,7 +22,7 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   private sub = new Subscription();
 
   characters: Character[] = [];
-  activeId = 'fighter';
+  activeId  = 'fighter';
   collapsed = false;
 
   get unlockedCharacters(): Character[] {
@@ -32,6 +32,7 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub.add(this.charService.characters$.subscribe(c => (this.characters = c)));
     this.sub.add(this.charService.activeId$.subscribe(id => (this.activeId = id)));
+    this.sub.add(this.charService.sidebarCollapsed$.subscribe(v => (this.collapsed = v)));
   }
 
   ngOnDestroy(): void {
@@ -39,11 +40,10 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   }
 
   toggle(): void {
-    this.collapsed = !this.collapsed;
+    this.charService.toggleSidebar();
   }
 
   setActive(id: string): void {
     this.charService.setActive(id);
   }
 }
-
