@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { CharacterService } from '../character/character.service';
-import { FighterMinigameComponent } from './fighter-minigame.component';
-import { ApothecaryMinigameComponent } from './apothecary-minigame.component';
-import { RangerMinigameComponent } from './ranger-minigame.component';
+import { FighterMinigameComponent } from './fighter/fighter-minigame.component';
+import { ApothecaryMinigameComponent } from './apothecary/apothecary-minigame.component';
+import { RangerMinigameComponent } from './ranger/ranger-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 
 interface MinigamePlaceholder {
