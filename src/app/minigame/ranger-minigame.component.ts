@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import { RANGER_MG } from '../game-config';
 
 type PrizeType = 'meat' | 'herb' | 'pixie' | 'blank';
 
@@ -37,9 +38,9 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   private log    = inject(ActivityLogService);
   private sub    = new Subscription();
 
-  readonly PICKS      = 3;
-  readonly GRID_SIZE  = 9;
-  readonly SCOUT_COST = 25;
+  readonly PICKS      = RANGER_MG.PICKS;
+  readonly GRID_SIZE  = RANGER_MG.GRID_SIZE;
+  readonly SCOUT_COST = RANGER_MG.SCOUT_COST;
 
   // Wallet-synced
   cookedMeat = 0;
@@ -96,10 +97,11 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     this.wallet.remove('cooked-meat', this.SCOUT_COST);
     this.log.log(`Ranger sets out to scout the area. (−${this.SCOUT_COST} Cooked Meat)`);
 
-    // 4 random prize cells + 5 blank cells, all shuffled
+    // Prize cells + blank cells, all shuffled
+    const prizeCells = RANGER_MG.GRID_SIZE - RANGER_MG.BLANK_CELLS;
     const pool: GridCell[] = [
-      ...Array.from({ length: 4 }, () => ({ prize: this.rollPrize(), revealed: false })),
-      ...Array.from({ length: 5 }, () => ({ prize: 'blank' as PrizeType, revealed: false })),
+      ...Array.from({ length: prizeCells },          () => ({ prize: this.rollPrize(), revealed: false })),
+      ...Array.from({ length: RANGER_MG.BLANK_CELLS }, () => ({ prize: 'blank' as PrizeType, revealed: false })),
     ];
     // Fisher-Yates shuffle
     for (let i = pool.length - 1; i > 0; i--) {
@@ -136,9 +138,9 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
 
   private rollPrize(): PrizeType {
     const r = Math.random();
-    if (r < 0.10) return 'pixie';   // 10 %
-    if (r < 0.45) return 'herb';    // 35 %
-    return 'meat';                  // 55 %
+    if (r < RANGER_MG.PIXIE_CHANCE)                          return 'pixie';
+    if (r < RANGER_MG.PIXIE_CHANCE + RANGER_MG.HERB_CHANCE) return 'herb';
+    return 'meat';
   }
 
   private award(prize: PrizeType): void {

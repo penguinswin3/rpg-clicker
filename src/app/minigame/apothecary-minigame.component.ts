@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import { APOTH_MG } from '../game-config';
 
 @Component({
   selector: 'app-apothecary-minigame',
@@ -25,8 +26,8 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   // ── Potion state ──────────────────────────
   potionActive      = false;
   quality           = 0;
-  readonly maxQuality = 10;
-  readonly herbCost   = 100;
+  readonly maxQuality = APOTH_MG.MAX_QUALITY;
+  readonly herbCost   = APOTH_MG.HERB_COST;
   firstPerfectDone  = false;
 
   // ── Beat bar ──────────────────────────────
@@ -35,10 +36,10 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   /** Movement direction: 1 = right, -1 = left */
   barDir = 1;
   /** Units per millisecond — full one-way sweep ≈ 2 s */
-  readonly barSpeed = 0.05;
+  readonly barSpeed = APOTH_MG.BAR_SPEED;
   /** Target zone boundaries (0 – 100) */
-  readonly zoneMin  = 35;
-  readonly zoneMax  = 65;
+  readonly zoneMin  = APOTH_MG.ZONE_MIN;
+  readonly zoneMax  = APOTH_MG.ZONE_MAX;
 
   // ── Messages ──────────────────────────────
   lastMsg  = '';

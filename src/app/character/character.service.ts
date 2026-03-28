@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { XP_THRESHOLDS, UNLOCK_COSTS } from '../game-config';
 
 export interface UnlockCost {
   currencyId: string;
@@ -37,8 +38,8 @@ export class CharacterService {
       color: '#2d7a2d',
       description: 'A swift archer who strikes from the shadows.',
       unlocked: false,
-      unlockCosts: [{ currencyId: 'gold', amount: 250 }],
-      xpRequirement: 100,
+      unlockCosts: [{ currencyId: 'gold', amount: UNLOCK_COSTS.RANGER_GOLD }],
+      xpRequirement: XP_THRESHOLDS.RANGER_UNLOCK,
     },
     {
       id: 'apothecary',
@@ -47,10 +48,10 @@ export class CharacterService {
       description: 'A skilled brewer who turns rare ingredients into powerful potions.',
       unlocked: false,
       unlockCosts: [
-        { currencyId: 'gold', amount: 1500 },
-        { currencyId: 'herb', amount: 250 },
+        { currencyId: 'gold', amount: UNLOCK_COSTS.APOTHECARY_GOLD },
+        { currencyId: 'herb', amount: UNLOCK_COSTS.APOTHECARY_HERBS },
       ],
-      xpRequirement: 1000,
+      xpRequirement: XP_THRESHOLDS.APOTHECARY_UNLOCK,
     },
   ];
 

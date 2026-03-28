@@ -6,8 +6,7 @@ import { CharacterService } from '../character/character.service';
 import { FighterMinigameComponent } from './fighter-minigame.component';
 import { ApothecaryMinigameComponent } from './apothecary-minigame.component';
 import { RangerMinigameComponent } from './ranger-minigame.component';
-
-export const MINIGAME_XP_THRESHOLD = 2500;
+import { XP_THRESHOLDS } from '../game-config';
 
 interface MinigamePlaceholder {
   characterId: string;
@@ -33,7 +32,7 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
 
   xp = 0;
   activeCharacterId = 'fighter';
-  readonly threshold = MINIGAME_XP_THRESHOLD;
+  readonly threshold = XP_THRESHOLDS.MINIGAME_UNLOCK;
 
   readonly placeholders: MinigamePlaceholder[] = [
     {

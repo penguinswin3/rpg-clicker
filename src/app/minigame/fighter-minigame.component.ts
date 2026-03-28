@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import { FIGHTER_MG } from '../game-config';
 
 interface Enemy {
   name: string;
@@ -32,9 +33,9 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   private spawnTimer?: ReturnType<typeof setTimeout>;
 
   // ── Fighter state ─────────────────────────
-  readonly maxHp   = 100;
-  readonly defense = 0;
-  fighterHp        = 100;
+  readonly maxHp   = FIGHTER_MG.MAX_HP;
+  readonly defense = FIGHTER_MG.DEFENSE;
+  fighterHp: number = FIGHTER_MG.MAX_HP;
 
   // ── Wallet-synced ─────────────────────────
   potions = 0;
@@ -106,7 +107,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     if (this.healDisabled) return;
 
     this.wallet.remove('potion', 1);
-    const healed = Math.min(10, this.maxHp - this.fighterHp);
+    const healed = Math.min(FIGHTER_MG.POTION_HEAL, this.maxHp - this.fighterHp);
     this.fighterHp += healed;
 
     const eDmg = this.rollEnemyDamage();
@@ -126,7 +127,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   // ── Private helpers ───────────────────────
 
   private rollEnemyDamage(): number {
-    return Math.max(0, Math.floor(Math.random() * 8) + 1 - this.defense);
+    return Math.max(0, Math.floor(Math.random() * FIGHTER_MG.ENEMY_DMG_MAX) + 1 - this.defense);
   }
 
   private applyEnemyDamage(dmg: number): void {
@@ -172,18 +173,18 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.awaitingSpawn = false;
       this.lastMsg      = '-- New enemy! --';
       this.msgClass     = 'msg-neutral';
-    }, 900);
+    }, FIGHTER_MG.SPAWN_DELAY_MS);
   }
 
   private buildGoblin(): Enemy {
     return {
       name:      'Goblin',
-      hp:        20,
-      maxHp:     20,
-      goldMin:   5,
-      goldMax:   10,
-      xpReward:  3,
-      earReward: 1,
+      hp:        FIGHTER_MG.GOBLIN_HP,
+      maxHp:     FIGHTER_MG.GOBLIN_HP,
+      goldMin:   FIGHTER_MG.GOBLIN_GOLD_MIN,
+      goldMax:   FIGHTER_MG.GOBLIN_GOLD_MAX,
+      xpReward:  FIGHTER_MG.GOBLIN_XP_REWARD,
+      earReward: FIGHTER_MG.GOBLIN_EAR_REWARD,
       ascii:
         '  (>_<)  \n' +
         '  /||\\   \n' +

@@ -9,9 +9,9 @@ import { CharacterSidebarComponent, HeroStat } from './character/character-sideb
 import { CharacterUnlockComponent } from './character/character-unlock.component';
 import { CharacterService } from './character/character.service';
 import { MinigamePanelComponent } from './minigame/minigame-panel.component';
-import { MINIGAME_XP_THRESHOLD } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './save/options-menu.component';
 import { SaveService, UpgradeState } from './save/save.service';
+import { XP_THRESHOLDS, BASE_COSTS, COST_SCALE, YIELDS } from './game-config';
 
 @Component({
   selector: 'app-root',
@@ -37,51 +37,51 @@ export class AppComponent implements OnInit {
   xp      = 0;
   potions = 0;
 
-  readonly minigameXpThreshold = MINIGAME_XP_THRESHOLD;
+  readonly minigameXpThreshold = XP_THRESHOLDS.MINIGAME_UNLOCK;
 
   get minigameShown(): boolean {
-    return this.xp >= this.minigameXpThreshold;
+    return this.xp >= XP_THRESHOLDS.MINIGAME_UNLOCK;
   }
 
   // Active character (synced from CharacterService)
   activeCharacterId = 'fighter';
 
   // ── Fighter upgrades ──────────────────────
-  goldPerClick      = 1;
-  clickUpgradeCost  = 10;
-  clickUpgradeLevel = 0;
+  goldPerClick: number      = YIELDS.FIGHTER_GOLD_PER_CLICK;
+  clickUpgradeCost: number  = BASE_COSTS.SHARPER_SWORD;
+  clickUpgradeLevel         = 0;
 
-  autoUpgradeCost   = 25;
-  autoUpgradeLevel  = 0;
+  autoUpgradeCost: number   = BASE_COSTS.CONTRACT_KILLING;
+  autoUpgradeLevel          = 0;
 
   /** Derived — 1 gold/sec per Contract Killing level. Never stored directly. */
   get autoGoldPerSecond(): number { return this.autoUpgradeLevel; }
 
   /** Shown only once the Apothecary is unlocked (potion currency available). */
-  apothecaryUnlocked      = false;
-  potionChuggingLevel     = 0;
-  potionChuggingCost      = 5;   // scales in potions
+  apothecaryUnlocked         = false;
+  potionChuggingLevel        = 0;
+  potionChuggingCost: number = BASE_COSTS.POTION_CHUGGING;
 
   // ── Ranger upgrades ───────────────────────
-  herbsPerFind         = 1;
-  moreHerbsCost        = 15;
-  moreHerbsLevel       = 0;
+  herbsPerFind: number      = YIELDS.RANGER_BASE_HERBS;
+  moreHerbsCost: number     = BASE_COSTS.MORE_HERBS;
+  moreHerbsLevel            = 0;
 
-  betterTrackingLevel  = 0;
-  betterTrackingCost   = 20;
+  betterTrackingLevel       = 0;
+  betterTrackingCost: number = BASE_COSTS.BETTER_TRACKING;
 
   get beastFindChance(): number {
-    return Math.min(95, 50 + this.betterTrackingLevel);
+    return Math.min(YIELDS.RANGER_BEAST_CHANCE_CAP, YIELDS.RANGER_BASE_BEAST_CHANCE + this.betterTrackingLevel);
   }
 
   // ── Apothecary upgrades ───────────────────
   /** Percentage chance (0-100) to save 1 herb when brewing. */
-  herbSaveChance          = 0;
-  potionTitrationCost     = 20;
-  potionTitrationLevel    = 0;
+  herbSaveChance              = 0;
+  potionTitrationCost: number = BASE_COSTS.POTION_TITRATION;
+  potionTitrationLevel        = 0;
 
-  potionMarketingCost     = 30;
-  potionMarketingLevel    = 0;
+  potionMarketingCost: number = BASE_COSTS.POTION_MARKETING;
+  potionMarketingLevel        = 0;
 
   /** Derived — 1 gold/sec per Potion Marketing level. Never stored directly. */
   get potionAutoGoldPerSecond(): number { return this.potionMarketingLevel; }
@@ -237,7 +237,7 @@ export class AppComponent implements OnInit {
   }
 
   private clickApothecary(): void {
-    const herbCost = 5;
+    const herbCost = YIELDS.APOTHECARY_BREW_HERB_COST;
     if (!this.wallet.canAfford('herb', herbCost)) {
       const have = Math.floor(this.wallet.get('herb'));
       this.log.log(
@@ -291,7 +291,7 @@ export class AppComponent implements OnInit {
       this.wallet.remove('gold', this.clickUpgradeCost);
       this.clickUpgradeLevel++;
       this.goldPerClick++;
-      this.clickUpgradeCost = Math.floor(this.clickUpgradeCost * 1.5);
+      this.clickUpgradeCost = Math.floor(this.clickUpgradeCost * COST_SCALE.SHARPER_SWORD);
       this.log.log(
         `Sharper Sword upgraded to Lv.${this.clickUpgradeLevel}. Now earning ${this.goldPerClick}g per click.`,
         'success'
@@ -308,7 +308,7 @@ export class AppComponent implements OnInit {
     if (this.wallet.canAfford('gold', this.autoUpgradeCost)) {
       this.wallet.remove('gold', this.autoUpgradeCost);
       this.autoUpgradeLevel++;
-      this.autoUpgradeCost = Math.floor(this.autoUpgradeCost * 1.5);
+      this.autoUpgradeCost = Math.floor(this.autoUpgradeCost * COST_SCALE.CONTRACT_KILLING);
       this.updateGoldPerSecond();
       this.log.log(
         `Contract Killing upgraded to Lv.${this.autoUpgradeLevel}. Now earning ${this.autoGoldPerSecond}g/sec.`,
@@ -326,7 +326,7 @@ export class AppComponent implements OnInit {
     if (this.wallet.canAfford('potion', this.potionChuggingCost)) {
       this.wallet.remove('potion', this.potionChuggingCost);
       this.potionChuggingLevel++;
-      this.potionChuggingCost = Math.ceil(this.potionChuggingCost * 1.5);
+      this.potionChuggingCost = Math.ceil(this.potionChuggingCost * COST_SCALE.POTION_CHUGGING);
       this.log.log(
         `Potion Chugging upgraded to Lv.${this.potionChuggingLevel}. The Fighter feels stronger...`,
         'success'
@@ -346,7 +346,7 @@ export class AppComponent implements OnInit {
       this.wallet.remove('gold', this.moreHerbsCost);
       this.moreHerbsLevel++;
       this.herbsPerFind++;
-      this.moreHerbsCost = Math.floor(this.moreHerbsCost * 1.5);
+      this.moreHerbsCost = Math.floor(this.moreHerbsCost * COST_SCALE.MORE_HERBS);
       this.log.log(
         `More Herbs upgraded to Lv.${this.moreHerbsLevel}. Now finding ${this.herbsPerFind} herb(s) per forage.`,
         'success'
@@ -363,7 +363,7 @@ export class AppComponent implements OnInit {
     if (this.wallet.canAfford('gold', this.betterTrackingCost)) {
       this.wallet.remove('gold', this.betterTrackingCost);
       this.betterTrackingLevel++;
-      this.betterTrackingCost = Math.floor(this.betterTrackingCost * 1.5);
+      this.betterTrackingCost = Math.floor(this.betterTrackingCost * COST_SCALE.BETTER_TRACKING);
       this.log.log(
         `Better Tracking upgraded to Lv.${this.betterTrackingLevel}. Beast find chance now ${this.beastFindChance}%.`,
         'success'
@@ -383,7 +383,7 @@ export class AppComponent implements OnInit {
       this.wallet.remove('gold', this.potionTitrationCost);
       this.potionTitrationLevel++;
       this.herbSaveChance++;   // +1% per level
-      this.potionTitrationCost = Math.floor(this.potionTitrationCost * 1.5);
+      this.potionTitrationCost = Math.floor(this.potionTitrationCost * COST_SCALE.POTION_TITRATION);
       this.log.log(
         `Potion Titration upgraded to Lv.${this.potionTitrationLevel}. Herb save chance now ${this.herbSaveChance}%.`,
         'success'
@@ -400,7 +400,7 @@ export class AppComponent implements OnInit {
     if (this.wallet.canAfford('gold', this.potionMarketingCost)) {
       this.wallet.remove('gold', this.potionMarketingCost);
       this.potionMarketingLevel++;
-      this.potionMarketingCost = Math.floor(this.potionMarketingCost * 1.5);
+      this.potionMarketingCost = Math.floor(this.potionMarketingCost * COST_SCALE.POTION_MARKETING);
       this.updateGoldPerSecond();
       this.log.log(
         `Potion Marketing upgraded to Lv.${this.potionMarketingLevel}. Now passively earning ${this.potionAutoGoldPerSecond}g/sec from sales.`,
