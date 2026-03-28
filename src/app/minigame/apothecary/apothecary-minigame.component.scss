@@ -3,14 +3,44 @@ $font: 'Courier New', Courier, monospace;
 $purple: #c37ef0;
 $green:  #44dd44;
 
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .apoth-mg {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  box-sizing: border-box;
   font-family: $font;
   font-size: 11px;
   color: #ccc;
+}
+
+// ── Primary slot: Start Potion and Brew share the same fixed position ─
+
+.primary-slot {
+  position: relative;
+  width: 100%;
+
+  // start-btn stays in normal flow to size the slot
+  // brew-btn overlays it absolutely
+  .brew-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.slot-inactive {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.08s;
 }
 
 // ── Resource row ──────────────────────────
@@ -40,6 +70,7 @@ $green:  #44dd44;
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .q-ascii {
@@ -48,12 +79,13 @@ $green:  #44dd44;
   letter-spacing: 0.02em;
   overflow: hidden;
   white-space: nowrap;
+  text-align: center;
 }
 
 .q-fraction {
   color: #555;
   font-size: 9px;
-  text-align: right;
+  text-align: center;
 }
 
 // ── Beat bar ──────────────────────────────
@@ -167,14 +199,7 @@ $green:  #44dd44;
   &:hover:not(:disabled) { background: $green; color: #000; }
 }
 
-// ── Idle block ────────────────────────────
-
-.idle-block {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  align-items: center;
-}
+// ── Idle hints ───────────────────────────
 
 .cost-hint {
   color: #444;

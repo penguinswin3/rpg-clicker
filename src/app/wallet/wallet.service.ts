@@ -33,7 +33,7 @@ export class WalletService {
     { id: 'cooked-meat',   name: 'Cooked Meat',    shorthand: 'cm', color: '#c0732a', requiredCharacterId: 'ranger', manualUnlock: true },
     { id: 'pixie-dust',    name: 'Pixie Dust',     shorthand: 'pd', color: '#ffe066', requiredCharacterId: 'ranger', manualUnlock: true },
     { id: 'potion',         name: 'Potion',         shorthand: 'pt', color: '#c37ef0', requiredCharacterId: 'apothecary' },
-    { id: 'perfect-potion', name: 'Perfect Potion', shorthand: 'pp', color: '#f5d0ff', requiredCharacterId: 'apothecary', manualUnlock: true },
+    { id: 'concentrated-potion', name: 'Concentrated Potion', shorthand: 'cp', color: '#f5d0ff', requiredCharacterId: 'apothecary', manualUnlock: true },
     { id: 'kobold-ear',    name: 'Kobold Ear',    shorthand: 'ke', color: '#e07820', requiredCharacterId: 'fighter',    manualUnlock: true },
   ];
 

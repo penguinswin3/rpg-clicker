@@ -6,6 +6,22 @@
     <span class="res-val" [class.res-low]="herbs < herbCost">{{ herbs }}</span>
   </div>
 
+  <!-- ── Fixed primary slot: Start and Brew share the same position ── -->
+  <div class="primary-slot">
+    <button class="action-btn start-btn"
+            [class.slot-inactive]="potionActive"
+            [disabled]="!canStart || potionActive"
+            (click)="startPotion()">
+      [ START POTION ]
+    </button>
+    <button class="action-btn brew-btn"
+            [class.slot-inactive]="!potionActive"
+            [class.btn-hot]="isInZone"
+            (click)="brew()">
+      [ BREW ]
+    </button>
+  </div>
+
   <!-- ══════ ACTIVE BREWING ══════ -->
   <ng-container *ngIf="potionActive">
 
@@ -34,27 +50,13 @@
       </div>
     </div>
 
-    <!-- Brew button — lights up when in zone -->
-    <button class="action-btn brew-btn"
-            [class.btn-hot]="isInZone"
-            (click)="brew()">
-      [ BREW ]
-    </button>
-
   </ng-container>
 
-  <!-- ══════ IDLE / START ══════ -->
+  <!-- ══════ IDLE hints ══════ -->
   <ng-container *ngIf="!potionActive">
-    <div class="idle-block">
-      <button class="action-btn start-btn"
-              [disabled]="!canStart"
-              (click)="startPotion()">
-        [ START POTION ]
-      </button>
-      <div class="cost-hint">costs {{ herbCost }} herbs</div>
-      <div class="herb-warn" *ngIf="herbs < herbCost">
-        need {{ herbCost - herbs }} more herbs
-      </div>
+    <div class="cost-hint">costs {{ herbCost }} herbs</div>
+    <div class="herb-warn" *ngIf="herbs < herbCost">
+      need {{ herbCost - herbs }} more herbs
     </div>
   </ng-container>
 

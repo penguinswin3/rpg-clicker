@@ -115,7 +115,7 @@ export const FIGHTER_MG = {
 
 // ── Apothecary Minigame ───────────────────────────────────────
 export const APOTH_MG = {
-  /** On-beat clicks required to complete a Perfect Potion */
+  /** On-beat clicks required to complete a Concentrated Potion */
   MAX_QUALITY:  10,
   /** Herbs consumed to begin brewing a new potion */
   HERB_COST:    100,

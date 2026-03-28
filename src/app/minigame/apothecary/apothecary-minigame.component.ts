@@ -151,14 +151,14 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   private onPerfectPotion(): void {
     this.stopAnimation();
     this.potionActive = false;
-    this.wallet.add('perfect-potion', 1);
+    this.wallet.add('concentrated-potion', 1);
 
     if (!this.firstPerfectDone) {
       this.firstPerfectDone = true;
-      this.wallet.unlockCurrency('perfect-potion');
-      this.log.log('A Perfect Potion has been crafted! New currency unlocked!', 'rare');
+      this.wallet.unlockCurrency('concentrated-potion');
+      this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
     } else {
-      this.log.log('A Perfect Potion has been crafted!', 'success');
+      this.log.log('A Concentrated Potion has been crafted!', 'success');
     }
 
     this.lastMsg  = '** PERFECT POTION COMPLETE **';
