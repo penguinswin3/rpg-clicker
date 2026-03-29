@@ -37,8 +37,11 @@
   font-family: 'Courier New', Courier, monospace;
   font-size: 11px;
   line-height: 1.3;
-  margin: 0 0 0.5rem;
-  text-align: center;
+  /* Center the block itself; keep each line left-aligned so all rows
+     share the same left edge and the art stays coherent. */
+  display: table;
+  margin: 0 auto 0.5rem;
+  text-align: left;
   white-space: pre;
 }
 

@@ -2,7 +2,7 @@
   <app-wallet-sidebar></app-wallet-sidebar>
 
   <!-- Minigame panel: unlocked at 2500 XP, spans left of game area -->
-  <app-minigame-panel *ngIf="minigameShown" [fighterAttack]="goldPerClick" [potionChuggingLevel]="potionChuggingLevel" />
+  <app-minigame-panel *ngIf="minigameShown" [fighterAttack]="fighterAttackPower" [potionChuggingLevel]="potionChuggingLevel" />
 
   <div class="game-wrapper">
     <div class="game-container">
@@ -52,37 +52,37 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <ng-container *ngIf="activeCharacterId === 'fighter'">
               <div class="upgrade-card">
                 <div class="upgrade-info">
-                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.SHARPER_SWORD.name }}</span>
-                  <span class="upgrade-desc">{{ upgradeFlavor.SHARPER_SWORD.desc }}</span>
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.BETTER_BOUNTIES.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.BETTER_BOUNTIES.desc }}</span>
                 </div>
                 <div class="upgrade-btn-wrap">
                   <button
                     class="upgrade-btn"
-                    [class.upgrade-maxed]="sharperSwordMaxed"
-                    [disabled]="sharperSwordMaxed || gold < clickUpgradeCost"
+                    [class.upgrade-maxed]="betterBountiesMaxed"
+                    [disabled]="betterBountiesMaxed || gold < clickUpgradeCost"
                     (click)="buyClickUpgrade()">
-                    <ng-container *ngIf="sharperSwordMaxed; else ssCost">[MAXED]</ng-container>
+                    <ng-container *ngIf="betterBountiesMaxed; else ssCost">[MAXED]</ng-container>
                     <ng-template #ssCost>[BUY: {{ clickUpgradeCost }}g]</ng-template>
                   </button>
-                  <span class="upgrade-level">Lv.{{ clickUpgradeLevel }}/{{ upgradeMax.SHARPER_SWORD }}</span>
+                  <span class="upgrade-level">Lv.{{ clickUpgradeLevel }}/{{ upgradeMax.BETTER_BOUNTIES }}</span>
                 </div>
               </div>
 
               <div class="upgrade-card">
                 <div class="upgrade-info">
-                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.CONTRACT_KILLING.name }}</span>
-                  <span class="upgrade-desc">{{ upgradeFlavor.CONTRACT_KILLING.desc }}</span>
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.CONTRACTED_HIRELINGS.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.CONTRACTED_HIRELINGS.desc }}</span>
                 </div>
                 <div class="upgrade-btn-wrap">
                   <button
                     class="upgrade-btn"
-                    [class.upgrade-maxed]="contractKillingMaxed"
-                    [disabled]="contractKillingMaxed || gold < autoUpgradeCost"
+                    [class.upgrade-maxed]="contractedHirelingsMaxed"
+                    [disabled]="contractedHirelingsMaxed || gold < autoUpgradeCost"
                     (click)="buyAutoUpgrade()">
-                    <ng-container *ngIf="contractKillingMaxed; else ckCost">[MAXED]</ng-container>
+                    <ng-container *ngIf="contractedHirelingsMaxed; else ckCost">[MAXED]</ng-container>
                     <ng-template #ckCost>[BUY: {{ autoUpgradeCost }}g]</ng-template>
                   </button>
-                  <span class="upgrade-level">Lv.{{ autoUpgradeLevel }}/{{ upgradeMax.CONTRACT_KILLING }}</span>
+                  <span class="upgrade-level">Lv.{{ autoUpgradeLevel }}/{{ upgradeMax.CONTRACTED_HIRELINGS }}</span>
                 </div>
               </div>
             </ng-container>
@@ -172,6 +172,24 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
             <!-- Fighter minigame upgrades -->
             <ng-container *ngIf="activeCharacterId === 'fighter'">
+              <div class="upgrade-card">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.SHARPER_SWORDS.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.SHARPER_SWORDS.desc }}</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="sharperSwordsMaxed"
+                    [disabled]="sharperSwordsMaxed || gold < sharperSwordsCost"
+                    (click)="buySharperSwords()">
+                    <ng-container *ngIf="sharperSwordsMaxed; else sswCost">[MAXED]</ng-container>
+                    <ng-template #sswCost>[BUY: {{ sharperSwordsCost }}g]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ sharperSwordsLevel }}/{{ upgradeMax.SHARPER_SWORDS }}</span>
+                </div>
+              </div>
+
               <div class="upgrade-card" *ngIf="apothecaryUnlocked">
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.POTION_CHUGGING.name }}</span>

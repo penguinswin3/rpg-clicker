@@ -33,9 +33,10 @@ export const UNLOCK_COSTS = {
 // Once an upgrade reaches its max level, the buy button is disabled.
 export const UPGRADE_MAX = {
   // Fighter
-  SHARPER_SWORD:    999,
-  CONTRACT_KILLING: 999,
-  POTION_CHUGGING:  999,
+  BETTER_BOUNTIES:      999,
+  CONTRACTED_HIRELINGS: 999,
+  POTION_CHUGGING:      999,
+  SHARPER_SWORDS:       999,
 
   // Ranger
   MORE_HERBS:       999,
@@ -53,9 +54,10 @@ export const UPGRADE_MAX = {
 // ── Upgrade Base Costs (gold unless noted) ────────────────────
 export const BASE_COSTS = {
   // Fighter
-  SHARPER_SWORD:    10,
-  CONTRACT_KILLING: 25,
-  POTION_CHUGGING:  5,   // paid in potions
+  BETTER_BOUNTIES:      10,
+  CONTRACTED_HIRELINGS: 25,
+  POTION_CHUGGING:      5,   // paid in potions
+  SHARPER_SWORDS:       50,  // gold; minigame upgrade
 
   // Ranger
   MORE_HERBS:       15,
@@ -69,9 +71,10 @@ export const BASE_COSTS = {
 // ── Upgrade Cost Scaling ──────────────────────────────────────
 // next_cost = floor(current_cost × SCALE)
 export const COST_SCALE = {
-  SHARPER_SWORD:    1.5,
-  CONTRACT_KILLING: 1.5,
-  POTION_CHUGGING:  1.5,
+  BETTER_BOUNTIES:      1.5,
+  CONTRACTED_HIRELINGS: 1.5,
+  POTION_CHUGGING:      1.5,
+  SHARPER_SWORDS:       1.5,
 
   MORE_HERBS:       1.5,
   BETTER_TRACKING:  1.5,

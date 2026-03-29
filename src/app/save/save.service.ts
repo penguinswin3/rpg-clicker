@@ -14,6 +14,9 @@ export interface UpgradeState {
   autoUpgradeLevel: number;
   potionChuggingLevel: number;
   potionChuggingCost: number;
+  /** Sharper Swords minigame upgrade — optional for old-save compat */
+  sharperSwordsLevel?: number;
+  sharperSwordsCost?: number;
   // Ranger
   /** @deprecated herbsPerFind is now derived via the doubling formula; kept optional for old-save compat */
   herbsPerFind?: number;

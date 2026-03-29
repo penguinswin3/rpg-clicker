@@ -9,17 +9,21 @@
 // ── Upgrades ──────────────────────────────────────────────────
 export const UPGRADE_FLAVOR = {
   // Fighter
-  SHARPER_SWORD: {
-    name: 'Sharper Sword',
+  BETTER_BOUNTIES: {
+    name: 'Better Bounties',
     desc: '+1 gold per click',
   },
-  CONTRACT_KILLING: {
-    name: 'Contract Killing',
+  CONTRACTED_HIRELINGS: {
+    name: 'Contracted Hirelings',
     desc: '+1 gold/sec',
   },
   POTION_CHUGGING: {
     name: 'Potion Chugging',
     desc: '+1 HP per potion heal',
+  },
+  SHARPER_SWORDS: {
+    name: 'Sharper Swords',
+    desc: '+1 attack damage in combat',
   },
 
   // Ranger

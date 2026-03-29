@@ -69,19 +69,26 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // ── Fighter upgrades ──────────────────────
   goldPerClick: number      = YIELDS.FIGHTER_GOLD_PER_CLICK;
-  clickUpgradeCost: number  = BASE_COSTS.SHARPER_SWORD;
+  clickUpgradeCost: number  = BASE_COSTS.BETTER_BOUNTIES;
   clickUpgradeLevel         = 0;
 
-  autoUpgradeCost: number   = BASE_COSTS.CONTRACT_KILLING;
+  autoUpgradeCost: number   = BASE_COSTS.CONTRACTED_HIRELINGS;
   autoUpgradeLevel          = 0;
 
-  /** Derived — 1 gold/sec per Contract Killing level. Never stored directly. */
+  /** Derived — 1 gold/sec per Contracted Hirelings level. Never stored directly. */
   get autoGoldPerSecond(): number { return this.autoUpgradeLevel; }
 
   /** Shown only once the Apothecary is unlocked (potion currency available). */
   apothecaryUnlocked         = false;
   potionChuggingLevel        = 0;
   potionChuggingCost: number = BASE_COSTS.POTION_CHUGGING;
+
+  /** Minigame upgrade — each level adds +1 attack damage in the fighter minigame. */
+  sharperSwordsLevel        = 0;
+  sharperSwordsCost: number = BASE_COSTS.SHARPER_SWORDS;
+
+  /** Total attack power fed into the fighter minigame: click bonus + sword sharpness. */
+  get fighterAttackPower(): number { return this.goldPerClick + this.sharperSwordsLevel; }
 
   // ── Ranger upgrades ───────────────────────
   /** Total doubling-chance percentage. Each level = +1%.
@@ -130,9 +137,10 @@ export class AppComponent implements OnInit, OnDestroy {
   readonly upgradeMax   = UPGRADE_MAX;
   readonly upgradeFlavor = UPGRADE_FLAVOR;
 
-  get sharperSwordMaxed():    boolean { return this.clickUpgradeLevel    >= UPGRADE_MAX.SHARPER_SWORD;    }
-  get contractKillingMaxed(): boolean { return this.autoUpgradeLevel     >= UPGRADE_MAX.CONTRACT_KILLING; }
+  get betterBountiesMaxed():    boolean { return this.clickUpgradeLevel    >= UPGRADE_MAX.BETTER_BOUNTIES;    }
+  get contractedHirelingsMaxed(): boolean { return this.autoUpgradeLevel     >= UPGRADE_MAX.CONTRACTED_HIRELINGS; }
   get potionChuggingMaxed():  boolean { return this.potionChuggingLevel  >= UPGRADE_MAX.POTION_CHUGGING;  }
+  get sharperSwordsMaxed():   boolean { return this.sharperSwordsLevel   >= UPGRADE_MAX.SHARPER_SWORDS;   }
   get moreHerbsMaxed():       boolean { return this.moreHerbsLevel       >= UPGRADE_MAX.MORE_HERBS;       }
   get betterTrackingMaxed():  boolean { return this.betterTrackingLevel  >= UPGRADE_MAX.BETTER_TRACKING;  }
   get potionTitrationMaxed(): boolean { return this.potionTitrationLevel >= UPGRADE_MAX.POTION_TITRATION; }
@@ -221,6 +229,8 @@ export class AppComponent implements OnInit, OnDestroy {
       autoUpgradeLevel:         this.autoUpgradeLevel,
       potionChuggingLevel:      this.potionChuggingLevel,
       potionChuggingCost:       this.potionChuggingCost,
+      sharperSwordsLevel:       this.sharperSwordsLevel,
+      sharperSwordsCost:        this.sharperSwordsCost,
       moreHerbsCost:            this.moreHerbsCost,
       moreHerbsLevel:           this.moreHerbsLevel,
       betterTrackingLevel:      this.betterTrackingLevel,
@@ -242,6 +252,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.autoUpgradeLevel        = s.autoUpgradeLevel;
     this.potionChuggingLevel     = s.potionChuggingLevel;
     this.potionChuggingCost      = s.potionChuggingCost;
+    this.sharperSwordsLevel      = s.sharperSwordsLevel  ?? 0;
+    this.sharperSwordsCost       = s.sharperSwordsCost   ?? BASE_COSTS.SHARPER_SWORDS;
     // herbsPerFind is no longer stored — yield is computed from moreHerbsLevel
     this.moreHerbsCost           = s.moreHerbsCost;
     this.moreHerbsLevel          = s.moreHerbsLevel;
@@ -389,38 +401,38 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   buyClickUpgrade(): void {
-    if (this.sharperSwordMaxed) { return; }
+    if (this.betterBountiesMaxed) { return; }
     if (this.wallet.canAfford('gold', this.clickUpgradeCost)) {
       this.wallet.remove('gold', this.clickUpgradeCost);
       this.clickUpgradeLevel++;
       this.goldPerClick++;
-      this.clickUpgradeCost = Math.floor(this.clickUpgradeCost * COST_SCALE.SHARPER_SWORD);
+      this.clickUpgradeCost = Math.floor(this.clickUpgradeCost * COST_SCALE.BETTER_BOUNTIES);
       this.log.log(
-        `Sharper Sword upgraded to Lv.${this.clickUpgradeLevel}. Now earning ${this.goldPerClick}g per click.`,
+        `Better Bounties upgraded to Lv.${this.clickUpgradeLevel}. Now earning ${this.goldPerClick}g per click.`,
         'success'
       );
     } else {
       this.log.log(
-        `Not enough gold for Sharper Sword. Need ${this.clickUpgradeCost}g, have ${this.gold}g.`,
+        `Not enough gold for Better Bounties. Need ${this.clickUpgradeCost}g, have ${this.gold}g.`,
         'warn'
       );
     }
   }
 
   buyAutoUpgrade(): void {
-    if (this.contractKillingMaxed) { return; }
+    if (this.contractedHirelingsMaxed) { return; }
     if (this.wallet.canAfford('gold', this.autoUpgradeCost)) {
       this.wallet.remove('gold', this.autoUpgradeCost);
       this.autoUpgradeLevel++;
-      this.autoUpgradeCost = Math.floor(this.autoUpgradeCost * COST_SCALE.CONTRACT_KILLING);
+      this.autoUpgradeCost = Math.floor(this.autoUpgradeCost * COST_SCALE.CONTRACTED_HIRELINGS);
       this.updateGoldPerSecond();
       this.log.log(
-        `Contract Killing upgraded to Lv.${this.autoUpgradeLevel}. Now earning ${this.autoGoldPerSecond}g/sec.`,
+        `Contracted Hirelings upgraded to Lv.${this.autoUpgradeLevel}. Now earning ${this.autoGoldPerSecond}g/sec.`,
         'success'
       );
     } else {
       this.log.log(
-        `Not enough gold for Contract Killing. Need ${this.autoUpgradeCost}g, have ${this.gold}g.`,
+        `Not enough gold for Contracted Hirelings. Need ${this.autoUpgradeCost}g, have ${this.gold}g.`,
         'warn'
       );
     }
@@ -439,6 +451,24 @@ export class AppComponent implements OnInit, OnDestroy {
     } else {
       this.log.log(
         `Not enough potions for Potion Chugging. Need ${this.potionChuggingCost}pt, have ${this.potions}pt.`,
+        'warn'
+      );
+    }
+  }
+
+  buySharperSwords(): void {
+    if (this.sharperSwordsMaxed) { return; }
+    if (this.wallet.canAfford('gold', this.sharperSwordsCost)) {
+      this.wallet.remove('gold', this.sharperSwordsCost);
+      this.sharperSwordsLevel++;
+      this.sharperSwordsCost = Math.floor(this.sharperSwordsCost * COST_SCALE.SHARPER_SWORDS);
+      this.log.log(
+        `Sharper Swords upgraded to Lv.${this.sharperSwordsLevel}. Attack damage is now ${this.fighterAttackPower}.`,
+        'success'
+      );
+    } else {
+      this.log.log(
+        `Not enough gold for Sharper Swords. Need ${this.sharperSwordsCost}g, have ${this.gold}g.`,
         'warn'
       );
     }
