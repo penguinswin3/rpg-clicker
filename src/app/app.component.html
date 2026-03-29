@@ -25,7 +25,6 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         <div class="jack-column" *ngIf="jacksVisible && activeCharacterInfo">
           <div class="jack-pool-info">
             <span class="jack-pool-label" [style.visibility]="jacksPoolFree > 0 ? 'visible' : 'hidden'">Avail: <span class="jack-pool-count">{{ jacksPoolFree }}</span></span>
-            <span class="jack-next-unlock" *ngIf="nextJackThreshold !== null">&nbsp;·&nbsp;Next: {{ nextJackThreshold | number }} XP</span>
           </div>
           <div class="jack-alloc-stack">
             <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack(activeCharacterInfo.id)">[+]</button>
