@@ -41,6 +41,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
       <section class="upgrades">
         <div class="divider">+===============================================================================================+</div>
 
+
         <div class="upgrades-columns">
 
           <!-- ══ Standard upgrades ════════════════════════════════════ -->
@@ -200,7 +201,15 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         <div class="divider">+===============================================================================================+</div>
 
       </section>
-      <app-character-unlock />
+      <app-character-unlock
+        [minigameUnlockAvailable]="minigameUnlockAvailable"
+        [minigameGoldCost]="minigameUnlockCosts.MINIGAME_GOLD"
+        [minigamePotionCost]="minigameUnlockCosts.MINIGAME_POTIONS"
+        [minigameBeastCost]="minigameUnlockCosts.MINIGAME_BEAST"
+        [canAffordMinigame]="gold >= minigameUnlockCosts.MINIGAME_GOLD &&
+                             potions >= minigameUnlockCosts.MINIGAME_POTIONS &&
+                             beast >= minigameUnlockCosts.MINIGAME_BEAST"
+        (minigameUnlock)="buyMinigameUnlock()" />
 
       <!-- spacer so content isn't hidden behind the fixed log panel -->
       <div class="log-spacer"></div>

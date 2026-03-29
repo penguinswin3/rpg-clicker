@@ -28,6 +28,8 @@ export interface UpgradeState {
   // potionAutoGoldPerSecond is derived: potionMarketingLevel × 1g/s — not saved
   potionMarketingCost: number;
   potionMarketingLevel: number;
+  /** Whether the minigame system has been purchased. Optional for old-save compat. */
+  minigameUnlocked?: boolean;
 }
 
 /** Persisted UI window and filter preferences. */

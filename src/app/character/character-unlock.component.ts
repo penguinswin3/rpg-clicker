@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription, combineLatest } from 'rxjs';
 import { CharacterService, Character, UnlockCost } from './character.service';
@@ -17,6 +17,14 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
   private wallet      = inject(WalletService);
   private log         = inject(ActivityLogService);
   private sub         = new Subscription();
+
+  // ── Global upgrade inputs ─────────────────
+  @Input() minigameUnlockAvailable = false;
+  @Input() minigameGoldCost   = 0;
+  @Input() minigamePotionCost = 0;
+  @Input() minigameBeastCost  = 0;
+  @Input() canAffordMinigame  = false;
+  @Output() minigameUnlock    = new EventEmitter<void>();
 
   /** Locked characters whose XP requirement has been reached. */
   available: Character[] = [];

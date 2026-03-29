@@ -22,6 +22,11 @@ export const UNLOCK_COSTS = {
 
   APOTHECARY_GOLD:   1500,
   APOTHECARY_HERBS:  250,
+
+  /** Minigame system unlock — available once XP >= MINIGAME_UNLOCK threshold */
+  MINIGAME_GOLD:    2500,
+  MINIGAME_POTIONS: 250,
+  MINIGAME_BEAST:   250,
 } as const;
 
 // ── Upgrade Maximum Levels ───────────────────────────────────

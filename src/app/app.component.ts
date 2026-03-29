@@ -11,7 +11,7 @@ import { CharacterService } from './character/character.service';
 import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './save/options-menu.component';
 import { SaveService, UpgradeState } from './save/save.service';
-import { XP_THRESHOLDS, BASE_COSTS, COST_SCALE, YIELDS, UPGRADE_MAX } from './game-config';
+import { XP_THRESHOLDS, BASE_COSTS, COST_SCALE, YIELDS, UPGRADE_MAX, UNLOCK_COSTS } from './game-config';
 
 @Component({
   selector: 'app-root',
@@ -36,12 +36,23 @@ export class AppComponent implements OnInit, OnDestroy {
   gold    = 0;
   xp      = 0;
   potions = 0;
+  beast   = 0;
 
   readonly minigameXpThreshold = XP_THRESHOLDS.MINIGAME_UNLOCK;
 
+  /** True once the player has purchased the Minigame unlock upgrade. */
+  minigameUnlocked = false;
+
   get minigameShown(): boolean {
-    return this.xp >= XP_THRESHOLDS.MINIGAME_UNLOCK;
+    return this.minigameUnlocked;
   }
+
+  /** Shows the minigame unlock purchase card once XP threshold is met. */
+  get minigameUnlockAvailable(): boolean {
+    return this.xp >= XP_THRESHOLDS.MINIGAME_UNLOCK && !this.minigameUnlocked;
+  }
+
+  readonly minigameUnlockCosts = UNLOCK_COSTS;
 
   // Active character (synced from CharacterService)
   activeCharacterId = 'fighter';
@@ -148,6 +159,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.gold    = Math.floor(state['gold']?.amount   ?? 0);
       this.xp      = Math.floor(state['xp']?.amount     ?? 0);
       this.potions = Math.floor(state['potion']?.amount ?? 0);
+      this.beast   = Math.floor(state['beast']?.amount  ?? 0);
     });
     this.charService.activeId$.subscribe(id => {
       this.activeCharacterId = id;
@@ -207,6 +219,7 @@ export class AppComponent implements OnInit, OnDestroy {
       potionTitrationLevel:     this.potionTitrationLevel,
       potionMarketingCost:      this.potionMarketingCost,
       potionMarketingLevel:     this.potionMarketingLevel,
+      minigameUnlocked:         this.minigameUnlocked,
     };
   }
 
@@ -228,6 +241,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.potionTitrationLevel    = s.potionTitrationLevel;
     this.potionMarketingCost     = s.potionMarketingCost;
     this.potionMarketingLevel    = s.potionMarketingLevel;
+    this.minigameUnlocked        = s.minigameUnlocked ?? false;
     this.updateGoldPerSecond();
   }
 
@@ -333,6 +347,34 @@ export class AppComponent implements OnInit, OnDestroy {
     this.saveService.deleteSave();
     document.body.classList.add('screen-shake');
     setTimeout(() => window.location.reload(), 800);
+  }
+
+  // ── Minigame unlock ───────────────────────
+
+  buyMinigameUnlock(): void {
+    if (this.minigameUnlocked) { return; }
+    const goldCost   = UNLOCK_COSTS.MINIGAME_GOLD;
+    const potionCost = UNLOCK_COSTS.MINIGAME_POTIONS;
+    const beastCost  = UNLOCK_COSTS.MINIGAME_BEAST;
+
+    if (!this.wallet.canAfford('gold',   goldCost)   ||
+        !this.wallet.canAfford('potion', potionCost) ||
+        !this.wallet.canAfford('beast',  beastCost)) {
+      this.log.log(
+        `Not enough resources to unlock Minigames. Need ${goldCost}g, ${potionCost}pt, ${beastCost} beast meat.`,
+        'warn'
+      );
+      return;
+    }
+
+    this.wallet.remove('gold',   goldCost);
+    this.wallet.remove('potion', potionCost);
+    this.wallet.remove('beast',  beastCost);
+    this.minigameUnlocked = true;
+    this.log.log(
+      '★ MINIGAMES UNLOCKED! Character-specific challenges are now available.',
+      'rare'
+    );
   }
 
   buyClickUpgrade(): void {

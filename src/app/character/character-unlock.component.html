@@ -1,8 +1,23 @@
-<ng-container *ngIf="available.length > 0">
+<ng-container *ngIf="available.length > 0 || minigameUnlockAvailable">
   <div class="divider">+===============================================================================================+</div>
-  <div class="section-title">[ CHARACTER UNLOCK ]</div>
-  <div class="xp-note">XP requirement met! New recruits available.</div>
+  <div class="section-title">[ GLOBAL UPGRADES ]</div>
 
+  <!-- Minigame unlock (global purchase) -->
+  <div class="unlock-card" *ngIf="minigameUnlockAvailable">
+    <div class="unlock-left">
+      <span class="unlock-name" style="color:#ffd700">Unlock Minigames</span>
+      <span class="unlock-desc">Unlocks character-specific minigame challenges</span>
+      <span class="xp-req">Requires {{ minigameGoldCost }}g + {{ minigamePotionCost }}pt + {{ minigameBeastCost }} beast meat</span>
+    </div>
+    <button
+      class="unlock-btn"
+      [disabled]="!canAffordMinigame"
+      (click)="minigameUnlock.emit()">
+      [UNLOCK MINIGAMES]
+    </button>
+  </div>
+
+  <!-- Character unlocks -->
   <div class="unlock-card" *ngFor="let c of available">
     <div class="unlock-left">
       <span class="unlock-name" [style.color]="c.color">/( {{ c.name }} )\</span>
