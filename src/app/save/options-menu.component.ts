@@ -6,8 +6,6 @@ import { SaveService } from './save.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { CharacterService } from '../character/character.service';
 
-type StatusType = 'success' | 'error' | 'idle';
-
 /** px width of the character sidebar in each state (must match character-sidebar.component.scss) */
 const SIDEBAR_EXPANDED  = 220;
 const SIDEBAR_COLLAPSED =  46;
@@ -29,8 +27,6 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
 
   isOpen           = false;
   importString     = '';
-  statusMsg        = '';
-  statusType: StatusType = 'idle';
   showClearConfirm = false;
 
   /** Bound to [style.right] on the anchor — follows the sidebar width. */
@@ -54,7 +50,6 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
     this.isOpen = !this.isOpen;
     if (!this.isOpen) {
       this.importString = '';
-      this.clearStatus();
       this.showClearConfirm = false;
     }
   }
@@ -67,32 +62,29 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
   async copyToClipboard(): Promise<void> {
     try {
       await this.saveService.copyToClipboard();
-      this.setStatus('Save data copied to clipboard.', 'success');
       this.log.log('Save data copied to clipboard.', 'success');
     } catch {
-      this.setStatus('Failed to copy — check browser permissions.', 'error');
+      this.log.log('Failed to copy save data — check browser permissions.', 'error');
     }
   }
 
   exportFile(): void {
     this.saveService.exportFile();
-    this.setStatus('Save file downloaded.', 'success');
     this.log.log('Save file exported.', 'success');
   }
 
   importSave(): void {
     const trimmed = this.importString.trim();
     if (!trimmed) {
-      this.setStatus('Paste a save string first.', 'error');
+      this.log.log('Paste a save string into the import box first.', 'error');
       return;
     }
     const ok = this.saveService.importFromBase64(trimmed);
     if (ok) {
       this.importString = '';
-      this.setStatus('Save loaded successfully!', 'success');
       this.log.log('Save data imported and applied.', 'success');
     } else {
-      this.setStatus('Invalid save data.', 'error');
+      this.log.log('Invalid save data — could not import.', 'error');
     }
   }
 
@@ -111,16 +103,5 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
 
   cancelClear(): void {
     this.showClearConfirm = false;
-  }
-
-  private setStatus(msg: string, type: StatusType): void {
-    this.statusMsg  = msg;
-    this.statusType = type;
-    setTimeout(() => this.clearStatus(), 4000);
-  }
-
-  private clearStatus(): void {
-    this.statusMsg  = '';
-    this.statusType = 'idle';
   }
 }

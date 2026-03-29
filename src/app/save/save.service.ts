@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { WalletService } from '../wallet/wallet.service';
 import { CharacterService } from '../character/character.service';
-import { ActivityLogService } from '../activity-log/activity-log.service';
+import { ActivityLogService, LogFilterType } from '../activity-log/activity-log.service';
 
 /** All upgrade / progression state managed by AppComponent. */
 export interface UpgradeState {
@@ -30,6 +30,15 @@ export interface UpgradeState {
   potionMarketingLevel: number;
 }
 
+/** Persisted UI window and filter preferences. */
+export interface UiPrefs {
+  walletCollapsed: boolean;
+  walletCharacterFilters: string[];
+  activityLogMinimized: boolean;
+  activityLogFilters: LogFilterType[];
+  characterSidebarCollapsed: boolean;
+}
+
 export interface SaveSnapshot {
   /** Bump this if the schema ever changes incompatibly. */
   version: number;
@@ -40,6 +49,8 @@ export interface SaveSnapshot {
   activeCharacterId: string;
   manualUnlocks: string[];
   upgrades: UpgradeState;
+  /** UI window/filter preferences — optional for backward compat with older saves. */
+  uiPrefs?: UiPrefs;
 }
 
 const SAVE_KEY = 'rpg-clicker-save';
@@ -122,6 +133,14 @@ export class SaveService {
     const activeCharacterId = this.charService.activeId;
     const upgrades = this.upgradeGetter ? this.upgradeGetter() : ({} as UpgradeState);
 
+    const uiPrefs: UiPrefs = {
+      walletCollapsed: this.wallet.collapsed,
+      walletCharacterFilters: Array.from(this.wallet.characterFilters),
+      activityLogMinimized: this.log.minimized,
+      activityLogFilters: Array.from(this.log.activeFilters),
+      characterSidebarCollapsed: this.charService.sidebarCollapsed,
+    };
+
     return {
       version: CURRENT_VERSION,
       timestamp: Date.now(),
@@ -130,6 +149,7 @@ export class SaveService {
       activeCharacterId,
       manualUnlocks,
       upgrades,
+      uiPrefs,
     };
   }
 
@@ -157,6 +177,16 @@ export class SaveService {
     // 5 — Upgrade state
     if (snap.upgrades && this.upgradeSetter) {
       this.upgradeSetter(snap.upgrades);
+    }
+
+    // 6 — UI preferences (optional — absent in older saves)
+    if (snap.uiPrefs) {
+      const p = snap.uiPrefs;
+      this.wallet.setCollapsed(p.walletCollapsed ?? false);
+      this.wallet.setCharacterFilters(new Set(p.walletCharacterFilters ?? []));
+      this.log.setMinimized(p.activityLogMinimized ?? false);
+      this.log.setActiveFilters(new Set(p.activityLogFilters ?? []));
+      this.charService.setSidebarCollapsed(p.characterSidebarCollapsed ?? false);
     }
   }
 

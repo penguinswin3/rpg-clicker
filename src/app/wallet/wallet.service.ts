@@ -48,6 +48,19 @@ export class WalletService {
   /** Observable of the full wallet state. */
   readonly state$ = this.stateSource.asObservable();
 
+  // ── UI State ──────────────────────────────────────────────────
+
+  private readonly collapsedSource = new BehaviorSubject<boolean>(false);
+  readonly collapsed$ = this.collapsedSource.asObservable();
+  get collapsed(): boolean { return this.collapsedSource.getValue(); }
+  setCollapsed(v: boolean): void { this.collapsedSource.next(v); }
+  toggleCollapsed(): void { this.collapsedSource.next(!this.collapsedSource.getValue()); }
+
+  private readonly characterFiltersSource = new BehaviorSubject<Set<string>>(new Set<string>());
+  readonly characterFilters$ = this.characterFiltersSource.asObservable();
+  get characterFilters(): Set<string> { return this.characterFiltersSource.getValue(); }
+  setCharacterFilters(filters: Set<string>): void { this.characterFiltersSource.next(new Set(filters)); }
+
   // ── Public API ────────────────────────────────────────────────
 
   /** Add `amount` of `currencyId` to the wallet. */

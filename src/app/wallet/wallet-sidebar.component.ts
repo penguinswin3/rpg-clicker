@@ -80,6 +80,8 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
         this.manualUnlockIds = ids;
       })
     );
+    this.sub.add(this.walletService.collapsed$.subscribe(v => (this.collapsed = v)));
+    this.sub.add(this.walletService.characterFilters$.subscribe(f => (this.activeCharacterFilters = f)));
   }
 
   ngOnDestroy(): void {
@@ -89,20 +91,17 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
   // ── Actions ───────────────────────────────
 
   toggle(): void {
-    this.collapsed = !this.collapsed;
+    this.walletService.toggleCollapsed();
   }
 
   toggleCharacterFilter(key: string): void {
-    if (this.activeCharacterFilters.has(key)) {
-      this.activeCharacterFilters.delete(key);
-    } else {
-      this.activeCharacterFilters.add(key);
-    }
-    this.activeCharacterFilters = new Set(this.activeCharacterFilters);
+    const next = new Set(this.activeCharacterFilters);
+    if (next.has(key)) { next.delete(key); } else { next.add(key); }
+    this.walletService.setCharacterFilters(next);
   }
 
   clearCharacterFilters(): void {
-    this.activeCharacterFilters = new Set();
+    this.walletService.setCharacterFilters(new Set());
   }
 
   // ── Helpers ───────────────────────────────

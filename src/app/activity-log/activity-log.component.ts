@@ -9,12 +9,10 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { ActivityLogService, LogMessage } from './activity-log.service';
-
-type FilterType = 'default' | 'success' | 'warn' | 'error' | 'rare';
+import { ActivityLogService, LogMessage, LogFilterType } from './activity-log.service';
 
 interface FilterOption {
-  value: FilterType;
+  value: LogFilterType;
   label: string;
 }
 
@@ -29,10 +27,11 @@ export class ActivityLogComponent implements OnInit, OnDestroy, AfterViewChecked
   @ViewChild('logBody') logBody?: ElementRef<HTMLDivElement>;
 
   private logService = inject(ActivityLogService);
-  private sub!: Subscription;
+  private sub = new Subscription();
 
   messages: LogMessage[] = [];
   minimized = false;
+  activeFilters = new Set<LogFilterType>();
   private shouldScroll = false;
 
   readonly filters: FilterOption[] = [
@@ -43,45 +42,36 @@ export class ActivityLogComponent implements OnInit, OnDestroy, AfterViewChecked
     { value: 'rare',    label: 'RARE'    },
   ];
 
-  /** Types currently shown. Empty set = show all. */
-  activeFilters = new Set<FilterType>();
-
   get allActive(): boolean {
     return this.activeFilters.size === 0;
   }
 
-  isActive(f: FilterType): boolean {
+  isActive(f: LogFilterType): boolean {
     return this.allActive || this.activeFilters.has(f);
   }
 
   get filteredMessages(): LogMessage[] {
     if (this.allActive) return this.messages;
-    return this.messages.filter(m => this.activeFilters.has((m.type ?? 'default') as FilterType));
+    return this.messages.filter(m => this.activeFilters.has((m.type ?? 'default') as LogFilterType));
   }
 
-  toggleFilter(f: FilterType): void {
-    if (this.activeFilters.has(f)) {
-      this.activeFilters.delete(f);
-    } else {
-      this.activeFilters.add(f);
-    }
-    // Rebuild the Set reference so Angular detects the change
-    this.activeFilters = new Set(this.activeFilters);
+  toggleFilter(f: LogFilterType): void {
+    this.logService.toggleFilter(f);
     this.shouldScroll = true;
   }
 
   clearFilters(): void {
-    this.activeFilters = new Set();
+    this.logService.clearFilters();
     this.shouldScroll = true;
   }
 
   ngOnInit(): void {
-    this.sub = this.logService.messages$.subscribe((msgs) => {
+    this.sub.add(this.logService.messages$.subscribe(msgs => {
       this.messages = msgs;
-      if (!this.minimized) {
-        this.shouldScroll = true;
-      }
-    });
+      if (!this.minimized) this.shouldScroll = true;
+    }));
+    this.sub.add(this.logService.minimized$.subscribe(v => (this.minimized = v)));
+    this.sub.add(this.logService.activeFilters$.subscribe(f => (this.activeFilters = f)));
   }
 
   ngAfterViewChecked(): void {
@@ -93,17 +83,17 @@ export class ActivityLogComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.sub.unsubscribe();
   }
 
   toggle(): void {
-    this.minimized = !this.minimized;
-    if (!this.minimized) {
-      this.shouldScroll = true;
-    }
+    this.logService.toggleMinimized();
+    if (!this.minimized) this.shouldScroll = true;
   }
 
   trackById(_: number, msg: LogMessage): number {
     return msg.id;
   }
 }
+
+

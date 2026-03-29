@@ -75,6 +75,10 @@ export class CharacterService {
     this.sidebarCollapsedSource.next(!this.sidebarCollapsedSource.getValue());
   }
 
+  setSidebarCollapsed(v: boolean): void {
+    this.sidebarCollapsedSource.next(v);
+  }
+
   get activeId(): string {
     return this.activeIdSource.getValue();
   }

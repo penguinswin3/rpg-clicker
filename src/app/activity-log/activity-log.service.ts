@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
+export type LogFilterType = 'default' | 'success' | 'warn' | 'error' | 'rare';
+
 export interface LogMessage {
   id: number;
   timestamp: string;
   text: string;
-  type?: 'default' | 'success' | 'warn' | 'error' | 'rare';
+  type?: LogFilterType;
 }
 
 const MAX_MESSAGES = 100;
@@ -18,8 +20,29 @@ export class ActivityLogService {
   /** Observable stream of all log messages. */
   readonly messages$ = this.messagesSource.asObservable();
 
+  // ── UI State ──────────────────────────────────────────────────
+
+  private minimizedSource = new BehaviorSubject<boolean>(false);
+  readonly minimized$ = this.minimizedSource.asObservable();
+  get minimized(): boolean { return this.minimizedSource.getValue(); }
+  setMinimized(v: boolean): void { this.minimizedSource.next(v); }
+  toggleMinimized(): void { this.minimizedSource.next(!this.minimizedSource.getValue()); }
+
+  private activeFiltersSource = new BehaviorSubject<Set<LogFilterType>>(new Set());
+  readonly activeFilters$ = this.activeFiltersSource.asObservable();
+  get activeFilters(): Set<LogFilterType> { return this.activeFiltersSource.getValue(); }
+  setActiveFilters(filters: Set<LogFilterType>): void { this.activeFiltersSource.next(new Set(filters)); }
+  toggleFilter(f: LogFilterType): void {
+    const next = new Set(this.activeFiltersSource.getValue());
+    if (next.has(f)) { next.delete(f); } else { next.add(f); }
+    this.activeFiltersSource.next(next);
+  }
+  clearFilters(): void { this.activeFiltersSource.next(new Set()); }
+
+  // ── Logging ───────────────────────────────────────────────────
+
   /** Add a message to the activity log. */
-  log(text: string, type: LogMessage['type'] = 'default'): void {
+  log(text: string, type: LogFilterType = 'default'): void {
     const now = new Date();
     const timestamp = now.toLocaleTimeString('en-US', {
       hour: '2-digit',

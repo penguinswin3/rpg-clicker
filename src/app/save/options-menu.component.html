@@ -30,12 +30,6 @@
       <button class="opt-btn opt-import-btn" (click)="importSave()">[ Load Save ]</button>
     </div>
 
-    <!-- Status message -->
-    <div class="opt-status" *ngIf="statusMsg"
-         [class.status-success]="statusType === 'success'"
-         [class.status-error]="statusType === 'error'">
-      &gt; {{ statusMsg }}
-    </div>
   </div>
 
 </div>
