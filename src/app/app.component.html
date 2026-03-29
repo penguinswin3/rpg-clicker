@@ -21,7 +21,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
       <section class="click-area">
         <button class="hero-btn" (click)="clickHero()">
-          [ >>> QUEST! <<< ]
+          [ >>> {{ questBtnLabel }} <<< ]
         </button>
 
         <!-- Dev menu -->
@@ -52,8 +52,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <ng-container *ngIf="activeCharacterId === 'fighter'">
               <div class="upgrade-card">
                 <div class="upgrade-info">
-                  <span class="upgrade-name cyan-text">Sharper Sword</span>
-                  <span class="upgrade-desc">+1 gold per click</span>
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.SHARPER_SWORD.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.SHARPER_SWORD.desc }}</span>
                 </div>
                 <div class="upgrade-btn-wrap">
                   <button
@@ -70,8 +70,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
               <div class="upgrade-card">
                 <div class="upgrade-info">
-                  <span class="upgrade-name cyan-text">Contract Killing</span>
-                  <span class="upgrade-desc">+1 gold/sec</span>
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.CONTRACT_KILLING.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.CONTRACT_KILLING.desc }}</span>
                 </div>
                 <div class="upgrade-btn-wrap">
                   <button
@@ -91,8 +91,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <ng-container *ngIf="activeCharacterId === 'ranger'">
               <div class="upgrade-card">
                 <div class="upgrade-info">
-                  <span class="upgrade-name cyan-text">More Herbs</span>
-                  <span class="upgrade-desc">+1% chance to double base herbs</span>
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.MORE_HERBS.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.MORE_HERBS.desc }}</span>
                 </div>
                 <div class="upgrade-btn-wrap">
                   <button
@@ -109,8 +109,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
               <div class="upgrade-card">
                 <div class="upgrade-info">
-                  <span class="upgrade-name cyan-text">Better Tracking</span>
-                  <span class="upgrade-desc">+1% beast find chance (now {{ beastFindChance }}%)</span>
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.BETTER_TRACKING.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.BETTER_TRACKING.desc }} (now {{ beastFindChance }}%)</span>
                 </div>
                 <div class="upgrade-btn-wrap">
                   <button
@@ -130,8 +130,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <ng-container *ngIf="activeCharacterId === 'apothecary'">
               <div class="upgrade-card">
                 <div class="upgrade-info">
-                  <span class="upgrade-name cyan-text">Potion Titration</span>
-                  <span class="upgrade-desc">+1% herb save chance on brew | Save: {{ herbSaveChance }}%</span>
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.POTION_TITRATION.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.POTION_TITRATION.desc }}</span>
                 </div>
                 <div class="upgrade-btn-wrap">
                   <button
@@ -148,8 +148,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
               <div class="upgrade-card">
                 <div class="upgrade-info">
-                  <span class="upgrade-name cyan-text">Potion Marketing</span>
-                  <span class="upgrade-desc">+1 gold/sec from passive sales</span>
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.POTION_MARKETING.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.POTION_MARKETING.desc }}</span>
                 </div>
                 <div class="upgrade-btn-wrap">
                   <button
@@ -174,8 +174,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <ng-container *ngIf="activeCharacterId === 'fighter'">
               <div class="upgrade-card" *ngIf="apothecaryUnlocked">
                 <div class="upgrade-info">
-                  <span class="upgrade-name cyan-text">Potion Chugging</span>
-                  <span class="upgrade-desc">+1 HP per potion heal</span>
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.POTION_CHUGGING.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.POTION_CHUGGING.desc }}</span>
                 </div>
                 <div class="upgrade-btn-wrap">
                   <button

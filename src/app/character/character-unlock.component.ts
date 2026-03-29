@@ -4,6 +4,7 @@ import { Subscription, combineLatest } from 'rxjs';
 import { CharacterService, Character, UnlockCost } from './character.service';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import { GLOBAL_UPGRADE_FLAVOR } from '../flavor-text';
 
 @Component({
   selector: 'app-character-unlock',
@@ -29,6 +30,8 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
   /** Locked characters whose XP requirement has been reached. */
   available: Character[] = [];
   xp = 0;
+
+  readonly globalUpgradeFlavor = GLOBAL_UPGRADE_FLAVOR;
 
   ngOnInit(): void {
     this.sub.add(

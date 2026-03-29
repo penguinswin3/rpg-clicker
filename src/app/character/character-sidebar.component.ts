@@ -2,6 +2,7 @@ import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { CharacterService, Character } from './character.service';
+import { HERO_STATS_FLAVOR } from '../flavor-text';
 
 export interface HeroStat {
   label: string;
@@ -24,6 +25,8 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   characters: Character[] = [];
   activeId  = 'fighter';
   collapsed = false;
+
+  readonly heroStatsFlavor = HERO_STATS_FLAVOR;
 
   get unlockedCharacters(): Character[] {
     return this.characters.filter(c => c.unlocked);

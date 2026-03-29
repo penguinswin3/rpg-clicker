@@ -12,6 +12,7 @@ import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './save/options-menu.component';
 import { SaveService, UpgradeState } from './save/save.service';
 import { XP_THRESHOLDS, BASE_COSTS, COST_SCALE, YIELDS, UPGRADE_MAX, UNLOCK_COSTS } from './game-config';
+import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR } from './flavor-text';
 
 @Component({
   selector: 'app-root',
@@ -45,6 +46,15 @@ export class AppComponent implements OnInit, OnDestroy {
 
   get minigameShown(): boolean {
     return this.minigameUnlocked;
+  }
+
+  get questBtnLabel(): string {
+    const map: Record<string, string> = {
+      fighter:    CHARACTER_FLAVOR.FIGHTER.questBtn,
+      ranger:     CHARACTER_FLAVOR.RANGER.questBtn,
+      apothecary: CHARACTER_FLAVOR.APOTHECARY.questBtn,
+    };
+    return map[this.activeCharacterId] ?? CHARACTER_FLAVOR.FIGHTER.questBtn;
   }
 
   /** Shows the minigame unlock purchase card once XP threshold is met. */
@@ -117,7 +127,8 @@ export class AppComponent implements OnInit, OnDestroy {
   get potionAutoGoldPerSecond(): number { return this.potionMarketingLevel; }
 
   // ── Upgrade max levels (sourced from game-config) ─────────────
-  readonly upgradeMax = UPGRADE_MAX;
+  readonly upgradeMax   = UPGRADE_MAX;
+  readonly upgradeFlavor = UPGRADE_FLAVOR;
 
   get sharperSwordMaxed():    boolean { return this.clickUpgradeLevel    >= UPGRADE_MAX.SHARPER_SWORD;    }
   get contractKillingMaxed(): boolean { return this.autoUpgradeLevel     >= UPGRADE_MAX.CONTRACT_KILLING; }
@@ -131,21 +142,21 @@ export class AppComponent implements OnInit, OnDestroy {
   get heroStats(): HeroStat[] {
     if (this.activeCharacterId === 'ranger') {
       return [
-        { label: 'Herb Chance  :', value: `50%`                           },
-        { label: 'Beast Chance :', value: `${this.beastFindChance}%`      },
-        { label: 'Herb Double  :', value: this.herbDoublingDisplay        },
+        { label: HERO_STATS_FLAVOR.RANGER.HERB_CHANCE,  value: `50%`                           },
+        { label: HERO_STATS_FLAVOR.RANGER.BEAST_CHANCE, value: `${this.beastFindChance}%`      },
+        { label: HERO_STATS_FLAVOR.RANGER.HERB_DOUBLE,  value: this.herbDoublingDisplay        },
       ];
     }
     if (this.activeCharacterId === 'apothecary') {
       return [
-        { label: 'Herbs/Brew   :', value: '5'                            },
-        { label: 'Save Chance  :', value: `${this.herbSaveChance}%`      },
-        { label: 'Sell Rate    :', value: `${this.potionAutoGoldPerSecond}g/s` },
+        { label: HERO_STATS_FLAVOR.APOTHECARY.HERBS_BREW,  value: '5'                                     },
+        { label: HERO_STATS_FLAVOR.APOTHECARY.SAVE_CHANCE, value: `${this.herbSaveChance}%`               },
+        { label: HERO_STATS_FLAVOR.APOTHECARY.SELL_RATE,   value: `${this.potionAutoGoldPerSecond}g/s`    },
       ];
     }
     return [
-      { label: 'Per Click   :', value: `${this.goldPerClick}`      },
-      { label: 'Per Second  :', value: `${this.autoGoldPerSecond}` },
+      { label: HERO_STATS_FLAVOR.FIGHTER.PER_CLICK,  value: `${this.goldPerClick}`      },
+      { label: HERO_STATS_FLAVOR.FIGHTER.PER_SECOND, value: `${this.autoGoldPerSecond}` },
     ];
   }
 

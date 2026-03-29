@@ -11,7 +11,7 @@
 
     <!-- Hero Stats -->
     <div class="hero-stats-box">
-      <div class="box-label">[ HERO STATS ]</div>
+      <div class="box-label">{{ heroStatsFlavor.BOX_TITLE }}</div>
       <div class="stat-row" *ngFor="let s of heroStats">
         <span class="stat-key">{{ s.label }}</span>
         <span class="stat-val">{{ s.value }}</span>

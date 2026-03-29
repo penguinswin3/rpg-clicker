@@ -7,6 +7,7 @@ import { FighterMinigameComponent } from './fighter/fighter-minigame.component';
 import { ApothecaryMinigameComponent } from './apothecary/apothecary-minigame.component';
 import { RangerMinigameComponent } from './ranger/ranger-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
+import { MINIGAME_FLAVOR } from '../flavor-text';
 
 interface MinigamePlaceholder {
   characterId: string;
@@ -39,8 +40,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   readonly placeholders: MinigamePlaceholder[] = [
     {
       characterId: 'fighter',
-      title: 'Battle Arena',
-      description: 'Face waves of enemies in gladiatorial combat.\nSurvive as long as you can.',
+      title: MINIGAME_FLAVOR.FIGHTER.name,
+      description: MINIGAME_FLAVOR.FIGHTER.desc,
       ascii:
         '    O    \n' +
         '   /|\\   \n' +
@@ -50,8 +51,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     },
     {
       characterId: 'ranger',
-      title: 'Hunting Grounds',
-      description: 'Track and pursue elusive prey\nthrough the ancient forest.',
+      title: MINIGAME_FLAVOR.RANGER.name,
+      description: MINIGAME_FLAVOR.RANGER.desc,
       ascii:
         ' }---->   \n' +
         ' }---->   \n' +
@@ -61,8 +62,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     },
     {
       characterId: 'apothecary',
-      title: 'Alchemy Bench',
-      description: 'Combine rare ingredients to brew\npowerful concoctions.',
+      title: MINIGAME_FLAVOR.APOTHECARY.name,
+      description: MINIGAME_FLAVOR.APOTHECARY.desc,
       ascii:
         '  _   _   \n' +
         ' (_) (_)  \n' +

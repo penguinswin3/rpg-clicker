@@ -5,8 +5,8 @@
   <!-- Minigame unlock (global purchase) -->
   <div class="unlock-card" *ngIf="minigameUnlockAvailable">
     <div class="unlock-left">
-      <span class="unlock-name" style="color:#ffd700">Unlock Minigames</span>
-      <span class="unlock-desc">Unlocks character-specific minigame challenges</span>
+      <span class="unlock-name" style="color:#ffd700">{{ globalUpgradeFlavor.UNLOCK_MINIGAMES.name }}</span>
+      <span class="unlock-desc">{{ globalUpgradeFlavor.UNLOCK_MINIGAMES.desc }}</span>
       <span class="xp-req">Requires {{ minigameGoldCost }}g + {{ minigamePotionCost }}pt + {{ minigameBeastCost }} beast meat</span>
     </div>
     <button

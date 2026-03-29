@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { XP_THRESHOLDS, UNLOCK_COSTS } from '../game-config';
+import { CHARACTER_FLAVOR } from '../flavor-text';
 
 export interface UnlockCost {
   currencyId: string;
@@ -25,27 +26,27 @@ export class CharacterService {
   private readonly definitions: Character[] = [
     {
       id: 'fighter',
-      name: 'Fighter',
+      name: CHARACTER_FLAVOR.FIGHTER.name,
       color: '#c87941',
-      description: 'A seasoned warrior armed with blade and shield.',
+      description: CHARACTER_FLAVOR.FIGHTER.desc,
       unlocked: true,
       unlockCosts: [],
       xpRequirement: 0,
     },
     {
       id: 'ranger',
-      name: 'Ranger',
+      name: CHARACTER_FLAVOR.RANGER.name,
       color: '#2d7a2d',
-      description: 'A swift archer who strikes from the shadows.',
+      description: CHARACTER_FLAVOR.RANGER.desc,
       unlocked: false,
       unlockCosts: [{ currencyId: 'gold', amount: UNLOCK_COSTS.RANGER_GOLD }],
       xpRequirement: XP_THRESHOLDS.RANGER_UNLOCK,
     },
     {
       id: 'apothecary',
-      name: 'Apothecary',
+      name: CHARACTER_FLAVOR.APOTHECARY.name,
       color: '#9d6ec7',
-      description: 'A skilled brewer who turns rare ingredients into powerful potions.',
+      description: CHARACTER_FLAVOR.APOTHECARY.desc,
       unlocked: false,
       unlockCosts: [
         { currencyId: 'gold', amount: UNLOCK_COSTS.APOTHECARY_GOLD },
