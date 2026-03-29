@@ -1,5 +1,5 @@
 <div class="root-layout">
-  <app-wallet-sidebar />
+  <app-wallet-sidebar></app-wallet-sidebar>
 
   <!-- Minigame panel: unlocked at 2500 XP, spans left of game area -->
   <app-minigame-panel *ngIf="minigameShown" [fighterAttack]="goldPerClick" [potionChuggingLevel]="potionChuggingLevel" />
@@ -209,7 +209,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         [canAffordMinigame]="gold >= minigameUnlockCosts.MINIGAME_GOLD &&
                              potions >= minigameUnlockCosts.MINIGAME_POTIONS &&
                              beast >= minigameUnlockCosts.MINIGAME_BEAST"
-        (minigameUnlock)="buyMinigameUnlock()" />
+        (minigameUnlock)="buyMinigameUnlock()"></app-character-unlock>
 
       <!-- spacer so content isn't hidden behind the fixed log panel -->
       <div class="log-spacer"></div>

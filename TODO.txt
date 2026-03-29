@@ -26,4 +26,8 @@
 - General Wording and thematic changes
 - Code Refactors
 
-- Make things not selectable by dragging mouse?
+- flesh out the upgrades for the minigames
+  - fighter, stronger kobolds
+
+- Flavor refactors
+  - Fighter upgrades should be bounty completion themed, minigames are sharper sword

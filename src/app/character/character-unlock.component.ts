@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription, combineLatest } from 'rxjs';
-import { CharacterService, Character, UnlockCost } from './character.service';
+import { CharacterService, Character } from './character.service';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { GLOBAL_UPGRADE_FLAVOR } from '../flavor-text';
