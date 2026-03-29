@@ -207,6 +207,7 @@
   padding: 0.6rem 2rem;
   cursor: pointer;
   letter-spacing: 0.1em;
+  user-select: none;
   transition: background 0.1s, color 0.1s;
 
   &:hover {
