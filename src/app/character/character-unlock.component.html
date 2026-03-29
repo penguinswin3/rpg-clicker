@@ -1,6 +1,32 @@
-<ng-container *ngIf="available.length > 0 || minigameUnlockAvailable">
+<ng-container *ngIf="available.length > 0 || minigameUnlockAvailable || jackHireAvailable">
   <div class="divider">+===============================================================================================+</div>
   <div class="section-title">[ GLOBAL UPGRADES ]</div>
+
+  <!-- Jack of All Trades hire -->
+  <div class="unlock-card" *ngIf="jackHireAvailable">
+    <div class="unlock-left">
+      <span class="unlock-name" style="color:#0ff">{{ jackFlavor.HIRE_BTN }}</span>
+      <span class="unlock-desc">Hire a Jack to auto-click a hero button once per second</span>
+    </div>
+    <button
+      class="unlock-btn"
+      [disabled]="!canAffordJack"
+      (click)="jackHire.emit()">
+      [HIRE:
+      {{ jackGoldCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>
+      +
+      {{ jackBeastCost }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>
+      +
+      {{ jackPotionCost }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
+      <ng-container *ngIf="jackKoboldEarCost > 0">
+        +
+        {{ jackKoboldEarCost }}<span [style.color]="currencyFlavor['kobold-ear'].color">{{ currencyFlavor['kobold-ear'].symbol }}</span>
+        +
+        {{ jackPixieDustCost }}<span [style.color]="currencyFlavor['pixie-dust'].color">{{ currencyFlavor['pixie-dust'].symbol }}</span>
+      </ng-container>
+      ]
+    </button>
+  </div>
 
   <!-- Minigame unlock (global purchase) -->
   <div class="unlock-card" *ngIf="minigameUnlockAvailable">

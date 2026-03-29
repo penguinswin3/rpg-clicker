@@ -36,6 +36,10 @@ export interface UpgradeState {
   potionMarketingLevel: number;
   /** Whether the minigame system has been purchased. Optional for old-save compat. */
   minigameUnlocked?: boolean;
+  /** Jacks of All Trades — how many have been hired. Optional for old-save compat. */
+  jacksOwned?: number;
+  /** How many Jacks are assigned per character id. Optional for old-save compat. */
+  jacksAllocations?: Record<string, number>;
 }
 
 /** Persisted UI window and filter preferences. */

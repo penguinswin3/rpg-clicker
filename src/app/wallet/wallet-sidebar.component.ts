@@ -140,4 +140,19 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
     if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'k';
     return n.toString();
   }
+
+  /**
+   * Format a per-second rate for display.
+   * - 0        → '--/s'
+   * - integer  → '+N/s'  (or '-N/s' for negative)
+   * - fraction → '+N.XX/s' (2 decimal places, trailing zeros stripped)
+   */
+  fmtRate(rate: number): string {
+    if (rate === 0) return '--/s';
+    const sign    = rate > 0 ? '+' : '';
+    const display = Number.isInteger(rate)
+      ? rate.toString()
+      : rate.toFixed(2).replace(/\.?0+$/, '');   // strip trailing zeros after rounding
+    return `${sign}${display}/s`;
+  }
 }

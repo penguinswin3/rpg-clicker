@@ -4,7 +4,7 @@ import { Subscription, combineLatest } from 'rxjs';
 import { CharacterService, Character } from './character.service';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
-import { GLOBAL_UPGRADE_FLAVOR, CURRENCY_FLAVOR } from '../flavor-text';
+import { GLOBAL_UPGRADE_FLAVOR, CURRENCY_FLAVOR, JACK_FLAVOR } from '../flavor-text';
 
 @Component({
   selector: 'app-character-unlock',
@@ -27,11 +27,22 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
   @Input() canAffordMinigame  = false;
   @Output() minigameUnlock    = new EventEmitter<void>();
 
+  // ── Jack of All Trades hire inputs ────────
+  @Input() jackHireAvailable = false;
+  @Input() canAffordJack     = false;
+  @Input() jackGoldCost      = 0;
+  @Input() jackBeastCost     = 0;
+  @Input() jackPotionCost    = 0;
+  @Input() jackKoboldEarCost = 0;
+  @Input() jackPixieDustCost = 0;
+  @Output() jackHire         = new EventEmitter<void>();
+
   /** Locked characters whose XP requirement has been reached. */
   available: Character[] = [];
   xp = 0;
 
   readonly globalUpgradeFlavor = GLOBAL_UPGRADE_FLAVOR;
+  readonly jackFlavor          = JACK_FLAVOR;
   readonly currencyFlavor      = CURRENCY_FLAVOR;
 
   ngOnInit(): void {

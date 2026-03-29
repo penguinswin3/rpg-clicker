@@ -38,7 +38,7 @@
         <div class="currency-data">
           <span class="currency-amount">{{ fmt(getEntry(c.id).amount) }}</span>
           <span class="currency-rate" [class.inactive]="getEntry(c.id).perSecond === 0">
-            {{ getEntry(c.id).perSecond > 0 ? '+' + getEntry(c.id).perSecond + '/s' : '--/s' }}
+            {{ fmtRate(getEntry(c.id).perSecond) }}
           </span>
         </div>
         <!-- XP unlock progress bar — absolutely positioned, no layout impact -->

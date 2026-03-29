@@ -108,6 +108,16 @@ export const GLOBAL_UPGRADE_FLAVOR = {
   },
 } as const;
 
+// ── Jack of All Trades ────────────────────────────────────────
+export const JACK_FLAVOR = {
+  PANEL_TITLE:    '[ JACKS OF ALL TRADES ]',
+  AVAILABLE:      'Available',
+  NEXT_UNLOCK:    'Next Jack at',
+  ALL_UNLOCKED:   'All Jacks unlocked!',
+  HIRE_BTN:       'HIRE JACK',
+  ASSIGN_LABEL:   'Assign Jacks',
+} as const;
+
 // ── Hero Stats Box ────────────────────────────────────────────
 export const HERO_STATS_FLAVOR = {
   BOX_TITLE: '[ CHARACTER STATS ]',

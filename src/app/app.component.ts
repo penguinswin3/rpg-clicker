@@ -11,8 +11,8 @@ import { CharacterService } from './character/character.service';
 import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './save/options-menu.component';
 import { SaveService, UpgradeState } from './save/save.service';
-import { XP_THRESHOLDS, BASE_COSTS, COST_SCALE, YIELDS, UPGRADE_MAX, UNLOCK_COSTS } from './game-config';
-import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR } from './flavor-text';
+import { XP_THRESHOLDS, BASE_COSTS, COST_SCALE, YIELDS, UPGRADE_MAX, UNLOCK_COSTS, JACK_XP_THRESHOLDS, JACK_COSTS } from './game-config';
+import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR, JACK_FLAVOR } from './flavor-text';
 
 @Component({
   selector: 'app-root',
@@ -46,6 +46,160 @@ export class AppComponent implements OnInit, OnDestroy {
 
   get minigameShown(): boolean {
     return this.minigameUnlocked;
+  }
+
+  // ── Jack of All Trades ─────────────────────────────────────────
+  readonly jackFlavor      = JACK_FLAVOR;
+  readonly jackCosts       = JACK_COSTS;
+  readonly jackThresholds  = JACK_XP_THRESHOLDS;
+
+  /** Number of Jacks the player has actually hired (purchased). */
+  jacksOwned = 0;
+  /** Map of characterId → number of Jacks currently allocated to that character. */
+  jacksAllocations: Record<string, number> = {};
+
+  /** Unlocked characters (used for the Jack allocation panel). */
+  unlockedCharacters: { id: string; name: string; color: string }[] = [];
+
+  /** How many Jacks can be hired based on current XP (i.e. how many thresholds passed). */
+  get jacksUnlockedCount(): number {
+    return JACK_XP_THRESHOLDS.filter(t => this.xp >= t).length;
+  }
+
+  /** How many additional Jacks can still be purchased right now. */
+  get jacksToPurchase(): number {
+    return Math.max(0, this.jacksUnlockedCount - this.jacksOwned);
+  }
+
+  /** Jacks that have been hired but not yet assigned to any character. */
+  get jacksPoolFree(): number {
+    const allocated = Object.values(this.jacksAllocations).reduce((a, b) => a + b, 0);
+    return this.jacksOwned - allocated;
+  }
+
+  /** Whether the Jack panel should be visible (first threshold has been reached OR a Jack is owned). */
+  get jacksVisible(): boolean {
+    return this.xp >= JACK_XP_THRESHOLDS[0] || this.jacksOwned > 0;
+  }
+
+  /** XP needed to unlock the next Jack slot, or null if all are unlocked. */
+  get nextJackThreshold(): number | null {
+    return JACK_XP_THRESHOLDS.find(t => t > this.xp) ?? null;
+  }
+
+  /** Whether the player can currently afford to hire a Jack. */
+  get canAffordJack(): boolean {
+    if (!this.wallet.canAfford('gold',   this.jackCurrentGoldCost))   return false;
+    if (!this.wallet.canAfford('beast',  this.jackCurrentBeastCost))  return false;
+    if (!this.wallet.canAfford('potion', this.jackCurrentPotionCost)) return false;
+    if (this.jacksOwned >= JACK_COSTS.RARE_THRESHOLD) {
+      if (!this.wallet.canAfford('kobold-ear', this.jackCurrentKoboldEarCost)) return false;
+      if (!this.wallet.canAfford('pixie-dust', this.jackCurrentPixieDustCost)) return false;
+    }
+    return true;
+  }
+
+  // Scaled hire costs — each is floor(BASE × SCALE^jacksOwned)
+  get jackCurrentGoldCost(): number {
+    return Math.floor(JACK_COSTS.GOLD * Math.pow(JACK_COSTS.SCALE, this.jacksOwned));
+  }
+  get jackCurrentBeastCost(): number {
+    return Math.floor(JACK_COSTS.BEAST * Math.pow(JACK_COSTS.SCALE, this.jacksOwned));
+  }
+  get jackCurrentPotionCost(): number {
+    return Math.floor(JACK_COSTS.POTIONS * Math.pow(JACK_COSTS.SCALE, this.jacksOwned));
+  }
+  /** Kobold Ear cost — 0 until RARE_THRESHOLD Jacks are owned, then scales from there. */
+  get jackCurrentKoboldEarCost(): number {
+    if (this.jacksOwned < JACK_COSTS.RARE_THRESHOLD) return 0;
+    return Math.floor(JACK_COSTS.KOBOLD_EARS_BASE
+      * Math.pow(JACK_COSTS.SCALE, this.jacksOwned - JACK_COSTS.RARE_THRESHOLD));
+  }
+  /** Pixie Dust cost — 0 until RARE_THRESHOLD Jacks are owned, then scales from there. */
+  get jackCurrentPixieDustCost(): number {
+    if (this.jacksOwned < JACK_COSTS.RARE_THRESHOLD) return 0;
+    return Math.floor(JACK_COSTS.PIXIE_DUST_BASE
+      * Math.pow(JACK_COSTS.SCALE, this.jacksOwned - JACK_COSTS.RARE_THRESHOLD));
+  }
+
+  /** Returns how many Jacks are assigned to the given character. */
+  getJackCount(charId: string): number {
+    return this.jacksAllocations[charId] ?? 0;
+  }
+
+  /** The currently-active character's info for the Jack allocation row. */
+  get activeCharacterInfo(): { id: string; name: string; color: string } | undefined {
+    return this.unlockedCharacters.find(c => c.id === this.activeCharacterId);
+  }
+
+  /** Hire a new Jack (deduct cost, increment owned). */
+  buyJack(): void {
+    if (this.jacksToPurchase <= 0) return;
+    if (!this.canAffordJack) {
+      this.log.log(`Not enough resources to hire a Jack.`, 'warn');
+      return;
+    }
+    this.wallet.remove('gold',   this.jackCurrentGoldCost);
+    this.wallet.remove('beast',  this.jackCurrentBeastCost);
+    this.wallet.remove('potion', this.jackCurrentPotionCost);
+    if (this.jacksOwned >= JACK_COSTS.RARE_THRESHOLD) {
+      this.wallet.remove('kobold-ear', this.jackCurrentKoboldEarCost);
+      this.wallet.remove('pixie-dust', this.jackCurrentPixieDustCost);
+    }
+    this.jacksOwned++;
+    this.log.log(`A Jack of All Trades has been hired! (Total: ${this.jacksOwned})`, 'success');
+  }
+
+  /** Move one Jack from the free pool to the given character. */
+  allocateJack(charId: string): void {
+    if (this.jacksPoolFree <= 0) return;
+    this.jacksAllocations = {
+      ...this.jacksAllocations,
+      [charId]: (this.jacksAllocations[charId] ?? 0) + 1,
+    };
+    this.updateAllPerSecond();
+  }
+
+  /** Remove one Jack from the given character back to the free pool. */
+  deallocateJack(charId: string): void {
+    const current = this.jacksAllocations[charId] ?? 0;
+    if (current <= 0) return;
+    this.jacksAllocations = {
+      ...this.jacksAllocations,
+      [charId]: current - 1,
+    };
+    this.updateAllPerSecond();
+  }
+
+  /**
+   * Silent version of hero click used by Jack auto-clicks.
+   * Produces the same resources/XP as the manual click but never writes to the log.
+   */
+  private jackAutoClick(charId: string): void {
+    if (charId === 'fighter') {
+      this.wallet.add('gold', this.goldPerClick);
+      this.wallet.add('xp', 1);
+    } else if (charId === 'ranger') {
+      this.wallet.add('xp', 1);
+      const targetHerb = Math.random() < 0.5;
+      if (targetHerb) {
+        const herbs = this.computeHerbYield();
+        this.wallet.add('herb', herbs);
+      } else {
+        if (Math.random() < this.beastFindChance / 100) {
+          this.wallet.add('beast', 1);
+        }
+      }
+    } else if (charId === 'apothecary') {
+      const herbCost = YIELDS.APOTHECARY_BREW_HERB_COST;
+      if (!this.wallet.canAfford('herb', herbCost)) return;
+      this.wallet.remove('herb', herbCost);
+      this.wallet.add('potion', 1);
+      this.wallet.add('xp', 1);
+      if (this.herbSaveChance > 0 && Math.random() * 100 < this.herbSaveChance) {
+        this.wallet.add('herb', 1);
+      }
+    }
   }
 
   get questBtnLabel(): string {
@@ -191,11 +345,24 @@ export class AppComponent implements OnInit, OnDestroy {
     });
     this.charService.characters$.subscribe(chars => {
       this.apothecaryUnlocked = chars.find(c => c.id === 'apothecary')?.unlocked ?? false;
+      this.unlockedCharacters = chars
+        .filter(c => c.unlocked)
+        .map(c => ({ id: c.id, name: c.name, color: c.color }));
     });
     setInterval(() => {
       const total = this.autoGoldPerSecond + this.potionAutoGoldPerSecond;
       if (total > 0) {
         this.wallet.add('gold', total);
+      }
+    }, 1000);
+    // Jack auto-click: each allocated Jack fires once per second per assigned character
+    setInterval(() => {
+      for (const [charId, count] of Object.entries(this.jacksAllocations)) {
+        if (count > 0) {
+          for (let i = 0; i < count; i++) {
+            this.jackAutoClick(charId);
+          }
+        }
       }
     }, 1000);
   }
@@ -249,6 +416,8 @@ export class AppComponent implements OnInit, OnDestroy {
       potionMarketingCost:      this.potionMarketingCost,
       potionMarketingLevel:     this.potionMarketingLevel,
       minigameUnlocked:         this.minigameUnlocked,
+      jacksOwned:               this.jacksOwned,
+      jacksAllocations:         { ...this.jacksAllocations },
     };
   }
 
@@ -275,11 +444,56 @@ export class AppComponent implements OnInit, OnDestroy {
     this.potionMarketingCost     = s.potionMarketingCost;
     this.potionMarketingLevel    = s.potionMarketingLevel;
     this.minigameUnlocked        = s.minigameUnlocked ?? false;
-    this.updateGoldPerSecond();
+    this.jacksOwned              = s.jacksOwned ?? 0;
+    this.jacksAllocations        = s.jacksAllocations ? { ...s.jacksAllocations } : {};
+    this.updateAllPerSecond();
   }
 
-  private updateGoldPerSecond(): void {
-    this.wallet.setPerSecond('gold', this.autoGoldPerSecond + this.potionAutoGoldPerSecond);
+  /**
+   * Expected herb yield per single Ranger click (before the 50/50 herb-vs-beast split).
+   * Used both in the actual click logic and for per-second rate display.
+   */
+  private expectedHerbPerRangerClick(): number {
+    const base        = YIELDS.RANGER_BASE_HERBS;
+    const guaranteed  = Math.floor(this.moreHerbsLevel / 100);
+    const remainder   = this.moreHerbsLevel % 100;
+    // Each guaranteed 100 levels = one certain doubling; remainder% = one probabilistic doubling
+    return base * Math.pow(2, guaranteed) * (1 + remainder / 100);
+  }
+
+  /**
+   * Recompute and push per-second display rates for every currency.
+   * Called after any upgrade purchase or Jack allocation change.
+   */
+  private updateAllPerSecond(): void {
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+
+    const fighterJacks    = this.jacksAllocations['fighter']    ?? 0;
+    const rangerJacks     = this.jacksAllocations['ranger']     ?? 0;
+    const apothecaryJacks = this.jacksAllocations['apothecary'] ?? 0;
+    const totalJacks      = fighterJacks + rangerJacks + apothecaryJacks;
+
+    // Gold: passive upgrades (Contracted Hirelings + Potion Marketing) + Fighter Jacks (1 click/s × goldPerClick)
+    this.wallet.setPerSecond('gold',
+      round2(this.autoGoldPerSecond + this.potionAutoGoldPerSecond + fighterJacks * this.goldPerClick)
+    );
+
+    // XP: every Jack click awards 1 XP regardless of character
+    this.wallet.setPerSecond('xp', round2(totalJacks));
+
+    // Herb: Ranger Jacks produce (50% herb-target × expected yield per forage);
+    //        Apothecary Jacks consume (brewCost herbs − expected herb-save)
+    const herbProduced = rangerJacks * 0.5 * this.expectedHerbPerRangerClick();
+    const herbConsumed = apothecaryJacks * (YIELDS.APOTHECARY_BREW_HERB_COST - this.herbSaveChance / 100);
+    this.wallet.setPerSecond('herb', round2(herbProduced - herbConsumed));
+
+    // Beast: Ranger Jacks × 50% beast-target × beastFindChance%
+    this.wallet.setPerSecond('beast',
+      round2(rangerJacks * 0.5 * (this.beastFindChance / 100))
+    );
+
+    // Potion: Apothecary Jacks brew one potion per click
+    this.wallet.setPerSecond('potion', round2(apothecaryJacks));
   }
 
   // ── Adventure click ───────────────────────
@@ -435,7 +649,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.remove('gold', this.autoUpgradeCost);
       this.autoUpgradeLevel++;
       this.autoUpgradeCost = Math.floor(this.autoUpgradeCost * COST_SCALE.CONTRACTED_HIRELINGS);
-      this.updateGoldPerSecond();
+      this.updateAllPerSecond();
       this.log.log(
         `Contracted Hirelings upgraded to Lv.${this.autoUpgradeLevel}. Now earning ${this.autoGoldPerSecond}g/sec.`,
         'success'
@@ -567,7 +781,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.remove('gold', this.potionMarketingCost);
       this.potionMarketingLevel++;
       this.potionMarketingCost = Math.floor(this.potionMarketingCost * COST_SCALE.POTION_MARKETING);
-      this.updateGoldPerSecond();
+      this.updateAllPerSecond();
       this.log.log(
         `Potion Marketing upgraded to Lv.${this.potionMarketingLevel}. Now passively earning ${this.potionAutoGoldPerSecond}g/sec from sales.`,
         'success'

@@ -20,6 +20,23 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
       </header>
 
       <section class="click-area">
+
+        <!-- Jacks column: pool-info directly above the bordered assigner -->
+        <div class="jack-column" *ngIf="jacksVisible && activeCharacterInfo">
+          <div class="jack-pool-info">
+            <span class="jack-pool-label" [style.visibility]="jacksPoolFree > 0 ? 'visible' : 'hidden'">Avail: <span class="jack-pool-count">{{ jacksPoolFree }}</span></span>
+            <span class="jack-next-unlock" *ngIf="nextJackThreshold !== null">&nbsp;·&nbsp;Next: {{ nextJackThreshold | number }} XP</span>
+          </div>
+          <div class="jack-alloc-stack">
+            <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack(activeCharacterInfo.id)">[+]</button>
+            <div class="jack-assigned-display">
+              <span class="jack-assigned-num">{{ getJackCount(activeCharacterInfo.id) }}</span>
+              <span class="jack-assigned-label">Jacks</span>
+            </div>
+            <button class="jack-alloc-btn" [disabled]="getJackCount(activeCharacterInfo.id) <= 0" (click)="deallocateJack(activeCharacterInfo.id)">[-]</button>
+          </div>
+        </div>
+
         <button class="hero-btn" (click)="clickHero()">
           [ >>> {{ questBtnLabel }} <<< ]
         </button>
@@ -246,7 +263,15 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         [canAffordMinigame]="gold >= minigameUnlockCosts.MINIGAME_GOLD &&
                              potions >= minigameUnlockCosts.MINIGAME_POTIONS &&
                              beast >= minigameUnlockCosts.MINIGAME_BEAST"
-        (minigameUnlock)="buyMinigameUnlock()"></app-character-unlock>
+        (minigameUnlock)="buyMinigameUnlock()"
+        [jackHireAvailable]="jacksToPurchase > 0"
+        [canAffordJack]="canAffordJack"
+        [jackGoldCost]="jackCurrentGoldCost"
+        [jackBeastCost]="jackCurrentBeastCost"
+        [jackPotionCost]="jackCurrentPotionCost"
+        [jackKoboldEarCost]="jackCurrentKoboldEarCost"
+        [jackPixieDustCost]="jackCurrentPixieDustCost"
+        (jackHire)="buyJack()"></app-character-unlock>
 
       <!-- spacer so content isn't hidden behind the fixed log panel -->
       <div class="log-spacer"></div>

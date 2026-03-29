@@ -16,6 +16,29 @@ export const XP_THRESHOLDS = {
   MINIGAME_UNLOCK:   2500,
 } as const;
 
+// ── Jack of All Trades ────────────────────────────────────────
+/** XP thresholds at which one additional Jack can be hired (in order). */
+export const JACK_XP_THRESHOLDS: readonly number[] = [
+  1500, 3000, 5000, 7500, 10_000,
+  15_000, 20_000, 30_000, 50_000,
+];
+
+/** One-time cost to hire a single Jack. Costs scale per Jack purchased. */
+export const JACK_COSTS = {
+  // Base costs (for the first Jack)
+  GOLD:    1000,
+  BEAST:   200,
+  POTIONS: 50,
+  /** Multiplier applied to every cost for each Jack already owned. */
+  SCALE: 1.5,
+  /** After this many Jacks are owned, Kobold Ears and Pixie Dust are also required. */
+  RARE_THRESHOLD: 4,
+  /** Base Kobold Ears cost when rare costs kick in. */
+  KOBOLD_EARS_BASE: 5,
+  /** Base Pixie Dust cost when rare costs kick in. */
+  PIXIE_DUST_BASE: 3,
+} as const;
+
 // ── Character Unlock Costs ────────────────────────────────────
 export const UNLOCK_COSTS = {
   RANGER_GOLD:       250,
