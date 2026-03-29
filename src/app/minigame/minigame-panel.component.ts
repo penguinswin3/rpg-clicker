@@ -32,6 +32,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() fighterAttack = 1;
   /** Potion Chugging level — forwarded to the fighter minigame. */
   @Input() potionChuggingLevel = 0;
+  /** Bountiful Lands level — forwarded to the ranger minigame. */
+  @Input() bountifulLandsLevel = 0;
 
   xp = 0;
   activeCharacterId = 'fighter';

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
@@ -43,6 +43,9 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   readonly GRID_SIZE  = RANGER_MG.GRID_SIZE;
   readonly SCOUT_COST = RANGER_MG.SCOUT_COST;
   readonly currencyFlavor = CURRENCY_FLAVOR;
+
+  /** Each level = +1% chance a blank cell is converted to a prize cell (max 100%). */
+  @Input() bountifulLandsLevel = 0;
 
   // Wallet-synced
   beastMeat = 0;
@@ -99,11 +102,16 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     this.wallet.remove('beast', this.SCOUT_COST);
     this.log.log(`Ranger sets out to scout the area. (−${this.SCOUT_COST} Raw Beast Meat)`);
 
-    // Prize cells + blank cells, all shuffled
+    // Prize cells + blank cells, all shuffled.
+    // Bountiful Lands: each blank cell has a bountifulLandsLevel% chance to become a prize.
+    const convertChance = Math.min(100, this.bountifulLandsLevel);
     const prizeCells = RANGER_MG.GRID_SIZE - RANGER_MG.BLANK_CELLS;
     const pool: GridCell[] = [
-      ...Array.from({ length: prizeCells },          () => ({ prize: this.rollPrize(), revealed: false })),
-      ...Array.from({ length: RANGER_MG.BLANK_CELLS }, () => ({ prize: 'blank' as PrizeType, revealed: false })),
+      ...Array.from({ length: prizeCells }, () => ({ prize: this.rollPrize(), revealed: false })),
+      ...Array.from({ length: RANGER_MG.BLANK_CELLS }, () => {
+        const isPrize = convertChance > 0 && Math.random() * 100 < convertChance;
+        return { prize: (isPrize ? this.rollPrize() : 'blank') as PrizeType, revealed: false };
+      }),
     ];
     // Fisher-Yates shuffle
     for (let i = pool.length - 1; i > 0; i--) {

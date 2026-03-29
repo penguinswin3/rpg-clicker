@@ -49,6 +49,10 @@ export const UPGRADE_FLAVOR = {
     /** Static prefix — template appends the live "(now X%)" suffix. */
     desc: '+1% beast find chance',
   },
+  BOUNTIFUL_LANDS: {
+    name: 'Bountiful Lands',
+    desc: '+1% chance a blank cell yields a prize',
+  },
 
   // Apothecary
   POTION_TITRATION: {

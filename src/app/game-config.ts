@@ -39,10 +39,9 @@ export const UPGRADE_MAX = {
   SHARPER_SWORDS:       999,
 
   // Ranger
-  MORE_HERBS:       999,
-  /** At level 45 the beast-find chance already hits the 95% hard cap,
-   *  but the level counter itself is allowed to run to 999. */
-  BETTER_TRACKING:  999,
+  MORE_HERBS:           999,
+  BETTER_TRACKING:      999,
+  BOUNTIFUL_LANDS:      100,  // 100% = every blank cell guaranteed a prize
 
   // Apothecary
   /** 400 levels × +1% each = 400% save-chance.
@@ -62,6 +61,7 @@ export const BASE_COSTS = {
   // Ranger
   MORE_HERBS:       15,
   BETTER_TRACKING:  20,
+  BOUNTIFUL_LANDS:  50,  // gold; ranger minigame upgrade
 
   // Apothecary
   POTION_TITRATION: 20,
@@ -78,6 +78,7 @@ export const COST_SCALE = {
 
   MORE_HERBS:       1.5,
   BETTER_TRACKING:  1.5,
+  BOUNTIFUL_LANDS:  1.5,
 
   POTION_TITRATION: 1.5,
   POTION_MARKETING: 1.5,

@@ -24,6 +24,9 @@ export interface UpgradeState {
   moreHerbsLevel: number;
   betterTrackingLevel: number;
   betterTrackingCost: number;
+  /** Bountiful Lands minigame upgrade — optional for old-save compat */
+  bountifulLandsLevel?: number;
+  bountifulLandsCost?: number;
   // Apothecary
   herbSaveChance: number;
   potionTitrationCost: number;

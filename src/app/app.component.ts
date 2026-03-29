@@ -117,6 +117,10 @@ export class AppComponent implements OnInit, OnDestroy {
   betterTrackingLevel       = 0;
   betterTrackingCost: number = BASE_COSTS.BETTER_TRACKING;
 
+  /** Minigame upgrade — each level gives +1% chance a blank cell yields a prize. */
+  bountifulLandsLevel        = 0;
+  bountifulLandsCost: number = BASE_COSTS.BOUNTIFUL_LANDS;
+
   get beastFindChance(): number {
     return Math.min(YIELDS.RANGER_BEAST_CHANCE_CAP, YIELDS.RANGER_BASE_BEAST_CHANCE + this.betterTrackingLevel);
   }
@@ -144,6 +148,7 @@ export class AppComponent implements OnInit, OnDestroy {
   get sharperSwordsMaxed():   boolean { return this.sharperSwordsLevel   >= UPGRADE_MAX.SHARPER_SWORDS;   }
   get moreHerbsMaxed():       boolean { return this.moreHerbsLevel       >= UPGRADE_MAX.MORE_HERBS;       }
   get betterTrackingMaxed():  boolean { return this.betterTrackingLevel  >= UPGRADE_MAX.BETTER_TRACKING;  }
+  get bountifulLandsMaxed():  boolean { return this.bountifulLandsLevel  >= UPGRADE_MAX.BOUNTIFUL_LANDS;  }
   get potionTitrationMaxed(): boolean { return this.potionTitrationLevel >= UPGRADE_MAX.POTION_TITRATION; }
   get potionMarketingMaxed(): boolean { return this.potionMarketingLevel >= UPGRADE_MAX.POTION_MARKETING; }
 
@@ -236,6 +241,8 @@ export class AppComponent implements OnInit, OnDestroy {
       moreHerbsLevel:           this.moreHerbsLevel,
       betterTrackingLevel:      this.betterTrackingLevel,
       betterTrackingCost:       this.betterTrackingCost,
+      bountifulLandsLevel:      this.bountifulLandsLevel,
+      bountifulLandsCost:       this.bountifulLandsCost,
       herbSaveChance:           this.herbSaveChance,
       potionTitrationCost:      this.potionTitrationCost,
       potionTitrationLevel:     this.potionTitrationLevel,
@@ -260,6 +267,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.moreHerbsLevel          = s.moreHerbsLevel;
     this.betterTrackingLevel     = s.betterTrackingLevel;
     this.betterTrackingCost      = s.betterTrackingCost;
+    this.bountifulLandsLevel     = s.bountifulLandsLevel ?? 0;
+    this.bountifulLandsCost      = s.bountifulLandsCost  ?? BASE_COSTS.BOUNTIFUL_LANDS;
     this.herbSaveChance          = s.herbSaveChance;
     this.potionTitrationCost     = s.potionTitrationCost;
     this.potionTitrationLevel    = s.potionTitrationLevel;
@@ -508,6 +517,24 @@ export class AppComponent implements OnInit, OnDestroy {
     } else {
       this.log.log(
         `Not enough gold for Better Tracking. Need ${this.betterTrackingCost}g, have ${this.gold}g.`,
+        'warn'
+      );
+    }
+  }
+
+  buyBountifulLands(): void {
+    if (this.bountifulLandsMaxed) { return; }
+    if (this.wallet.canAfford('gold', this.bountifulLandsCost)) {
+      this.wallet.remove('gold', this.bountifulLandsCost);
+      this.bountifulLandsLevel++;
+      this.bountifulLandsCost = Math.floor(this.bountifulLandsCost * COST_SCALE.BOUNTIFUL_LANDS);
+      this.log.log(
+        `Bountiful Lands upgraded to Lv.${this.bountifulLandsLevel}. Blank cell prize chance now ${this.bountifulLandsLevel}%.`,
+        'success'
+      );
+    } else {
+      this.log.log(
+        `Not enough gold for Bountiful Lands. Need ${this.bountifulLandsCost}g, have ${this.gold}g.`,
         'warn'
       );
     }

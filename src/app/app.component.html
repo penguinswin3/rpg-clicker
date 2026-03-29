@@ -2,7 +2,7 @@
   <app-wallet-sidebar></app-wallet-sidebar>
 
   <!-- Minigame panel: unlocked at 2500 XP, spans left of game area -->
-  <app-minigame-panel *ngIf="minigameShown" [fighterAttack]="fighterAttackPower" [potionChuggingLevel]="potionChuggingLevel" />
+  <app-minigame-panel *ngIf="minigameShown" [fighterAttack]="fighterAttackPower" [potionChuggingLevel]="potionChuggingLevel" [bountifulLandsLevel]="bountifulLandsLevel" />
 
   <div class="game-wrapper">
     <div class="game-container">
@@ -210,6 +210,25 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             </ng-container>
 
             <!-- Ranger minigame upgrades (placeholder) -->
+            <ng-container *ngIf="activeCharacterId === 'ranger'">
+              <div class="upgrade-card">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.BOUNTIFUL_LANDS.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.BOUNTIFUL_LANDS.desc }}</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="bountifulLandsMaxed"
+                    [disabled]="bountifulLandsMaxed || gold < bountifulLandsCost"
+                    (click)="buyBountifulLands()">
+                    <ng-container *ngIf="bountifulLandsMaxed; else blCost">[MAXED]</ng-container>
+                    <ng-template #blCost>[BUY: {{ bountifulLandsCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ bountifulLandsLevel }}/{{ upgradeMax.BOUNTIFUL_LANDS }}</span>
+                </div>
+              </div>
+            </ng-container>
             <!-- Apothecary minigame upgrades (placeholder) -->
 
           </div><!-- /upgrades-col minigame -->
