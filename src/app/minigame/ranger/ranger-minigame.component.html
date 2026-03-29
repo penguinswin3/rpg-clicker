@@ -6,13 +6,13 @@
       <div class="idle-title">[ SCOUTING ]</div>
       <div class="idle-desc">
         Reveal 3 of 9 hidden boxes.<br>
-        Costs {{ SCOUT_COST }}<span [style.color]="currencyFlavor['cooked-meat'].color">{{ currencyFlavor['cooked-meat'].symbol }}</span> per scout.
+        Costs {{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span> per scout.
       </div>
       <button class="scout-btn" [disabled]="!canScout" (click)="newRound()">
-        [ SCOUT ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['cooked-meat'].color">{{ currencyFlavor['cooked-meat'].symbol }}</span>) ]
+        [ SCOUT ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>) ]
       </button>
       <div class="cost-warn" *ngIf="!canScout">
-        need {{ SCOUT_COST - cookedMeat }} more <span [style.color]="currencyFlavor['cooked-meat'].color">{{ currencyFlavor['cooked-meat'].name }}</span>
+        need {{ SCOUT_COST - beastMeat }} more <span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].name }}</span>
       </div>
     </div>
   </ng-container>
@@ -57,10 +57,10 @@
     <!-- Scout again (only when round is over) -->
     <ng-container *ngIf="roundOver">
       <button class="scout-btn" [disabled]="!canScout" (click)="newRound()">
-        [ SCOUT AGAIN ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['cooked-meat'].color">{{ currencyFlavor['cooked-meat'].symbol }}</span>) ]
+        [ SCOUT AGAIN ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>) ]
       </button>
       <div class="cost-warn" *ngIf="!canScout">
-        need {{ SCOUT_COST - cookedMeat }} more <span [style.color]="currencyFlavor['cooked-meat'].color">{{ currencyFlavor['cooked-meat'].name }}</span>
+        need {{ SCOUT_COST - beastMeat }} more <span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].name }}</span>
       </div>
     </ng-container>
 

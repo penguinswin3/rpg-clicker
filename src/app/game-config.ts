@@ -143,7 +143,7 @@ export const RANGER_MG = {
   GRID_SIZE:    9,
   /** How many of those cells are blank (no reward) */
   BLANK_CELLS:  5,
-  /** Cooked Meat cost to begin a scouting round */
+  /** Raw Beast Meat cost to begin a scouting round */
   SCOUT_COST:   25,
 
   /** Probability a prize cell contains Pixie Dust (0–1) */

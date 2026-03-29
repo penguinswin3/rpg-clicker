@@ -45,7 +45,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   readonly currencyFlavor = CURRENCY_FLAVOR;
 
   // Wallet-synced
-  cookedMeat = 0;
+  beastMeat = 0;
 
   cells: GridCell[]  = [];
   picksLeft          = this.PICKS;
@@ -62,7 +62,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   msgClass = 'msg-neutral';
 
   get canScout(): boolean {
-    return this.cookedMeat >= this.SCOUT_COST;
+    return this.beastMeat >= this.SCOUT_COST;
   }
 
   // ── Lifecycle ─────────────────────────────
@@ -70,7 +70,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
-        this.cookedMeat = Math.floor(s['cooked-meat']?.amount ?? 0);
+        this.beastMeat = Math.floor(s['beast']?.amount ?? 0);
       })
     );
   }
@@ -96,8 +96,8 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
 
   newRound(): void {
     if (!this.canScout) return;
-    this.wallet.remove('cooked-meat', this.SCOUT_COST);
-    this.log.log(`Ranger sets out to scout the area. (−${this.SCOUT_COST} Cooked Meat)`);
+    this.wallet.remove('beast', this.SCOUT_COST);
+    this.log.log(`Ranger sets out to scout the area. (−${this.SCOUT_COST} Raw Beast Meat)`);
 
     // Prize cells + blank cells, all shuffled
     const prizeCells = RANGER_MG.GRID_SIZE - RANGER_MG.BLANK_CELLS;
