@@ -121,6 +121,7 @@ $muted: #555;
 // ── Expanded rows ─────────────────────────
 
 .currency-row {
+  position: relative;
   padding: 10px 10px 8px;
   border-bottom: 1px solid #1a1a1a;
 
@@ -174,6 +175,7 @@ $muted: #555;
 // ── Collapsed icons ───────────────────────
 
 .currency-compact {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -181,6 +183,52 @@ $muted: #555;
   border-bottom: 1px dotted #1e1e1e;
 
   &:last-child { border-bottom: none; }
+}
+
+// ...existing code...
+
+// ── XP unlock progress bar ────────────────
+// Absolutely positioned so it never adds to the box height.
+
+.xp-progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #0d0d0d;
+  overflow: hidden;
+}
+
+.xp-progress-fill {
+  height: 100%;
+  transition: width 0.4s ease;
+
+  &.xp-rainbow {
+    background: linear-gradient(
+      90deg,
+      #ff0000,
+      #ff7700,
+      #ffff00,
+      #00cc00,
+      #0000ff,
+      #4b0082,
+      #8b00ff,
+      #ff0000
+    ) !important;
+    background-size: 200% 100% !important;
+  }
+}
+
+@keyframes xp-rainbow-scroll {
+  from { background-position: 0% 0%; }
+  to   { background-position: 200% 0%; }
+}
+
+// Inset slightly in the compact view to clear the dotted border corners
+.xp-track-compact {
+  left: 5px;
+  right: 5px;
 }
 
 .compact-amount {

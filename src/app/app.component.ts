@@ -12,7 +12,7 @@ import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './save/options-menu.component';
 import { SaveService, UpgradeState } from './save/save.service';
 import { XP_THRESHOLDS, BASE_COSTS, COST_SCALE, YIELDS, UPGRADE_MAX, UNLOCK_COSTS } from './game-config';
-import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR } from './flavor-text';
+import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR } from './flavor-text';
 
 @Component({
   selector: 'app-root',
@@ -134,8 +134,9 @@ export class AppComponent implements OnInit, OnDestroy {
   get potionAutoGoldPerSecond(): number { return this.potionMarketingLevel; }
 
   // ── Upgrade max levels (sourced from game-config) ─────────────
-  readonly upgradeMax   = UPGRADE_MAX;
+  readonly upgradeMax    = UPGRADE_MAX;
   readonly upgradeFlavor = UPGRADE_FLAVOR;
+  readonly currencyFlavor = CURRENCY_FLAVOR;
 
   get betterBountiesMaxed():    boolean { return this.clickUpgradeLevel    >= UPGRADE_MAX.BETTER_BOUNTIES;    }
   get contractedHirelingsMaxed(): boolean { return this.autoUpgradeLevel     >= UPGRADE_MAX.CONTRACTED_HIRELINGS; }

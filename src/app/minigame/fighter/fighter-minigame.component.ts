@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { FIGHTER_MG } from '../../game-config';
+import { CURRENCY_FLAVOR } from '../../flavor-text';
 
 interface Enemy {
   name: string;
@@ -37,6 +38,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   // ── Fighter state ─────────────────────────
   readonly maxHp   = FIGHTER_MG.MAX_HP;
   readonly defense = FIGHTER_MG.DEFENSE;
+  readonly currencyFlavor = CURRENCY_FLAVOR;
   fighterHp: number = FIGHTER_MG.MAX_HP;
 
   // ── Wallet-synced ─────────────────────────
@@ -200,7 +202,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       xpReward:  FIGHTER_MG.KOBOLD_XP_REWARD,
       earReward: FIGHTER_MG.KOBOLD_EAR_REWARD,
       ascii:
-        ' <(>_<)>↟  \n' +
+        '  <(>_<)>↟  \n' +
         '   /||-- |   \n' +
         '   d  b  |   ',
     };

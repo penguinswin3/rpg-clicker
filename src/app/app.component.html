@@ -62,7 +62,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     [disabled]="betterBountiesMaxed || gold < clickUpgradeCost"
                     (click)="buyClickUpgrade()">
                     <ng-container *ngIf="betterBountiesMaxed; else ssCost">[MAXED]</ng-container>
-                    <ng-template #ssCost>[BUY: {{ clickUpgradeCost }}g]</ng-template>
+                    <ng-template #ssCost>[BUY: {{ clickUpgradeCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>]</ng-template>
                   </button>
                   <span class="upgrade-level">Lv.{{ clickUpgradeLevel }}/{{ upgradeMax.BETTER_BOUNTIES }}</span>
                 </div>
@@ -80,7 +80,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     [disabled]="contractedHirelingsMaxed || gold < autoUpgradeCost"
                     (click)="buyAutoUpgrade()">
                     <ng-container *ngIf="contractedHirelingsMaxed; else ckCost">[MAXED]</ng-container>
-                    <ng-template #ckCost>[BUY: {{ autoUpgradeCost }}g]</ng-template>
+                    <ng-template #ckCost>[BUY: {{ autoUpgradeCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>]</ng-template>
                   </button>
                   <span class="upgrade-level">Lv.{{ autoUpgradeLevel }}/{{ upgradeMax.CONTRACTED_HIRELINGS }}</span>
                 </div>
@@ -101,7 +101,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     [disabled]="moreHerbsMaxed || gold < moreHerbsCost"
                     (click)="buyMoreHerbs()">
                     <ng-container *ngIf="moreHerbsMaxed; else mhCost">[MAXED]</ng-container>
-                    <ng-template #mhCost>[BUY: {{ moreHerbsCost }}g]</ng-template>
+                    <ng-template #mhCost>[BUY: {{ moreHerbsCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>]</ng-template>
                   </button>
                   <span class="upgrade-level">Lv.{{ moreHerbsLevel }}/{{ upgradeMax.MORE_HERBS }}</span>
                 </div>
@@ -119,7 +119,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     [disabled]="betterTrackingMaxed || gold < betterTrackingCost"
                     (click)="buyBetterTracking()">
                     <ng-container *ngIf="betterTrackingMaxed; else btCost">[MAXED]</ng-container>
-                    <ng-template #btCost>[BUY: {{ betterTrackingCost }}g]</ng-template>
+                    <ng-template #btCost>[BUY: {{ betterTrackingCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>]</ng-template>
                   </button>
                   <span class="upgrade-level">Lv.{{ betterTrackingLevel }}/{{ upgradeMax.BETTER_TRACKING }}</span>
                 </div>
@@ -140,7 +140,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     [disabled]="potionTitrationMaxed || gold < potionTitrationCost"
                     (click)="buyPotionTitration()">
                     <ng-container *ngIf="potionTitrationMaxed; else ptCost">[MAXED]</ng-container>
-                    <ng-template #ptCost>[BUY: {{ potionTitrationCost }}g]</ng-template>
+                    <ng-template #ptCost>[BUY: {{ potionTitrationCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>]</ng-template>
                   </button>
                   <span class="upgrade-level">Lv.{{ potionTitrationLevel }}/{{ upgradeMax.POTION_TITRATION }}</span>
                 </div>
@@ -158,7 +158,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     [disabled]="potionMarketingMaxed || gold < potionMarketingCost"
                     (click)="buyPotionMarketing()">
                     <ng-container *ngIf="potionMarketingMaxed; else pmCost">[MAXED]</ng-container>
-                    <ng-template #pmCost>[BUY: {{ potionMarketingCost }}g]</ng-template>
+                    <ng-template #pmCost>[BUY: {{ potionMarketingCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>]</ng-template>
                   </button>
                   <span class="upgrade-level">Lv.{{ potionMarketingLevel }}/{{ upgradeMax.POTION_MARKETING }}</span>
                 </div>
@@ -184,7 +184,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     [disabled]="sharperSwordsMaxed || gold < sharperSwordsCost"
                     (click)="buySharperSwords()">
                     <ng-container *ngIf="sharperSwordsMaxed; else sswCost">[MAXED]</ng-container>
-                    <ng-template #sswCost>[BUY: {{ sharperSwordsCost }}g]</ng-template>
+                    <ng-template #sswCost>[BUY: {{ sharperSwordsCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>]</ng-template>
                   </button>
                   <span class="upgrade-level">Lv.{{ sharperSwordsLevel }}/{{ upgradeMax.SHARPER_SWORDS }}</span>
                 </div>
@@ -202,7 +202,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     [disabled]="potionChuggingMaxed || potions < potionChuggingCost"
                     (click)="buyPotionChugging()">
                     <ng-container *ngIf="potionChuggingMaxed; else pcCost">[MAXED]</ng-container>
-                    <ng-template #pcCost>[BUY: {{ potionChuggingCost }}pt]</ng-template>
+                    <ng-template #pcCost>[BUY: {{ potionChuggingCost }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>]</ng-template>
                   </button>
                   <span class="upgrade-level">Lv.{{ potionChuggingLevel }}/{{ upgradeMax.POTION_CHUGGING }}</span>
                 </div>

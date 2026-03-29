@@ -1,10 +1,9 @@
 .options-anchor {
   // Fixed to the viewport — completely outside document flow.
   position: fixed;
-  bottom: 210px;
-  // right is set dynamically via [style.right] binding in the template.
-  // The transition matches the character sidebar's own width transition.
-  transition: right 0.15s ease;
+  // bottom and right are driven by [style.bottom] and [style.right] bindings.
+  // Transitions match the sidebar and activity-log animations.
+  transition: right 0.15s ease, bottom 0.15s ease;
   z-index: 500;
   font-family: 'Courier New', Courier, monospace;
   display: flex;

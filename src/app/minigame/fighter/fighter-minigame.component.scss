@@ -43,8 +43,11 @@ $font: 'Courier New', Courier, monospace;
   font-family: $font;
   font-size: 10px;
   line-height: 1.4;
-  text-align: center;
-  margin: 0;
+  /* Center the block as a unit; keep each line left-aligned so the
+     art rows share a common left edge and stay coherent. */
+  display: table;
+  margin: 0 auto;
+  text-align: left;
   white-space: pre;
 }
 

@@ -11,6 +11,9 @@ const SIDEBAR_EXPANDED  = 220;
 const SIDEBAR_COLLAPSED =  46;
 /** Extra gap between options panel right edge and sidebar left edge */
 const SIDEBAR_GAP = 4;
+/** px height of the activity log in each state (must match activity-log.component.scss) */
+const LOG_EXPANDED  = 210;
+const LOG_MINIMIZED =  36;
 
 @Component({
   selector: 'app-options-menu',
@@ -30,7 +33,9 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
   showClearConfirm = false;
 
   /** Bound to [style.right] on the anchor — follows the sidebar width. */
-  rightOffset = `${SIDEBAR_EXPANDED + SIDEBAR_GAP}px`;
+  rightOffset  = `${SIDEBAR_EXPANDED + SIDEBAR_GAP}px`;
+  /** Bound to [style.bottom] on the anchor — follows the activity log height. */
+  bottomOffset = `${LOG_EXPANDED}px`;
 
   ngOnInit(): void {
     this.sub.add(
@@ -38,6 +43,11 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
         this.rightOffset = collapsed
           ? `${SIDEBAR_COLLAPSED + SIDEBAR_GAP}px`
           : `${SIDEBAR_EXPANDED  + SIDEBAR_GAP}px`;
+      })
+    );
+    this.sub.add(
+      this.log.minimized$.subscribe(minimized => {
+        this.bottomOffset = minimized ? `${LOG_MINIMIZED}px` : `${LOG_EXPANDED}px`;
       })
     );
   }

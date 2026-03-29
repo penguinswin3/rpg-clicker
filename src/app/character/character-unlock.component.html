@@ -7,13 +7,18 @@
     <div class="unlock-left">
       <span class="unlock-name" style="color:#ffd700">{{ globalUpgradeFlavor.UNLOCK_MINIGAMES.name }}</span>
       <span class="unlock-desc">{{ globalUpgradeFlavor.UNLOCK_MINIGAMES.desc }}</span>
-      <span class="xp-req">Requires {{ minigameGoldCost }}g + {{ minigamePotionCost }}pt + {{ minigameBeastCost }} beast meat</span>
     </div>
     <button
       class="unlock-btn"
       [disabled]="!canAffordMinigame"
       (click)="minigameUnlock.emit()">
-      [UNLOCK MINIGAMES]
+      [UNLOCK:
+      {{ minigameGoldCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>
+      +
+      {{ minigamePotionCost }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
+      +
+      {{ minigameBeastCost }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>
+      ]
     </button>
   </div>
 
@@ -28,7 +33,14 @@
       class="unlock-btn"
       [disabled]="!canAfford(c)"
       (click)="buy(c)">
-      [UNLOCK: {{ formatCosts(c) }}]
+      <ng-container *ngIf="costsFor(c).length === 0">[UNLOCK: FREE]</ng-container>
+      <ng-container *ngIf="costsFor(c).length > 0">
+        [UNLOCK:
+        <ng-container *ngFor="let cost of costsFor(c); let last = last">
+          {{ cost.amount }}<span [style.color]="cost.color">{{ cost.symbol }}</span><ng-container *ngIf="!last"> + </ng-container>
+        </ng-container>
+        ]
+      </ng-container>
     </button>
   </div>
 

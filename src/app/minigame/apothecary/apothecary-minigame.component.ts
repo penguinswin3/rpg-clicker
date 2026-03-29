@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { APOTH_MG } from '../../game-config';
+import { CURRENCY_FLAVOR } from '../../flavor-text';
 
 @Component({
   selector: 'app-apothecary-minigame',
@@ -26,8 +27,9 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   // ── Potion state ──────────────────────────
   potionActive      = false;
   quality           = 0;
-  readonly maxQuality = APOTH_MG.MAX_QUALITY;
-  readonly herbCost   = APOTH_MG.HERB_COST;
+  readonly maxQuality   = APOTH_MG.MAX_QUALITY;
+  readonly herbCost     = APOTH_MG.HERB_COST;
+  readonly currencyFlavor = CURRENCY_FLAVOR;
   firstPerfectDone  = false;
 
   // ── Beat bar ──────────────────────────────

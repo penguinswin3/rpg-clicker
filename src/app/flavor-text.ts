@@ -6,6 +6,19 @@
  * ════════════════════════════════════════════════════════════
  */
 
+// ── Currencies ────────────────────────────────────────────────
+export const CURRENCY_FLAVOR = {
+  gold:                  { name: 'Gold',                 symbol: '$',  color: '#ffcc00' },
+  xp:                    { name: 'Experience',           symbol: '֍',  color: '#53d394' },
+  herb:                  { name: 'Herb',                 symbol: '♣',  color: '#247a24' },
+  beast:                 { name: 'Raw Beast Meat',       symbol: 'Ꮻ',  color: '#e8739a' },
+  'cooked-meat':         { name: 'Cooked Meat',          symbol: 'Ꮻ',  color: '#683a0c' },
+  'pixie-dust':          { name: 'Pixie Dust',           symbol: '✦',  color: '#ffe066' },
+  potion:                { name: 'Potion',               symbol: '⚗',  color: '#ceaedf' },
+  'concentrated-potion': { name: 'Concentrated Potion',  symbol: '⚗',  color: '#ba70cf' },
+  'kobold-ear':          { name: 'Kobold Ear',           symbol: '>',  color: '#e02020' },
+} as const;
+
 // ── Upgrades ──────────────────────────────────────────────────
 export const UPGRADE_FLAVOR = {
   // Fighter

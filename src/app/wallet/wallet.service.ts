@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { CURRENCY_FLAVOR } from '../flavor-text';
 
 export interface Currency {
   id: string;
   name: string;
-  shorthand: string;
+  /** Single ASCII/Unicode symbol shown as the compact identifier. */
+  symbol: string;
   color: string;
   /** If set, this currency is hidden in the wallet until the named character is unlocked. */
   requiredCharacterId?: string;
@@ -26,15 +28,15 @@ export type WalletState = Record<string, CurrencyEntry>;
 export class WalletService {
   /** All currencies recognized by the wallet. Add new ones here. */
   readonly currencies: Currency[] = [
-    { id: 'gold',        name: 'Gold',          shorthand: 'gp', color: '#ffcc00' },
-    { id: 'xp',          name: 'Experience',    shorthand: 'xp', color: '#00ff88' },
-    { id: 'herb',          name: 'Herb',          shorthand: 'hr', color: '#44dd44', requiredCharacterId: 'ranger' },
-    { id: 'beast',         name: 'Raw Beast Meat', shorthand: 'bm', color: '#e8739a', requiredCharacterId: 'ranger' },
-    { id: 'cooked-meat',   name: 'Cooked Meat',    shorthand: 'cm', color: '#c0732a', requiredCharacterId: 'ranger', manualUnlock: true },
-    { id: 'pixie-dust',    name: 'Pixie Dust',     shorthand: 'pd', color: '#ffe066', requiredCharacterId: 'ranger', manualUnlock: true },
-    { id: 'potion',         name: 'Potion',         shorthand: 'pt', color: '#c37ef0', requiredCharacterId: 'apothecary' },
-    { id: 'concentrated-potion', name: 'Concentrated Potion', shorthand: 'cp', color: '#f5d0ff', requiredCharacterId: 'apothecary', manualUnlock: true },
-    { id: 'kobold-ear',    name: 'Kobold Ear',    shorthand: 'ke', color: '#e07820', requiredCharacterId: 'fighter',    manualUnlock: true },
+    { id: 'gold',                 ...CURRENCY_FLAVOR['gold']                  },
+    { id: 'xp',                   ...CURRENCY_FLAVOR['xp']                    },
+    { id: 'herb',                 ...CURRENCY_FLAVOR['herb'],                  requiredCharacterId: 'ranger'     },
+    { id: 'beast',                ...CURRENCY_FLAVOR['beast'],                 requiredCharacterId: 'ranger'     },
+    { id: 'cooked-meat',          ...CURRENCY_FLAVOR['cooked-meat'],           requiredCharacterId: 'ranger',    manualUnlock: true },
+    { id: 'pixie-dust',           ...CURRENCY_FLAVOR['pixie-dust'],            requiredCharacterId: 'ranger',    manualUnlock: true },
+    { id: 'potion',               ...CURRENCY_FLAVOR['potion'],                requiredCharacterId: 'apothecary' },
+    { id: 'concentrated-potion',  ...CURRENCY_FLAVOR['concentrated-potion'],   requiredCharacterId: 'apothecary', manualUnlock: true },
+    { id: 'kobold-ear',           ...CURRENCY_FLAVOR['kobold-ear'],            requiredCharacterId: 'fighter',   manualUnlock: true },
   ];
 
   private readonly stateSource = new BehaviorSubject<WalletState>(

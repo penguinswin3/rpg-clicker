@@ -4,12 +4,15 @@
   <ng-container *ngIf="!roundStarted">
     <div class="idle-block">
       <div class="idle-title">[ SCOUTING ]</div>
-      <div class="idle-desc">Reveal 3 of 9 hidden boxes.<br>Costs {{ SCOUT_COST }} Cooked Meat per scout.</div>
+      <div class="idle-desc">
+        Reveal 3 of 9 hidden boxes.<br>
+        Costs {{ SCOUT_COST }}<span [style.color]="currencyFlavor['cooked-meat'].color">{{ currencyFlavor['cooked-meat'].symbol }}</span> per scout.
+      </div>
       <button class="scout-btn" [disabled]="!canScout" (click)="newRound()">
-        [ SCOUT ({{ SCOUT_COST }}cm) ]
+        [ SCOUT ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['cooked-meat'].color">{{ currencyFlavor['cooked-meat'].symbol }}</span>) ]
       </button>
       <div class="cost-warn" *ngIf="!canScout">
-        need {{ SCOUT_COST - cookedMeat }} more Cooked Meat
+        need {{ SCOUT_COST - cookedMeat }} more <span [style.color]="currencyFlavor['cooked-meat'].color">{{ currencyFlavor['cooked-meat'].name }}</span>
       </div>
     </div>
   </ng-container>
@@ -54,10 +57,10 @@
     <!-- Scout again (only when round is over) -->
     <ng-container *ngIf="roundOver">
       <button class="scout-btn" [disabled]="!canScout" (click)="newRound()">
-        [ SCOUT AGAIN ({{ SCOUT_COST }}cm) ]
+        [ SCOUT AGAIN ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['cooked-meat'].color">{{ currencyFlavor['cooked-meat'].symbol }}</span>) ]
       </button>
       <div class="cost-warn" *ngIf="!canScout">
-        need {{ SCOUT_COST - cookedMeat }} more Cooked Meat
+        need {{ SCOUT_COST - cookedMeat }} more <span [style.color]="currencyFlavor['cooked-meat'].color">{{ currencyFlavor['cooked-meat'].name }}</span>
       </div>
     </ng-container>
 

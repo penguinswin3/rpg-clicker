@@ -4,7 +4,7 @@ import { Subscription, combineLatest } from 'rxjs';
 import { CharacterService, Character } from './character.service';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
-import { GLOBAL_UPGRADE_FLAVOR } from '../flavor-text';
+import { GLOBAL_UPGRADE_FLAVOR, CURRENCY_FLAVOR } from '../flavor-text';
 
 @Component({
   selector: 'app-character-unlock',
@@ -32,6 +32,7 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
   xp = 0;
 
   readonly globalUpgradeFlavor = GLOBAL_UPGRADE_FLAVOR;
+  readonly currencyFlavor      = CURRENCY_FLAVOR;
 
   ngOnInit(): void {
     this.sub.add(
@@ -69,15 +70,15 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
     this.log.log(`${char.name} has been unlocked! Welcome to the party.`, 'rare');
   }
 
-  /** Returns a formatted cost label, e.g. "1500 gp + 250 hr". */
-  formatCosts(char: Character): string {
-    if (char.unlockCosts.length === 0) return 'FREE';
-    return char.unlockCosts
-      .map(cost => `${cost.amount} ${this.shorthand(cost.currencyId)}`)
-      .join(' + ');
+  /** Returns structured cost entries for template rendering with colored symbols. */
+  costsFor(char: Character): { amount: number; symbol: string; color: string }[] {
+    return char.unlockCosts.map(cost => {
+      const c = this.wallet.currencies.find(cu => cu.id === cost.currencyId);
+      return { amount: cost.amount, symbol: c?.symbol ?? cost.currencyId, color: c?.color ?? '#fff' };
+    });
   }
 
   private shorthand(currencyId: string): string {
-    return this.wallet.currencies.find(c => c.id === currencyId)?.shorthand ?? currencyId;
+    return this.wallet.currencies.find(c => c.id === currencyId)?.symbol ?? currencyId;
   }
 }

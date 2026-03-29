@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService, Currency, CurrencyEntry, WalletState } from './wallet.service';
 import { CharacterService, Character } from '../character/character.service';
+import { XP_THRESHOLDS } from '../game-config';
 
 @Component({
   selector: 'app-wallet-sidebar',
@@ -63,6 +64,27 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
 
   get allFiltersActive(): boolean {
     return this.activeCharacterFilters.size === 0;
+  }
+
+  /** 0–100 percentage progress toward the next XP unlock threshold. */
+  get xpProgressPct(): number {
+    const xp = Math.floor(this.state['xp']?.amount ?? 0);
+    const thresholds = [
+      XP_THRESHOLDS.RANGER_UNLOCK,
+      XP_THRESHOLDS.APOTHECARY_UNLOCK,
+      XP_THRESHOLDS.MINIGAME_UNLOCK,
+    ];
+    let prev = 0;
+    for (const t of thresholds) {
+      if (xp < t) return Math.min(100, ((xp - prev) / (t - prev)) * 100);
+      prev = t;
+    }
+    return 100;
+  }
+
+  /** True once all XP unlock thresholds have been reached. */
+  get xpComplete(): boolean {
+    return this.xpProgressPct === 100;
   }
 
   // ── Lifecycle ─────────────────────────────

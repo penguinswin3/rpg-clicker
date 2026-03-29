@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { RANGER_MG } from '../../game-config';
+import { CURRENCY_FLAVOR } from '../../flavor-text';
 
 type PrizeType = 'meat' | 'herb' | 'pixie' | 'blank';
 
@@ -41,6 +42,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   readonly PICKS      = RANGER_MG.PICKS;
   readonly GRID_SIZE  = RANGER_MG.GRID_SIZE;
   readonly SCOUT_COST = RANGER_MG.SCOUT_COST;
+  readonly currencyFlavor = CURRENCY_FLAVOR;
 
   // Wallet-synced
   cookedMeat = 0;
