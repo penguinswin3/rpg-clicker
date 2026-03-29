@@ -1,8 +1,6 @@
 
 - Game Icon
 
-- Replace currency shorthand with a symbol?
-
 - More characters
   - Chef
     - Like that mastermind game / spicy stew to cook
@@ -18,16 +16,57 @@
     - Animal parts combination mix and match synnergy?
   - Party Face
     - Card game Blackjack?
+  - Merchant
+    - Stock market game where you can sell your materials for gp, and buy other materials for gp
+  - Slayer
+    - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
 
 - More upgrades
-  - Questing Automation
-  - Exp bonuses
 
-- General Wording and thematic changes
+
 - Code Refactors
 
 - flesh out the upgrades for the minigames
   - fighter, stronger kobolds
 
-- Flavor refactors
-  - Fighter upgrades should be bounty completion themed, minigames are sharper sword
+- 500 xp reward, possible XP increase for fighter questing
+
+- make the first jack show up on the xp tracker milestone
+
+- negative per seconds should be red
+
+- Some sort of notification if a jack can't complete it's job because of insufficent resources. should also not factor in to the per second
+
+- standardize the character screen summaries to include the unit on the right side of the colon (number/s)
+
+- Herb doubling can max out at 100% then a later upgrade will let you bypass that limit
+
+- Bountiful lands can cost herbs
+
+- apothecary minigame should use the herb symbol when you have insufficient herbs
+
+- kobold ear should be kobold left ear
+
+- after losing to a kobold there should be a lockout period (longish, upgradeable? Called recovery time?
+
+- you should get a nice xp bonus when successfully finding something in the ranger minigame
+
+- Bonus tries in the ranger minigame
+
+- extract log text to flavor file, might need to implement string replacement here idk
+
+- a summary of Jacks assignemnts in the character meny, maybe like a little (3) or some shit
+
+- Abundance upgrade for the ranger, The yield of herbs and meat is multiplied by the total number of successful nodes.
+
+- Hunter upgrade, a % chance to Hunt AND Gather
+
+- herb chance % is not neeed in the character stats page it should be above (Both chance)
+
+- Should you take damage the same turn you kill the kobold?
+
+- Stronger Kobolds (you can switch between them at any time)
+
+- The cost of the ranger minigame should be less
+
+- Only the first kobold ear should be the rare text, aka when the currency is unlocked

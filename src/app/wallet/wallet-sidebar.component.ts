@@ -72,6 +72,7 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
     const thresholds = [
       XP_THRESHOLDS.RANGER_UNLOCK,
       XP_THRESHOLDS.APOTHECARY_UNLOCK,
+      XP_THRESHOLDS.JACKS_UNLOCK,
       XP_THRESHOLDS.MINIGAME_UNLOCK,
     ];
     let prev = 0;

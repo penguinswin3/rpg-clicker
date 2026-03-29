@@ -24,7 +24,7 @@ export const UPGRADE_FLAVOR = {
   // Fighter
   BETTER_BOUNTIES: {
     name: 'Better Bounties',
-    desc: '+1 gold per click',
+    desc: '+1 gold per bounty',
   },
   CONTRACTED_HIRELINGS: {
     name: 'Contracted Hirelings',
@@ -47,11 +47,11 @@ export const UPGRADE_FLAVOR = {
   BETTER_TRACKING: {
     name: 'Better Tracking',
     /** Static prefix — template appends the live "(now X%)" suffix. */
-    desc: '+1% beast find chance',
+    desc: '+1% beast hunt chance',
   },
   BOUNTIFUL_LANDS: {
     name: 'Bountiful Lands',
-    desc: '+1% chance a blank cell yields a prize',
+    desc: '+1% chance a blank cell yields a resource',
   },
 
   // Apothecary
@@ -114,7 +114,7 @@ export const JACK_FLAVOR = {
   AVAILABLE:      'Available',
   NEXT_UNLOCK:    'Next Jack at',
   ALL_UNLOCKED:   'All Jacks unlocked!',
-  HIRE_BTN:       'HIRE JACK',
+  HIRE_BTN:       'Hire a Jack of All Trades',
   ASSIGN_LABEL:   'Assign Jacks',
 } as const;
 

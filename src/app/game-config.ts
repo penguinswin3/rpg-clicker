@@ -12,6 +12,8 @@ export const XP_THRESHOLDS = {
   RANGER_UNLOCK:     100,
   /** XP required before the Apothecary unlock offer appears */
   APOTHECARY_UNLOCK: 1000,
+  /** XP required before the First Jack purchase appears */
+  JACKS_UNLOCK: 1500,
   /** XP required to unlock all character minigame screens */
   MINIGAME_UNLOCK:   2500,
 } as const;
@@ -34,9 +36,9 @@ export const JACK_COSTS = {
   /** After this many Jacks are owned, Kobold Ears and Pixie Dust are also required. */
   RARE_THRESHOLD: 4,
   /** Base Kobold Ears cost when rare costs kick in. */
-  KOBOLD_EARS_BASE: 5,
+  KOBOLD_EARS_BASE: 50,
   /** Base Pixie Dust cost when rare costs kick in. */
-  PIXIE_DUST_BASE: 3,
+  PIXIE_DUST_BASE: 10,
 } as const;
 
 // ── Character Unlock Costs ────────────────────────────────────
@@ -168,7 +170,7 @@ export const RANGER_MG = {
   /** How many of those cells are blank (no reward) */
   BLANK_CELLS:  5,
   /** Raw Beast Meat cost to begin a scouting round */
-  SCOUT_COST:   25,
+  SCOUT_COST:   9,
 
   /** Probability a prize cell contains Pixie Dust (0–1) */
   PIXIE_CHANCE: 0.10,
