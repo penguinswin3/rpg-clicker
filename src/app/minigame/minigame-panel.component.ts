@@ -29,6 +29,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
 
   /** Sword sharpness passed in from AppComponent (goldPerClick). */
   @Input() fighterAttack = 1;
+  /** Potion Chugging level — forwarded to the fighter minigame. */
+  @Input() potionChuggingLevel = 0;
 
   xp = 0;
   activeCharacterId = 'fighter';

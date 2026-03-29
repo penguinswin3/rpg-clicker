@@ -2,7 +2,7 @@
   <app-wallet-sidebar />
 
   <!-- Minigame panel: unlocked at 2500 XP, spans left of game area -->
-  <app-minigame-panel *ngIf="minigameShown" [fighterAttack]="goldPerClick" />
+  <app-minigame-panel *ngIf="minigameShown" [fighterAttack]="goldPerClick" [potionChuggingLevel]="potionChuggingLevel" />
 
   <div class="game-wrapper">
     <div class="game-container">
@@ -16,7 +16,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 | |\ \| |   | |_\ \ | \__/\| |_____| |_| \__/\| |\  \| |___| |\ \
 \_| \_\_|    \____/  \____/\_____/\___/ \____/\_| \_/\____/\_| \_|
         </pre>
-        <div class="divider">+===========================================================+</div>
+        <div class="divider">+===============================================================================================+</div>
       </header>
 
       <section class="click-area">
@@ -39,146 +39,165 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
       </section>
 
       <section class="upgrades">
-        <div class="divider">+===========================================================+</div>
-        <div class="section-title">[ UPGRADES ]</div>
+        <div class="divider">+===============================================================================================+</div>
 
-        <!-- Fighter upgrades -->
-        <ng-container *ngIf="activeCharacterId === 'fighter'">
-          <div class="upgrade-card">
-            <div class="upgrade-info">
-              <span class="upgrade-name cyan-text">/( Sharper Sword )\</span>
-              <span class="upgrade-desc">+1 gold per click</span>
-            </div>
-            <div class="upgrade-btn-wrap">
-              <button
-                class="upgrade-btn"
-                [class.upgrade-maxed]="sharperSwordMaxed"
-                [disabled]="sharperSwordMaxed || gold < clickUpgradeCost"
-                (click)="buyClickUpgrade()">
-                <ng-container *ngIf="sharperSwordMaxed; else ssCost">[MAXED]</ng-container>
-                <ng-template #ssCost>[BUY: {{ clickUpgradeCost }}g]</ng-template>
-              </button>
-              <span class="upgrade-level">Lv.{{ clickUpgradeLevel }}/{{ upgradeMax.SHARPER_SWORD }}</span>
-            </div>
-          </div>
+        <div class="upgrades-columns">
 
-          <div class="upgrade-card">
-            <div class="upgrade-info">
-              <span class="upgrade-name cyan-text">/( Contract Killing )\</span>
-              <span class="upgrade-desc">+1 gold/sec</span>
-            </div>
-            <div class="upgrade-btn-wrap">
-              <button
-                class="upgrade-btn"
-                [class.upgrade-maxed]="contractKillingMaxed"
-                [disabled]="contractKillingMaxed || gold < autoUpgradeCost"
-                (click)="buyAutoUpgrade()">
-                <ng-container *ngIf="contractKillingMaxed; else ckCost">[MAXED]</ng-container>
-                <ng-template #ckCost>[BUY: {{ autoUpgradeCost }}g]</ng-template>
-              </button>
-              <span class="upgrade-level">Lv.{{ autoUpgradeLevel }}/{{ upgradeMax.CONTRACT_KILLING }}</span>
-            </div>
-          </div>
+          <!-- ══ Standard upgrades ════════════════════════════════════ -->
+          <div class="upgrades-col">
+            <div class="section-title">[ UPGRADES ]</div>
 
-          <!-- Unlocked once Apothecary is in the party -->
-          <div class="upgrade-card" *ngIf="apothecaryUnlocked">
-            <div class="upgrade-info">
-              <span class="upgrade-name cyan-text">/( Potion Chugging )\</span>
-              <span class="upgrade-desc">???</span>
-            </div>
-            <div class="upgrade-btn-wrap">
-              <button
-                class="upgrade-btn"
-                [class.upgrade-maxed]="potionChuggingMaxed"
-                [disabled]="potionChuggingMaxed || potions < potionChuggingCost"
-                (click)="buyPotionChugging()">
-                <ng-container *ngIf="potionChuggingMaxed; else pcCost">[MAXED]</ng-container>
-                <ng-template #pcCost>[BUY: {{ potionChuggingCost }}pt]</ng-template>
-              </button>
-              <span class="upgrade-level">Lv.{{ potionChuggingLevel }}/{{ upgradeMax.POTION_CHUGGING }}</span>
-            </div>
-          </div>
-        </ng-container>
+            <!-- Fighter upgrades -->
+            <ng-container *ngIf="activeCharacterId === 'fighter'">
+              <div class="upgrade-card">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">Sharper Sword</span>
+                  <span class="upgrade-desc">+1 gold per click</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="sharperSwordMaxed"
+                    [disabled]="sharperSwordMaxed || gold < clickUpgradeCost"
+                    (click)="buyClickUpgrade()">
+                    <ng-container *ngIf="sharperSwordMaxed; else ssCost">[MAXED]</ng-container>
+                    <ng-template #ssCost>[BUY: {{ clickUpgradeCost }}g]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ clickUpgradeLevel }}/{{ upgradeMax.SHARPER_SWORD }}</span>
+                </div>
+              </div>
 
-        <!-- Ranger upgrades -->
-        <ng-container *ngIf="activeCharacterId === 'ranger'">
-          <div class="upgrade-card">
-            <div class="upgrade-info">
-              <span class="upgrade-name cyan-text">/( More Herbs )\</span>
-              <span class="upgrade-desc">+1% chance to double base herbs</span>
-            </div>
-            <div class="upgrade-btn-wrap">
-              <button
-                class="upgrade-btn"
-                [class.upgrade-maxed]="moreHerbsMaxed"
-                [disabled]="moreHerbsMaxed || gold < moreHerbsCost"
-                (click)="buyMoreHerbs()">
-                <ng-container *ngIf="moreHerbsMaxed; else mhCost">[MAXED]</ng-container>
-                <ng-template #mhCost>[BUY: {{ moreHerbsCost }}g]</ng-template>
-              </button>
-              <span class="upgrade-level">Lv.{{ moreHerbsLevel }}/{{ upgradeMax.MORE_HERBS }}</span>
-            </div>
-          </div>
+              <div class="upgrade-card">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">Contract Killing</span>
+                  <span class="upgrade-desc">+1 gold/sec</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="contractKillingMaxed"
+                    [disabled]="contractKillingMaxed || gold < autoUpgradeCost"
+                    (click)="buyAutoUpgrade()">
+                    <ng-container *ngIf="contractKillingMaxed; else ckCost">[MAXED]</ng-container>
+                    <ng-template #ckCost>[BUY: {{ autoUpgradeCost }}g]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ autoUpgradeLevel }}/{{ upgradeMax.CONTRACT_KILLING }}</span>
+                </div>
+              </div>
+            </ng-container>
 
-          <div class="upgrade-card">
-            <div class="upgrade-info">
-              <span class="upgrade-name cyan-text">/( Better Tracking )\</span>
-              <span class="upgrade-desc">+1% beast find chance (now {{ beastFindChance }}%)</span>
-            </div>
-            <div class="upgrade-btn-wrap">
-              <button
-                class="upgrade-btn"
-                [class.upgrade-maxed]="betterTrackingMaxed"
-                [disabled]="betterTrackingMaxed || gold < betterTrackingCost"
-                (click)="buyBetterTracking()">
-                <ng-container *ngIf="betterTrackingMaxed; else btCost">[MAXED]</ng-container>
-                <ng-template #btCost>[BUY: {{ betterTrackingCost }}g]</ng-template>
-              </button>
-              <span class="upgrade-level">Lv.{{ betterTrackingLevel }}/{{ upgradeMax.BETTER_TRACKING }}</span>
-            </div>
-          </div>
-        </ng-container>
+            <!-- Ranger upgrades -->
+            <ng-container *ngIf="activeCharacterId === 'ranger'">
+              <div class="upgrade-card">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">More Herbs</span>
+                  <span class="upgrade-desc">+1% chance to double base herbs</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="moreHerbsMaxed"
+                    [disabled]="moreHerbsMaxed || gold < moreHerbsCost"
+                    (click)="buyMoreHerbs()">
+                    <ng-container *ngIf="moreHerbsMaxed; else mhCost">[MAXED]</ng-container>
+                    <ng-template #mhCost>[BUY: {{ moreHerbsCost }}g]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ moreHerbsLevel }}/{{ upgradeMax.MORE_HERBS }}</span>
+                </div>
+              </div>
 
-        <!-- Apothecary upgrades -->
-        <ng-container *ngIf="activeCharacterId === 'apothecary'">
-          <div class="upgrade-card">
-            <div class="upgrade-info">
-              <span class="upgrade-name cyan-text">/( Potion Titration )\</span>
-              <span class="upgrade-desc">+1% herb save chance on brew | Save: {{ herbSaveChance }}%</span>
-            </div>
-            <div class="upgrade-btn-wrap">
-              <button
-                class="upgrade-btn"
-                [class.upgrade-maxed]="potionTitrationMaxed"
-                [disabled]="potionTitrationMaxed || gold < potionTitrationCost"
-                (click)="buyPotionTitration()">
-                <ng-container *ngIf="potionTitrationMaxed; else ptCost">[MAXED]</ng-container>
-                <ng-template #ptCost>[BUY: {{ potionTitrationCost }}g]</ng-template>
-              </button>
-              <span class="upgrade-level">Lv.{{ potionTitrationLevel }}/{{ upgradeMax.POTION_TITRATION }}</span>
-            </div>
-          </div>
+              <div class="upgrade-card">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">Better Tracking</span>
+                  <span class="upgrade-desc">+1% beast find chance (now {{ beastFindChance }}%)</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="betterTrackingMaxed"
+                    [disabled]="betterTrackingMaxed || gold < betterTrackingCost"
+                    (click)="buyBetterTracking()">
+                    <ng-container *ngIf="betterTrackingMaxed; else btCost">[MAXED]</ng-container>
+                    <ng-template #btCost>[BUY: {{ betterTrackingCost }}g]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ betterTrackingLevel }}/{{ upgradeMax.BETTER_TRACKING }}</span>
+                </div>
+              </div>
+            </ng-container>
 
-          <div class="upgrade-card">
-            <div class="upgrade-info">
-              <span class="upgrade-name cyan-text">/( Potion Marketing )\</span>
-              <span class="upgrade-desc">+1 gold/sec from passive sales</span>
-            </div>
-            <div class="upgrade-btn-wrap">
-              <button
-                class="upgrade-btn"
-                [class.upgrade-maxed]="potionMarketingMaxed"
-                [disabled]="potionMarketingMaxed || gold < potionMarketingCost"
-                (click)="buyPotionMarketing()">
-                <ng-container *ngIf="potionMarketingMaxed; else pmCost">[MAXED]</ng-container>
-                <ng-template #pmCost>[BUY: {{ potionMarketingCost }}g]</ng-template>
-              </button>
-              <span class="upgrade-level">Lv.{{ potionMarketingLevel }}/{{ upgradeMax.POTION_MARKETING }}</span>
-            </div>
-          </div>
-        </ng-container>
+            <!-- Apothecary upgrades -->
+            <ng-container *ngIf="activeCharacterId === 'apothecary'">
+              <div class="upgrade-card">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">Potion Titration</span>
+                  <span class="upgrade-desc">+1% herb save chance on brew | Save: {{ herbSaveChance }}%</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="potionTitrationMaxed"
+                    [disabled]="potionTitrationMaxed || gold < potionTitrationCost"
+                    (click)="buyPotionTitration()">
+                    <ng-container *ngIf="potionTitrationMaxed; else ptCost">[MAXED]</ng-container>
+                    <ng-template #ptCost>[BUY: {{ potionTitrationCost }}g]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ potionTitrationLevel }}/{{ upgradeMax.POTION_TITRATION }}</span>
+                </div>
+              </div>
 
-        <div class="divider">+===========================================================+</div>
+              <div class="upgrade-card">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">Potion Marketing</span>
+                  <span class="upgrade-desc">+1 gold/sec from passive sales</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="potionMarketingMaxed"
+                    [disabled]="potionMarketingMaxed || gold < potionMarketingCost"
+                    (click)="buyPotionMarketing()">
+                    <ng-container *ngIf="potionMarketingMaxed; else pmCost">[MAXED]</ng-container>
+                    <ng-template #pmCost>[BUY: {{ potionMarketingCost }}g]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ potionMarketingLevel }}/{{ upgradeMax.POTION_MARKETING }}</span>
+                </div>
+              </div>
+            </ng-container>
+          </div><!-- /upgrades-col standard -->
+
+          <!-- ══ Minigame upgrades (visible once minigames unlock) ═══ -->
+          <div class="upgrades-col upgrades-minigame-col" *ngIf="minigameShown">
+            <div class="section-title">[ MINIGAME ]</div>
+
+            <!-- Fighter minigame upgrades -->
+            <ng-container *ngIf="activeCharacterId === 'fighter'">
+              <div class="upgrade-card" *ngIf="apothecaryUnlocked">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">Potion Chugging</span>
+                  <span class="upgrade-desc">+1 HP per potion heal</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="potionChuggingMaxed"
+                    [disabled]="potionChuggingMaxed || potions < potionChuggingCost"
+                    (click)="buyPotionChugging()">
+                    <ng-container *ngIf="potionChuggingMaxed; else pcCost">[MAXED]</ng-container>
+                    <ng-template #pcCost>[BUY: {{ potionChuggingCost }}pt]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ potionChuggingLevel }}/{{ upgradeMax.POTION_CHUGGING }}</span>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Ranger minigame upgrades (placeholder) -->
+            <!-- Apothecary minigame upgrades (placeholder) -->
+
+          </div><!-- /upgrades-col minigame -->
+
+        </div><!-- /upgrades-columns -->
+
+        <div class="divider">+===============================================================================================+</div>
 
       </section>
       <app-character-unlock />

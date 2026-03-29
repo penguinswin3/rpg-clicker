@@ -26,6 +26,8 @@ interface Enemy {
 export class FighterMinigameComponent implements OnInit, OnDestroy {
   /** Sword sharpness — fed in from goldPerClick on the Fighter. */
   @Input() attackPower = 1;
+  /** Potion Chugging upgrade level — each level adds +1 HP to potion heals. */
+  @Input() potionChuggingLevel = 0;
 
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
@@ -61,6 +63,11 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
   get enemyHpPct(): number {
     return Math.max(0, (this.enemy.hp / this.enemy.maxHp) * 100);
+  }
+
+  /** Base heal + 1 HP per Potion Chugging level. */
+  get potionHealAmount(): number {
+    return FIGHTER_MG.POTION_HEAL + this.potionChuggingLevel;
   }
 
   get actionsDisabled(): boolean {
@@ -109,7 +116,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     if (this.healDisabled) return;
 
     this.wallet.remove('potion', 1);
-    const healed = Math.min(FIGHTER_MG.POTION_HEAL, this.maxHp - this.fighterHp);
+    const healed = Math.min(this.potionHealAmount, this.maxHp - this.fighterHp);
     this.fighterHp += healed;
 
     const eDmg = this.rollEnemyDamage();

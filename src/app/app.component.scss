@@ -21,7 +21,7 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 600px;
+  max-width: 860px;
   padding: 2rem 1rem;
   background: #000;
   color: #fff;
@@ -232,7 +232,27 @@
 
 .upgrades {
   width: 100%;
-  max-width: 480px;
+}
+
+.upgrades-columns {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
+  width: 100%;
+}
+
+.upgrades-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.upgrades-minigame-col {
+  border-left: 1px solid #333;
+  padding-left: 1rem;
+  margin-left: 0.5rem;
 }
 
 .upgrade-card {
