@@ -270,6 +270,22 @@
   color: #0ff;
 }
 
+.upgrade-btn-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  margin-left: 1rem;
+  flex-shrink: 0;
+}
+
+.upgrade-level {
+  font-size: 0.7rem;
+  color: #555;
+  text-align: right;
+  font-family: 'Courier New', Courier, monospace;
+}
+
 .upgrade-btn {
   background: #000;
   color: #fff;
@@ -279,7 +295,6 @@
   padding: 0.35rem 0.75rem;
   cursor: pointer;
   white-space: nowrap;
-  margin-left: 1rem;
   transition: background 0.1s, color 0.1s;
 
   &:hover:not(:disabled) {

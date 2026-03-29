@@ -23,11 +23,7 @@
   - Questing Automation
   - Exp bonuses
 
-- Make the minigame buttons move less so you can spam click and not have to move your mouse
-
 - General Wording and thematic changes
-  - Rename perfect potion to concentrated potion. This could be a whole upgrade chain later
-
 - Code Refactors
 
 - Make things not selectable by dragging mouse?
