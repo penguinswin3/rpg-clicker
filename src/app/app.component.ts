@@ -338,12 +338,13 @@ export class AppComponent implements OnInit, OnDestroy {
     const fighterJacks    = this.jacksAllocations['fighter']    ?? 0;
     const rangerJacks     = this.jacksAllocations['ranger']     ?? 0;
     const apothecaryJacks = this.jacksAllocations['apothecary'] ?? 0;
-    const totalJacks      = fighterJacks + rangerJacks + apothecaryJacks;
 
     this.wallet.setPerSecond('gold',
       round2(this.autoGoldPerSecond + this.potionAutoGoldPerSecond + fighterJacks * this.goldPerClick));
 
-    this.wallet.setPerSecond('xp', round2(totalJacks));
+    // Fighter jacks fire xpPerBounty per click; ranger/apothecary jacks give 1 XP each.
+    this.wallet.setPerSecond('xp',
+      round2(fighterJacks * this.xpPerBounty + rangerJacks + apothecaryJacks));
 
     const herbProduced = rangerJacks * 0.5 * this.expectedHerbPerRangerClick();
     const herbConsumed = apothecaryJacks * (YIELDS.APOTHECARY_BREW_HERB_COST - this.herbSaveChance / 100);
