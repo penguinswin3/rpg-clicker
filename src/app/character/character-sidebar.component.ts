@@ -18,6 +18,12 @@ export interface HeroStat {
 })
 export class CharacterSidebarComponent implements OnInit, OnDestroy {
   @Input() heroStats: HeroStat[] = [];
+  /** Passed in from AppComponent so the sidebar can display Jack assignment counts. */
+  @Input() jacksAllocations: Record<string, number> = {};
+
+  getJackCount(charId: string): number {
+    return this.jacksAllocations[charId] ?? 0;
+  }
 
   private charService = inject(CharacterService);
   private sub = new Subscription();

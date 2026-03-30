@@ -54,9 +54,9 @@
 
   <!-- ══════ IDLE hints ══════ -->
   <ng-container *ngIf="!potionActive">
-    <div class="cost-hint">costs {{ herbCost }}<span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span></div>
+    <div class="cost-hint">costs {{ herbCost }} <span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span></div>
     <div class="herb-warn" *ngIf="herbs < herbCost">
-      need {{ herbCost - herbs }} more <span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].name }}</span>
+      need {{ herbCost - herbs }} more <span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span>
     </div>
   </ng-container>
 

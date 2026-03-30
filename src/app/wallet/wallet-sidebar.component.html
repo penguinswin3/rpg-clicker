@@ -37,7 +37,9 @@
         </div>
         <div class="currency-data">
           <span class="currency-amount">{{ fmt(getEntry(c.id).amount) }}</span>
-          <span class="currency-rate" [class.inactive]="getEntry(c.id).perSecond === 0">
+          <span class="currency-rate"
+                [class.inactive]="getEntry(c.id).perSecond === 0"
+                [class.negative]="getEntry(c.id).perSecond < 0">
             {{ fmtRate(getEntry(c.id).perSecond) }}
           </span>
         </div>

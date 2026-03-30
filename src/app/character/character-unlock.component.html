@@ -51,9 +51,8 @@
   <!-- Character unlocks -->
   <div class="unlock-card" *ngFor="let c of available">
     <div class="unlock-left">
-      <span class="unlock-name" [style.color]="c.color">/( {{ c.name }} )\</span>
+      <span class="unlock-name" [style.color]="c.color">{{ c.name }}</span>
       <span class="unlock-desc">{{ c.description }}</span>
-      <span class="xp-req">Requires {{ c.xpRequirement }} XP</span>
     </div>
     <button
       class="unlock-btn"

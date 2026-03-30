@@ -58,6 +58,13 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Map of characterId → number of Jacks currently allocated to that character. */
   jacksAllocations: Record<string, number> = {};
 
+  /**
+   * Tracks which characters currently have Jacks that are starved of resources
+   * (i.e. tried to auto-click but couldn't complete the action).
+   * Cleared automatically when the Jack succeeds.
+   */
+  jackStarved: Record<string, boolean> = {};
+
   /** Unlocked characters (used for the Jack allocation panel). */
   unlockedCharacters: { id: string; name: string; color: string }[] = [];
 
@@ -132,6 +139,22 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.unlockedCharacters.find(c => c.id === this.activeCharacterId);
   }
 
+  /** True when the active character has at least one Jack assigned but they are all starved. */
+  get activeCharJackStarved(): boolean {
+    return this.getJackCount(this.activeCharacterId) > 0
+      && this.jackStarved[this.activeCharacterId] === true;
+  }
+
+  /** Human-readable reason the Jack is idle for the active character. */
+  get activeCharJackStarvedMsg(): string {
+    if (this.activeCharacterId === 'apothecary') {
+      const need = YIELDS.APOTHECARY_BREW_HERB_COST;
+      const have = Math.floor(this.wallet.get('herb'));
+      return `⚠ Jack idle — need ${need} herbs (have ${have})`;
+    }
+    return '⚠ Jack idle — insufficient resources';
+  }
+
   /** Hire a new Jack (deduct cost, increment owned). */
   buyJack(): void {
     if (this.jacksToPurchase <= 0) return;
@@ -179,6 +202,9 @@ export class AppComponent implements OnInit, OnDestroy {
     if (charId === 'fighter') {
       this.wallet.add('gold', this.goldPerClick);
       this.wallet.add('xp', 1);
+      if (this.jackStarved[charId]) {
+        this.jackStarved = { ...this.jackStarved, [charId]: false };
+      }
     } else if (charId === 'ranger') {
       this.wallet.add('xp', 1);
       const targetHerb = Math.random() < 0.5;
@@ -190,9 +216,20 @@ export class AppComponent implements OnInit, OnDestroy {
           this.wallet.add('beast', 1);
         }
       }
+      if (this.jackStarved[charId]) {
+        this.jackStarved = { ...this.jackStarved, [charId]: false };
+      }
     } else if (charId === 'apothecary') {
       const herbCost = YIELDS.APOTHECARY_BREW_HERB_COST;
-      if (!this.wallet.canAfford('herb', herbCost)) return;
+      if (!this.wallet.canAfford('herb', herbCost)) {
+        if (!this.jackStarved[charId]) {
+          this.jackStarved = { ...this.jackStarved, [charId]: true };
+        }
+        return;
+      }
+      if (this.jackStarved[charId]) {
+        this.jackStarved = { ...this.jackStarved, [charId]: false };
+      }
       this.wallet.remove('herb', herbCost);
       this.wallet.add('potion', 1);
       this.wallet.add('xp', 1);

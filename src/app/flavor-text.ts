@@ -16,7 +16,7 @@ export const CURRENCY_FLAVOR = {
   'pixie-dust':          { name: 'Pixie Dust',           symbol: '✦',  color: '#ffe066' },
   potion:                { name: 'Potion',               symbol: '⚗',  color: '#ceaedf' },
   'concentrated-potion': { name: 'Concentrated Potion',  symbol: '⚗',  color: '#ba70cf' },
-  'kobold-ear':          { name: 'Kobold Ear',           symbol: '>',  color: '#e02020' },
+  'kobold-ear':          { name: 'Kobold Left Ear',      symbol: '>',  color: '#e02020' },
 } as const;
 
 // ── Upgrades ──────────────────────────────────────────────────

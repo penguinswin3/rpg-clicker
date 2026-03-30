@@ -33,19 +33,11 @@
 
 - make the first jack show up on the xp tracker milestone
 
-- negative per seconds should be red
-
-- Some sort of notification if a jack can't complete it's job because of insufficent resources. should also not factor in to the per second
-
 - standardize the character screen summaries to include the unit on the right side of the colon (number/s)
 
 - Herb doubling can max out at 100% then a later upgrade will let you bypass that limit
 
 - Bountiful lands can cost herbs
-
-- apothecary minigame should use the herb symbol when you have insufficient herbs
-
-- kobold ear should be kobold left ear
 
 - after losing to a kobold there should be a lockout period (longish, upgradeable? Called recovery time?
 
@@ -55,18 +47,18 @@
 
 - extract log text to flavor file, might need to implement string replacement here idk
 
-- a summary of Jacks assignemnts in the character meny, maybe like a little (3) or some shit
-
 - Abundance upgrade for the ranger, The yield of herbs and meat is multiplied by the total number of successful nodes.
 
 - Hunter upgrade, a % chance to Hunt AND Gather
 
-- herb chance % is not neeed in the character stats page it should be above (Both chance)
-
-- Should you take damage the same turn you kill the kobold?
+- herb chance % is not need in the character stats page it should be above (Both chance)
 
 - Stronger Kobolds (you can switch between them at any time)
 
-- The cost of the ranger minigame should be less
-
 - Only the first kobold ear should be the rare text, aka when the currency is unlocked
+
+- clicking a square after the ranger minigame is complete could restart it for less mouse movement
+
+- Visions of pixies upgrade that gives a little sparkle effect where a pixie might me. A few tiers with varying accuracies, can scale to up to 3 sparkles
+
+- Remove the [ Scouting ] tag from the ranger minigame

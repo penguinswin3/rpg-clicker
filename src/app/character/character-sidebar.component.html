@@ -28,6 +28,7 @@
 
       <div class="char-header">
         <span class="char-name" [style.color]="c.color">{{ c.name }}</span>
+        <span class="badge-jacks" *ngIf="getJackCount(c.id) > 0">({{ getJackCount(c.id) }})</span>
         <span class="badge-active" *ngIf="c.id === activeId">[ACT]</span>
       </div>
 
@@ -55,6 +56,7 @@
       (click)="setActive(c.id)">
       <span class="compact-initial" [style.color]="c.color">{{ c.name[0] }}</span>
       <span class="compact-pip">{{ c.id === activeId ? '*' : 'o' }}</span>
+      <span class="compact-jacks" *ngIf="getJackCount(c.id) > 0">({{ getJackCount(c.id) }})</span>
     </div>
   </div>
 

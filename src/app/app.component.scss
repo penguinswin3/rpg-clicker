@@ -306,6 +306,30 @@
   }
 }
 
+// Wraps the hero button + optional Jack-starvation error so they stack vertically
+// while staying centred in the .click-area flex row.
+.hero-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+// Shown beneath the hero button when the active character's Jacks can't complete their action.
+.jack-error {
+  color: #ff5555;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.72rem;
+  text-align: center;
+  white-space: nowrap;
+  animation: jack-error-blink 1.4s step-start infinite;
+}
+
+@keyframes jack-error-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
 // ---- Upgrades ----
 
 .section-title {

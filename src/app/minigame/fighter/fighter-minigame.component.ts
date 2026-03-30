@@ -100,18 +100,30 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   attack(): void {
     if (this.actionsDisabled) return;
 
-    const dmg = Math.floor(Math.random() * (this.attackPower + 1)) + 1;
-    this.enemy.hp = Math.max(0, this.enemy.hp - dmg);
+    const dmg  = Math.floor(Math.random() * (this.attackPower + 1)) + 1;
+    const eDmg = this.rollEnemyDamage();   // always rolled — counter fires even on a killing blow
+
+    this.enemy.hp  = Math.max(0, this.enemy.hp - dmg);
+    this.fighterHp = Math.max(0, this.fighterHp - eDmg);  // always applied
 
     if (this.enemy.hp <= 0) {
-      this.onEnemyDefeated();
+      this.onEnemyDefeated(eDmg);
       return;
     }
 
-    const eDmg = this.rollEnemyDamage();
+    // Normal round — show both lines, then check if the fighter was killed
     this.lastMsg  = `You deal ${dmg} dmg.`;
     this.msgLine2 = `${this.enemy.name} hits ${eDmg}!`;
-    this.applyEnemyDamage(eDmg);
+    this.msgClass = 'msg-neutral';
+
+    if (this.fighterHp <= 0) {
+      this.fighterHp = 0;
+      this.defeated  = true;
+      this.lastMsg   = `!! DEFEATED by ${this.enemy.name} !!`;
+      this.msgLine2  = '';
+      this.msgClass  = 'msg-bad';
+      this.log.log(`The Fighter was slain by a ${this.enemy.name}!`, 'warn');
+    }
   }
 
   heal(): void {
@@ -155,7 +167,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     }
   }
 
-  private onEnemyDefeated(): void {
+  private onEnemyDefeated(enemyLastDmg: number): void {
     const gold = this.enemy.goldMin +
       Math.floor(Math.random() * (this.enemy.goldMax - this.enemy.goldMin + 1));
 
@@ -178,9 +190,19 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       );
     }
 
-    this.lastMsg      = `${this.enemy.name} defeated!`;
-    this.msgLine2     = '';
-    this.msgClass     = 'msg-good';
+    if (this.fighterHp <= 0) {
+      // Mutual kill — awards still granted, but fighter is defeated
+      this.fighterHp = 0;
+      this.defeated  = true;
+      this.lastMsg   = `${this.enemy.name} falls! (mutual kill)`;
+      this.msgLine2  = `Kobold's last strike: ${enemyLastDmg} dmg!`;
+      this.msgClass  = 'msg-bad';
+      return;
+    }
+
+    this.lastMsg       = `${this.enemy.name} defeated!`;
+    this.msgLine2      = `Kobold hits back: ${enemyLastDmg} dmg!`;
+    this.msgClass      = 'msg-good';
     this.awaitingSpawn = true;
 
     this.spawnTimer = setTimeout(() => {

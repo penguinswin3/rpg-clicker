@@ -159,6 +159,14 @@ $cyan: #0ff;
   color: $cyan;
 }
 
+// Jack assignment count shown beside the character name
+.badge-jacks {
+  font-size: 9px;
+  color: #aaa;
+  font-weight: normal;
+  flex-shrink: 0;
+}
+
 .badge-locked {
   font-size: 9px;
   color: $muted;
@@ -228,5 +236,12 @@ $cyan: #0ff;
   font-size: 9px;
   color: $muted;
   line-height: 1.2;
+}
+
+// Tiny Jack count shown below the pip in the collapsed sidebar
+.compact-jacks {
+  font-size: 8px;
+  color: #aaa;
+  line-height: 1;
 }
 

@@ -3,7 +3,6 @@
   <!-- ── Idle entry screen ─────────────── -->
   <ng-container *ngIf="!roundStarted">
     <div class="idle-block">
-      <div class="idle-title">[ SCOUTING ]</div>
       <div class="idle-desc">
         Reveal 3 of 9 hidden boxes.<br>
         Costs {{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span> per scout.

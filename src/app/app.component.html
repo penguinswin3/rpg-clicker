@@ -36,9 +36,14 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           </div>
         </div>
 
-        <button class="hero-btn" (click)="clickHero()">
-          [ >>> {{ questBtnLabel }} <<< ]
-        </button>
+        <div class="hero-area">
+          <button class="hero-btn" (click)="clickHero()">
+            [ >>> {{ questBtnLabel }} <<< ]
+          </button>
+          <div class="jack-error" *ngIf="activeCharJackStarved">
+            {{ activeCharJackStarvedMsg }}
+          </div>
+        </div>
 
         <!-- Dev menu -->
         <div class="dev-menu-wrap">
@@ -251,8 +256,6 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
         </div><!-- /upgrades-columns -->
 
-        <div class="divider">+===============================================================================================+</div>
-
       </section>
       <app-character-unlock
         [minigameUnlockAvailable]="minigameUnlockAvailable"
@@ -279,7 +282,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
   </div>
 
   <!-- Right sidebar -->
-  <app-character-sidebar [heroStats]="heroStats" />
+  <app-character-sidebar [heroStats]="heroStats" [jacksAllocations]="jacksAllocations" />
 </div>
 
 <router-outlet />
