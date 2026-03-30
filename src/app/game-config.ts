@@ -6,20 +6,44 @@
  * ════════════════════════════════════════════════════════════
  */
 
+// ── Shared Upgrade Types ─────────────────────────────────────
+
+export type UpgradeCategory = 'standard' | 'minigame';
+
+/** Optional visibility gates — evaluated by the host component. */
+export interface UpgradeGates {
+  /** Hide until the Apothecary character is unlocked. */
+  readonly requiresApothecary?: boolean;
+  /** Minimum XP required before the card is shown. */
+  readonly xpMin?: number;
+}
+
+export interface CostDef {
+  readonly currency: string;
+  readonly base:     number;
+  readonly scale:    number;
+}
+
+/** Complete definition for a single upgrade — balance + structure in one place. */
+export interface UpgradeDef {
+  readonly id:          string;
+  readonly characterId: string;
+  readonly category:    UpgradeCategory;
+  readonly max:         number;
+  readonly costs:       readonly CostDef[];
+  readonly gates?:      UpgradeGates;
+}
+
 // ── XP Unlock Thresholds ─────────────────────────────────────
 export const XP_THRESHOLDS = {
   /** XP required before the Ranger unlock offer appears */
   RANGER_UNLOCK:     100,
-  /** XP required before the Insightful Contracts upgrade appears */
-  INSIGHTFUL_CONTRACTS_UNLOCK: 500,
   /** XP required before the Apothecary unlock offer appears */
   APOTHECARY_UNLOCK: 1000,
   /** XP required before the First Jack purchase appears */
   JACKS_UNLOCK: 1500,
   /** XP required to unlock all character minigame screens */
   MINIGAME_UNLOCK:   2500,
-  /** XP required before the Stronger Kobolds minigame upgrade appears */
-  STRONGER_KOBOLDS_UNLOCK: 3000,
 } as const;
 
 // ── Jack of All Trades ────────────────────────────────────────
@@ -58,82 +82,59 @@ export const UNLOCK_COSTS = {
   MINIGAME_BEAST:   100,
 } as const;
 
-// ── Upgrade Maximum Levels ───────────────────────────────────
-// Once an upgrade reaches its max level, the buy button is disabled.
-export const UPGRADE_MAX = {
-  // Fighter
-  BETTER_BOUNTIES:           999,
-  CONTRACTED_HIRELINGS:      999,
-  INSIGHTFUL_CONTRACTS:      999,
-  POTION_CHUGGING:           999,
-  SHARPER_SWORDS:            999,
-  STRONGER_KOBOLDS:          10,   // 10 tiers; each unlocks one higher kobold level
+// ── Upgrade Definitions ──────────────────────────────────────
+// Single source of truth for every upgrade in the game.
+// Adding a new upgrade? Just append an entry here and add
+// a matching flavor entry — no other config files need to change.
+export const UPGRADE_DEFS: readonly UpgradeDef[] = [
+  // ── Fighter — standard ───────────────────────────────────────
+  { id: 'BETTER_BOUNTIES',      characterId: 'fighter', category: 'standard', max: 999,
+    costs: [{ currency: 'gold', base: 10, scale: 1.5 }] },
+  { id: 'CONTRACTED_HIRELINGS', characterId: 'fighter', category: 'standard', max: 999,
+    costs: [{ currency: 'gold', base: 25, scale: 1.5 }] },
+  { id: 'INSIGHTFUL_CONTRACTS', characterId: 'fighter', category: 'standard', max: 999,
+    gates: { xpMin: 500 },
+    costs: [{ currency: 'gold', base: 400, scale: 2.5 }] },
 
-  // Ranger
-  MORE_HERBS:           999,
-  BETTER_TRACKING:      999,
-  BOUNTIFUL_LANDS:      100,  // 100% = every blank cell guaranteed a prize
-  ABUNDANT_LANDS:       1,    // binary unlock — multiply yield by successful cell count
-  POTION_CATS_EYE:      100,  // 100 levels × +1% = 100% chance to roll both herb and beast
-  BIGGER_GAME:          999,  // each level +1 max Raw Beast Meat from hero button
+  // ── Fighter — minigame ───────────────────────────────────────
+  { id: 'SHARPER_SWORDS',   characterId: 'fighter', category: 'minigame', max: 999,
+    costs: [{ currency: 'gold', base: 50, scale: 1.5 }] },
+  { id: 'POTION_CHUGGING',  characterId: 'fighter', category: 'minigame', max: 999,
+    gates: { requiresApothecary: true },
+    costs: [{ currency: 'potion', base: 5, scale: 1.5 }] },
+  { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: 10,   // 10 tiers; each unlocks one higher kobold level
+    gates: { xpMin: 3000 },
+    costs: [
+      { currency: 'kobold-ear', base: 10, scale: 2.8 },
+      { currency: 'beast',      base: 25, scale: 2.8 },
+    ] },
 
-  // Apothecary
-  /** 400 levels × +1% each = 400% save-chance.
-   *  At 400% you can save all 4 out of 5 herbs consumed per brew. */
-  POTION_TITRATION: 400,
-  POTION_MARKETING: 999,
-} as const;
+  // ── Ranger — standard ────────────────────────────────────────
+  { id: 'MORE_HERBS',      characterId: 'ranger', category: 'standard', max: 999,
+    costs: [{ currency: 'gold', base: 15, scale: 1.5 }] },
+  { id: 'BETTER_TRACKING', characterId: 'ranger', category: 'standard', max: 999,
+    costs: [{ currency: 'gold', base: 20, scale: 1.5 }] },
+  { id: 'BIGGER_GAME',     characterId: 'ranger', category: 'standard', max: 999,    // each level +1 max Raw Beast Meat from hero button
+    costs: [{ currency: 'gold', base: 480, scale: 2.4 }] },
+  { id: 'POTION_CATS_EYE', characterId: 'ranger', category: 'standard', max: 100,    // 100 levels × +1% = 100% chance to roll both herb and beast
+    gates: { requiresApothecary: true },
+    costs: [
+      { currency: 'concentrated-potion', base: 5,  scale: 1.5 },
+      { currency: 'pixie-dust',          base: 15, scale: 1.5 },
+    ] },
 
-// ── Upgrade Base Costs (gold unless noted) ────────────────────
-export const BASE_COSTS = {
-  // Fighter
-  BETTER_BOUNTIES:      10,
-  CONTRACTED_HIRELINGS: 25,
-  INSIGHTFUL_CONTRACTS: 400,  // gold; unlocked at 500 XP
-  POTION_CHUGGING:      5,   // paid in potions
-  SHARPER_SWORDS:       50,  // gold; minigame upgrade
-  /** Kobold Ears base cost for Stronger Kobolds */
-  STRONGER_KOBOLDS_EARS: 10,
-  /** Raw Beast Meat base cost for Stronger Kobolds */
-  STRONGER_KOBOLDS_MEAT: 25,
+  // ── Ranger — minigame ────────────────────────────────────────
+  { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 100,    // 100% = every blank cell guaranteed a prize
+    costs: [{ currency: 'kobold-ear', base: 10, scale: 1.5 }] },
+  { id: 'ABUNDANT_LANDS',  characterId: 'ranger', category: 'minigame', max: 1,      // binary unlock
+    costs: [{ currency: 'pixie-dust', base: 5, scale: 1.0 }] },
 
-  // Ranger
-  MORE_HERBS:       15,
-  BETTER_TRACKING:  20,
-  BOUNTIFUL_LANDS:  10,  // kobold ears; ranger minigame upgrade
-  ABUNDANT_LANDS:   5,   // pixie dust; ranger minigame upgrade
-  /** Concentrated Potion base cost for Potion of Cat's Eye */
-  POTION_CATS_EYE_CONC:  5,
-  /** Pixie Dust base cost for Potion of Cat's Eye */
-  POTION_CATS_EYE_PIXIE: 15,
-  /** Gold cost for Bigger Game ranger upgrade */
-  BIGGER_GAME: 480,
-
-  // Apothecary
-  POTION_TITRATION: 20,
-  POTION_MARKETING: 30,
-} as const;
-
-// ── Upgrade Cost Scaling ──────────────────────────────────────
-// next_cost = floor(current_cost × SCALE)
-export const COST_SCALE = {
-  BETTER_BOUNTIES:      1.5,
-  CONTRACTED_HIRELINGS: 1.5,
-  INSIGHTFUL_CONTRACTS: 2.5,
-  POTION_CHUGGING:      1.5,
-  SHARPER_SWORDS:       1.5,
-  STRONGER_KOBOLDS:     2.8,
-
-  MORE_HERBS:       1.5,
-  BETTER_TRACKING:  1.5,
-  BOUNTIFUL_LANDS:  1.5,
-  ABUNDANT_LANDS:   1.0,  // max level 1 — scale not applicable
-  POTION_CATS_EYE:  1.5,
-  BIGGER_GAME:      2.4,
-
-  POTION_TITRATION: 1.5,
-  POTION_MARKETING: 1.5,
-} as const;
+  // ── Apothecary — standard ────────────────────────────────────
+  { id: 'POTION_TITRATION', characterId: 'apothecary', category: 'standard', max: 400,  // 400 × +1% save-chance
+    costs: [{ currency: 'gold', base: 20, scale: 1.5 }] },
+  { id: 'POTION_MARKETING', characterId: 'apothecary', category: 'standard', max: 999,
+    costs: [{ currency: 'gold', base: 30, scale: 1.5 }] },
+];
 
 // ── Resource Yields ───────────────────────────────────────────
 export const YIELDS = {

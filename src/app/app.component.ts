@@ -12,8 +12,8 @@ import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './save/options-menu.component';
 import { SaveService, UpgradeState, FighterCombatState } from './save/save.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, UPGRADE_MAX, UNLOCK_COSTS, JACK_XP_THRESHOLDS, JACK_COSTS } from './game-config';
-import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR, JACK_FLAVOR } from './flavor-text';
+import { XP_THRESHOLDS, YIELDS, UNLOCK_COSTS, JACK_XP_THRESHOLDS, JACK_COSTS } from './game-config';
+import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR } from './flavor-text';
 
 @Component({
   selector: 'app-root',
@@ -43,12 +43,7 @@ export class AppComponent implements OnInit, OnDestroy {
   readonly upgrades            = inject(UpgradeService);
 
   // ── Readonly template refs ─────────────────────────────────────
-  readonly upgradeMax     = UPGRADE_MAX;
-  readonly upgradeFlavor  = UPGRADE_FLAVOR;
-  readonly currencyFlavor = CURRENCY_FLAVOR;
-  readonly jackFlavor     = JACK_FLAVOR;
-  readonly jackCosts      = JACK_COSTS;
-  readonly jackThresholds = JACK_XP_THRESHOLDS;
+  readonly minigameUnlockCosts = UNLOCK_COSTS;
 
   // ── Wallet state ───────────────────────────────────────────────
   gold                = 0;
@@ -65,9 +60,7 @@ export class AppComponent implements OnInit, OnDestroy {
   unlockedCharacters: { id: string; name: string; color: string }[] = [];
 
   // ── Minigame ───────────────────────────────────────────────────
-  minigameUnlocked           = false;
-  readonly minigameXpThreshold = XP_THRESHOLDS.MINIGAME_UNLOCK;
-  readonly minigameUnlockCosts = UNLOCK_COSTS;
+  minigameUnlocked = false;
 
   get minigameShown():           boolean { return this.minigameUnlocked; }
   get minigameUnlockAvailable(): boolean {
@@ -315,7 +308,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   getUpgradeState(): UpgradeState {
     return {
-      ...this.upgrades.snapshotToLegacy(),
+      upgradeLevels:       this.upgrades.snapshot(),
       selectedKoboldLevel: this.selectedKoboldLevel,
       minigameUnlocked:    this.minigameUnlocked,
       jacksOwned:          this.jacksOwned,
@@ -325,7 +318,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   setUpgradeState(s: UpgradeState): void {
-    this.upgrades.restoreFromLegacy(s);
+    this.upgrades.restore(s.upgradeLevels);
     this.selectedKoboldLevel = Math.max(1, Math.min(
       s.selectedKoboldLevel ?? 1,
       this.upgrades.level('STRONGER_KOBOLDS') + 1,

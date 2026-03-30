@@ -3,6 +3,8 @@ import { BehaviorSubject } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { CharacterService } from '../character/character.service';
 import { ActivityLogService, LogFilterType } from '../activity-log/activity-log.service';
+import { UPGRADE_DEFS } from '../game-config';
+import { UpgradesSnapshot } from '../upgrade/upgrade.service';
 
 /** Persistent snapshot of the Fighter's in-progress combat. */
 export interface FighterCombatState {
@@ -18,62 +20,100 @@ export interface FighterCombatState {
 
 /** All upgrade / progression state managed by AppComponent. */
 export interface UpgradeState {
-  // Fighter
-  goldPerClick: number;
-  clickUpgradeCost: number;
-  clickUpgradeLevel: number;
-  // autoGoldPerSecond is derived: autoUpgradeLevel × 1g/s — not saved
-  autoUpgradeCost: number;
-  autoUpgradeLevel: number;
-  potionChuggingLevel: number;
-  potionChuggingCost: number;
-  /** Insightful Contracts upgrade — optional for old-save compat */
+  /** Generic per-upgrade data: { upgradeId → { level, costs } }.
+   *  Adding new upgrades never requires changing this interface. */
+  upgradeLevels: UpgradesSnapshot;
+  selectedKoboldLevel?: number;
+  minigameUnlocked?: boolean;
+  jacksOwned?: number;
+  jacksAllocations?: Record<string, number>;
+  fighterCombatState?: FighterCombatState;
+}
+
+// ── Legacy save migration ─────────────────────────────────────
+
+/** @deprecated Flat upgrade state from v1 saves — kept only for backward-compatible migration. */
+interface LegacyUpgradeState {
+  goldPerClick?: number;
+  clickUpgradeCost?: number;
+  clickUpgradeLevel?: number;
+  autoUpgradeCost?: number;
+  autoUpgradeLevel?: number;
+  potionChuggingLevel?: number;
+  potionChuggingCost?: number;
   insightfulContractsLevel?: number;
   insightfulContractsCost?: number;
-  /** Sharper Swords minigame upgrade — optional for old-save compat */
   sharperSwordsLevel?: number;
   sharperSwordsCost?: number;
-  /** Stronger Kobolds minigame upgrade — optional for old-save compat */
   strongerKoboldsLevel?: number;
   strongerKoboldsEarsCost?: number;
   strongerKoboldsMeatCost?: number;
-  /** Currently-selected kobold difficulty level (1 = base) — optional for old-save compat */
   selectedKoboldLevel?: number;
-  // Ranger
-  /** @deprecated herbsPerFind is now derived via the doubling formula; kept optional for old-save compat */
   herbsPerFind?: number;
-  moreHerbsCost: number;
-  moreHerbsLevel: number;
-  betterTrackingLevel: number;
-  betterTrackingCost: number;
-  /** Bountiful Lands minigame upgrade — optional for old-save compat */
+  moreHerbsCost?: number;
+  moreHerbsLevel?: number;
+  betterTrackingLevel?: number;
+  betterTrackingCost?: number;
   bountifulLandsLevel?: number;
   bountifulLandsCost?: number;
-  /** Abundant Lands minigame upgrade — optional for old-save compat */
   abundantLandsLevel?: number;
   abundantLandsCost?: number;
-  /** Potion of Cat's Eye ranger upgrade — optional for old-save compat */
   potionCatsEyeLevel?: number;
   potionCatsEyeConcCost?: number;
   potionCatsEyePixieCost?: number;
-  /** Bigger Game ranger upgrade — optional for old-save compat */
   biggerGameLevel?: number;
   biggerGameCost?: number;
-  // Apothecary
-  herbSaveChance: number;
-  potionTitrationCost: number;
-  potionTitrationLevel: number;
-  // potionAutoGoldPerSecond is derived: potionMarketingLevel × 1g/s — not saved
-  potionMarketingCost: number;
-  potionMarketingLevel: number;
-  /** Whether the minigame system has been purchased. Optional for old-save compat. */
+  herbSaveChance?: number;
+  potionTitrationCost?: number;
+  potionTitrationLevel?: number;
+  potionMarketingCost?: number;
+  potionMarketingLevel?: number;
   minigameUnlocked?: boolean;
-  /** Jacks of All Trades — how many have been hired. Optional for old-save compat. */
   jacksOwned?: number;
-  /** How many Jacks are assigned per character id. Optional for old-save compat. */
   jacksAllocations?: Record<string, number>;
-  /** Current fighter minigame combat state. Optional for old-save compat. */
   fighterCombatState?: FighterCombatState;
+}
+
+/** Returns true if the raw upgrades object is in the legacy v1 flat format. */
+function isLegacyFormat(obj: any): obj is LegacyUpgradeState {
+  return obj && !('upgradeLevels' in obj) && ('clickUpgradeLevel' in obj || 'moreHerbsLevel' in obj);
+}
+
+/** Look up the base costs for an upgrade id from UPGRADE_DEFS. */
+function baseCostsFor(id: string): Record<string, number> {
+  const def = UPGRADE_DEFS.find(d => d.id === id);
+  return Object.fromEntries(def?.costs.map(c => [c.currency, c.base]) ?? []);
+}
+
+/** Convert a legacy v1 flat save into the current generic format. */
+function migrateLegacy(s: LegacyUpgradeState): UpgradeState {
+  const upgradeLevels: UpgradesSnapshot = {
+    BETTER_BOUNTIES:      { level: s.clickUpgradeLevel        ?? 0, costs: { gold:                 s.clickUpgradeCost          ?? baseCostsFor('BETTER_BOUNTIES')['gold'] } },
+    CONTRACTED_HIRELINGS: { level: s.autoUpgradeLevel         ?? 0, costs: { gold:                 s.autoUpgradeCost           ?? baseCostsFor('CONTRACTED_HIRELINGS')['gold'] } },
+    INSIGHTFUL_CONTRACTS: { level: s.insightfulContractsLevel ?? 0, costs: { gold:                 s.insightfulContractsCost   ?? baseCostsFor('INSIGHTFUL_CONTRACTS')['gold'] } },
+    POTION_CHUGGING:      { level: s.potionChuggingLevel      ?? 0, costs: { potion:               s.potionChuggingCost        ?? baseCostsFor('POTION_CHUGGING')['potion'] } },
+    SHARPER_SWORDS:       { level: s.sharperSwordsLevel       ?? 0, costs: { gold:                 s.sharperSwordsCost         ?? baseCostsFor('SHARPER_SWORDS')['gold'] } },
+    STRONGER_KOBOLDS:     { level: s.strongerKoboldsLevel     ?? 0, costs: { 'kobold-ear':         s.strongerKoboldsEarsCost   ?? baseCostsFor('STRONGER_KOBOLDS')['kobold-ear'],
+                                                                             beast:                s.strongerKoboldsMeatCost   ?? baseCostsFor('STRONGER_KOBOLDS')['beast'] } },
+    MORE_HERBS:           { level: s.moreHerbsLevel           ?? 0, costs: { gold:                 s.moreHerbsCost             ?? baseCostsFor('MORE_HERBS')['gold'] } },
+    BETTER_TRACKING:      { level: s.betterTrackingLevel      ?? 0, costs: { gold:                 s.betterTrackingCost        ?? baseCostsFor('BETTER_TRACKING')['gold'] } },
+    BIGGER_GAME:          { level: s.biggerGameLevel          ?? 0, costs: { gold:                 s.biggerGameCost            ?? baseCostsFor('BIGGER_GAME')['gold'] } },
+    BOUNTIFUL_LANDS:      { level: s.bountifulLandsLevel      ?? 0, costs: { 'kobold-ear':         s.bountifulLandsCost        ?? baseCostsFor('BOUNTIFUL_LANDS')['kobold-ear'] } },
+    ABUNDANT_LANDS:       { level: s.abundantLandsLevel       ?? 0, costs: { 'pixie-dust':         s.abundantLandsCost         ?? baseCostsFor('ABUNDANT_LANDS')['pixie-dust'] } },
+    POTION_CATS_EYE:      { level: s.potionCatsEyeLevel       ?? 0, costs: { 'concentrated-potion': s.potionCatsEyeConcCost    ?? baseCostsFor('POTION_CATS_EYE')['concentrated-potion'],
+                                                                             'pixie-dust':         s.potionCatsEyePixieCost    ?? baseCostsFor('POTION_CATS_EYE')['pixie-dust'] } },
+    POTION_TITRATION:     { level: s.potionTitrationLevel     ?? 0, costs: { gold:                 s.potionTitrationCost       ?? baseCostsFor('POTION_TITRATION')['gold'] } },
+    POTION_MARKETING:     { level: s.potionMarketingLevel     ?? 0, costs: { gold:                 s.potionMarketingCost       ?? baseCostsFor('POTION_MARKETING')['gold'] } },
+  };
+
+  return {
+    upgradeLevels,
+    selectedKoboldLevel: s.selectedKoboldLevel,
+    minigameUnlocked:    s.minigameUnlocked,
+    jacksOwned:          s.jacksOwned,
+    jacksAllocations:    s.jacksAllocations,
+    fighterCombatState:  s.fighterCombatState,
+  };
 }
 
 /** Persisted UI window and filter preferences. */
@@ -238,9 +278,12 @@ export class SaveService {
     // 4 — Active character
     this.charService.setActive(snap.activeCharacterId);
 
-    // 5 — Upgrade state
+    // 5 — Upgrade state (with legacy migration)
     if (snap.upgrades && this.upgradeSetter) {
-      this.upgradeSetter(snap.upgrades);
+      const state = isLegacyFormat(snap.upgrades)
+        ? migrateLegacy(snap.upgrades)
+        : snap.upgrades as UpgradeState;
+      this.upgradeSetter(state);
     }
 
     // 6 — UI preferences (optional — absent in older saves)

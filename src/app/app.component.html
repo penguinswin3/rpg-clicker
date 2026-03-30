@@ -71,54 +71,41 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
       <section class="upgrades">
         <div class="divider">+===============================================================================================+</div>
 
+        <!-- Shared upgrade card template — used by both columns -->
+        <ng-template #upgradeCard let-id>
+          <div class="upgrade-card">
+            <div class="upgrade-info">
+              <span class="upgrade-name cyan-text">{{ getUpgradeFlavor(id).name }}</span>
+              <span class="upgrade-desc">{{ getUpgradeFlavor(id).desc }}{{ upgradeDescSuffix(id) }}</span>
+            </div>
+            <div class="upgrade-btn-wrap">
+              <button class="upgrade-btn"
+                [class.upgrade-maxed]="upgrades.isMaxed(id)"
+                [disabled]="upgrades.isMaxed(id) || !upgrades.canAfford(id)"
+                (click)="upgrades.buy(id)">
+                <ng-container *ngIf="upgrades.isMaxed(id); else costTpl">[MAXED]</ng-container>
+                <ng-template #costTpl>[BUY: <ng-container *ngFor="let c of upgrades.allCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container>{{ c.amount }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></ng-container>]</ng-template>
+              </button>
+              <span class="upgrade-level">Lv.{{ upgrades.level(id) }}/{{ upgrades.maxLevel(id) }}</span>
+            </div>
+          </div>
+        </ng-template>
+
         <div class="upgrades-columns">
 
           <!-- ══ Standard upgrades ════════════════════════════════════ -->
           <div class="upgrades-col">
             <div class="section-title">[ UPGRADES ]</div>
-
             <ng-container *ngFor="let id of getVisibleUpgrades('standard')">
-              <div class="upgrade-card">
-                <div class="upgrade-info">
-                  <span class="upgrade-name cyan-text">{{ getUpgradeFlavor(id).name }}</span>
-                  <span class="upgrade-desc">{{ getUpgradeFlavor(id).desc }}{{ upgradeDescSuffix(id) }}</span>
-                </div>
-                <div class="upgrade-btn-wrap">
-                  <button class="upgrade-btn"
-                    [class.upgrade-maxed]="upgrades.isMaxed(id)"
-                    [disabled]="upgrades.isMaxed(id) || !upgrades.canAfford(id)"
-                    (click)="upgrades.buy(id)">
-                    <ng-container *ngIf="upgrades.isMaxed(id); else stdCost">[MAXED]</ng-container>
-                    <ng-template #stdCost>[BUY: <ng-container *ngFor="let c of upgrades.allCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container>{{ c.amount }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></ng-container>]</ng-template>
-                  </button>
-                  <span class="upgrade-level">Lv.{{ upgrades.level(id) }}/{{ upgrades.maxLevel(id) }}</span>
-                </div>
-              </div>
+              <ng-container *ngTemplateOutlet="upgradeCard; context: { $implicit: id }"></ng-container>
             </ng-container>
           </div><!-- /upgrades-col standard -->
 
           <!-- ══ Minigame upgrades ══════════════════════════════════ -->
           <div class="upgrades-col upgrades-minigame-col" *ngIf="minigameShown && !hideMinigameUpgrades">
             <div class="section-title">[ MINIGAME ]</div>
-
             <ng-container *ngFor="let id of getVisibleUpgrades('minigame')">
-              <div class="upgrade-card">
-                <div class="upgrade-info">
-                  <span class="upgrade-name cyan-text">{{ getUpgradeFlavor(id).name }}</span>
-                  <span class="upgrade-desc">{{ getUpgradeFlavor(id).desc }}{{ upgradeDescSuffix(id) }}</span>
-                </div>
-                <div class="upgrade-btn-wrap">
-                  <button class="upgrade-btn"
-                    [class.upgrade-maxed]="upgrades.isMaxed(id)"
-                    [disabled]="upgrades.isMaxed(id) || !upgrades.canAfford(id)"
-                    (click)="upgrades.buy(id)">
-                    <ng-container *ngIf="upgrades.isMaxed(id); else mgCost">[MAXED]</ng-container>
-                    <ng-template #mgCost>[BUY: <ng-container *ngFor="let c of upgrades.allCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container>{{ c.amount }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></ng-container>]</ng-template>
-                  </button>
-                  <span class="upgrade-level">Lv.{{ upgrades.level(id) }}/{{ upgrades.maxLevel(id) }}</span>
-                </div>
-              </div>
-
+              <ng-container *ngTemplateOutlet="upgradeCard; context: { $implicit: id }"></ng-container>
             </ng-container>
 
           </div><!-- /upgrades-col minigame -->
