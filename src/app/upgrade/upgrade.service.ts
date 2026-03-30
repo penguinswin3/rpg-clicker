@@ -4,6 +4,7 @@ import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { UPGRADE_DEFS, UpgradeDef, UpgradeCategory, UpgradeGates } from '../game-config';
 import { UPGRADE_FLAVOR } from '../flavor-text';
+import { scaledCost } from '../utils/mathUtils';
 
 // Re-export types consumed by other components
 export type { UpgradeCategory, UpgradeGates };
@@ -122,7 +123,7 @@ export class UpgradeService {
 
     for (const c of def.costs) {
       this.wallet.remove(c.currency, rt.currentCosts[c.currency]);
-      rt.currentCosts[c.currency] = Math.floor(rt.currentCosts[c.currency] * c.scale);
+      rt.currentCosts[c.currency] = scaledCost(rt.currentCosts[c.currency], c.scale, 1);
     }
     rt.level++;
 
@@ -148,15 +149,27 @@ export class UpgradeService {
 
   /**
    * Restore upgrade levels and costs from a generic snapshot.
-   * Unknown IDs are silently ignored (forward-compat).
+   * Costs are rebuilt against the def's currency list — if a saved currency
+   * is no longer valid (e.g. cost structure changed), the def's base cost is
+   * used as a fallback instead of blindly applying the stale value.
+   * Unknown upgrade IDs are silently ignored (forward-compat).
    */
   restore(data: UpgradesSnapshot): void {
     for (const [id, entry] of Object.entries(data)) {
-      const rt = this.runtime.get(id);
-      if (rt) {
-        rt.level        = entry.level;
-        rt.currentCosts = { ...entry.costs };
+      const def = this.defs.get(id);
+      const rt  = this.runtime.get(id);
+      if (!def || !rt) continue;
+
+      rt.level = entry.level;
+
+      // Rebuild costs using the def's currency list as the authority.
+      // Use the saved amount if the key matches; fall back to the def's base cost
+      // if the save has a stale or renamed currency (e.g. after a balance change).
+      const restoredCosts: Record<string, number> = {};
+      for (const costDef of def.costs) {
+        restoredCosts[costDef.currency] = entry.costs[costDef.currency] ?? costDef.base;
       }
+      rt.currentCosts = restoredCosts;
     }
   }
 }

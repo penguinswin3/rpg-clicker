@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { WalletService, Currency, CurrencyEntry, WalletState } from './wallet.service';
 import { CharacterService, Character } from '../character/character.service';
 import { XP_THRESHOLDS } from '../game-config';
+import { fmtNumber } from '../utils/mathUtils';
 
 @Component({
   selector: 'app-wallet-sidebar',
@@ -135,12 +136,7 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
   }
 
   /** Format large numbers into compact shorthand (e.g. 12400 → 12.4k). */
-  fmt(amount: number): string {
-    const n = Math.floor(amount);
-    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-    if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'k';
-    return n.toString();
-  }
+  fmtNumber = fmtNumber;
 
   /**
    * Format a per-second rate for display.

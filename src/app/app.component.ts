@@ -14,6 +14,7 @@ import { SaveService, UpgradeState, FighterCombatState } from './save/save.servi
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
 import { XP_THRESHOLDS, YIELDS, UNLOCK_COSTS, JACK_XP_THRESHOLDS, JACK_COSTS } from './game-config';
 import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR } from './flavor-text';
+import { fmtNumber, clamp, scaledCost, randInt, rollChance, roundTo } from './utils/mathUtils';
 
 @Component({
   selector: 'app-root',
@@ -98,8 +99,7 @@ export class AppComponent implements OnInit, OnDestroy {
   get fighterAttackPower(): number { return this.goldPerClick + this.upgrades.level('SHARPER_SWORDS'); }
   /** Current beast-find percentage (capped). */
   get beastFindChance(): number {
-    return Math.min(YIELDS.RANGER_BEAST_CHANCE_CAP,
-      YIELDS.RANGER_BASE_BEAST_CHANCE + this.upgrades.level('BETTER_TRACKING'));
+    return clamp(YIELDS.RANGER_BASE_BEAST_CHANCE + this.upgrades.level('BETTER_TRACKING'), 0, YIELDS.RANGER_BEAST_CHANCE_CAP);
   }
   /** Herb save chance in % — equals Potion Titration level. */
   get herbSaveChance(): number { return this.upgrades.level('POTION_TITRATION'); }
@@ -139,16 +139,16 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     return true;
   }
-  get jackCurrentGoldCost():     number { return Math.floor(JACK_COSTS.GOLD    * Math.pow(JACK_COSTS.SCALE, this.jacksOwned)); }
-  get jackCurrentBeastCost():    number { return Math.floor(JACK_COSTS.BEAST   * Math.pow(JACK_COSTS.SCALE, this.jacksOwned)); }
-  get jackCurrentPotionCost():   number { return Math.floor(JACK_COSTS.POTIONS * Math.pow(JACK_COSTS.SCALE, this.jacksOwned)); }
+  get jackCurrentGoldCost():     number { return scaledCost(JACK_COSTS.GOLD,    JACK_COSTS.SCALE, this.jacksOwned); }
+  get jackCurrentBeastCost():    number { return scaledCost(JACK_COSTS.BEAST,   JACK_COSTS.SCALE, this.jacksOwned); }
+  get jackCurrentPotionCost():   number { return scaledCost(JACK_COSTS.POTIONS, JACK_COSTS.SCALE, this.jacksOwned); }
   get jackCurrentKoboldEarCost(): number {
     if (this.jacksOwned < JACK_COSTS.RARE_THRESHOLD) return 0;
-    return Math.floor(JACK_COSTS.KOBOLD_EARS_BASE * Math.pow(JACK_COSTS.SCALE, this.jacksOwned - JACK_COSTS.RARE_THRESHOLD));
+    return scaledCost(JACK_COSTS.KOBOLD_EARS_BASE, JACK_COSTS.SCALE, this.jacksOwned - JACK_COSTS.RARE_THRESHOLD);
   }
   get jackCurrentPixieDustCost(): number {
     if (this.jacksOwned < JACK_COSTS.RARE_THRESHOLD) return 0;
-    return Math.floor(JACK_COSTS.PIXIE_DUST_BASE * Math.pow(JACK_COSTS.SCALE, this.jacksOwned - JACK_COSTS.RARE_THRESHOLD));
+    return scaledCost(JACK_COSTS.PIXIE_DUST_BASE, JACK_COSTS.SCALE, this.jacksOwned - JACK_COSTS.RARE_THRESHOLD);
   }
 
   getJackCount(charId: string): number { return this.jacksAllocations[charId] ?? 0; }
@@ -247,6 +247,11 @@ export class AppComponent implements OnInit, OnDestroy {
       ?? { name: id, desc: '' };
   }
 
+  /** Format large numbers as shorthand: 11800 → "11.8k", 1200000 → "1.2M", etc. */
+  formatNumber(num: number): string {
+    return fmtNumber(num);
+  }
+
   // ── Lifecycle ──────────────────────────────────────────────────
 
   constructor() {
@@ -319,10 +324,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   setUpgradeState(s: UpgradeState): void {
     this.upgrades.restore(s.upgradeLevels);
-    this.selectedKoboldLevel = Math.max(1, Math.min(
+    this.selectedKoboldLevel = clamp(
       s.selectedKoboldLevel ?? 1,
+      1,
       this.upgrades.level('STRONGER_KOBOLDS') + 1,
-    ));
+    );
     this.minigameUnlocked   = s.minigameUnlocked   ?? false;
     this.jacksOwned         = s.jacksOwned         ?? 0;
     this.jacksAllocations   = s.jacksAllocations ? { ...s.jacksAllocations } : {};
@@ -333,28 +339,26 @@ export class AppComponent implements OnInit, OnDestroy {
   // ── Per-second display rates ───────────────────────────────────
 
   private updateAllPerSecond(): void {
-    const round2 = (n: number) => Math.round(n * 100) / 100;
-
     const fighterJacks    = this.jacksAllocations['fighter']    ?? 0;
     const rangerJacks     = this.jacksAllocations['ranger']     ?? 0;
     const apothecaryJacks = this.jacksAllocations['apothecary'] ?? 0;
 
     this.wallet.setPerSecond('gold',
-      round2(this.autoGoldPerSecond + this.potionAutoGoldPerSecond + fighterJacks * this.goldPerClick));
+      roundTo(this.autoGoldPerSecond + this.potionAutoGoldPerSecond + fighterJacks * this.goldPerClick, 2));
 
     // Fighter jacks fire xpPerBounty per click; ranger/apothecary jacks give 1 XP each.
     this.wallet.setPerSecond('xp',
-      round2(fighterJacks * this.xpPerBounty + rangerJacks + apothecaryJacks));
+      roundTo(fighterJacks * this.xpPerBounty + rangerJacks + apothecaryJacks, 2));
 
     const herbProduced = rangerJacks * 0.5 * this.expectedHerbPerRangerClick();
     const herbConsumed = apothecaryJacks * (YIELDS.APOTHECARY_BREW_HERB_COST - this.herbSaveChance / 100);
-    this.wallet.setPerSecond('herb', round2(herbProduced - herbConsumed));
+    this.wallet.setPerSecond('herb', roundTo(herbProduced - herbConsumed, 2));
 
     const expectedMeatYield = (this.upgrades.level('BIGGER_GAME') + 2) / 2;
     this.wallet.setPerSecond('beast',
-      round2(rangerJacks * 0.5 * (this.beastFindChance / 100) * expectedMeatYield));
+      roundTo(rangerJacks * 0.5 * (this.beastFindChance / 100) * expectedMeatYield, 2));
 
-    this.wallet.setPerSecond('potion', round2(apothecaryJacks));
+    this.wallet.setPerSecond('potion', roundTo(apothecaryJacks, 2));
   }
 
   /**
@@ -385,11 +389,11 @@ export class AppComponent implements OnInit, OnDestroy {
   private clickRanger(): void {
     this.wallet.add('xp', 1);
     const catsEyeLevel = this.upgrades.level('POTION_CATS_EYE');
-    const catsEyeProcs = catsEyeLevel > 0 && Math.random() * 100 < catsEyeLevel;
+    const catsEyeProcs = catsEyeLevel > 0 && rollChance(catsEyeLevel);
 
     if (catsEyeProcs) {
       const herbs    = this.computeHerbYield();
-      const gotBeast = Math.random() < this.beastFindChance / 100;
+      const gotBeast = rollChance(this.beastFindChance);
       this.wallet.add('herb', herbs);
       if (gotBeast) {
         const meat = this.computeMeatYield();
@@ -399,13 +403,13 @@ export class AppComponent implements OnInit, OnDestroy {
         this.log.log(`Cat's Eye! You foraged ${herbs} herb(s), but the beast escaped. (+1 XP)`, 'success');
       }
     } else {
-      const targetHerb = Math.random() < 0.5;
+      const targetHerb = rollChance(50);
       if (targetHerb) {
         const herbs = this.computeHerbYield();
         this.wallet.add('herb', herbs);
         this.log.log(`You targeted herbs and foraged ${herbs} herb(s). (+1 XP)`);
       } else {
-        const gotBeast = Math.random() < this.beastFindChance / 100;
+        const gotBeast = rollChance(this.beastFindChance);
         if (gotBeast) {
           const meat = this.computeMeatYield();
           this.wallet.add('beast', meat);
@@ -427,7 +431,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.wallet.remove('herb', herbCost);
     this.wallet.add('potion', 1);
     this.wallet.add('xp', 1);
-    if (this.herbSaveChance > 0 && Math.random() * 100 < this.herbSaveChance) {
+    if (this.herbSaveChance > 0 && rollChance(this.herbSaveChance)) {
       this.wallet.add('herb', 1);
       this.log.log(`You brewed a potion and recovered a herb! (+1 XP)`, 'success');
     } else {
@@ -441,12 +445,12 @@ export class AppComponent implements OnInit, OnDestroy {
     const level      = this.upgrades.level('MORE_HERBS');
     const guaranteed = Math.floor(level / 100);
     const remainder  = level % 100;
-    const extra      = Math.random() * 100 < remainder ? 1 : 0;
+    const extra      = rollChance(remainder) ? 1 : 0;
     return YIELDS.RANGER_BASE_HERBS * Math.pow(2, guaranteed + extra);
   }
 
   private computeMeatYield(): number {
-    return Math.floor(Math.random() * (this.upgrades.level('BIGGER_GAME') + 1)) + 1;
+    return randInt(1, this.upgrades.level('BIGGER_GAME') + 1);
   }
 
   // ── Jack methods ───────────────────────────────────────────────
@@ -490,15 +494,15 @@ export class AppComponent implements OnInit, OnDestroy {
     } else if (charId === 'ranger') {
       this.wallet.add('xp', 1);
       const catsEyeLevel = this.upgrades.level('POTION_CATS_EYE');
-      const catsEyeProcs = catsEyeLevel > 0 && Math.random() * 100 < catsEyeLevel;
+      const catsEyeProcs = catsEyeLevel > 0 && rollChance(catsEyeLevel);
       if (catsEyeProcs) {
         this.wallet.add('herb', this.computeHerbYield());
-        if (Math.random() < this.beastFindChance / 100) this.wallet.add('beast', this.computeMeatYield());
+        if (rollChance(this.beastFindChance)) this.wallet.add('beast', this.computeMeatYield());
       } else {
-        const targetHerb = Math.random() < 0.5;
+        const targetHerb = rollChance(50);
         if (targetHerb) {
           this.wallet.add('herb', this.computeHerbYield());
-        } else if (Math.random() < this.beastFindChance / 100) {
+        } else if (rollChance(this.beastFindChance)) {
           this.wallet.add('beast', this.computeMeatYield());
         }
       }
@@ -514,7 +518,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.remove('herb', herbCost);
       this.wallet.add('potion', 1);
       this.wallet.add('xp', 1);
-      if (this.herbSaveChance > 0 && Math.random() * 100 < this.herbSaveChance) this.wallet.add('herb', 1);
+      if (this.herbSaveChance > 0 && rollChance(this.herbSaveChance)) this.wallet.add('herb', 1);
     }
   }
 

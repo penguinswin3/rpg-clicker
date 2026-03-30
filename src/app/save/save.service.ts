@@ -5,6 +5,7 @@ import { CharacterService } from '../character/character.service';
 import { ActivityLogService, LogFilterType } from '../activity-log/activity-log.service';
 import { UPGRADE_DEFS } from '../game-config';
 import { UpgradesSnapshot } from '../upgrade/upgrade.service';
+import { scaledCost } from '../utils/mathUtils';
 
 /** Persistent snapshot of the Fighter's in-progress combat. */
 export interface FighterCombatState {
@@ -79,31 +80,38 @@ function isLegacyFormat(obj: any): obj is LegacyUpgradeState {
   return obj && !('upgradeLevels' in obj) && ('clickUpgradeLevel' in obj || 'moreHerbsLevel' in obj);
 }
 
-/** Look up the base costs for an upgrade id from UPGRADE_DEFS. */
-function baseCostsFor(id: string): Record<string, number> {
+/**
+ * Compute the correct next-purchase costs for an upgrade at a given level.
+ * Always derived from the live config — never from the save — so stale or
+ * renamed currencies are never carried forward.
+ * Formula: floor(base × scale^level)
+ */
+function scaledCostsFor(id: string, level: number): Record<string, number> {
   const def = UPGRADE_DEFS.find(d => d.id === id);
-  return Object.fromEntries(def?.costs.map(c => [c.currency, c.base]) ?? []);
+  if (!def) return {};
+  return Object.fromEntries(
+    def.costs.map(c => [c.currency, scaledCost(c.base, c.scale, level)])
+  );
 }
 
 /** Convert a legacy v1 flat save into the current generic format. */
 function migrateLegacy(s: LegacyUpgradeState): UpgradeState {
+  const lvl = (n: number | undefined) => n ?? 0;
   const upgradeLevels: UpgradesSnapshot = {
-    BETTER_BOUNTIES:      { level: s.clickUpgradeLevel        ?? 0, costs: { gold:                 s.clickUpgradeCost          ?? baseCostsFor('BETTER_BOUNTIES')['gold'] } },
-    CONTRACTED_HIRELINGS: { level: s.autoUpgradeLevel         ?? 0, costs: { gold:                 s.autoUpgradeCost           ?? baseCostsFor('CONTRACTED_HIRELINGS')['gold'] } },
-    INSIGHTFUL_CONTRACTS: { level: s.insightfulContractsLevel ?? 0, costs: { gold:                 s.insightfulContractsCost   ?? baseCostsFor('INSIGHTFUL_CONTRACTS')['gold'] } },
-    POTION_CHUGGING:      { level: s.potionChuggingLevel      ?? 0, costs: { potion:               s.potionChuggingCost        ?? baseCostsFor('POTION_CHUGGING')['potion'] } },
-    SHARPER_SWORDS:       { level: s.sharperSwordsLevel       ?? 0, costs: { gold:                 s.sharperSwordsCost         ?? baseCostsFor('SHARPER_SWORDS')['gold'] } },
-    STRONGER_KOBOLDS:     { level: s.strongerKoboldsLevel     ?? 0, costs: { 'kobold-ear':         s.strongerKoboldsEarsCost   ?? baseCostsFor('STRONGER_KOBOLDS')['kobold-ear'],
-                                                                             beast:                s.strongerKoboldsMeatCost   ?? baseCostsFor('STRONGER_KOBOLDS')['beast'] } },
-    MORE_HERBS:           { level: s.moreHerbsLevel           ?? 0, costs: { gold:                 s.moreHerbsCost             ?? baseCostsFor('MORE_HERBS')['gold'] } },
-    BETTER_TRACKING:      { level: s.betterTrackingLevel      ?? 0, costs: { gold:                 s.betterTrackingCost        ?? baseCostsFor('BETTER_TRACKING')['gold'] } },
-    BIGGER_GAME:          { level: s.biggerGameLevel          ?? 0, costs: { gold:                 s.biggerGameCost            ?? baseCostsFor('BIGGER_GAME')['gold'] } },
-    BOUNTIFUL_LANDS:      { level: s.bountifulLandsLevel      ?? 0, costs: { 'kobold-ear':         s.bountifulLandsCost        ?? baseCostsFor('BOUNTIFUL_LANDS')['kobold-ear'] } },
-    ABUNDANT_LANDS:       { level: s.abundantLandsLevel       ?? 0, costs: { 'pixie-dust':         s.abundantLandsCost         ?? baseCostsFor('ABUNDANT_LANDS')['pixie-dust'] } },
-    POTION_CATS_EYE:      { level: s.potionCatsEyeLevel       ?? 0, costs: { 'concentrated-potion': s.potionCatsEyeConcCost    ?? baseCostsFor('POTION_CATS_EYE')['concentrated-potion'],
-                                                                             'pixie-dust':         s.potionCatsEyePixieCost    ?? baseCostsFor('POTION_CATS_EYE')['pixie-dust'] } },
-    POTION_TITRATION:     { level: s.potionTitrationLevel     ?? 0, costs: { gold:                 s.potionTitrationCost       ?? baseCostsFor('POTION_TITRATION')['gold'] } },
-    POTION_MARKETING:     { level: s.potionMarketingLevel     ?? 0, costs: { gold:                 s.potionMarketingCost       ?? baseCostsFor('POTION_MARKETING')['gold'] } },
+    BETTER_BOUNTIES:      { level: lvl(s.clickUpgradeLevel),        costs: scaledCostsFor('BETTER_BOUNTIES',      lvl(s.clickUpgradeLevel))        },
+    CONTRACTED_HIRELINGS: { level: lvl(s.autoUpgradeLevel),         costs: scaledCostsFor('CONTRACTED_HIRELINGS', lvl(s.autoUpgradeLevel))         },
+    INSIGHTFUL_CONTRACTS: { level: lvl(s.insightfulContractsLevel), costs: scaledCostsFor('INSIGHTFUL_CONTRACTS', lvl(s.insightfulContractsLevel)) },
+    POTION_CHUGGING:      { level: lvl(s.potionChuggingLevel),      costs: scaledCostsFor('POTION_CHUGGING',      lvl(s.potionChuggingLevel))      },
+    SHARPER_SWORDS:       { level: lvl(s.sharperSwordsLevel),       costs: scaledCostsFor('SHARPER_SWORDS',       lvl(s.sharperSwordsLevel))       },
+    STRONGER_KOBOLDS:     { level: lvl(s.strongerKoboldsLevel),     costs: scaledCostsFor('STRONGER_KOBOLDS',     lvl(s.strongerKoboldsLevel))     },
+    MORE_HERBS:           { level: lvl(s.moreHerbsLevel),           costs: scaledCostsFor('MORE_HERBS',           lvl(s.moreHerbsLevel))           },
+    BETTER_TRACKING:      { level: lvl(s.betterTrackingLevel),      costs: scaledCostsFor('BETTER_TRACKING',      lvl(s.betterTrackingLevel))      },
+    BIGGER_GAME:          { level: lvl(s.biggerGameLevel),          costs: scaledCostsFor('BIGGER_GAME',          lvl(s.biggerGameLevel))          },
+    BOUNTIFUL_LANDS:      { level: lvl(s.bountifulLandsLevel),      costs: scaledCostsFor('BOUNTIFUL_LANDS',      lvl(s.bountifulLandsLevel))      },
+    ABUNDANT_LANDS:       { level: lvl(s.abundantLandsLevel),       costs: scaledCostsFor('ABUNDANT_LANDS',       lvl(s.abundantLandsLevel))       },
+    POTION_CATS_EYE:      { level: lvl(s.potionCatsEyeLevel),       costs: scaledCostsFor('POTION_CATS_EYE',      lvl(s.potionCatsEyeLevel))       },
+    POTION_TITRATION:     { level: lvl(s.potionTitrationLevel),     costs: scaledCostsFor('POTION_TITRATION',     lvl(s.potionTitrationLevel))     },
+    POTION_MARKETING:     { level: lvl(s.potionMarketingLevel),     costs: scaledCostsFor('POTION_MARKETING',     lvl(s.potionMarketingLevel))     },
   };
 
   return {

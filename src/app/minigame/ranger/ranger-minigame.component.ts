@@ -5,6 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { RANGER_MG } from '../../game-config';
 import { CURRENCY_FLAVOR } from '../../flavor-text';
+import { shuffleInPlace, rollChance } from '../../utils/mathUtils';
 
 type PrizeType = 'meat' | 'herb' | 'pixie' | 'blank';
 
@@ -131,15 +132,11 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     const pool: GridCell[] = [
       ...Array.from({ length: prizeCells }, () => ({ prize: this.rollPrize(), revealed: false })),
       ...Array.from({ length: RANGER_MG.BLANK_CELLS }, () => {
-        const isPrize = convertChance > 0 && Math.random() * 100 < convertChance;
+        const isPrize = convertChance > 0 && rollChance(convertChance);
         return { prize: (isPrize ? this.rollPrize() : 'blank') as PrizeType, revealed: false };
       }),
     ];
-    // Fisher-Yates shuffle
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
+    shuffleInPlace(pool);
     this.cells        = pool;
     this.picksLeft    = this.PICKS;
     this.roundOver    = false;

@@ -36,14 +36,6 @@
 
 - Once an xp threshold is passed, anything unlocked by that threshold should remain, and the threshold should not be tracked again in the currency menu
 
-- Potion of the cat's eye shouldn't show up until the minigames are unlocked
-
-- Upgrades should only show a maximum of 5 at a time before making the user scroll through a scroll box.
-
-- Upgrades can be extracted from the code and dynamically loaded into these scroll boxes.
-
-- fighter long rest should tick down even if the fighter isnt selected
-
 - short rest upgrade that auto consumes potions after a fighter minigame success
 
 - Kobold ear currency should be up top, near the other fighter resources
@@ -58,3 +50,4 @@
 
 - Lore Pages that give context about the character or the world they live in. Can be unlocked by doing certain things in minigames...
 
+- Statistics tracking

@@ -5,6 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { APOTH_MG } from '../../game-config';
 import { CURRENCY_FLAVOR } from '../../flavor-text';
+import { toPct } from '../../utils/mathUtils';
 
 @Component({
   selector: 'app-apothecary-minigame',
@@ -53,7 +54,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   }
 
   get qualityPct(): number {
-    return (this.quality / this.maxQuality) * 100;
+    return toPct(this.quality, this.maxQuality);
   }
 
   get isInZone(): boolean {

@@ -36,7 +36,7 @@
           <span class="currency-short" [style.color]="c.color">{{ c.symbol }}</span>
         </div>
         <div class="currency-data">
-          <span class="currency-amount">{{ fmt(getEntry(c.id).amount) }}</span>
+          <span class="currency-amount">{{ fmtNumber(getEntry(c.id).amount) }}</span>
           <span class="currency-rate"
                 [class.inactive]="getEntry(c.id).perSecond === 0"
                 [class.negative]="getEntry(c.id).perSecond < 0">
@@ -61,7 +61,7 @@
   <!-- ── Collapsed view ─────────────────── -->
   <ng-container *ngIf="collapsed">
     <div class="currency-compact" *ngFor="let c of filteredCurrencies">
-      <span class="compact-amount" [style.color]="c.color">{{ fmt(getEntry(c.id).amount) }}</span>
+      <span class="compact-amount" [style.color]="c.color">{{ fmtNumber(getEntry(c.id).amount) }}</span>
       <span class="compact-short" [style.color]="c.color">{{ c.symbol }}</span>
       <!-- XP unlock progress bar — absolutely positioned, no layout impact -->
       <div class="xp-progress-track xp-track-compact" *ngIf="c.id === 'xp'">

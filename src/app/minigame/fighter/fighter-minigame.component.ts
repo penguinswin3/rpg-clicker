@@ -6,6 +6,7 @@ import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { FIGHTER_MG } from '../../game-config';
 import { CURRENCY_FLAVOR } from '../../flavor-text';
 import { FighterCombatState } from '../../save/save.service';
+import { toPct, randInt } from '../../utils/mathUtils';
 
 interface Enemy {
   name: string;
@@ -84,11 +85,11 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   // ── Computed ──────────────────────────────
 
   get fighterHpPct(): number {
-    return Math.max(0, (this.fighterHp / this.maxHp) * 100);
+    return toPct(this.fighterHp, this.maxHp);
   }
 
   get enemyHpPct(): number {
-    return Math.max(0, (this.enemy.hp / this.enemy.maxHp) * 100);
+    return toPct(this.enemy.hp, this.enemy.maxHp);
   }
 
   /** Base heal + 1 HP per Potion Chugging level. */
@@ -208,7 +209,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   attack(): void {
     if (this.actionsDisabled) return;
 
-    const dmg  = Math.floor(Math.random() * (this.attackPower + 1)) + 1;
+    const dmg  = randInt(1, this.attackPower + 1);
     const eDmg = this.rollEnemyDamage();   // always rolled — counter fires even on a killing blow
 
     this.enemy.hp  = Math.max(0, this.enemy.hp - dmg);
@@ -290,7 +291,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   }
 
   private rollEnemyDamage(): number {
-    return Math.max(0, Math.floor(Math.random() * this.enemy.dmgMax) + 1 - this.defense);
+    return Math.max(0, randInt(1, this.enemy.dmgMax) - this.defense);
   }
 
   private applyEnemyDamage(dmg: number): void {
@@ -308,8 +309,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   }
 
   private onEnemyDefeated(enemyLastDmg: number): void {
-    const gold = this.enemy.goldMin +
-      Math.floor(Math.random() * (this.enemy.goldMax - this.enemy.goldMin + 1));
+    const gold = randInt(this.enemy.goldMin, this.enemy.goldMax);
 
     this.wallet.add('gold',        gold);
     this.wallet.add('xp',          this.enemy.xpReward);

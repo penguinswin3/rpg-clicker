@@ -101,7 +101,10 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'gold', base: 50, scale: 1.5 }] },
   { id: 'POTION_CHUGGING',  characterId: 'fighter', category: 'minigame', max: 999,
     gates: { requiresApothecary: true },
-    costs: [{ currency: 'potion', base: 5, scale: 1.5 }] },
+    costs: [
+      { currency: 'concentrated-potion', base: 3, scale: 1.5 },
+      { currency: 'beast',               base: 12, scale: 1.5 },
+    ] },
   { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: 10,   // 10 tiers; each unlocks one higher kobold level
     gates: { xpMin: 3000 },
     costs: [
