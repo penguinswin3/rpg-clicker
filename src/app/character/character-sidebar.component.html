@@ -24,22 +24,16 @@
     <div
       class="char-card"
       *ngFor="let c of unlockedCharacters"
-      [class.is-active]="c.id === activeId">
+      [class.is-active]="c.id === activeId"
+      (click)="setActive(c.id)">
 
       <div class="char-header">
         <span class="char-name" [style.color]="c.color">{{ c.name }}</span>
         <span class="badge-jacks" *ngIf="getJackCount(c.id) > 0">({{ getJackCount(c.id) }})</span>
-        <span class="badge-active" *ngIf="c.id === activeId">[ACT]</span>
       </div>
 
       <p class="char-desc">{{ c.description }}</p>
 
-      <button
-        class="use-btn"
-        *ngIf="c.id !== activeId"
-        (click)="setActive(c.id)">
-        [ SET ACTIVE ]
-      </button>
 
     </div>
 
