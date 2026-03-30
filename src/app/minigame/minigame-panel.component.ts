@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
@@ -8,6 +8,7 @@ import { ApothecaryMinigameComponent } from './apothecary/apothecary-minigame.co
 import { RangerMinigameComponent } from './ranger/ranger-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
+import { FighterCombatState } from '../save/save.service';
 
 interface MinigamePlaceholder {
   characterId: string;
@@ -34,6 +35,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() potionChuggingLevel = 0;
   /** Bountiful Lands level — forwarded to the ranger minigame. */
   @Input() bountifulLandsLevel = 0;
+  /** Previously-saved fighter combat state. */
+  @Input() fighterCombatState: FighterCombatState | null = null;
+  /** Emitted whenever fighter combat state changes. */
+  @Output() fighterCombatStateChange = new EventEmitter<FighterCombatState>();
 
   xp = 0;
   activeCharacterId = 'fighter';

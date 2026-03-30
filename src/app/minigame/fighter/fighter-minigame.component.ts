@@ -1,10 +1,11 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { FIGHTER_MG } from '../../game-config';
 import { CURRENCY_FLAVOR } from '../../flavor-text';
+import { FighterCombatState } from '../../save/save.service';
 
 interface Enemy {
   name: string;
@@ -31,6 +32,10 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   @Input() potionChuggingLevel = 0;
   /** Future upgrades reduce the long-rest lockout by this many seconds. */
   @Input() recoveryReductionSec = 0;
+  /** Previously-saved combat state to restore on init. */
+  @Input() savedState: FighterCombatState | null = null;
+  /** Emitted whenever combat state changes (HP, defeated, rest countdown). */
+  @Output() stateChange = new EventEmitter<FighterCombatState>();
 
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
@@ -98,6 +103,58 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
         this.potions = Math.floor(s['potion']?.amount ?? 0);
       })
     );
+
+    // Restore persisted combat state if available
+    if (this.savedState) {
+      const s = this.savedState;
+      this.fighterHp = Math.min(s.fighterHp, this.maxHp);
+
+      if (s.enemyHp > 0 && !s.defeated) {
+        // Rebuild a kobold and apply the saved HP
+        const k = this.buildKobold();
+        k.hp = Math.min(s.enemyHp, k.maxHp);
+        this.enemy = k;
+        this.lastMsg  = '-- Resumed --';
+        this.msgLine2 = '';
+        this.msgClass = 'msg-neutral';
+      } else {
+        // Enemy already dead — spawn fresh kobold
+        this.enemy = this.buildKobold();
+      }
+
+      this.defeated = s.defeated;
+      if (s.defeated && s.restCountdown > 0) {
+        this.restCountdown = s.restCountdown;
+        this.lastMsg  = `!! DEFEATED !!`;
+        this.msgLine2 = `Long resting... ${this.restCountdown}s`;
+        this.msgClass = 'msg-bad';
+        this.restInterval = setInterval(() => {
+          this.restCountdown = Math.max(0, this.restCountdown - 1);
+          this.emitState();
+          if (this.restCountdown > 0) {
+            this.msgLine2 = `Long resting... ${this.restCountdown}s`;
+          } else {
+            this.msgLine2 = '-- Press RETRY --';
+            clearInterval(this.restInterval);
+            this.restInterval = undefined;
+          }
+        }, 1000);
+      } else if (s.defeated) {
+        this.lastMsg  = `!! DEFEATED !!`;
+        this.msgLine2 = '-- Press RETRY --';
+        this.msgClass = 'msg-bad';
+      }
+    }
+  }
+
+  /** Emit the current combat state to the parent for persistence. */
+  private emitState(): void {
+    this.stateChange.emit({
+      fighterHp:     this.fighterHp,
+      enemyHp:       this.enemy.hp,
+      defeated:      this.defeated,
+      restCountdown: this.restCountdown,
+    });
   }
 
   ngOnDestroy(): void {
@@ -136,6 +193,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.log.log(`The Fighter was slain by a ${this.enemy.name}!`, 'warn');
       this.startRest();
     }
+    this.emitState();
   }
 
   heal(): void {
@@ -150,6 +208,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.msgLine2 = `${this.enemy.name} hits ${eDmg}!`;
     this.msgClass = 'msg-neutral';
     this.applyEnemyDamage(eDmg);
+    this.emitState();
   }
 
   retry(): void {
@@ -160,6 +219,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.lastMsg   = '-- Ready to fight --';
     this.msgLine2  = '';
     this.msgClass  = 'msg-neutral';
+    this.emitState();
   }
 
   // ── Private helpers ───────────────────────
@@ -176,6 +236,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
     this.restInterval = setInterval(() => {
       this.restCountdown = Math.max(0, this.restCountdown - 1);
+      this.emitState();
       if (this.restCountdown > 0) {
         this.msgLine2 = `Long resting... ${this.restCountdown}s`;
       } else {
@@ -201,6 +262,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.log.log(`The Fighter was slain by a ${this.enemy.name}!`, 'warn');
       this.startRest();
     }
+    this.emitState();
   }
 
   private onEnemyDefeated(enemyLastDmg: number): void {
@@ -233,6 +295,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.msgLine2  = `Kobold's last strike: ${enemyLastDmg} dmg!`;
       this.msgClass  = 'msg-bad';
       this.startRest();
+      this.emitState();
       return;
     }
 
@@ -240,6 +303,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.msgLine2      = `Kobold hits back: ${enemyLastDmg} dmg!`;
     this.msgClass      = 'msg-good';
     this.awaitingSpawn = true;
+    this.emitState();
 
     this.spawnTimer = setTimeout(() => {
       this.enemy        = this.buildKobold();
@@ -247,6 +311,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.lastMsg      = '-- New enemy! --';
       this.msgLine2     = '';
       this.msgClass     = 'msg-neutral';
+      this.emitState();
     }, FIGHTER_MG.SPAWN_DELAY_MS);
   }
 

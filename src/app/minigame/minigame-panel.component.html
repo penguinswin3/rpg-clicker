@@ -9,7 +9,12 @@
 
     <!-- ── Fighter: live combat minigame ── -->
     <ng-container *ngIf="activeCharacterId === 'fighter'">
-      <app-fighter-minigame [attackPower]="fighterAttack" [potionChuggingLevel]="potionChuggingLevel" />
+      <app-fighter-minigame
+        [attackPower]="fighterAttack"
+        [potionChuggingLevel]="potionChuggingLevel"
+        [savedState]="fighterCombatState"
+        (stateChange)="fighterCombatStateChange.emit($event)"
+      />
     </ng-container>
 
     <!-- ── Apothecary: alchemy rhythm minigame ── -->

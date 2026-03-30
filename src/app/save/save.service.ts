@@ -3,6 +3,14 @@ import { WalletService } from '../wallet/wallet.service';
 import { CharacterService } from '../character/character.service';
 import { ActivityLogService, LogFilterType } from '../activity-log/activity-log.service';
 
+/** Persistent snapshot of the Fighter's in-progress combat. */
+export interface FighterCombatState {
+  fighterHp: number;
+  enemyHp: number;
+  defeated: boolean;
+  restCountdown: number;
+}
+
 /** All upgrade / progression state managed by AppComponent. */
 export interface UpgradeState {
   // Fighter
@@ -40,6 +48,8 @@ export interface UpgradeState {
   jacksOwned?: number;
   /** How many Jacks are assigned per character id. Optional for old-save compat. */
   jacksAllocations?: Record<string, number>;
+  /** Current fighter minigame combat state. Optional for old-save compat. */
+  fighterCombatState?: FighterCombatState;
 }
 
 /** Persisted UI window and filter preferences. */

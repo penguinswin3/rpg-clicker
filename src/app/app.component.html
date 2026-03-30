@@ -2,7 +2,7 @@
   <app-wallet-sidebar></app-wallet-sidebar>
 
   <!-- Minigame panel: unlocked at 2500 XP, spans left of game area -->
-  <app-minigame-panel *ngIf="minigameShown" [fighterAttack]="fighterAttackPower" [potionChuggingLevel]="potionChuggingLevel" [bountifulLandsLevel]="bountifulLandsLevel" />
+  <app-minigame-panel *ngIf="minigameShown" [fighterAttack]="fighterAttackPower" [potionChuggingLevel]="potionChuggingLevel" [bountifulLandsLevel]="bountifulLandsLevel" [fighterCombatState]="fighterCombatState" (fighterCombatStateChange)="fighterCombatState = $event" />
 
   <div class="game-wrapper">
     <div class="game-container">

@@ -10,7 +10,7 @@ import { CharacterUnlockComponent } from './character/character-unlock.component
 import { CharacterService } from './character/character.service';
 import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './save/options-menu.component';
-import { SaveService, UpgradeState } from './save/save.service';
+import { SaveService, UpgradeState, FighterCombatState } from './save/save.service';
 import { XP_THRESHOLDS, BASE_COSTS, COST_SCALE, YIELDS, UPGRADE_MAX, UNLOCK_COSTS, JACK_XP_THRESHOLDS, JACK_COSTS } from './game-config';
 import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR, JACK_FLAVOR } from './flavor-text';
 
@@ -279,6 +279,9 @@ export class AppComponent implements OnInit, OnDestroy {
   sharperSwordsLevel        = 0;
   sharperSwordsCost: number = BASE_COSTS.SHARPER_SWORDS;
 
+  /** Persistent fighter combat state — survives character switching and saves. */
+  fighterCombatState: FighterCombatState | null = null;
+
   /** Total attack power fed into the fighter minigame: click bonus + sword sharpness. */
   get fighterAttackPower(): number { return this.goldPerClick + this.sharperSwordsLevel; }
 
@@ -457,6 +460,7 @@ export class AppComponent implements OnInit, OnDestroy {
       minigameUnlocked:         this.minigameUnlocked,
       jacksOwned:               this.jacksOwned,
       jacksAllocations:         { ...this.jacksAllocations },
+      fighterCombatState:       this.fighterCombatState ?? undefined,
     };
   }
 
@@ -485,6 +489,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.minigameUnlocked        = s.minigameUnlocked ?? false;
     this.jacksOwned              = s.jacksOwned ?? 0;
     this.jacksAllocations        = s.jacksAllocations ? { ...s.jacksAllocations } : {};
+    this.fighterCombatState      = s.fighterCombatState ?? null;
     this.updateAllPerSecond();
   }
 
