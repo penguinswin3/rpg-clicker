@@ -32,7 +32,7 @@ export const JACK_XP_THRESHOLDS: readonly number[] = [
 /** One-time cost to hire a single Jack. Costs scale per Jack purchased. */
 export const JACK_COSTS = {
   // Base costs (for the first Jack)
-  GOLD:    1000,
+  GOLD:    2200,
   BEAST:   200,
   POTIONS: 50,
   /** Multiplier applied to every cost for each Jack already owned. */
@@ -107,7 +107,7 @@ export const BASE_COSTS = {
   /** Pixie Dust base cost for Potion of Cat's Eye */
   POTION_CATS_EYE_PIXIE: 15,
   /** Gold cost for Bigger Game ranger upgrade */
-  BIGGER_GAME: 120,
+  BIGGER_GAME: 480,
 
   // Apothecary
   POTION_TITRATION: 20,
@@ -128,7 +128,7 @@ export const COST_SCALE = {
   BETTER_TRACKING:  1.5,
   BOUNTIFUL_LANDS:  1.5,
   POTION_CATS_EYE:  1.5,
-  BIGGER_GAME:      1.9,
+  BIGGER_GAME:      2.4,
 
   POTION_TITRATION: 1.5,
   POTION_MARKETING: 1.5,

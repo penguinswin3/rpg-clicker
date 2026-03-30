@@ -62,4 +62,9 @@
 
 - Hireling's Hirelings, hirelings can hire hirelings that double the effectiveness of hirelings
 
-- Recalculate the per second value when an upgrade is purchased (the Jacks and Better Bounties) 
+- Recalculate the per second value when an upgrade is purchased (the Jacks and Better Bounties)
+- Jacks need to effect the XP/s upgrade Insightful contracts as well
+
+- Add max hit to character tab
+
+- Stronger kobolds can be stronger monsters and do other things like spiders and ogres and stuff 
