@@ -107,16 +107,13 @@ export const CHARACTER_FLAVOR = {
 // ── Minigames ─────────────────────────────────────────────────
 export const MINIGAME_FLAVOR = {
   FIGHTER: {
-    name: 'Open Wilderness',
-    desc: 'Face waves of enemies in gladiatorial combat.\nSurvive as long as you can.',
+    name: 'Wild Wilderness',
   },
   RANGER: {
     name: 'Hunting Grounds',
-    desc: 'Track and pursue elusive prey\nthrough the ancient forest.',
   },
   APOTHECARY: {
     name: 'Alchemy Tablet',
-    desc: 'Combine rare ingredients to brew\npowerful concoctions.',
   },
 } as const;
 

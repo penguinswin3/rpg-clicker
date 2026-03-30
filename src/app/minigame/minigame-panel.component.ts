@@ -10,11 +10,9 @@ import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
 import { FighterCombatState } from '../save/save.service';
 
-interface MinigamePlaceholder {
+interface MinigameInfo {
   characterId: string;
   title: string;
-  description: string;
-  ascii: string;
 }
 
 @Component({
@@ -52,39 +50,18 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   activeCharacterId = 'fighter';
   readonly threshold = XP_THRESHOLDS.MINIGAME_UNLOCK;
 
-  readonly placeholders: MinigamePlaceholder[] = [
+  readonly placeholders: MinigameInfo[] = [
     {
       characterId: 'fighter',
       title: MINIGAME_FLAVOR.FIGHTER.name,
-      description: MINIGAME_FLAVOR.FIGHTER.desc,
-      ascii:
-        '    O    \n' +
-        '   /|\\   \n' +
-        '   / \\   \n' +
-        ' -------- \n' +
-        '  FIGHTER ',
     },
     {
       characterId: 'ranger',
       title: MINIGAME_FLAVOR.RANGER.name,
-      description: MINIGAME_FLAVOR.RANGER.desc,
-      ascii:
-        ' }---->   \n' +
-        ' }---->   \n' +
-        '  ~forest~\n' +
-        ' }---->   \n' +
-        '  RANGER  ',
     },
     {
       characterId: 'apothecary',
       title: MINIGAME_FLAVOR.APOTHECARY.name,
-      description: MINIGAME_FLAVOR.APOTHECARY.desc,
-      ascii:
-        '  _   _   \n' +
-        ' (_) (_)  \n' +
-        '  |   |   \n' +
-        ' [=] [=]  \n' +
-        ' APOTH.   ',
     },
   ];
 
@@ -92,16 +69,13 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     return this.xp >= this.threshold;
   }
 
-  get activeMinigame(): MinigamePlaceholder {
+  get activeMinigame(): MinigameInfo {
     return (
       this.placeholders.find(p => p.characterId === this.activeCharacterId) ??
       this.placeholders[0]
     );
   }
 
-  get descLines(): string[] {
-    return this.activeMinigame.description.split('\n');
-  }
 
   ngOnInit(): void {
     this.sub.add(

@@ -33,16 +33,6 @@
     <!-- ── Other characters: placeholder ── -->
     <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger'">
 
-      <div class="ascii-frame">
-        <pre class="minigame-ascii">{{ activeMinigame.ascii }}</pre>
-      </div>
-
-      <div class="mg-divider">+----------+</div>
-
-      <div class="mg-description">
-        <span class="mg-desc-line" *ngFor="let line of descLines">{{ line }}</span>
-      </div>
-
       <div class="mg-divider">+----------+</div>
 
       <div class="mg-coming-soon">
@@ -50,6 +40,8 @@
         <span class="cs-sub">[ Under Construction ]</span>
         <span class="cs-hint">// more content soon //</span>
       </div>
+
+      <div class="mg-divider">+----------+</div>
 
     </ng-container>
 
