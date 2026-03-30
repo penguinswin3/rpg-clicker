@@ -359,6 +359,22 @@
   min-width: 0;
 }
 
+// Scrollable card list — shows ~4 cards; overflow reveals the rest
+// Card ≈ 56px content + 8px margin = ~64px. 4 cards = 256px ≈ 16rem.
+.upgrades-scroll {
+  max-height: 12rem;
+  overflow-y: auto;
+  padding-right: 0.25rem; // room for scrollbar without clipping card borders
+
+  // Terminal-style thin scrollbar
+  &::-webkit-scrollbar        { width: 4px; }
+  &::-webkit-scrollbar-track  { background: #111; }
+  &::-webkit-scrollbar-thumb  { background: #444; }
+  &::-webkit-scrollbar-thumb:hover { background: #777; }
+  scrollbar-width: thin;
+  scrollbar-color: #444 #111;
+}
+
 .upgrades-minigame-col {
   border-left: 1px solid #333;
   padding-left: 1rem;

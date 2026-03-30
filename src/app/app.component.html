@@ -96,18 +96,21 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           <!-- ══ Standard upgrades ════════════════════════════════════ -->
           <div class="upgrades-col">
             <div class="section-title">[ UPGRADES ]</div>
-            <ng-container *ngFor="let id of getVisibleUpgrades('standard')">
-              <ng-container *ngTemplateOutlet="upgradeCard; context: { $implicit: id }"></ng-container>
-            </ng-container>
+            <div class="upgrades-scroll">
+              <ng-container *ngFor="let id of getVisibleUpgrades('standard')">
+                <ng-container *ngTemplateOutlet="upgradeCard; context: { $implicit: id }"></ng-container>
+              </ng-container>
+            </div>
           </div><!-- /upgrades-col standard -->
 
           <!-- ══ Minigame upgrades ══════════════════════════════════ -->
           <div class="upgrades-col upgrades-minigame-col" *ngIf="minigameShown && !hideMinigameUpgrades">
             <div class="section-title">[ MINIGAME ]</div>
-            <ng-container *ngFor="let id of getVisibleUpgrades('minigame')">
-              <ng-container *ngTemplateOutlet="upgradeCard; context: { $implicit: id }"></ng-container>
-            </ng-container>
-
+            <div class="upgrades-scroll">
+              <ng-container *ngFor="let id of getVisibleUpgrades('minigame')">
+                <ng-container *ngTemplateOutlet="upgradeCard; context: { $implicit: id }"></ng-container>
+              </ng-container>
+            </div>
           </div><!-- /upgrades-col minigame -->
 
         </div><!-- /upgrades-columns -->
