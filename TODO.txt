@@ -40,10 +40,26 @@
 
 - herb chance % is not need in the character stats page it should be above (Both chance)
 
-- Stronger Kobolds (you can switch between them at any time)
-
 - Visions of pixies upgrade that gives a little sparkle effect where a pixie might me. A few tiers with varying accuracies, can scale to up to 3 sparkles
 
 - Add a flee button to the fighter minigame that resets the fight to the new selected level after 5 seconds
 
-- Every kobold level should only ever drop 1 ear (higher levels might drop more resources in the future, a new drop will be signified by the next kobold level requiring the previous levels drop)
+- Once an xp threshold is passed, anything unlocked by that threshold should remain, and the threshold should not be tracked again in the currency menu
+
+- Potion of the cat's eye shouldn't show up until the minigames are unlocked
+
+- Upgrades should only show a maximum of 5 at a time before making the user scroll through a scroll box.
+
+- Upgrades can be extracted from the code and dynamically loaded into these scroll boxes.
+
+- fighter long rest should tick down even if the fighter isnt selected
+
+- short rest upgrade that auto consumes potions after a fighter minigame success
+
+- Kobold ear currency should be up top, near the other fighter resources
+
+- remove herb chance and keep cats eye in the character menu
+
+- Hireling's Hirelings, hirelings can hire hirelings that double the effectiveness of hirelings
+
+- Recalculate the per second value when an upgrade is purchased (the Jacks and Better Bounties) 

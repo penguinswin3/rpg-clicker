@@ -53,9 +53,9 @@ export const UNLOCK_COSTS = {
   APOTHECARY_HERBS:  250,
 
   /** Minigame system unlock — available once XP >= MINIGAME_UNLOCK threshold */
-  MINIGAME_GOLD:    2500,
-  MINIGAME_POTIONS: 250,
-  MINIGAME_BEAST:   250,
+  MINIGAME_GOLD:    10000,
+  MINIGAME_POTIONS: 100,
+  MINIGAME_BEAST:   100,
 } as const;
 
 // ── Upgrade Maximum Levels ───────────────────────────────────
@@ -75,6 +75,7 @@ export const UPGRADE_MAX = {
   BOUNTIFUL_LANDS:      100,  // 100% = every blank cell guaranteed a prize
   ABUNDANT_LANDS:       1,    // binary unlock — multiply yield by successful cell count
   POTION_CATS_EYE:      100,  // 100 levels × +1% = 100% chance to roll both herb and beast
+  BIGGER_GAME:          999,  // each level +1 max Raw Beast Meat from hero button
 
   // Apothecary
   /** 400 levels × +1% each = 400% save-chance.
@@ -88,7 +89,7 @@ export const BASE_COSTS = {
   // Fighter
   BETTER_BOUNTIES:      10,
   CONTRACTED_HIRELINGS: 25,
-  INSIGHTFUL_CONTRACTS: 75,  // gold; unlocked at 500 XP
+  INSIGHTFUL_CONTRACTS: 400,  // gold; unlocked at 500 XP
   POTION_CHUGGING:      5,   // paid in potions
   SHARPER_SWORDS:       50,  // gold; minigame upgrade
   /** Kobold Ears base cost for Stronger Kobolds */
@@ -105,6 +106,8 @@ export const BASE_COSTS = {
   POTION_CATS_EYE_CONC:  5,
   /** Pixie Dust base cost for Potion of Cat's Eye */
   POTION_CATS_EYE_PIXIE: 15,
+  /** Gold cost for Bigger Game ranger upgrade */
+  BIGGER_GAME: 120,
 
   // Apothecary
   POTION_TITRATION: 20,
@@ -116,15 +119,16 @@ export const BASE_COSTS = {
 export const COST_SCALE = {
   BETTER_BOUNTIES:      1.5,
   CONTRACTED_HIRELINGS: 1.5,
-  INSIGHTFUL_CONTRACTS: 2.0,
+  INSIGHTFUL_CONTRACTS: 2.5,
   POTION_CHUGGING:      1.5,
   SHARPER_SWORDS:       1.5,
-  STRONGER_KOBOLDS:     1.8,
+  STRONGER_KOBOLDS:     2.8,
 
   MORE_HERBS:       1.5,
   BETTER_TRACKING:  1.5,
   BOUNTIFUL_LANDS:  1.5,
   POTION_CATS_EYE:  1.5,
+  BIGGER_GAME:      1.9,
 
   POTION_TITRATION: 1.5,
   POTION_MARKETING: 1.5,

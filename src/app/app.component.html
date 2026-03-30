@@ -173,6 +173,24 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                 </div>
               </div>
 
+              <div class="upgrade-card" *ngIf="shouldShowUpgrade(biggerGameMaxed)">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.BIGGER_GAME.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.BIGGER_GAME.desc }} (now 1-{{ biggerGameLevel + 1 }})</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="biggerGameMaxed"
+                    [disabled]="biggerGameMaxed || gold < biggerGameCost"
+                    (click)="buyBiggerGame()">
+                    <ng-container *ngIf="biggerGameMaxed; else bgCost">[MAXED]</ng-container>
+                    <ng-template #bgCost>[BUY: {{ biggerGameCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ biggerGameLevel }}/{{ upgradeMax.BIGGER_GAME }}</span>
+                </div>
+              </div>
+
               <div class="upgrade-card" *ngIf="apothecaryUnlocked && shouldShowUpgrade(potionCatsEyeMaxed)">
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.POTION_CATS_EYE.name }}</span>

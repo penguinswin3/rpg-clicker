@@ -214,7 +214,7 @@ export class AppComponent implements OnInit, OnDestroy {
       if (catsEyeProcs) {
         this.wallet.add('herb', this.computeHerbYield());
         if (Math.random() < this.beastFindChance / 100) {
-          this.wallet.add('beast', 1);
+          this.wallet.add('beast', this.computeMeatYield());
         }
       } else {
         const targetHerb = Math.random() < 0.5;
@@ -222,7 +222,7 @@ export class AppComponent implements OnInit, OnDestroy {
           this.wallet.add('herb', this.computeHerbYield());
         } else {
           if (Math.random() < this.beastFindChance / 100) {
-            this.wallet.add('beast', 1);
+            this.wallet.add('beast', this.computeMeatYield());
           }
         }
       }
@@ -342,6 +342,11 @@ export class AppComponent implements OnInit, OnDestroy {
     return base * Math.pow(2, guaranteedDoublings + extraDoubling);
   }
 
+  /** Compute the Raw Beast Meat yield for one ranger hunt (1 to 1 + biggerGameLevel). */
+  private computeMeatYield(): number {
+    return Math.floor(Math.random() * (this.biggerGameLevel + 1)) + 1;
+  }
+
   /** Display string for hero stats – e.g. "3× + 25%" */
   get herbDoublingDisplay(): string {
     const guaranteed = Math.floor(this.moreHerbsLevel / 100);
@@ -369,6 +374,10 @@ export class AppComponent implements OnInit, OnDestroy {
   potionCatsEyeLevel         = 0;
   potionCatsEyeConcCost: number  = BASE_COSTS.POTION_CATS_EYE_CONC;
   potionCatsEyePixieCost: number = BASE_COSTS.POTION_CATS_EYE_PIXIE;
+
+  /** Ranger upgrade — each level adds +1 to the maximum Raw Beast Meat per hero button press. */
+  biggerGameLevel        = 0;
+  biggerGameCost: number = BASE_COSTS.BIGGER_GAME;
 
   get beastFindChance(): number {
     return Math.min(YIELDS.RANGER_BEAST_CHANCE_CAP, YIELDS.RANGER_BASE_BEAST_CHANCE + this.betterTrackingLevel);
@@ -400,6 +409,7 @@ export class AppComponent implements OnInit, OnDestroy {
   get bountifulLandsMaxed():  boolean { return this.bountifulLandsLevel  >= UPGRADE_MAX.BOUNTIFUL_LANDS;  }
   get abundantLandsMaxed():   boolean { return this.abundantLandsLevel   >= UPGRADE_MAX.ABUNDANT_LANDS;   }
   get potionCatsEyeMaxed():   boolean { return this.potionCatsEyeLevel   >= UPGRADE_MAX.POTION_CATS_EYE;  }
+  get biggerGameMaxed():      boolean { return this.biggerGameLevel      >= UPGRADE_MAX.BIGGER_GAME;      }
   get potionTitrationMaxed(): boolean { return this.potionTitrationLevel >= UPGRADE_MAX.POTION_TITRATION; }
   get potionMarketingMaxed(): boolean { return this.potionMarketingLevel >= UPGRADE_MAX.POTION_MARKETING; }
 
@@ -407,11 +417,13 @@ export class AppComponent implements OnInit, OnDestroy {
   get heroStats(): HeroStat[] {
     if (this.activeCharacterId === 'ranger') {
       return [
-        { label: HERO_STATS_FLAVOR.RANGER.HERB_CHANCE,  value: `50%`                           },
         { label: HERO_STATS_FLAVOR.RANGER.BEAST_CHANCE, value: `${this.beastFindChance}%`      },
         { label: HERO_STATS_FLAVOR.RANGER.HERB_DOUBLE,  value: this.herbDoublingDisplay        },
         ...(this.potionCatsEyeLevel > 0
           ? [{ label: HERO_STATS_FLAVOR.RANGER.CATS_EYE, value: `${this.potionCatsEyeLevel}%` }]
+          : []),
+        ...(this.biggerGameLevel > 0
+          ? [{ label: HERO_STATS_FLAVOR.RANGER.MAX_MEAT, value: `${this.biggerGameLevel + 1}` }]
           : []),
       ];
     }
@@ -540,6 +552,8 @@ export class AppComponent implements OnInit, OnDestroy {
       potionCatsEyeLevel:       this.potionCatsEyeLevel,
       potionCatsEyeConcCost:    this.potionCatsEyeConcCost,
       potionCatsEyePixieCost:   this.potionCatsEyePixieCost,
+      biggerGameLevel:          this.biggerGameLevel,
+      biggerGameCost:           this.biggerGameCost,
       herbSaveChance:           this.herbSaveChance,
       potionTitrationCost:      this.potionTitrationCost,
       potionTitrationLevel:     this.potionTitrationLevel,
@@ -584,6 +598,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.potionCatsEyeLevel      = s.potionCatsEyeLevel      ?? 0;
     this.potionCatsEyeConcCost   = s.potionCatsEyeConcCost   ?? BASE_COSTS.POTION_CATS_EYE_CONC;
     this.potionCatsEyePixieCost  = s.potionCatsEyePixieCost  ?? BASE_COSTS.POTION_CATS_EYE_PIXIE;
+    this.biggerGameLevel         = s.biggerGameLevel         ?? 0;
+    this.biggerGameCost          = s.biggerGameCost          ?? BASE_COSTS.BIGGER_GAME;
     this.herbSaveChance          = s.herbSaveChance;
     this.potionTitrationCost     = s.potionTitrationCost;
     this.potionTitrationLevel    = s.potionTitrationLevel;
@@ -634,9 +650,10 @@ export class AppComponent implements OnInit, OnDestroy {
     const herbConsumed = apothecaryJacks * (YIELDS.APOTHECARY_BREW_HERB_COST - this.herbSaveChance / 100);
     this.wallet.setPerSecond('herb', round2(herbProduced - herbConsumed));
 
-    // Beast: Ranger Jacks × 50% beast-target × beastFindChance%
+    // Beast: Ranger Jacks × 50% beast-target × beastFindChance% × expected meat yield per hunt
+    const expectedMeatYield = (this.biggerGameLevel + 2) / 2;
     this.wallet.setPerSecond('beast',
-      round2(rangerJacks * 0.5 * (this.beastFindChance / 100))
+      round2(rangerJacks * 0.5 * (this.beastFindChance / 100) * expectedMeatYield)
     );
 
     // Potion: Apothecary Jacks brew one potion per click
@@ -672,8 +689,9 @@ export class AppComponent implements OnInit, OnDestroy {
       const gotBeast = Math.random() < this.beastFindChance / 100;
       this.wallet.add('herb', herbs);
       if (gotBeast) {
-        this.wallet.add('beast', 1);
-        this.log.log(`Cat's Eye! You foraged ${herbs} herb(s) AND hunted a beast! (+1 XP)`, 'success');
+        const meat = this.computeMeatYield();
+        this.wallet.add('beast', meat);
+        this.log.log(`Cat's Eye! You foraged ${herbs} herb(s) AND hunted a beast! (+${meat} meat, +1 XP)`, 'success');
       } else {
         this.log.log(`Cat's Eye! You foraged ${herbs} herb(s), but the beast escaped. (+1 XP)`, 'success');
       }
@@ -687,8 +705,9 @@ export class AppComponent implements OnInit, OnDestroy {
       } else {
         const gotBeast = Math.random() < this.beastFindChance / 100;
         if (gotBeast) {
-          this.wallet.add('beast', 1);
-          this.log.log(`You tracked a beast and claimed its meat. (+1 XP)`);
+          const meat = this.computeMeatYield();
+          this.wallet.add('beast', meat);
+          this.log.log(`You tracked a beast and claimed its meat. (+${meat} meat, +1 XP)`);
         } else {
           this.log.log(`You targeted a beast but it escaped. (+1 XP)`);
         }
@@ -929,6 +948,25 @@ export class AppComponent implements OnInit, OnDestroy {
     } else {
       this.log.log(
         `Not enough gold for Better Tracking. Need ${this.betterTrackingCost}g, have ${this.gold}g.`,
+        'warn'
+      );
+    }
+  }
+
+  buyBiggerGame(): void {
+    if (this.biggerGameMaxed) { return; }
+    if (this.wallet.canAfford('gold', this.biggerGameCost)) {
+      this.wallet.remove('gold', this.biggerGameCost);
+      this.biggerGameLevel++;
+      this.biggerGameCost = Math.floor(this.biggerGameCost * COST_SCALE.BIGGER_GAME);
+      this.updateAllPerSecond();
+      this.log.log(
+        `Bigger Game upgraded to Lv.${this.biggerGameLevel}. Max meat per hunt now ${this.biggerGameLevel + 1}.`,
+        'success'
+      );
+    } else {
+      this.log.log(
+        `Not enough gold for Bigger Game. Need ${this.biggerGameCost}g, have ${this.gold}g.`,
         'warn'
       );
     }

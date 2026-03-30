@@ -65,6 +65,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
   // ── Long rest lockout ─────────────────────
   restCountdown = 0;   // seconds remaining; 0 = can retry
+  /** Absolute wall-clock time (ms) when the long rest ends. 0 when not resting. */
+  private restEndsAt = 0;
 
   /** Effective rest duration after applying any upgrade reductions. */
   get effectiveRestSec(): number {
@@ -148,21 +150,34 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
       this.defeated = s.defeated;
       if (s.defeated && s.restCountdown > 0) {
-        this.restCountdown = s.restCountdown;
+        // Derive remaining time from the wall-clock end timestamp when available,
+        // so the countdown reflects real elapsed time even if the tab was away.
+        const remaining = s.restEndsAt
+          ? Math.max(0, Math.ceil((s.restEndsAt - Date.now()) / 1000))
+          : s.restCountdown;
+        this.restEndsAt    = s.restEndsAt ?? (Date.now() + remaining * 1000);
+        this.restCountdown = remaining;
+
         this.lastMsg  = `!! DEFEATED !!`;
-        this.msgLine2 = `Long resting... ${this.restCountdown}s`;
         this.msgClass = 'msg-bad';
-        this.restInterval = setInterval(() => {
-          this.restCountdown = Math.max(0, this.restCountdown - 1);
-          this.emitState();
-          if (this.restCountdown > 0) {
-            this.msgLine2 = `Long resting... ${this.restCountdown}s`;
-          } else {
-            this.msgLine2 = '-- Press RETRY --';
-            clearInterval(this.restInterval);
-            this.restInterval = undefined;
-          }
-        }, 1000);
+
+        if (this.restCountdown <= 0) {
+          // Rest already finished while away
+          this.msgLine2 = '-- Press RETRY --';
+        } else {
+          this.msgLine2 = `Long resting... ${this.restCountdown}s`;
+          this.restInterval = setInterval(() => {
+            this.restCountdown = Math.max(0, this.restCountdown - 1);
+            this.emitState();
+            if (this.restCountdown > 0) {
+              this.msgLine2 = `Long resting... ${this.restCountdown}s`;
+            } else {
+              this.msgLine2 = '-- Press RETRY --';
+              clearInterval(this.restInterval);
+              this.restInterval = undefined;
+            }
+          }, 1000);
+        }
       } else if (s.defeated) {
         this.lastMsg  = `!! DEFEATED !!`;
         this.msgLine2 = '-- Press RETRY --';
@@ -178,6 +193,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       enemyHp:       this.enemy.hp,
       defeated:      this.defeated,
       restCountdown: this.restCountdown,
+      restEndsAt:    this.restEndsAt,
     });
   }
 
@@ -250,12 +266,14 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
   /**
    * Begin the long-rest lockout after a defeat.
-   * Updates msgLine2 each second with the remaining time, then clears itself.
+   * Records an absolute end timestamp so the countdown stays accurate even
+   * if the component is destroyed and recreated (e.g. switching characters).
    */
   private startRest(): void {
     this.restCountdown = this.effectiveRestSec;
     if (this.restCountdown <= 0) return;   // fully reduced — can retry instantly
 
+    this.restEndsAt = Date.now() + this.restCountdown * 1000;
     this.msgLine2 = `Long resting... ${this.restCountdown}s`;
 
     this.restInterval = setInterval(() => {

@@ -10,6 +10,10 @@ export interface FighterCombatState {
   enemyHp: number;
   defeated: boolean;
   restCountdown: number;
+  /** Absolute wall-clock timestamp (ms) when the long rest ends. Used so the
+   *  countdown ticks correctly even while the Fighter tab is not active.
+   *  Optional for backward compatibility with older saves. */
+  restEndsAt?: number;
 }
 
 /** All upgrade / progression state managed by AppComponent. */
@@ -52,6 +56,9 @@ export interface UpgradeState {
   potionCatsEyeLevel?: number;
   potionCatsEyeConcCost?: number;
   potionCatsEyePixieCost?: number;
+  /** Bigger Game ranger upgrade — optional for old-save compat */
+  biggerGameLevel?: number;
+  biggerGameCost?: number;
   // Apothecary
   herbSaveChance: number;
   potionTitrationCost: number;
