@@ -204,6 +204,20 @@ $font: 'Courier New', Courier, monospace;
   border-color: #a60;
   color: #fa0;
   &:hover:not(:disabled) { background: #a60; color: #000; }
+
+  // Long-rest lockout state — muted, clearly unavailable
+  &.resting {
+    border-color: #446;
+    color: #88a;
+    cursor: not-allowed;
+    animation: rest-pulse 2s ease-in-out infinite;
+    &:hover { background: #000; color: #88a; }
+  }
+}
+
+@keyframes rest-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
 }
 
 // ── Potion count ──────────────────────────

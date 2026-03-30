@@ -31,17 +31,9 @@
 
 - 500 xp reward, possible XP increase for fighter questing
 
-- make the first jack show up on the xp tracker milestone
-
 - standardize the character screen summaries to include the unit on the right side of the colon (number/s)
 
 - Herb doubling can max out at 100% then a later upgrade will let you bypass that limit
-
-- Bountiful lands can cost herbs
-
-- after losing to a kobold there should be a lockout period (longish, upgradeable? Called recovery time?
-
-- you should get a nice xp bonus when successfully finding something in the ranger minigame
 
 - Bonus tries in the ranger minigame
 
@@ -55,10 +47,4 @@
 
 - Stronger Kobolds (you can switch between them at any time)
 
-- Only the first kobold ear should be the rare text, aka when the currency is unlocked
-
-- clicking a square after the ranger minigame is complete could restart it for less mouse movement
-
 - Visions of pixies upgrade that gives a little sparkle effect where a pixie might me. A few tiers with varying accuracies, can scale to up to 3 sparkles
-
-- Remove the [ Scouting ] tag from the ranger minigame

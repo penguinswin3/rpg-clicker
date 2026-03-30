@@ -241,10 +241,10 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                   <button
                     class="upgrade-btn"
                     [class.upgrade-maxed]="bountifulLandsMaxed"
-                    [disabled]="bountifulLandsMaxed || gold < bountifulLandsCost"
+                    [disabled]="bountifulLandsMaxed || koboldEars < bountifulLandsCost"
                     (click)="buyBountifulLands()">
                     <ng-container *ngIf="bountifulLandsMaxed; else blCost">[MAXED]</ng-container>
-                    <ng-template #blCost>[BUY: {{ bountifulLandsCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>]</ng-template>
+                    <ng-template #blCost>[BUY: {{ bountifulLandsCost }}<span [style.color]="currencyFlavor['kobold-ear'].color">{{ currencyFlavor['kobold-ear'].symbol }}</span>]</ng-template>
                   </button>
                   <span class="upgrade-level">Lv.{{ bountifulLandsLevel }}/{{ upgradeMax.BOUNTIFUL_LANDS }}</span>
                 </div>

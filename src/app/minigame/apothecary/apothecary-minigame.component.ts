@@ -30,7 +30,6 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   readonly maxQuality   = APOTH_MG.MAX_QUALITY;
   readonly herbCost     = APOTH_MG.HERB_COST;
   readonly currencyFlavor = CURRENCY_FLAVOR;
-  firstPerfectDone  = false;
 
   // ── Beat bar ──────────────────────────────
   /** Cursor position: 0 – 100 */
@@ -155,8 +154,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.potionActive = false;
     this.wallet.add('concentrated-potion', 1);
 
-    if (!this.firstPerfectDone) {
-      this.firstPerfectDone = true;
+    if (!this.wallet.isCurrencyUnlocked('concentrated-potion')) {
       this.wallet.unlockCurrency('concentrated-potion');
       this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
     } else {

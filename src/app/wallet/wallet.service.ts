@@ -112,6 +112,14 @@ export class WalletService {
     this.manualUnlocksSource.next(next);
   }
 
+  /**
+   * Returns true if the given currency's manual-unlock gate has already been opened.
+   * Use this instead of local component flags so the check survives page reloads.
+   */
+  isCurrencyUnlocked(id: string): boolean {
+    return this.manualUnlocksSource.getValue().has(id);
+  }
+
   // ── Private ───────────────────────────────────────────────────
 
   private _patch(

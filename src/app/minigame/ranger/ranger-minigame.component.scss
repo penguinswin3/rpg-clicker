@@ -36,6 +36,14 @@ $pixie:  #ffe066;
 .picks-num   { color: #fff; font-weight: bold; }
 .round-done  { color: #555; }
 
+// Shown when round is over and the player can afford another scout
+.round-restart-hint {
+  color: $green;
+  font-size: 9px;
+  text-align: center;
+  opacity: 0.7;
+}
+
 // ── Grid ──────────────────────────────────
 
 .grid {
@@ -63,12 +71,22 @@ $pixie:  #ffe066;
   overflow: hidden;          /* prevent revealed content from pushing column width */
   box-sizing: border-box;
   transition: background 0.07s, border-color 0.07s, color 0.07s;
+  user-select: none;
 
   // Hoverable hidden cells
   &.cell-hidden:not(:disabled):hover {
     background: #1c1c1c;
     border-color: $green;
     color: $herb;
+  }
+
+  // Round-over restart shortcut — any cell click scouts again
+  &.cell-restart {
+    cursor: pointer;
+    &:hover {
+      border-color: $green;
+      filter: brightness(1.25);
+    }
   }
 
   &:disabled.cell-hidden { cursor: default; }
@@ -211,4 +229,3 @@ $pixie:  #ffe066;
     cursor: not-allowed;
   }
 }
-

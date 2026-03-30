@@ -49,8 +49,10 @@
       </button>
       <button class="action-btn retry-btn"
               [class.slot-inactive]="!defeated"
+              [class.resting]="restCountdown > 0"
+              [disabled]="restCountdown > 0"
               (click)="retry()">
-        [ RETRY ]
+        {{ restCountdown > 0 ? '[ LONG REST: ' + restCountdown + 's ]' : '[ RETRY ]' }}
       </button>
     </div>
 

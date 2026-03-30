@@ -54,12 +54,12 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   picksLeft          = this.PICKS;
   roundOver          = false;
   roundStarted       = false;   // false = show idle/cost screen
-  firstPixieDone     = false;
 
   // Round tallies
   meatFound  = 0;
   herbFound  = 0;
   pixieFound = 0;
+  xpGained   = 0;
 
   lastMsg  = '';
   msgClass = 'msg-neutral';
@@ -97,6 +97,19 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Unified cell click handler.
+   * - During an active round: reveal the cell (delegates to select).
+   * - After the round is over: clicking any cell restarts (delegates to newRound).
+   */
+  cellClick(i: number): void {
+    if (this.roundOver) {
+      this.newRound();
+    } else {
+      this.select(i);
+    }
+  }
+
   newRound(): void {
     if (!this.canScout) return;
     this.wallet.remove('beast', this.SCOUT_COST);
@@ -125,6 +138,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     this.meatFound    = 0;
     this.herbFound    = 0;
     this.pixieFound   = 0;
+    this.xpGained     = 0;
     this.lastMsg      = `Choose ${this.PICKS} boxes...`;
     this.msgClass     = 'msg-neutral';
   }
@@ -157,19 +171,24 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     switch (prize) {
       case 'meat':
         this.wallet.add('beast', 1);
+        this.wallet.add('xp', RANGER_MG.MEAT_XP);
         this.meatFound++;
+        this.xpGained += RANGER_MG.MEAT_XP;
         break;
 
       case 'herb':
         this.wallet.add('herb', 1);
+        this.wallet.add('xp', RANGER_MG.HERB_XP);
         this.herbFound++;
+        this.xpGained += RANGER_MG.HERB_XP;
         break;
 
       case 'pixie':
         this.wallet.add('pixie-dust', 1);
+        this.wallet.add('xp', RANGER_MG.PIXIE_XP);
         this.pixieFound++;
-        if (!this.firstPixieDone) {
-          this.firstPixieDone = true;
+        this.xpGained += RANGER_MG.PIXIE_XP;
+        if (!this.wallet.isCurrencyUnlocked('pixie-dust')) {
           this.wallet.unlockCurrency('pixie-dust');
           this.log.log('A Pixie emerged from the undergrowth! Pixie Dust unlocked!', 'rare');
         } else {
@@ -194,13 +213,14 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     if (this.pixieFound > 0) parts.push(`${this.pixieFound}× pixie dust`);
 
     const summary = parts.length ? parts.join(', ') : 'nothing useful';
-    const type = this.pixieFound > 0 ? 'rare' : 'success';
+    const xpStr   = this.xpGained > 0 ? ` (+${this.xpGained} XP)` : '';
+    const type    = this.pixieFound > 0 ? 'rare' : 'success';
 
     if (this.pixieFound === 0) {
-      this.log.log(`Ranger scouted the area: found ${summary}.`, type);
+      this.log.log(`Ranger scouted the area: found ${summary}.${xpStr}`, type);
     }
 
-    this.lastMsg  = `Found: ${summary}`;
+    this.lastMsg  = `Found: ${summary}${xpStr}`;
     this.msgClass = this.pixieFound > 0 ? 'msg-rare' : 'msg-good';
   }
 }

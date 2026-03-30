@@ -86,7 +86,7 @@ export const BASE_COSTS = {
   // Ranger
   MORE_HERBS:       15,
   BETTER_TRACKING:  20,
-  BOUNTIFUL_LANDS:  50,  // gold; ranger minigame upgrade
+  BOUNTIFUL_LANDS:  10,  // kobold ears; ranger minigame upgrade
 
   // Apothecary
   POTION_TITRATION: 20,
@@ -145,6 +145,8 @@ export const FIGHTER_MG = {
   ENEMY_DMG_MAX:     8,
   /** Milliseconds between a kill and the next enemy spawning */
   SPAWN_DELAY_MS:    900,
+  /** Base long-rest lockout in ms after the Fighter is defeated (future upgrades reduce this) */
+  RECOVERY_TIME_MS:  60_000,
 } as const;
 
 // ── Apothecary Minigame ───────────────────────────────────────
@@ -177,5 +179,12 @@ export const RANGER_MG = {
   /** Probability a prize cell contains a Herb (0–1; evaluated after Pixie roll) */
   HERB_CHANCE:  0.35,
   // Remaining probability → Raw Beast Meat
+
+  /** XP awarded when the player uncovers a Raw Beast Meat cell */
+  MEAT_XP:  3,
+  /** XP awarded when the player uncovers a Herb cell */
+  HERB_XP:  3,
+  /** XP awarded when the player uncovers a Pixie Dust cell */
+  PIXIE_XP: 9,
 } as const;
 

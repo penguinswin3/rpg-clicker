@@ -60,7 +60,7 @@
 
   <!-- ── Collapsed view ─────────────────── -->
   <ng-container *ngIf="collapsed">
-    <div class="currency-compact" *ngFor="let c of visibleCurrencies">
+    <div class="currency-compact" *ngFor="let c of filteredCurrencies">
       <span class="compact-amount" [style.color]="c.color">{{ fmt(getEntry(c.id).amount) }}</span>
       <span class="compact-short" [style.color]="c.color">{{ c.symbol }}</span>
       <!-- XP unlock progress bar — absolutely positioned, no layout impact -->

@@ -29,11 +29,14 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   @Input() attackPower = 1;
   /** Potion Chugging upgrade level — each level adds +1 HP to potion heals. */
   @Input() potionChuggingLevel = 0;
+  /** Future upgrades reduce the long-rest lockout by this many seconds. */
+  @Input() recoveryReductionSec = 0;
 
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private sub    = new Subscription();
   private spawnTimer?: ReturnType<typeof setTimeout>;
+  private restInterval?: ReturnType<typeof setInterval>;
 
   // ── Fighter state ─────────────────────────
   readonly maxHp   = FIGHTER_MG.MAX_HP;
@@ -47,7 +50,14 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   // ── Combat state ──────────────────────────
   defeated      = false;
   awaitingSpawn = false;
-  firstKillDone = false;
+
+  // ── Long rest lockout ─────────────────────
+  restCountdown = 0;   // seconds remaining; 0 = can retry
+
+  /** Effective rest duration after applying any upgrade reductions. */
+  get effectiveRestSec(): number {
+    return Math.max(0, Math.floor(FIGHTER_MG.RECOVERY_TIME_MS / 1000) - this.recoveryReductionSec);
+  }
 
   // ── Enemy ─────────────────────────────────
   enemy: Enemy = this.buildKobold();
@@ -92,7 +102,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
-    if (this.spawnTimer) clearTimeout(this.spawnTimer);
+    if (this.spawnTimer)   clearTimeout(this.spawnTimer);
+    if (this.restInterval) clearInterval(this.restInterval);
   }
 
   // ── Actions ───────────────────────────────
@@ -123,6 +134,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.msgLine2  = '';
       this.msgClass  = 'msg-bad';
       this.log.log(`The Fighter was slain by a ${this.enemy.name}!`, 'warn');
+      this.startRest();
     }
   }
 
@@ -141,6 +153,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   }
 
   retry(): void {
+    if (this.restCountdown > 0) return;   // still long resting
     this.fighterHp = this.maxHp;
     this.enemy     = this.buildKobold();
     this.defeated  = false;
@@ -150,6 +163,28 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   }
 
   // ── Private helpers ───────────────────────
+
+  /**
+   * Begin the long-rest lockout after a defeat.
+   * Updates msgLine2 each second with the remaining time, then clears itself.
+   */
+  private startRest(): void {
+    this.restCountdown = this.effectiveRestSec;
+    if (this.restCountdown <= 0) return;   // fully reduced — can retry instantly
+
+    this.msgLine2 = `Long resting... ${this.restCountdown}s`;
+
+    this.restInterval = setInterval(() => {
+      this.restCountdown = Math.max(0, this.restCountdown - 1);
+      if (this.restCountdown > 0) {
+        this.msgLine2 = `Long resting... ${this.restCountdown}s`;
+      } else {
+        this.msgLine2 = '-- Press RETRY --';
+        clearInterval(this.restInterval);
+        this.restInterval = undefined;
+      }
+    }, 1000);
+  }
 
   private rollEnemyDamage(): number {
     return Math.max(0, Math.floor(Math.random() * FIGHTER_MG.ENEMY_DMG_MAX) + 1 - this.defense);
@@ -164,6 +199,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.msgLine2  = '';
       this.msgClass  = 'msg-bad';
       this.log.log(`The Fighter was slain by a ${this.enemy.name}!`, 'warn');
+      this.startRest();
     }
   }
 
@@ -175,9 +211,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.wallet.add('xp',          this.enemy.xpReward);
     this.wallet.add('kobold-ear', this.enemy.earReward);
 
-    const isFirst = !this.firstKillDone;
+    const isFirst = !this.wallet.isCurrencyUnlocked('kobold-ear');
     if (isFirst) {
-      this.firstKillDone = true;
       this.wallet.unlockCurrency('kobold-ear');
       this.log.log(
         `Victory! The ${this.enemy.name} drops a Kobold Ear! (+${gold}g, +${this.enemy.xpReward} XP)`,
@@ -197,6 +232,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.lastMsg   = `${this.enemy.name} falls! (mutual kill)`;
       this.msgLine2  = `Kobold's last strike: ${enemyLastDmg} dmg!`;
       this.msgClass  = 'msg-bad';
+      this.startRest();
       return;
     }
 

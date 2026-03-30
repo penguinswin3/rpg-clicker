@@ -33,9 +33,10 @@
         class="cell"
         *ngFor="let cell of cells; let i = index"
         [class.cell-hidden]="!cell.revealed"
+        [class.cell-restart]="roundOver && canScout"
         [ngClass]="cellClass(cell)"
-        [disabled]="cell.revealed || roundOver"
-        (click)="select(i)">
+        [disabled]="(!roundOver && cell.revealed) || (roundOver && !canScout)"
+        (click)="cellClick(i)">
         <span class="cell-sym">{{ symbol(cell) }}</span>
         <span class="cell-sub" *ngIf="cell.revealed">{{ subLabel(cell) }}</span>
       </button>
@@ -61,6 +62,7 @@
       <div class="cost-warn" *ngIf="!canScout">
         need {{ SCOUT_COST - beastMeat }} more <span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].name }}</span>
       </div>
+      <div class="round-restart-hint" *ngIf="canScout">-- or click any cell --</div>
     </ng-container>
 
   </ng-container>

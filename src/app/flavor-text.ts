@@ -61,7 +61,7 @@ export const UPGRADE_FLAVOR = {
   },
   POTION_MARKETING: {
     name: 'Potion Marketing',
-    desc: '+1 gold/sec from passive sales',
+    desc: '+1 gold/sec',
   },
 } as const;
 

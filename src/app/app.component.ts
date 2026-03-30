@@ -38,6 +38,7 @@ export class AppComponent implements OnInit, OnDestroy {
   xp      = 0;
   potions = 0;
   beast   = 0;
+  koboldEars = 0;
 
   readonly minigameXpThreshold = XP_THRESHOLDS.MINIGAME_UNLOCK;
 
@@ -372,10 +373,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.wallet.state$.subscribe(state => {
-      this.gold    = Math.floor(state['gold']?.amount   ?? 0);
-      this.xp      = Math.floor(state['xp']?.amount     ?? 0);
-      this.potions = Math.floor(state['potion']?.amount ?? 0);
-      this.beast   = Math.floor(state['beast']?.amount  ?? 0);
+      this.gold       = Math.floor(state['gold']?.amount        ?? 0);
+      this.xp         = Math.floor(state['xp']?.amount          ?? 0);
+      this.potions    = Math.floor(state['potion']?.amount      ?? 0);
+      this.beast      = Math.floor(state['beast']?.amount       ?? 0);
+      this.koboldEars = Math.floor(state['kobold-ear']?.amount  ?? 0);
     });
     this.charService.activeId$.subscribe(id => {
       this.activeCharacterId = id;
@@ -775,8 +777,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   buyBountifulLands(): void {
     if (this.bountifulLandsMaxed) { return; }
-    if (this.wallet.canAfford('gold', this.bountifulLandsCost)) {
-      this.wallet.remove('gold', this.bountifulLandsCost);
+    if (this.wallet.canAfford('kobold-ear', this.bountifulLandsCost)) {
+      this.wallet.remove('kobold-ear', this.bountifulLandsCost);
       this.bountifulLandsLevel++;
       this.bountifulLandsCost = Math.floor(this.bountifulLandsCost * COST_SCALE.BOUNTIFUL_LANDS);
       this.log.log(
@@ -785,7 +787,7 @@ export class AppComponent implements OnInit, OnDestroy {
       );
     } else {
       this.log.log(
-        `Not enough gold for Bountiful Lands. Need ${this.bountifulLandsCost}g, have ${this.gold}g.`,
+        `Not enough Kobold Ears for Bountiful Lands. Need ${this.bountifulLandsCost}, have ${this.koboldEars}.`,
         'warn'
       );
     }
