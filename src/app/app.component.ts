@@ -54,6 +54,7 @@ export class AppComponent implements OnInit, OnDestroy {
   koboldEars          = 0;
   pixieDust           = 0;
   concentratedPotions = 0;
+  spice               = 0;
 
   // ── Character state ────────────────────────────────────────────
   activeCharacterId  = 'fighter';
@@ -103,6 +104,13 @@ export class AppComponent implements OnInit, OnDestroy {
   }
   /** Herb save chance in % — equals Potion Titration level. */
   get herbSaveChance(): number { return this.upgrades.level('POTION_TITRATION'); }
+  /** Spice gained per Culinarian hero-button click (base 1 + Wholesale Spices level). */
+  get spicePerClick(): number { return 1 + this.upgrades.level('WHOLESALE_SPICES'); }
+  /** Gold cost per Culinarian hero-button click — rises by CULINARIAN_WHOLESALE_GOLD_PER_LEVEL per upgrade level. */
+  get culinarianGoldCost(): number {
+    return YIELDS.CULINARIAN_SPICE_COST
+      + this.upgrades.level('WHOLESALE_SPICES') *  YIELDS.CULINARIAN_WHOLESALE_DISCOUNTED_GOLD_PER_LEVEL;
+  }
 
   // ── Jack computed getters ──────────────────────────────────────
   get jacksUnlockedCount(): number { return JACK_XP_THRESHOLDS.filter(t => this.xp >= t).length; }
@@ -125,6 +133,11 @@ export class AppComponent implements OnInit, OnDestroy {
       const need = YIELDS.APOTHECARY_BREW_HERB_COST;
       const have = Math.floor(this.wallet.get('herb'));
       return `⚠ Jack idle — need ${need} herbs (have ${have})`;
+    }
+    if (this.activeCharacterId === 'culinarian') {
+      const need = this.culinarianGoldCost;
+      const have = Math.floor(this.wallet.get('gold'));
+      return `⚠ Jack idle — need ${need} gold (have ${have})`;
     }
     return '⚠ Jack idle — insufficient resources';
   }
@@ -160,6 +173,7 @@ export class AppComponent implements OnInit, OnDestroy {
       fighter:    CHARACTER_FLAVOR.FIGHTER.questBtn,
       ranger:     CHARACTER_FLAVOR.RANGER.questBtn,
       apothecary: CHARACTER_FLAVOR.APOTHECARY.questBtn,
+      culinarian: CHARACTER_FLAVOR.CULINARIAN.questBtn,
     };
     return map[this.activeCharacterId] ?? CHARACTER_FLAVOR.FIGHTER.questBtn;
   }
@@ -193,6 +207,12 @@ export class AppComponent implements OnInit, OnDestroy {
         { label: HERO_STATS_FLAVOR.APOTHECARY.HERBS_BREW,  value: `${YIELDS.APOTHECARY_BREW_HERB_COST}` },
         { label: HERO_STATS_FLAVOR.APOTHECARY.SAVE_CHANCE, value: `${this.herbSaveChance}%`              },
         { label: HERO_STATS_FLAVOR.APOTHECARY.SELL_RATE,   value: `${this.potionAutoGoldPerSecond}`   },
+      ];
+    }
+    if (this.activeCharacterId === 'culinarian') {
+      return [
+        { label: HERO_STATS_FLAVOR.CULINARIAN.SPICE_PER_CLICK, value: `${this.spicePerClick}`      },
+        { label: HERO_STATS_FLAVOR.CULINARIAN.GOLD_COST,        value: `${this.culinarianGoldCost}` },
       ];
     }
     // Fighter
@@ -229,9 +249,9 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Returns a live description suffix for upgrades that show current values. */
   upgradeDescSuffix(id: string): string {
     switch (id) {
-      case 'BETTER_TRACKING': return ` (now ${this.beastFindChance}%)`;
-      case 'BIGGER_GAME':     return ` (now 1-${this.upgrades.level('BIGGER_GAME') + 1})`;
-      default:                return '';
+      case 'BETTER_TRACKING':  return ` (now ${this.beastFindChance}%)`;
+      case 'BIGGER_GAME':      return ` (now 1-${this.upgrades.level('BIGGER_GAME') + 1})`;
+      default:                 return '';
     }
   }
 
@@ -264,6 +284,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.koboldEars          = Math.floor(state['kobold-ear']?.amount          ?? 0);
       this.pixieDust           = Math.floor(state['pixie-dust']?.amount          ?? 0);
       this.concentratedPotions = Math.floor(state['concentrated-potion']?.amount ?? 0);
+      this.spice               = Math.floor(state['spice']?.amount               ?? 0);
     });
 
     this.charService.activeId$.subscribe(id => { this.activeCharacterId = id; });
@@ -342,13 +363,17 @@ export class AppComponent implements OnInit, OnDestroy {
     const fighterJacks    = this.jacksAllocations['fighter']    ?? 0;
     const rangerJacks     = this.jacksAllocations['ranger']     ?? 0;
     const apothecaryJacks = this.jacksAllocations['apothecary'] ?? 0;
+    const culinarianJacks = this.jacksAllocations['culinarian'] ?? 0;
 
+    // Culinarian Jacks cost gold each tick; subtract from total gold income.
     this.wallet.setPerSecond('gold',
-      roundTo(this.autoGoldPerSecond + this.potionAutoGoldPerSecond + fighterJacks * this.goldPerClick, 2));
+      roundTo(this.autoGoldPerSecond + this.potionAutoGoldPerSecond
+        + fighterJacks * this.goldPerClick
+        - culinarianJacks * this.culinarianGoldCost, 2));
 
-    // Fighter jacks fire xpPerBounty per click; ranger/apothecary jacks give 1 XP each.
+    // Fighter jacks fire xpPerBounty per click; all other jacks give 1 XP each.
     this.wallet.setPerSecond('xp',
-      roundTo(fighterJacks * this.xpPerBounty + rangerJacks + apothecaryJacks, 2));
+      roundTo(fighterJacks * this.xpPerBounty + rangerJacks + apothecaryJacks + culinarianJacks, 2));
 
     const herbProduced = rangerJacks * 0.5 * this.expectedHerbPerRangerClick();
     const herbConsumed = apothecaryJacks * (YIELDS.APOTHECARY_BREW_HERB_COST - this.herbSaveChance / 100);
@@ -359,6 +384,7 @@ export class AppComponent implements OnInit, OnDestroy {
       roundTo(rangerJacks * 0.5 * (this.beastFindChance / 100) * expectedMeatYield, 2));
 
     this.wallet.setPerSecond('potion', roundTo(apothecaryJacks, 2));
+    this.wallet.setPerSecond('spice',  roundTo(culinarianJacks * this.spicePerClick, 2));
   }
 
   /**
@@ -377,6 +403,7 @@ export class AppComponent implements OnInit, OnDestroy {
   clickHero(): void {
     if      (this.activeCharacterId === 'ranger')     this.clickRanger();
     else if (this.activeCharacterId === 'apothecary') this.clickApothecary();
+    else if (this.activeCharacterId === 'culinarian') this.clickCulinarian();
     else                                               this.clickFighter();
   }
 
@@ -437,6 +464,20 @@ export class AppComponent implements OnInit, OnDestroy {
     } else {
       this.log.log(`You brewed a potion from ${herbCost} herbs. (+1 XP)`);
     }
+  }
+
+  private clickCulinarian(): void {
+    const goldCost   = this.culinarianGoldCost;
+    const spiceYield = this.spicePerClick;
+    if (!this.wallet.canAfford('gold', goldCost)) {
+      const have = Math.floor(this.wallet.get('gold'));
+      this.log.log(`Not enough gold to gather spices. Need ${goldCost}g, have ${have}g.`, 'warn');
+      return;
+    }
+    this.wallet.remove('gold', goldCost);
+    this.wallet.add('spice', spiceYield);
+    this.wallet.add('xp', 1);
+    this.log.log(`You sourced exotic spices. (−${goldCost}g, +${spiceYield}${CURRENCY_FLAVOR.spice.symbol}, +1 XP)`);
   }
 
   // ── Yield helpers ──────────────────────────────────────────────
@@ -519,6 +560,17 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.add('potion', 1);
       this.wallet.add('xp', 1);
       if (this.herbSaveChance > 0 && rollChance(this.herbSaveChance)) this.wallet.add('herb', 1);
+
+    } else if (charId === 'culinarian') {
+      const goldCost = this.culinarianGoldCost;
+      if (!this.wallet.canAfford('gold', goldCost)) {
+        if (!this.jackStarved[charId]) this.jackStarved = { ...this.jackStarved, [charId]: true };
+        return;
+      }
+      if (this.jackStarved[charId]) this.jackStarved = { ...this.jackStarved, [charId]: false };
+      this.wallet.remove('gold', goldCost);
+      this.wallet.add('spice', this.spicePerClick);
+      this.wallet.add('xp', 1);
     }
   }
 

@@ -44,6 +44,8 @@ export const XP_THRESHOLDS = {
   JACKS_UNLOCK: 1500,
   /** XP required to unlock all character minigame screens */
   MINIGAME_UNLOCK:   2500,
+  /** XP required before the Culinarian unlock offer appears */
+  CULINARIAN_UNLOCK: 5000,
 } as const;
 
 // ── Jack of All Trades ────────────────────────────────────────
@@ -75,6 +77,10 @@ export const UNLOCK_COSTS = {
 
   APOTHECARY_GOLD:   1500,
   APOTHECARY_HERBS:  250,
+
+  CULINARIAN_GOLD:   15_000,
+  CULINARIAN_BEAST:   1_500,
+  CULINARIAN_HERBS:   1_500,
 
   /** Minigame system unlock — available once XP >= MINIGAME_UNLOCK threshold */
   MINIGAME_GOLD:    10000,
@@ -137,6 +143,10 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'gold', base: 20, scale: 1.5 }] },
   { id: 'POTION_MARKETING', characterId: 'apothecary', category: 'standard', max: 999,
     costs: [{ currency: 'gold', base: 30, scale: 1.5 }] },
+
+  // ── Culinarian — standard ────────────────────────────────────
+  { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 999, // +1 spice/click, +24g cost/click per level
+    costs: [{ currency: 'gold', base: 200, scale: 1.6 }] },
 ];
 
 // ── Resource Yields ───────────────────────────────────────────
@@ -153,6 +163,12 @@ export const YIELDS = {
 
   /** Herbs consumed per Apothecary brew action */
   APOTHECARY_BREW_HERB_COST: 5,
+
+  /** Gold spent per Culinarian hero-button press to produce 1 Spice */
+  CULINARIAN_SPICE_COST: 25,
+  /** Additional gold cost per click per Wholesale Spices level (= CULINARIAN_SPICE_COST − 1) */
+  CULINARIAN_WHOLESALE_DISCOUNTED_GOLD_PER_LEVEL: 18,
+
 } as const;
 
 // ── Fighter Minigame ──────────────────────────────────────────
@@ -232,3 +248,7 @@ export const RANGER_MG = {
   PIXIE_XP: 9,
 } as const;
 
+// ── Culinarian Minigame (placeholder) ────────────────────────
+// TODO: implement the Culinarian minigame mechanics here.
+export const CULINARIAN_MG = {
+} as const;

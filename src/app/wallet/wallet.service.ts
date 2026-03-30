@@ -30,13 +30,14 @@ export class WalletService {
   readonly currencies: Currency[] = [
     { id: 'gold',                 ...CURRENCY_FLAVOR['gold']                  },
     { id: 'xp',                   ...CURRENCY_FLAVOR['xp']                    },
-    { id: 'herb',                 ...CURRENCY_FLAVOR['herb'],                  requiredCharacterId: 'ranger'     },
-    { id: 'beast',                ...CURRENCY_FLAVOR['beast'],                 requiredCharacterId: 'ranger'     },
+    { id: 'herb',                 ...CURRENCY_FLAVOR['herb'],                  requiredCharacterId: 'ranger'       },
+    { id: 'beast',                ...CURRENCY_FLAVOR['beast'],                 requiredCharacterId: 'ranger'       },
     { id: 'cooked-meat',          ...CURRENCY_FLAVOR['cooked-meat'],           requiredCharacterId: 'ranger',    manualUnlock: true },
     { id: 'pixie-dust',           ...CURRENCY_FLAVOR['pixie-dust'],            requiredCharacterId: 'ranger',    manualUnlock: true },
-    { id: 'potion',               ...CURRENCY_FLAVOR['potion'],                requiredCharacterId: 'apothecary' },
+    { id: 'potion',               ...CURRENCY_FLAVOR['potion'],                requiredCharacterId: 'apothecary'   },
     { id: 'concentrated-potion',  ...CURRENCY_FLAVOR['concentrated-potion'],   requiredCharacterId: 'apothecary', manualUnlock: true },
     { id: 'kobold-ear',           ...CURRENCY_FLAVOR['kobold-ear'],            requiredCharacterId: 'fighter',   manualUnlock: true },
+    { id: 'spice',                ...CURRENCY_FLAVOR['spice'],                 requiredCharacterId: 'culinarian'   },
   ];
 
   private readonly stateSource = new BehaviorSubject<WalletState>(

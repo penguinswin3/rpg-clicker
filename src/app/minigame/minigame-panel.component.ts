@@ -63,6 +63,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
       characterId: 'apothecary',
       title: MINIGAME_FLAVOR.APOTHECARY.name,
     },
+    {
+      characterId: 'culinarian',
+      title: MINIGAME_FLAVOR.CULINARIAN.name,
+    },
   ];
 
   get shown(): boolean {

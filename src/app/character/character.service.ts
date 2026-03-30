@@ -54,6 +54,19 @@ export class CharacterService {
       ],
       xpRequirement: XP_THRESHOLDS.APOTHECARY_UNLOCK,
     },
+    {
+      id: 'culinarian',
+      name: CHARACTER_FLAVOR.CULINARIAN.name,
+      color: '#75390c',
+      description: CHARACTER_FLAVOR.CULINARIAN.desc,
+      unlocked: false,
+      unlockCosts: [
+        { currencyId: 'gold',  amount: UNLOCK_COSTS.CULINARIAN_GOLD  },
+        { currencyId: 'beast', amount: UNLOCK_COSTS.CULINARIAN_BEAST },
+        { currencyId: 'herb',  amount: UNLOCK_COSTS.CULINARIAN_HERBS },
+      ],
+      xpRequirement: XP_THRESHOLDS.CULINARIAN_UNLOCK,
+    },
   ];
 
   private readonly charactersSource = new BehaviorSubject<Character[]>(

@@ -380,7 +380,7 @@
 .upgrade-card {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   box-sizing: border-box;
   border: 1px solid #333;
   border-left: 3px solid #fff;
@@ -425,7 +425,7 @@
 .upgrade-btn-wrap {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 0.25rem;
   margin-left: 1rem;
   flex-shrink: 0;
@@ -445,7 +445,6 @@
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.85rem;
   padding: 0.35rem 0.75rem;
-  margin-top: 0.3rem;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.1s, color 0.1s;

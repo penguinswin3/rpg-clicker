@@ -17,6 +17,7 @@ export const CURRENCY_FLAVOR = {
   potion:                { name: 'Potion Base',               symbol: '⚗',  color: '#ceaedf' },
   'concentrated-potion': { name: 'Concentrated Potion Base',  symbol: '⚗',  color: '#ba70cf' },
   'kobold-ear':          { name: 'Kobold Left Ear',           symbol: '>',  color: '#e02020' },
+  spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
 } as const;
 
 // ── Upgrades ──────────────────────────────────────────────────
@@ -83,6 +84,12 @@ export const UPGRADE_FLAVOR = {
     name: 'Potion Marketing',
     desc: '+1 gold/sec',
   },
+
+  // Culinarian
+  WHOLESALE_SPICES: {
+    name: 'Wholesale Spices',
+    desc: '+1 spice per click, discounted to 18g!',
+  },
 } as const;
 
 // ── Characters ────────────────────────────────────────────────
@@ -102,6 +109,11 @@ export const CHARACTER_FLAVOR = {
     desc: 'The proud owner of a small potion shop. He is quite good at his craft, and specializes in versatile potion bases.',
     questBtn: 'Alchemize',
   },
+  CULINARIAN: {
+    name: 'Culinarian',
+    desc: 'A seasoned chef who sources only the finest ingredients. Can craft never before tasted dishes with peculiar potency...',
+    questBtn: 'Source Ingredients',
+  },
 } as const;
 
 // ── Minigames ─────────────────────────────────────────────────
@@ -117,6 +129,10 @@ export const MINIGAME_FLAVOR = {
   APOTHECARY: {
     name: 'Alchemy Tablet',
     desc: 'Combine rare ingredients to brew\npowerful concoctions.',
+  },
+  CULINARIAN: {
+    name: 'The Kitchen',
+    desc: 'Master the art of spice and flame\nto craft legendary dishes.',
   },
 } as const;
 
@@ -158,6 +174,10 @@ export const HERO_STATS_FLAVOR = {
     HERBS_BREW:  'Herbs Per Brew   :',
     SAVE_CHANCE: 'Herb Save Chance :',
     SELL_RATE:   'Sell Rate        :',
+  },
+  CULINARIAN: {
+    SPICE_PER_CLICK: 'Spice Per Click  :',
+    GOLD_COST:       'Price Per Spice  :',
   },
 } as const;
 
