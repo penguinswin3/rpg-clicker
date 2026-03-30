@@ -127,6 +127,7 @@ export const COST_SCALE = {
   MORE_HERBS:       1.5,
   BETTER_TRACKING:  1.5,
   BOUNTIFUL_LANDS:  1.5,
+  ABUNDANT_LANDS:   1.0,  // max level 1 — scale not applicable
   POTION_CATS_EYE:  1.5,
   BIGGER_GAME:      2.4,
 
