@@ -104,7 +104,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           </div><!-- /upgrades-col standard -->
 
           <!-- ══ Minigame upgrades ══════════════════════════════════ -->
-          <div class="upgrades-col upgrades-minigame-col" *ngIf="minigameShown && !hideMinigameUpgrades">
+          <div class="upgrades-col" *ngIf="minigameShown && !hideMinigameUpgrades">
             <div class="section-title">[ MINIGAME ]</div>
             <div class="upgrades-scroll">
               <ng-container *ngFor="let id of getVisibleUpgrades('minigame')">

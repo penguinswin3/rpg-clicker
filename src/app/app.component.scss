@@ -345,10 +345,11 @@
 }
 
 
-.upgrades-columns {  display: flex;
+.upgrades-columns {
+  display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 0;
+  gap: 1.5rem;
   width: 100%;
 }
 
@@ -375,16 +376,12 @@
   scrollbar-color: #444 #111;
 }
 
-.upgrades-minigame-col {
-  border-left: 1px solid #333;
-  padding-left: 1rem;
-  margin-left: 0.5rem;
-}
-
 .upgrade-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 3.25rem;
+  box-sizing: border-box;
   border: 1px solid #333;
   border-left: 3px solid #fff;
   padding: 0.6rem 0.9rem;
@@ -400,16 +397,24 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  min-width: 0;   // required for text-overflow to work inside a flex item
+  overflow: hidden;
 }
 
 .upgrade-name {
   font-weight: bold;
   font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .upgrade-desc {
   color: #888;
   font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cyan-text {
