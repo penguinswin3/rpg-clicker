@@ -181,7 +181,7 @@ export const FIGHTER_MG = {
   /** Extra XP reward per kobold level above 1 */
   KOBOLD_XP_PER_LEVEL:        2,
   /** Extra Kobold Ear reward per kobold level above 1 */
-  KOBOLD_EAR_PER_LEVEL:       1,
+  KOBOLD_EAR_PER_LEVEL:       0,
 } as const;
 
 // ── Apothecary Minigame ───────────────────────────────────────

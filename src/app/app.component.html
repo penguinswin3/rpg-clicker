@@ -275,9 +275,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                 </div>
               </div>
 
-<!--              <div class="upgrade-card" *ngIf="shouldShowUpgrade(strongerKoboldsMaxed)">-->
-
-              <div class="upgrade-card">
+              <div class="upgrade-card" *ngIf="strongerKoboldsVisible && shouldShowUpgrade(strongerKoboldsMaxed)">
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.STRONGER_KOBOLDS.name }}</span>
                   <span class="upgrade-desc">{{ upgradeFlavor.STRONGER_KOBOLDS.desc }}</span>
