@@ -29,9 +29,8 @@
 - flesh out the upgrades for the minigames
   - fighter, stronger kobolds
 
-- 500 xp reward, possible XP increase for fighter questing
-
 - standardize the character screen summaries to include the unit on the right side of the colon (number/s)
+
 
 - Herb doubling can max out at 100% then a later upgrade will let you bypass that limit
 
@@ -39,12 +38,12 @@
 
 - extract log text to flavor file, might need to implement string replacement here idk
 
-- Abundance upgrade for the ranger, The yield of herbs and meat is multiplied by the total number of successful nodes.
-
-- Hunter upgrade, a % chance to Hunt AND Gather
-
 - herb chance % is not need in the character stats page it should be above (Both chance)
 
 - Stronger Kobolds (you can switch between them at any time)
 
 - Visions of pixies upgrade that gives a little sparkle effect where a pixie might me. A few tiers with varying accuracies, can scale to up to 3 sparkles
+
+- Add a flee button to the fighter minigame that resets the fight to the new selected level after 5 seconds
+
+- Every kobold level should only ever drop 1 ear (higher levels might drop more resources in the future, a new drop will be signified by the next kobold level requiring the previous levels drop)

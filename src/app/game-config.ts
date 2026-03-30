@@ -10,12 +10,16 @@
 export const XP_THRESHOLDS = {
   /** XP required before the Ranger unlock offer appears */
   RANGER_UNLOCK:     100,
+  /** XP required before the Insightful Contracts upgrade appears */
+  INSIGHTFUL_CONTRACTS_UNLOCK: 500,
   /** XP required before the Apothecary unlock offer appears */
   APOTHECARY_UNLOCK: 1000,
   /** XP required before the First Jack purchase appears */
   JACKS_UNLOCK: 1500,
   /** XP required to unlock all character minigame screens */
   MINIGAME_UNLOCK:   2500,
+  /** XP required before the Stronger Kobolds minigame upgrade appears */
+  STRONGER_KOBOLDS_UNLOCK: 3000,
 } as const;
 
 // ── Jack of All Trades ────────────────────────────────────────
@@ -58,15 +62,19 @@ export const UNLOCK_COSTS = {
 // Once an upgrade reaches its max level, the buy button is disabled.
 export const UPGRADE_MAX = {
   // Fighter
-  BETTER_BOUNTIES:      999,
-  CONTRACTED_HIRELINGS: 999,
-  POTION_CHUGGING:      999,
-  SHARPER_SWORDS:       999,
+  BETTER_BOUNTIES:           999,
+  CONTRACTED_HIRELINGS:      999,
+  INSIGHTFUL_CONTRACTS:      999,
+  POTION_CHUGGING:           999,
+  SHARPER_SWORDS:            999,
+  STRONGER_KOBOLDS:          10,   // 10 tiers; each unlocks one higher kobold level
 
   // Ranger
   MORE_HERBS:           999,
   BETTER_TRACKING:      999,
   BOUNTIFUL_LANDS:      100,  // 100% = every blank cell guaranteed a prize
+  ABUNDANT_LANDS:       1,    // binary unlock — multiply yield by successful cell count
+  POTION_CATS_EYE:      100,  // 100 levels × +1% = 100% chance to roll both herb and beast
 
   // Apothecary
   /** 400 levels × +1% each = 400% save-chance.
@@ -80,13 +88,23 @@ export const BASE_COSTS = {
   // Fighter
   BETTER_BOUNTIES:      10,
   CONTRACTED_HIRELINGS: 25,
+  INSIGHTFUL_CONTRACTS: 75,  // gold; unlocked at 500 XP
   POTION_CHUGGING:      5,   // paid in potions
   SHARPER_SWORDS:       50,  // gold; minigame upgrade
+  /** Kobold Ears base cost for Stronger Kobolds */
+  STRONGER_KOBOLDS_EARS: 10,
+  /** Raw Beast Meat base cost for Stronger Kobolds */
+  STRONGER_KOBOLDS_MEAT: 25,
 
   // Ranger
   MORE_HERBS:       15,
   BETTER_TRACKING:  20,
   BOUNTIFUL_LANDS:  10,  // kobold ears; ranger minigame upgrade
+  ABUNDANT_LANDS:   5,   // pixie dust; ranger minigame upgrade
+  /** Concentrated Potion base cost for Potion of Cat's Eye */
+  POTION_CATS_EYE_CONC:  5,
+  /** Pixie Dust base cost for Potion of Cat's Eye */
+  POTION_CATS_EYE_PIXIE: 15,
 
   // Apothecary
   POTION_TITRATION: 20,
@@ -98,12 +116,15 @@ export const BASE_COSTS = {
 export const COST_SCALE = {
   BETTER_BOUNTIES:      1.5,
   CONTRACTED_HIRELINGS: 1.5,
+  INSIGHTFUL_CONTRACTS: 2.0,
   POTION_CHUGGING:      1.5,
   SHARPER_SWORDS:       1.5,
+  STRONGER_KOBOLDS:     1.8,
 
   MORE_HERBS:       1.5,
   BETTER_TRACKING:  1.5,
   BOUNTIFUL_LANDS:  1.5,
+  POTION_CATS_EYE:  1.5,
 
   POTION_TITRATION: 1.5,
   POTION_MARKETING: 1.5,
@@ -147,6 +168,20 @@ export const FIGHTER_MG = {
   SPAWN_DELAY_MS:    900,
   /** Base long-rest lockout in ms after the Fighter is defeated (future upgrades reduce this) */
   RECOVERY_TIME_MS:  60_000,
+
+  // ── Kobold level scaling (applied per level above 1) ──────
+  /** Extra HP per kobold level above 1 */
+  KOBOLD_HP_PER_LEVEL:       20,
+  /** Extra enemy max damage per kobold level above 1 */
+  KOBOLD_DMG_PER_LEVEL:       2,
+  /** Extra gold min reward per kobold level above 1 */
+  KOBOLD_GOLD_MIN_PER_LEVEL:  3,
+  /** Extra gold max reward per kobold level above 1 */
+  KOBOLD_GOLD_MAX_PER_LEVEL:  5,
+  /** Extra XP reward per kobold level above 1 */
+  KOBOLD_XP_PER_LEVEL:        2,
+  /** Extra Kobold Ear reward per kobold level above 1 */
+  KOBOLD_EAR_PER_LEVEL:       1,
 } as const;
 
 // ── Apothecary Minigame ───────────────────────────────────────

@@ -12,6 +12,9 @@
       <app-fighter-minigame
         [attackPower]="fighterAttack"
         [potionChuggingLevel]="potionChuggingLevel"
+        [strongerKoboldsLevel]="strongerKoboldsLevel"
+        [selectedKoboldLevel]="selectedKoboldLevel"
+        (selectedKoboldLevelChange)="selectedKoboldLevelChange.emit($event)"
         [savedState]="fighterCombatState"
         (stateChange)="fighterCombatStateChange.emit($event)"
       />
@@ -24,7 +27,7 @@
 
     <!-- ── Ranger: scouting grid minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'ranger'">
-      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" />
+      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" />
     </ng-container>
 
     <!-- ── Other characters: placeholder ── -->

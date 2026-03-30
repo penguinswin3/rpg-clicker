@@ -2,7 +2,16 @@
   <app-wallet-sidebar></app-wallet-sidebar>
 
   <!-- Minigame panel: unlocked at 2500 XP, spans left of game area -->
-  <app-minigame-panel *ngIf="minigameShown" [fighterAttack]="fighterAttackPower" [potionChuggingLevel]="potionChuggingLevel" [bountifulLandsLevel]="bountifulLandsLevel" [fighterCombatState]="fighterCombatState" (fighterCombatStateChange)="fighterCombatState = $event" />
+  <app-minigame-panel *ngIf="minigameShown"
+    [fighterAttack]="fighterAttackPower"
+    [potionChuggingLevel]="potionChuggingLevel"
+    [strongerKoboldsLevel]="strongerKoboldsLevel"
+    [selectedKoboldLevel]="selectedKoboldLevel"
+    (selectedKoboldLevelChange)="selectedKoboldLevel = $event"
+    [bountifulLandsLevel]="bountifulLandsLevel"
+    [abundantLandsLevel]="abundantLandsLevel"
+    [fighterCombatState]="fighterCombatState"
+    (fighterCombatStateChange)="fighterCombatState = $event" />
 
   <div class="game-wrapper">
     <div class="game-container">
@@ -71,7 +80,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
             <!-- Fighter upgrades -->
             <ng-container *ngIf="activeCharacterId === 'fighter'">
-              <div class="upgrade-card">
+              <div class="upgrade-card" *ngIf="shouldShowUpgrade(betterBountiesMaxed)">
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.BETTER_BOUNTIES.name }}</span>
                   <span class="upgrade-desc">{{ upgradeFlavor.BETTER_BOUNTIES.desc }}</span>
@@ -89,7 +98,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                 </div>
               </div>
 
-              <div class="upgrade-card">
+              <div class="upgrade-card" *ngIf="shouldShowUpgrade(contractedHirelingsMaxed)">
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.CONTRACTED_HIRELINGS.name }}</span>
                   <span class="upgrade-desc">{{ upgradeFlavor.CONTRACTED_HIRELINGS.desc }}</span>
@@ -106,11 +115,29 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                   <span class="upgrade-level">Lv.{{ autoUpgradeLevel }}/{{ upgradeMax.CONTRACTED_HIRELINGS }}</span>
                 </div>
               </div>
+
+              <div class="upgrade-card" *ngIf="insightfulContractsVisible && shouldShowUpgrade(insightfulContractsMaxed)">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.INSIGHTFUL_CONTRACTS.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.INSIGHTFUL_CONTRACTS.desc }}</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="insightfulContractsMaxed"
+                    [disabled]="insightfulContractsMaxed || gold < insightfulContractsCost"
+                    (click)="buyInsightfulContracts()">
+                    <ng-container *ngIf="insightfulContractsMaxed; else icCost">[MAXED]</ng-container>
+                    <ng-template #icCost>[BUY: {{ insightfulContractsCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ insightfulContractsLevel }}/{{ upgradeMax.INSIGHTFUL_CONTRACTS }}</span>
+                </div>
+              </div>
             </ng-container>
 
             <!-- Ranger upgrades -->
             <ng-container *ngIf="activeCharacterId === 'ranger'">
-              <div class="upgrade-card">
+              <div class="upgrade-card" *ngIf="shouldShowUpgrade(moreHerbsMaxed)">
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.MORE_HERBS.name }}</span>
                   <span class="upgrade-desc">{{ upgradeFlavor.MORE_HERBS.desc }}</span>
@@ -128,7 +155,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                 </div>
               </div>
 
-              <div class="upgrade-card">
+              <div class="upgrade-card" *ngIf="shouldShowUpgrade(betterTrackingMaxed)">
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.BETTER_TRACKING.name }}</span>
                   <span class="upgrade-desc">{{ upgradeFlavor.BETTER_TRACKING.desc }} (now {{ beastFindChance }}%)</span>
@@ -145,11 +172,29 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                   <span class="upgrade-level">Lv.{{ betterTrackingLevel }}/{{ upgradeMax.BETTER_TRACKING }}</span>
                 </div>
               </div>
+
+              <div class="upgrade-card" *ngIf="apothecaryUnlocked && shouldShowUpgrade(potionCatsEyeMaxed)">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.POTION_CATS_EYE.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.POTION_CATS_EYE.desc }}</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="potionCatsEyeMaxed"
+                    [disabled]="potionCatsEyeMaxed || concentratedPotions < potionCatsEyeConcCost || pixieDust < potionCatsEyePixieCost"
+                    (click)="buyPotionCatsEye()">
+                    <ng-container *ngIf="potionCatsEyeMaxed; else pceCost">[MAXED]</ng-container>
+                    <ng-template #pceCost>[BUY: {{ potionCatsEyeConcCost }}<span [style.color]="currencyFlavor['concentrated-potion'].color">{{ currencyFlavor['concentrated-potion'].symbol }}</span> + {{ potionCatsEyePixieCost }}<span [style.color]="currencyFlavor['pixie-dust'].color">{{ currencyFlavor['pixie-dust'].symbol }}</span>]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ potionCatsEyeLevel }}/{{ upgradeMax.POTION_CATS_EYE }}</span>
+                </div>
+              </div>
             </ng-container>
 
             <!-- Apothecary upgrades -->
             <ng-container *ngIf="activeCharacterId === 'apothecary'">
-              <div class="upgrade-card">
+              <div class="upgrade-card" *ngIf="shouldShowUpgrade(potionTitrationMaxed)">
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.POTION_TITRATION.name }}</span>
                   <span class="upgrade-desc">{{ upgradeFlavor.POTION_TITRATION.desc }}</span>
@@ -167,7 +212,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                 </div>
               </div>
 
-              <div class="upgrade-card">
+              <div class="upgrade-card" *ngIf="shouldShowUpgrade(potionMarketingMaxed)">
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.POTION_MARKETING.name }}</span>
                   <span class="upgrade-desc">{{ upgradeFlavor.POTION_MARKETING.desc }}</span>
@@ -188,12 +233,12 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           </div><!-- /upgrades-col standard -->
 
           <!-- ══ Minigame upgrades (visible once minigames unlock) ═══ -->
-          <div class="upgrades-col upgrades-minigame-col" *ngIf="minigameShown">
+          <div class="upgrades-col upgrades-minigame-col" *ngIf="minigameShown && !hideMinigameUpgrades">
             <div class="section-title">[ MINIGAME ]</div>
 
             <!-- Fighter minigame upgrades -->
             <ng-container *ngIf="activeCharacterId === 'fighter'">
-              <div class="upgrade-card">
+              <div class="upgrade-card" *ngIf="shouldShowUpgrade(sharperSwordsMaxed)">
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.SHARPER_SWORDS.name }}</span>
                   <span class="upgrade-desc">{{ upgradeFlavor.SHARPER_SWORDS.desc }}</span>
@@ -211,7 +256,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                 </div>
               </div>
 
-              <div class="upgrade-card" *ngIf="apothecaryUnlocked">
+              <div class="upgrade-card" *ngIf="apothecaryUnlocked && shouldShowUpgrade(potionChuggingMaxed)">
+                <!-- ...existing Potion Chugging card content... -->
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.POTION_CHUGGING.name }}</span>
                   <span class="upgrade-desc">{{ upgradeFlavor.POTION_CHUGGING.desc }}</span>
@@ -228,11 +274,34 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                   <span class="upgrade-level">Lv.{{ potionChuggingLevel }}/{{ upgradeMax.POTION_CHUGGING }}</span>
                 </div>
               </div>
+
+<!--              <div class="upgrade-card" *ngIf="shouldShowUpgrade(strongerKoboldsMaxed)">-->
+
+              <div class="upgrade-card">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.STRONGER_KOBOLDS.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.STRONGER_KOBOLDS.desc }}</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="strongerKoboldsMaxed"
+                    [disabled]="strongerKoboldsMaxed || !strongerKoboldsVisible || koboldEars < strongerKoboldsEarsCost || beast < strongerKoboldsMeatCost"
+                    (click)="buyStrongerKobolds()">
+                    <ng-container *ngIf="strongerKoboldsMaxed; else skCost">[MAXED]</ng-container>
+                    <ng-template #skCost>
+                      <ng-container *ngIf="!strongerKoboldsVisible">[ Req. 3000 XP ]</ng-container>
+                      <ng-container *ngIf="strongerKoboldsVisible">[BUY: {{ strongerKoboldsEarsCost }}<span [style.color]="currencyFlavor['kobold-ear'].color">{{ currencyFlavor['kobold-ear'].symbol }}</span> + {{ strongerKoboldsMeatCost }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>]</ng-container>
+                    </ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ strongerKoboldsLevel }}/{{ upgradeMax.STRONGER_KOBOLDS }}</span>
+                </div>
+              </div>
             </ng-container>
 
             <!-- Ranger minigame upgrades (placeholder) -->
             <ng-container *ngIf="activeCharacterId === 'ranger'">
-              <div class="upgrade-card">
+              <div class="upgrade-card" *ngIf="shouldShowUpgrade(bountifulLandsMaxed)">
                 <div class="upgrade-info">
                   <span class="upgrade-name cyan-text">{{ upgradeFlavor.BOUNTIFUL_LANDS.name }}</span>
                   <span class="upgrade-desc">{{ upgradeFlavor.BOUNTIFUL_LANDS.desc }}</span>
@@ -247,6 +316,24 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     <ng-template #blCost>[BUY: {{ bountifulLandsCost }}<span [style.color]="currencyFlavor['kobold-ear'].color">{{ currencyFlavor['kobold-ear'].symbol }}</span>]</ng-template>
                   </button>
                   <span class="upgrade-level">Lv.{{ bountifulLandsLevel }}/{{ upgradeMax.BOUNTIFUL_LANDS }}</span>
+                </div>
+              </div>
+
+              <div class="upgrade-card" *ngIf="shouldShowUpgrade(abundantLandsMaxed)">
+                <div class="upgrade-info">
+                  <span class="upgrade-name cyan-text">{{ upgradeFlavor.ABUNDANT_LANDS.name }}</span>
+                  <span class="upgrade-desc">{{ upgradeFlavor.ABUNDANT_LANDS.desc }}</span>
+                </div>
+                <div class="upgrade-btn-wrap">
+                  <button
+                    class="upgrade-btn"
+                    [class.upgrade-maxed]="abundantLandsMaxed"
+                    [disabled]="abundantLandsMaxed || pixieDust < abundantLandsCost"
+                    (click)="buyAbundantLands()">
+                    <ng-container *ngIf="abundantLandsMaxed; else alCost">[MAXED]</ng-container>
+                    <ng-template #alCost>[BUY: {{ abundantLandsCost }}<span [style.color]="currencyFlavor['pixie-dust'].color">{{ currencyFlavor['pixie-dust'].symbol }}</span>]</ng-template>
+                  </button>
+                  <span class="upgrade-level">Lv.{{ abundantLandsLevel }}/{{ upgradeMax.ABUNDANT_LANDS }}</span>
                 </div>
               </div>
             </ng-container>

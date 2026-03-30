@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { CharacterService } from '../character/character.service';
 import { ActivityLogService, LogFilterType } from '../activity-log/activity-log.service';
@@ -22,9 +23,18 @@ export interface UpgradeState {
   autoUpgradeLevel: number;
   potionChuggingLevel: number;
   potionChuggingCost: number;
+  /** Insightful Contracts upgrade — optional for old-save compat */
+  insightfulContractsLevel?: number;
+  insightfulContractsCost?: number;
   /** Sharper Swords minigame upgrade — optional for old-save compat */
   sharperSwordsLevel?: number;
   sharperSwordsCost?: number;
+  /** Stronger Kobolds minigame upgrade — optional for old-save compat */
+  strongerKoboldsLevel?: number;
+  strongerKoboldsEarsCost?: number;
+  strongerKoboldsMeatCost?: number;
+  /** Currently-selected kobold difficulty level (1 = base) — optional for old-save compat */
+  selectedKoboldLevel?: number;
   // Ranger
   /** @deprecated herbsPerFind is now derived via the doubling formula; kept optional for old-save compat */
   herbsPerFind?: number;
@@ -35,6 +45,13 @@ export interface UpgradeState {
   /** Bountiful Lands minigame upgrade — optional for old-save compat */
   bountifulLandsLevel?: number;
   bountifulLandsCost?: number;
+  /** Abundant Lands minigame upgrade — optional for old-save compat */
+  abundantLandsLevel?: number;
+  abundantLandsCost?: number;
+  /** Potion of Cat's Eye ranger upgrade — optional for old-save compat */
+  potionCatsEyeLevel?: number;
+  potionCatsEyeConcCost?: number;
+  potionCatsEyePixieCost?: number;
   // Apothecary
   herbSaveChance: number;
   potionTitrationCost: number;
@@ -59,6 +76,9 @@ export interface UiPrefs {
   activityLogMinimized: boolean;
   activityLogFilters: LogFilterType[];
   characterSidebarCollapsed: boolean;
+  /** Optional — absent in older saves, defaults to false. */
+  hideMaxedUpgrades?: boolean;
+  hideMinigameUpgrades?: boolean;
 }
 
 export interface SaveSnapshot {
@@ -91,6 +111,19 @@ export class SaveService {
   private upgradeSetter: ((s: UpgradeState) => void) | null = null;
 
   private autoSaveTimer?: ReturnType<typeof setInterval>;
+
+  // ── Upgrade display preferences ───────────────────────────────
+  private hideMaxedSource        = new BehaviorSubject<boolean>(false);
+  private hideMinigameSource     = new BehaviorSubject<boolean>(false);
+
+  readonly hideMaxedUpgrades$    = this.hideMaxedSource.asObservable();
+  readonly hideMinigameUpgrades$ = this.hideMinigameSource.asObservable();
+
+  get hideMaxedUpgrades():    boolean { return this.hideMaxedSource.getValue(); }
+  get hideMinigameUpgrades(): boolean { return this.hideMinigameSource.getValue(); }
+
+  setHideMaxedUpgrades(v: boolean):    void { this.hideMaxedSource.next(v); }
+  setHideMinigameUpgrades(v: boolean): void { this.hideMinigameSource.next(v); }
 
   /** When true the next beforeunload save is skipped (used by dev clear-save). */
   private _skipNextSave = false;
@@ -161,6 +194,8 @@ export class SaveService {
       activityLogMinimized: this.log.minimized,
       activityLogFilters: Array.from(this.log.activeFilters),
       characterSidebarCollapsed: this.charService.sidebarCollapsed,
+      hideMaxedUpgrades:    this.hideMaxedUpgrades,
+      hideMinigameUpgrades: this.hideMinigameUpgrades,
     };
 
     return {
@@ -209,6 +244,8 @@ export class SaveService {
       this.log.setMinimized(p.activityLogMinimized ?? false);
       this.log.setActiveFilters(new Set(p.activityLogFilters ?? []));
       this.charService.setSidebarCollapsed(p.characterSidebarCollapsed ?? false);
+      this.setHideMaxedUpgrades(p.hideMaxedUpgrades       ?? false);
+      this.setHideMinigameUpgrades(p.hideMinigameUpgrades ?? false);
     }
   }
 

@@ -33,8 +33,16 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() fighterAttack = 1;
   /** Potion Chugging level — forwarded to the fighter minigame. */
   @Input() potionChuggingLevel = 0;
+  /** Stronger Kobolds tier — forwarded to the fighter minigame. */
+  @Input() strongerKoboldsLevel = 0;
+  /** Currently-selected kobold difficulty level — forwarded to the fighter minigame. */
+  @Input() selectedKoboldLevel = 1;
+  /** Emitted when the player changes the kobold level inside the fighter minigame. */
+  @Output() selectedKoboldLevelChange = new EventEmitter<number>();
   /** Bountiful Lands level — forwarded to the ranger minigame. */
   @Input() bountifulLandsLevel = 0;
+  /** Abundant Lands level — forwarded to the ranger minigame. */
+  @Input() abundantLandsLevel = 0;
   /** Previously-saved fighter combat state. */
   @Input() fighterCombatState: FighterCombatState | null = null;
   /** Emitted whenever fighter combat state changes. */

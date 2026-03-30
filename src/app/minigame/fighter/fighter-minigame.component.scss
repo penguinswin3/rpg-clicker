@@ -20,6 +20,58 @@ $font: 'Courier New', Courier, monospace;
   color: #ccc;
 }
 
+// ── Kobold level selector ─────────────────
+
+.kobold-level-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 3px 0;
+  border-bottom: 1px solid #333;
+  margin-bottom: 2px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.klvl-label {
+  flex: 0 1 auto;
+  text-align: center;
+  color: #aaa;
+  font-size: 9px;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.klvl-num {
+  color: #e8b85a;
+  font-weight: bold;
+}
+
+.klvl-btn {
+  background: #1a1a1a;
+  color: #ccc;
+  border: 1px solid #555;
+  font-family: $font;
+  font-size: 9px;
+  padding: 1px 4px;
+  cursor: pointer;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    color: #fff;
+    border-color: #888;
+    background: #222;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
 // ── Combatant block ───────────────────────
 
 .combatant {

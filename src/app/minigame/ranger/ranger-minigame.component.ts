@@ -14,10 +14,17 @@ interface GridCell {
 }
 
 const PRIZE_SYMBOL: Record<PrizeType, string> = {
-  meat:  'M',
-  herb:  'H',
-  pixie: '*',
+  meat:  CURRENCY_FLAVOR['beast'].symbol,
+  herb:  CURRENCY_FLAVOR['herb'].symbol,
+  pixie: CURRENCY_FLAVOR['pixie-dust'].symbol,
   blank: '-',
+};
+
+const PRIZE_COLOR: Record<PrizeType, string> = {
+  meat:  CURRENCY_FLAVOR['beast'].color,
+  herb:  CURRENCY_FLAVOR['herb'].color,
+  pixie: CURRENCY_FLAVOR['pixie-dust'].color,
+  blank: '#555',
 };
 
 const PRIZE_NAME: Record<PrizeType, string> = {
@@ -46,6 +53,8 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
 
   /** Each level = +1% chance a blank cell is converted to a prize cell (max 100%). */
   @Input() bountifulLandsLevel = 0;
+  /** When >= 1 the total currency yield is multiplied by the number of successful squares. */
+  @Input() abundantLandsLevel = 0;
 
   // Wallet-synced
   beastMeat = 0;
@@ -149,6 +158,10 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     return cell.revealed ? PRIZE_SYMBOL[cell.prize] : '?';
   }
 
+  symbolColor(cell: GridCell): string {
+    return cell.revealed ? PRIZE_COLOR[cell.prize] : '#888';
+  }
+
   subLabel(cell: GridCell): string {
     return cell.revealed ? PRIZE_NAME[cell.prize] : '';
   }
@@ -170,21 +183,21 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   private award(prize: PrizeType): void {
     switch (prize) {
       case 'meat':
-        this.wallet.add('beast', 1);
+        // Currency deferred to endRound for Abundant Lands multiplier
         this.wallet.add('xp', RANGER_MG.MEAT_XP);
         this.meatFound++;
         this.xpGained += RANGER_MG.MEAT_XP;
         break;
 
       case 'herb':
-        this.wallet.add('herb', 1);
+        // Currency deferred to endRound for Abundant Lands multiplier
         this.wallet.add('xp', RANGER_MG.HERB_XP);
         this.herbFound++;
         this.xpGained += RANGER_MG.HERB_XP;
         break;
 
       case 'pixie':
-        this.wallet.add('pixie-dust', 1);
+        // Currency deferred to endRound for Abundant Lands multiplier
         this.wallet.add('xp', RANGER_MG.PIXIE_XP);
         this.pixieFound++;
         this.xpGained += RANGER_MG.PIXIE_XP;
@@ -207,20 +220,36 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     // Reveal all unrevealed cells
     this.cells.forEach(c => (c.revealed = true));
 
-    const parts: string[] = [];
-    if (this.meatFound  > 0) parts.push(`${this.meatFound}× meat`);
-    if (this.herbFound  > 0) parts.push(`${this.herbFound}× herb`);
-    if (this.pixieFound > 0) parts.push(`${this.pixieFound}× pixie dust`);
+    // Abundant Lands: multiply currency by the number of successful squares found
+    const successCount = this.meatFound + this.herbFound + this.pixieFound;
+    const multiplier   = (this.abundantLandsLevel >= 1 && successCount > 0)
+      ? successCount
+      : 1;
 
-    const summary = parts.length ? parts.join(', ') : 'nothing useful';
-    const xpStr   = this.xpGained > 0 ? ` (+${this.xpGained} XP)` : '';
-    const type    = this.pixieFound > 0 ? 'rare' : 'success';
+    // Batch-award all currencies now (with multiplier applied)
+    const totalMeat  = this.meatFound  * multiplier;
+    const totalHerb  = this.herbFound  * multiplier;
+    const totalPixie = this.pixieFound * multiplier;
+
+    if (totalMeat  > 0) this.wallet.add('beast',      totalMeat);
+    if (totalHerb  > 0) this.wallet.add('herb',        totalHerb);
+    if (totalPixie > 0) this.wallet.add('pixie-dust',  totalPixie);
+
+    const parts: string[] = [];
+    if (totalMeat  > 0) parts.push(`${totalMeat}× meat`);
+    if (totalHerb  > 0) parts.push(`${totalHerb}× herb`);
+    if (totalPixie > 0) parts.push(`${totalPixie}× pixie dust`);
+
+    const summary    = parts.length ? parts.join(', ') : 'nothing useful';
+    const xpStr      = this.xpGained > 0 ? ` (+${this.xpGained} XP)` : '';
+    const multiplierStr = multiplier > 1 ? ` [×${multiplier} Abundant Lands]` : '';
+    const type       = this.pixieFound > 0 ? 'rare' : 'success';
 
     if (this.pixieFound === 0) {
-      this.log.log(`Ranger scouted the area: found ${summary}.${xpStr}`, type);
+      this.log.log(`Ranger scouted the area: found ${summary}.${xpStr}${multiplierStr}`, type);
     }
 
-    this.lastMsg  = `Found: ${summary}${xpStr}`;
+    this.lastMsg  = `Found: ${summary}${multiplierStr}${xpStr}`;
     this.msgClass = this.pixieFound > 0 ? 'msg-rare' : 'msg-good';
   }
 }

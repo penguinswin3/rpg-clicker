@@ -9,6 +9,23 @@
   <div class="options-panel" *ngIf="isOpen">
     <div class="options-title">+[ OPTIONS ]+</div>
 
+    <!-- Display -->
+    <div class="opt-section">
+      <div class="opt-label">// DISPLAY</div>
+      <button
+        class="opt-btn opt-toggle-btn"
+        [class.opt-toggle-active]="hideMaxedUpgrades"
+        (click)="toggleHideMaxed()">
+        [ {{ hideMaxedUpgrades ? '■' : '□' }} ] Hide Maxed Upgrades
+      </button>
+      <button
+        class="opt-btn opt-toggle-btn"
+        [class.opt-toggle-active]="hideMinigameUpgrades"
+        (click)="toggleHideMinigame()">
+        [ {{ hideMinigameUpgrades ? '■' : '□' }} ] Hide Minigame Upgrades
+      </button>
+    </div>
+
     <!-- Save -->
     <div class="opt-section">
       <div class="opt-label">// SAVE</div>

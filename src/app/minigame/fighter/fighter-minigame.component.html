@@ -1,5 +1,12 @@
 <div class="fighter-mg">
 
+  <!-- ── Kobold Level Selector ─────────── -->
+  <div class="kobold-level-row" *ngIf="strongerKoboldsLevel > 0">
+    <button class="klvl-btn" [disabled]="selectedKoboldLevel <= 1" (click)="decreaseKoboldLevel()">[-]</button>
+    <span class="klvl-label">Kobold Level: <span class="klvl-num">{{ selectedKoboldLevel }}</span></span>
+    <button class="klvl-btn" [disabled]="selectedKoboldLevel >= maxKoboldLevel" (click)="increaseKoboldLevel()">[+]</button>
+  </div>
+
   <!-- ── Fighter HP ─────────────────────── -->
   <div class="combatant">
     <div class="c-label">[ FIGHTER ]</div>

@@ -104,6 +104,17 @@
   }
 }
 
+.opt-toggle-active {
+  color: #fff;
+  border-color: #88aaff;
+  background: #151a2e;
+
+  &:hover {
+    border-color: #aac4ff;
+    background: #1c2440;
+  }
+}
+
 .opt-import-btn {
   border-color: #558855;
   color: #88cc88;

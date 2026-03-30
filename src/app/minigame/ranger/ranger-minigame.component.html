@@ -37,16 +37,25 @@
         [ngClass]="cellClass(cell)"
         [disabled]="(!roundOver && cell.revealed) || (roundOver && !canScout)"
         (click)="cellClick(i)">
-        <span class="cell-sym">{{ symbol(cell) }}</span>
+        <span class="cell-sym" [style.color]="symbolColor(cell)">{{ symbol(cell) }}</span>
         <span class="cell-sub" *ngIf="cell.revealed">{{ subLabel(cell) }}</span>
       </button>
     </div>
 
     <!-- Legend -->
     <div class="legend">
-      <span class="leg meat-leg">M = Raw Meat</span>
-      <span class="leg herb-leg">H = Herb</span>
-      <span class="leg pixie-leg">* = Pixie</span>
+      <span class="leg meat-leg">
+        <span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>
+        = {{ currencyFlavor['beast'].name }}
+      </span>
+      <span class="leg herb-leg">
+        <span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span>
+        = {{ currencyFlavor['herb'].name }}
+      </span>
+      <span class="leg pixie-leg">
+        <span [style.color]="currencyFlavor['pixie-dust'].color">{{ currencyFlavor['pixie-dust'].symbol }}</span>
+        = {{ currencyFlavor['pixie-dust'].name }}
+      </span>
     </div>
 
     <!-- Result message -->

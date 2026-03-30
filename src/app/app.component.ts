@@ -38,7 +38,9 @@ export class AppComponent implements OnInit, OnDestroy {
   xp      = 0;
   potions = 0;
   beast   = 0;
-  koboldEars = 0;
+  koboldEars          = 0;
+  pixieDust           = 0;
+  concentratedPotions = 0;
 
   readonly minigameXpThreshold = XP_THRESHOLDS.MINIGAME_UNLOCK;
 
@@ -202,19 +204,26 @@ export class AppComponent implements OnInit, OnDestroy {
   private jackAutoClick(charId: string): void {
     if (charId === 'fighter') {
       this.wallet.add('gold', this.goldPerClick);
-      this.wallet.add('xp', 1);
+      this.wallet.add('xp', this.xpPerBounty);
       if (this.jackStarved[charId]) {
         this.jackStarved = { ...this.jackStarved, [charId]: false };
       }
     } else if (charId === 'ranger') {
       this.wallet.add('xp', 1);
-      const targetHerb = Math.random() < 0.5;
-      if (targetHerb) {
-        const herbs = this.computeHerbYield();
-        this.wallet.add('herb', herbs);
-      } else {
+      const catsEyeProcs = this.potionCatsEyeLevel > 0 && Math.random() * 100 < this.potionCatsEyeLevel;
+      if (catsEyeProcs) {
+        this.wallet.add('herb', this.computeHerbYield());
         if (Math.random() < this.beastFindChance / 100) {
           this.wallet.add('beast', 1);
+        }
+      } else {
+        const targetHerb = Math.random() < 0.5;
+        if (targetHerb) {
+          this.wallet.add('herb', this.computeHerbYield());
+        } else {
+          if (Math.random() < this.beastFindChance / 100) {
+            this.wallet.add('beast', 1);
+          }
         }
       }
       if (this.jackStarved[charId]) {
@@ -279,8 +288,41 @@ export class AppComponent implements OnInit, OnDestroy {
   sharperSwordsLevel        = 0;
   sharperSwordsCost: number = BASE_COSTS.SHARPER_SWORDS;
 
+  /** Minigame upgrade — each tier unlocks one higher kobold difficulty level (max 10). */
+  strongerKoboldsLevel        = 0;
+  strongerKoboldsEarsCost: number = BASE_COSTS.STRONGER_KOBOLDS_EARS;
+  strongerKoboldsMeatCost: number = BASE_COSTS.STRONGER_KOBOLDS_MEAT;
+
+  /** The kobold level the player has chosen to fight (1 = base; max = strongerKoboldsLevel + 1). */
+  selectedKoboldLevel = 1;
+
+  /** True once 3000 XP is reached (and minigames are unlocked). */
+  get strongerKoboldsVisible(): boolean {
+    return this.xp >= XP_THRESHOLDS.STRONGER_KOBOLDS_UNLOCK;
+  }
+  get strongerKoboldsMaxed(): boolean {
+    return this.strongerKoboldsLevel >= UPGRADE_MAX.STRONGER_KOBOLDS;
+  }
+
   /** Persistent fighter combat state — survives character switching and saves. */
   fighterCombatState: FighterCombatState | null = null;
+
+  /** Insightful Contracts upgrade — each level adds +1 XP per fighter bounty click. */
+  insightfulContractsLevel        = 0;
+  insightfulContractsCost: number = BASE_COSTS.INSIGHTFUL_CONTRACTS;
+
+  /** Visible once the player hits the 500 XP milestone. */
+  get insightfulContractsVisible(): boolean {
+    return this.xp >= XP_THRESHOLDS.INSIGHTFUL_CONTRACTS_UNLOCK;
+  }
+  get insightfulContractsMaxed(): boolean {
+    return this.insightfulContractsLevel >= UPGRADE_MAX.INSIGHTFUL_CONTRACTS;
+  }
+
+  /** Total XP awarded per fighter bounty (base 1 + bonus levels). */
+  get xpPerBounty(): number {
+    return 1 + this.insightfulContractsLevel;
+  }
 
   /** Total attack power fed into the fighter minigame: click bonus + sword sharpness. */
   get fighterAttackPower(): number { return this.goldPerClick + this.sharperSwordsLevel; }
@@ -316,6 +358,18 @@ export class AppComponent implements OnInit, OnDestroy {
   bountifulLandsLevel        = 0;
   bountifulLandsCost: number = BASE_COSTS.BOUNTIFUL_LANDS;
 
+  /** Minigame upgrade — multiply currency yield by the number of successful squares found. */
+  abundantLandsLevel        = 0;
+  abundantLandsCost: number = BASE_COSTS.ABUNDANT_LANDS;
+
+  /**
+   * Ranger upgrade (unlocked with Apothecary) — each level adds +1% chance to roll BOTH
+   * herb and beast on a single hero button press instead of the normal 50/50 split.
+   */
+  potionCatsEyeLevel         = 0;
+  potionCatsEyeConcCost: number  = BASE_COSTS.POTION_CATS_EYE_CONC;
+  potionCatsEyePixieCost: number = BASE_COSTS.POTION_CATS_EYE_PIXIE;
+
   get beastFindChance(): number {
     return Math.min(YIELDS.RANGER_BEAST_CHANCE_CAP, YIELDS.RANGER_BASE_BEAST_CHANCE + this.betterTrackingLevel);
   }
@@ -344,6 +398,8 @@ export class AppComponent implements OnInit, OnDestroy {
   get moreHerbsMaxed():       boolean { return this.moreHerbsLevel       >= UPGRADE_MAX.MORE_HERBS;       }
   get betterTrackingMaxed():  boolean { return this.betterTrackingLevel  >= UPGRADE_MAX.BETTER_TRACKING;  }
   get bountifulLandsMaxed():  boolean { return this.bountifulLandsLevel  >= UPGRADE_MAX.BOUNTIFUL_LANDS;  }
+  get abundantLandsMaxed():   boolean { return this.abundantLandsLevel   >= UPGRADE_MAX.ABUNDANT_LANDS;   }
+  get potionCatsEyeMaxed():   boolean { return this.potionCatsEyeLevel   >= UPGRADE_MAX.POTION_CATS_EYE;  }
   get potionTitrationMaxed(): boolean { return this.potionTitrationLevel >= UPGRADE_MAX.POTION_TITRATION; }
   get potionMarketingMaxed(): boolean { return this.potionMarketingLevel >= UPGRADE_MAX.POTION_MARKETING; }
 
@@ -354,6 +410,9 @@ export class AppComponent implements OnInit, OnDestroy {
         { label: HERO_STATS_FLAVOR.RANGER.HERB_CHANCE,  value: `50%`                           },
         { label: HERO_STATS_FLAVOR.RANGER.BEAST_CHANCE, value: `${this.beastFindChance}%`      },
         { label: HERO_STATS_FLAVOR.RANGER.HERB_DOUBLE,  value: this.herbDoublingDisplay        },
+        ...(this.potionCatsEyeLevel > 0
+          ? [{ label: HERO_STATS_FLAVOR.RANGER.CATS_EYE, value: `${this.potionCatsEyeLevel}%` }]
+          : []),
       ];
     }
     if (this.activeCharacterId === 'apothecary') {
@@ -366,6 +425,9 @@ export class AppComponent implements OnInit, OnDestroy {
     return [
       { label: HERO_STATS_FLAVOR.FIGHTER.PER_CLICK,  value: `${this.goldPerClick}`      },
       { label: HERO_STATS_FLAVOR.FIGHTER.PER_SECOND, value: `${this.autoGoldPerSecond}` },
+      ...(this.insightfulContractsLevel > 0
+        ? [{ label: HERO_STATS_FLAVOR.FIGHTER.XP_PER_CLICK, value: `${this.xpPerBounty}` }]
+        : []),
     ];
   }
 
@@ -374,13 +436,25 @@ export class AppComponent implements OnInit, OnDestroy {
   private charService = inject(CharacterService);
   private saveService = inject(SaveService);
 
+  /** Mirrors SaveService flag — used by the upgrade template to hide maxed cards. */
+  hideMaxedUpgrades    = false;
+  /** Mirrors SaveService flag — used to hide the whole minigame upgrades column. */
+  hideMinigameUpgrades = false;
+
+  /** Returns true when an upgrade card should be visible given its maxed state. */
+  shouldShowUpgrade(isMaxed: boolean): boolean {
+    return !this.hideMaxedUpgrades || !isMaxed;
+  }
+
   constructor() {
     this.wallet.state$.subscribe(state => {
-      this.gold       = Math.floor(state['gold']?.amount        ?? 0);
-      this.xp         = Math.floor(state['xp']?.amount          ?? 0);
-      this.potions    = Math.floor(state['potion']?.amount      ?? 0);
-      this.beast      = Math.floor(state['beast']?.amount       ?? 0);
-      this.koboldEars = Math.floor(state['kobold-ear']?.amount  ?? 0);
+      this.gold               = Math.floor(state['gold']?.amount               ?? 0);
+      this.xp                 = Math.floor(state['xp']?.amount                 ?? 0);
+      this.potions            = Math.floor(state['potion']?.amount             ?? 0);
+      this.beast              = Math.floor(state['beast']?.amount              ?? 0);
+      this.koboldEars         = Math.floor(state['kobold-ear']?.amount         ?? 0);
+      this.pixieDust          = Math.floor(state['pixie-dust']?.amount         ?? 0);
+      this.concentratedPotions = Math.floor(state['concentrated-potion']?.amount ?? 0);
     });
     this.charService.activeId$.subscribe(id => {
       this.activeCharacterId = id;
@@ -415,6 +489,9 @@ export class AppComponent implements OnInit, OnDestroy {
       () => this.getUpgradeState(),
       (s) => this.setUpgradeState(s),
     );
+    // Sync display-preference flags from SaveService.
+    this.saveService.hideMaxedUpgrades$.subscribe(v    => this.hideMaxedUpgrades    = v);
+    this.saveService.hideMinigameUpgrades$.subscribe(v => this.hideMinigameUpgrades = v);
     // Auto-load from localStorage if a save exists.
     if (this.saveService.hasSave()) {
       this.saveService.loadFromLocalStorage();
@@ -444,14 +521,25 @@ export class AppComponent implements OnInit, OnDestroy {
       autoUpgradeLevel:         this.autoUpgradeLevel,
       potionChuggingLevel:      this.potionChuggingLevel,
       potionChuggingCost:       this.potionChuggingCost,
+      insightfulContractsLevel: this.insightfulContractsLevel,
+      insightfulContractsCost:  this.insightfulContractsCost,
       sharperSwordsLevel:       this.sharperSwordsLevel,
       sharperSwordsCost:        this.sharperSwordsCost,
+      strongerKoboldsLevel:     this.strongerKoboldsLevel,
+      strongerKoboldsEarsCost:  this.strongerKoboldsEarsCost,
+      strongerKoboldsMeatCost:  this.strongerKoboldsMeatCost,
+      selectedKoboldLevel:      this.selectedKoboldLevel,
       moreHerbsCost:            this.moreHerbsCost,
       moreHerbsLevel:           this.moreHerbsLevel,
       betterTrackingLevel:      this.betterTrackingLevel,
       betterTrackingCost:       this.betterTrackingCost,
       bountifulLandsLevel:      this.bountifulLandsLevel,
       bountifulLandsCost:       this.bountifulLandsCost,
+      abundantLandsLevel:       this.abundantLandsLevel,
+      abundantLandsCost:        this.abundantLandsCost,
+      potionCatsEyeLevel:       this.potionCatsEyeLevel,
+      potionCatsEyeConcCost:    this.potionCatsEyeConcCost,
+      potionCatsEyePixieCost:   this.potionCatsEyePixieCost,
       herbSaveChance:           this.herbSaveChance,
       potionTitrationCost:      this.potionTitrationCost,
       potionTitrationLevel:     this.potionTitrationLevel,
@@ -472,8 +560,18 @@ export class AppComponent implements OnInit, OnDestroy {
     this.autoUpgradeLevel        = s.autoUpgradeLevel;
     this.potionChuggingLevel     = s.potionChuggingLevel;
     this.potionChuggingCost      = s.potionChuggingCost;
+    this.insightfulContractsLevel = s.insightfulContractsLevel ?? 0;
+    this.insightfulContractsCost  = s.insightfulContractsCost  ?? BASE_COSTS.INSIGHTFUL_CONTRACTS;
     this.sharperSwordsLevel      = s.sharperSwordsLevel  ?? 0;
     this.sharperSwordsCost       = s.sharperSwordsCost   ?? BASE_COSTS.SHARPER_SWORDS;
+    this.strongerKoboldsLevel    = s.strongerKoboldsLevel    ?? 0;
+    this.strongerKoboldsEarsCost = s.strongerKoboldsEarsCost ?? BASE_COSTS.STRONGER_KOBOLDS_EARS;
+    this.strongerKoboldsMeatCost = s.strongerKoboldsMeatCost ?? BASE_COSTS.STRONGER_KOBOLDS_MEAT;
+    // Clamp in case save has level beyond current max
+    this.selectedKoboldLevel     = Math.max(1, Math.min(
+      s.selectedKoboldLevel ?? 1,
+      this.strongerKoboldsLevel + 1
+    ));
     // herbsPerFind is no longer stored — yield is computed from moreHerbsLevel
     this.moreHerbsCost           = s.moreHerbsCost;
     this.moreHerbsLevel          = s.moreHerbsLevel;
@@ -481,6 +579,11 @@ export class AppComponent implements OnInit, OnDestroy {
     this.betterTrackingCost      = s.betterTrackingCost;
     this.bountifulLandsLevel     = s.bountifulLandsLevel ?? 0;
     this.bountifulLandsCost      = s.bountifulLandsCost  ?? BASE_COSTS.BOUNTIFUL_LANDS;
+    this.abundantLandsLevel      = s.abundantLandsLevel  ?? 0;
+    this.abundantLandsCost       = s.abundantLandsCost   ?? BASE_COSTS.ABUNDANT_LANDS;
+    this.potionCatsEyeLevel      = s.potionCatsEyeLevel      ?? 0;
+    this.potionCatsEyeConcCost   = s.potionCatsEyeConcCost   ?? BASE_COSTS.POTION_CATS_EYE_CONC;
+    this.potionCatsEyePixieCost  = s.potionCatsEyePixieCost  ?? BASE_COSTS.POTION_CATS_EYE_PIXIE;
     this.herbSaveChance          = s.herbSaveChance;
     this.potionTitrationCost     = s.potionTitrationCost;
     this.potionTitrationLevel    = s.potionTitrationLevel;
@@ -554,31 +657,41 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private clickFighter(): void {
     this.wallet.add('gold', this.goldPerClick);
-    this.wallet.add('xp', 1);
+    this.wallet.add('xp', this.xpPerBounty);
     this.log.log(`You ventured forth and found ${this.goldPerClick} gold.`);
   }
 
   private clickRanger(): void {
     this.wallet.add('xp', 1);
 
-    // First roll: 50/50 determines the target — herb or beast
-    const targetHerb = Math.random() < 0.5;
+    // Cat's Eye: chance to roll BOTH herb and beast simultaneously
+    const catsEyeProcs = this.potionCatsEyeLevel > 0 && Math.random() * 100 < this.potionCatsEyeLevel;
 
-    if (targetHerb) {
-      // Apply the More Herbs doubling formula
-      const herbs = this.computeHerbYield();
-      this.wallet.add('herb', herbs);
-      this.log.log(
-        `You targeted herbs and foraged ${herbs} herb(s). (+1 XP)`
-      );
-    } else {
-      // Second roll: beastFindChance% to successfully bring down a beast
+    if (catsEyeProcs) {
+      const herbs    = this.computeHerbYield();
       const gotBeast = Math.random() < this.beastFindChance / 100;
+      this.wallet.add('herb', herbs);
       if (gotBeast) {
         this.wallet.add('beast', 1);
-        this.log.log(`You tracked a beast and claimed its meat. (+1 XP)`);
+        this.log.log(`Cat's Eye! You foraged ${herbs} herb(s) AND hunted a beast! (+1 XP)`, 'success');
       } else {
-        this.log.log(`You targeted a beast but it escaped. (+1 XP)`);
+        this.log.log(`Cat's Eye! You foraged ${herbs} herb(s), but the beast escaped. (+1 XP)`, 'success');
+      }
+    } else {
+      // Normal 50/50 split
+      const targetHerb = Math.random() < 0.5;
+      if (targetHerb) {
+        const herbs = this.computeHerbYield();
+        this.wallet.add('herb', herbs);
+        this.log.log(`You targeted herbs and foraged ${herbs} herb(s). (+1 XP)`);
+      } else {
+        const gotBeast = Math.random() < this.beastFindChance / 100;
+        if (gotBeast) {
+          this.wallet.add('beast', 1);
+          this.log.log(`You tracked a beast and claimed its meat. (+1 XP)`);
+        } else {
+          this.log.log(`You targeted a beast but it escaped. (+1 XP)`);
+        }
       }
     }
   }
@@ -687,6 +800,24 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
+  buyInsightfulContracts(): void {
+    if (this.insightfulContractsMaxed) { return; }
+    if (this.wallet.canAfford('gold', this.insightfulContractsCost)) {
+      this.wallet.remove('gold', this.insightfulContractsCost);
+      this.insightfulContractsLevel++;
+      this.insightfulContractsCost = Math.floor(this.insightfulContractsCost * COST_SCALE.INSIGHTFUL_CONTRACTS);
+      this.log.log(
+        `Insightful Contracts upgraded to Lv.${this.insightfulContractsLevel}. Now earning ${this.xpPerBounty} XP per bounty.`,
+        'success'
+      );
+    } else {
+      this.log.log(
+        `Not enough gold for Insightful Contracts. Need ${this.insightfulContractsCost}g, have ${this.gold}g.`,
+        'warn'
+      );
+    }
+  }
+
   buyAutoUpgrade(): void {
     if (this.contractedHirelingsMaxed) { return; }
     if (this.wallet.canAfford('gold', this.autoUpgradeCost)) {
@@ -737,6 +868,29 @@ export class AppComponent implements OnInit, OnDestroy {
     } else {
       this.log.log(
         `Not enough gold for Sharper Swords. Need ${this.sharperSwordsCost}g, have ${this.gold}g.`,
+        'warn'
+      );
+    }
+  }
+
+  buyStrongerKobolds(): void {
+    if (this.strongerKoboldsMaxed) { return; }
+    const canAfford = this.wallet.canAfford('kobold-ear', this.strongerKoboldsEarsCost)
+                   && this.wallet.canAfford('beast',      this.strongerKoboldsMeatCost);
+    if (canAfford) {
+      this.wallet.remove('kobold-ear', this.strongerKoboldsEarsCost);
+      this.wallet.remove('beast',      this.strongerKoboldsMeatCost);
+      this.strongerKoboldsLevel++;
+      this.strongerKoboldsEarsCost = Math.floor(this.strongerKoboldsEarsCost * COST_SCALE.STRONGER_KOBOLDS);
+      this.strongerKoboldsMeatCost = Math.floor(this.strongerKoboldsMeatCost * COST_SCALE.STRONGER_KOBOLDS);
+      const maxLevel = this.strongerKoboldsLevel + 1;
+      this.log.log(
+        `Stronger Kobolds upgraded to Tier ${this.strongerKoboldsLevel}. Kobold levels up to ${maxLevel} are now available.`,
+        'success'
+      );
+    } else {
+      this.log.log(
+        `Not enough resources for Stronger Kobolds. Need ${this.strongerKoboldsEarsCost}> and ${this.strongerKoboldsMeatCost}Ꮻ.`,
         'warn'
       );
     }
@@ -793,6 +947,45 @@ export class AppComponent implements OnInit, OnDestroy {
     } else {
       this.log.log(
         `Not enough Kobold Ears for Bountiful Lands. Need ${this.bountifulLandsCost}, have ${this.koboldEars}.`,
+        'warn'
+      );
+    }
+  }
+
+  buyAbundantLands(): void {
+    if (this.abundantLandsMaxed) { return; }
+    if (this.wallet.canAfford('pixie-dust', this.abundantLandsCost)) {
+      this.wallet.remove('pixie-dust', this.abundantLandsCost);
+      this.abundantLandsLevel++;
+      this.log.log(
+        `Abundant Lands unlocked! Currency yield is now multiplied by the number of successful squares found.`,
+        'rare'
+      );
+    } else {
+      this.log.log(
+        `Not enough Pixie Dust for Abundant Lands. Need ${this.abundantLandsCost}, have ${this.pixieDust}.`,
+        'warn'
+      );
+    }
+  }
+
+  buyPotionCatsEye(): void {
+    if (this.potionCatsEyeMaxed) { return; }
+    const canAfford = this.wallet.canAfford('concentrated-potion', this.potionCatsEyeConcCost)
+                   && this.wallet.canAfford('pixie-dust',          this.potionCatsEyePixieCost);
+    if (canAfford) {
+      this.wallet.remove('concentrated-potion', this.potionCatsEyeConcCost);
+      this.wallet.remove('pixie-dust',          this.potionCatsEyePixieCost);
+      this.potionCatsEyeLevel++;
+      this.potionCatsEyeConcCost  = Math.floor(this.potionCatsEyeConcCost  * COST_SCALE.POTION_CATS_EYE);
+      this.potionCatsEyePixieCost = Math.floor(this.potionCatsEyePixieCost * COST_SCALE.POTION_CATS_EYE);
+      this.log.log(
+        `Potion of Cat's Eye upgraded to Lv.${this.potionCatsEyeLevel}. Dual-roll chance now ${this.potionCatsEyeLevel}%.`,
+        'success'
+      );
+    } else {
+      this.log.log(
+        `Not enough resources for Potion of Cat's Eye. Need ${this.potionCatsEyeConcCost}⚗ (conc.) and ${this.potionCatsEyePixieCost}✦ (pixie dust).`,
         'warn'
       );
     }

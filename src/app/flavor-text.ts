@@ -30,13 +30,21 @@ export const UPGRADE_FLAVOR = {
     name: 'Contracted Hirelings',
     desc: '+1 gold/sec',
   },
+  INSIGHTFUL_CONTRACTS: {
+    name: 'Insightful Contracts',
+    desc: '+1 XP per bounty completed',
+  },
   POTION_CHUGGING: {
     name: 'Potion Chugging',
     desc: '+1 HP per potion heal',
   },
   SHARPER_SWORDS: {
     name: 'Sharper Swords',
-    desc: '+1 attack damage in combat',
+    desc: '+1 max hit in combat',
+  },
+  STRONGER_KOBOLDS: {
+    name: 'Stronger Kobolds',
+    desc: 'Unlock the next kobold difficulty level',
   },
 
   // Ranger
@@ -52,6 +60,14 @@ export const UPGRADE_FLAVOR = {
   BOUNTIFUL_LANDS: {
     name: 'Bountiful Lands',
     desc: '+1% chance a blank cell yields a resource',
+  },
+  ABUNDANT_LANDS: {
+    name: 'Abundant Lands',
+    desc: 'Resource gain is multiplied by the number of successful finds',
+  },
+  POTION_CATS_EYE: {
+    name: "Potion of Cat's Eye",
+    desc: "+1% chance to roll both herb AND beast",
   },
 
   // Apothecary
@@ -123,13 +139,15 @@ export const HERO_STATS_FLAVOR = {
   BOX_TITLE: '[ CHARACTER STATS ]',
 
   FIGHTER: {
-    PER_CLICK:  'Per Click   :',
-    PER_SECOND: 'Per Second  :',
+    PER_CLICK:   'Per Click   :',
+    PER_SECOND:  'Per Second  :',
+    XP_PER_CLICK: 'XP / Bounty :',
   },
   RANGER: {
     HERB_CHANCE:  'Herb Chance  :',
     BEAST_CHANCE: 'Beast Chance :',
     HERB_DOUBLE:  'Herb Double  :',
+    CATS_EYE:     "Cat's Eye    :",
   },
   APOTHECARY: {
     HERBS_BREW:  'Herbs/Brew   :',

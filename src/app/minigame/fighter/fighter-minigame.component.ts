@@ -15,6 +15,7 @@ interface Enemy {
   goldMax: number;
   xpReward: number;
   earReward: number;
+  dmgMax: number;
   ascii: string;
 }
 
@@ -32,6 +33,12 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   @Input() potionChuggingLevel = 0;
   /** Future upgrades reduce the long-rest lockout by this many seconds. */
   @Input() recoveryReductionSec = 0;
+  /** Number of Stronger Kobolds tiers purchased — determines max selectable level. */
+  @Input() strongerKoboldsLevel = 0;
+  /** Currently-selected kobold difficulty (1 = base). */
+  @Input() selectedKoboldLevel = 1;
+  /** Emitted when the player clicks +/- on the kobold level selector. */
+  @Output() selectedKoboldLevelChange = new EventEmitter<number>();
   /** Previously-saved combat state to restore on init. */
   @Input() savedState: FighterCombatState | null = null;
   /** Emitted whenever combat state changes (HP, defeated, rest countdown). */
@@ -93,6 +100,23 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
   get healDisabled(): boolean {
     return this.actionsDisabled || this.potions < 1 || this.fighterHp >= this.maxHp;
+  }
+
+  /** Maximum selectable kobold level: base 1 + one per Stronger Kobolds tier. */
+  get maxKoboldLevel(): number {
+    return this.strongerKoboldsLevel + 1;
+  }
+
+  increaseKoboldLevel(): void {
+    if (this.selectedKoboldLevel < this.maxKoboldLevel) {
+      this.selectedKoboldLevelChange.emit(this.selectedKoboldLevel + 1);
+    }
+  }
+
+  decreaseKoboldLevel(): void {
+    if (this.selectedKoboldLevel > 1) {
+      this.selectedKoboldLevelChange.emit(this.selectedKoboldLevel - 1);
+    }
   }
 
   // ── Lifecycle ─────────────────────────────
@@ -248,7 +272,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   }
 
   private rollEnemyDamage(): number {
-    return Math.max(0, Math.floor(Math.random() * FIGHTER_MG.ENEMY_DMG_MAX) + 1 - this.defense);
+    return Math.max(0, Math.floor(Math.random() * this.enemy.dmgMax) + 1 - this.defense);
   }
 
   private applyEnemyDamage(dmg: number): void {
@@ -316,14 +340,18 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   }
 
   private buildKobold(): Enemy {
+    const lvl   = this.selectedKoboldLevel;
+    const extra = lvl - 1;
+    const hp    = FIGHTER_MG.KOBOLD_HP + extra * FIGHTER_MG.KOBOLD_HP_PER_LEVEL;
     return {
-      name:      'Kobold',
-      hp:        FIGHTER_MG.KOBOLD_HP,
-      maxHp:     FIGHTER_MG.KOBOLD_HP,
-      goldMin:   FIGHTER_MG.KOBOLD_GOLD_MIN,
-      goldMax:   FIGHTER_MG.KOBOLD_GOLD_MAX,
-      xpReward:  FIGHTER_MG.KOBOLD_XP_REWARD,
-      earReward: FIGHTER_MG.KOBOLD_EAR_REWARD,
+      name:      lvl > 1 ? `Kobold Lv.${lvl}` : 'Kobold',
+      hp,
+      maxHp:     hp,
+      goldMin:   FIGHTER_MG.KOBOLD_GOLD_MIN   + extra * FIGHTER_MG.KOBOLD_GOLD_MIN_PER_LEVEL,
+      goldMax:   FIGHTER_MG.KOBOLD_GOLD_MAX   + extra * FIGHTER_MG.KOBOLD_GOLD_MAX_PER_LEVEL,
+      xpReward:  FIGHTER_MG.KOBOLD_XP_REWARD  + extra * FIGHTER_MG.KOBOLD_XP_PER_LEVEL,
+      earReward: FIGHTER_MG.KOBOLD_EAR_REWARD + extra * FIGHTER_MG.KOBOLD_EAR_PER_LEVEL,
+      dmgMax:    FIGHTER_MG.ENEMY_DMG_MAX      + extra * FIGHTER_MG.KOBOLD_DMG_PER_LEVEL,
       ascii:
         '  <(>_<)>↟  \n' +
         '   /||-- |   \n' +
