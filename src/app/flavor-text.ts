@@ -89,17 +89,17 @@ export const UPGRADE_FLAVOR = {
 export const CHARACTER_FLAVOR = {
   FIGHTER: {
     name: 'Fighter',
-    desc: 'A seasoned warrior armed with blade and shield.',
+    desc: 'A mercenary looking to get by, completing odd jobs and learning about the world around him.',
     questBtn: 'Complete Bounty',
   },
   RANGER: {
     name: 'Ranger',
-    desc: 'A swift archer who strikes from the shadows.',
+    desc: 'A perceptive folk, and a warden of the woods. Even when her prey escapes, she manages to always bring something home.',
     questBtn: 'Hunt & Gather',
   },
   APOTHECARY: {
     name: 'Apothecary',
-    desc: 'A skilled brewer who turns rare ingredients into powerful potions.',
+    desc: 'The proud owner of a small potion shop. He is quite good at his craft, and specializes in versatile potion bases.',
     questBtn: 'Alchemize',
   },
 } as const;
@@ -143,9 +143,9 @@ export const HERO_STATS_FLAVOR = {
   BOX_TITLE: '[ CHARACTER STATS ]',
 
   FIGHTER: {
-    PER_CLICK:   'Per Click   :',
-    PER_SECOND:  'Per Second  :',
-    XP_PER_CLICK: 'XP / Bounty :',
+    PER_CLICK:    'Gold Per Click   :',
+    PER_SECOND:   'Gold Per Second  :',
+    XP_PER_CLICK: 'XP Per Bounty    :',
   },
   RANGER: {
     HERB_CHANCE:  'Herb Chance  :',
@@ -155,9 +155,9 @@ export const HERO_STATS_FLAVOR = {
     MAX_MEAT:     'Max Meat     :',
   },
   APOTHECARY: {
-    HERBS_BREW:  'Herbs/Brew   :',
-    SAVE_CHANCE: 'Save Chance  :',
-    SELL_RATE:   'Sell Rate    :',
+    HERBS_BREW:  'Herbs Per Brew   :',
+    SAVE_CHANCE: 'Herb Save Chance :',
+    SELL_RATE:   'Sell Rate        :',
   },
 } as const;
 

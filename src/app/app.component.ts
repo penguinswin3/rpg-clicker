@@ -169,7 +169,7 @@ export class AppComponent implements OnInit, OnDestroy {
     const level      = this.upgrades.level('MORE_HERBS');
     const guaranteed = Math.floor(level / 100);
     const remainder  = level % 100;
-    if (guaranteed === 0) return `${remainder}% chance`;
+    if (guaranteed === 0) return `${remainder}%`;
     if (remainder  === 0) return `${guaranteed}× (guaranteed)`;
     return `${guaranteed}× + ${remainder}% again`;
   }
@@ -184,7 +184,7 @@ export class AppComponent implements OnInit, OnDestroy {
           ? [{ label: HERO_STATS_FLAVOR.RANGER.CATS_EYE, value: `${this.upgrades.level('POTION_CATS_EYE')}%` }]
           : []),
         ...(this.upgrades.level('BIGGER_GAME') > 0
-          ? [{ label: HERO_STATS_FLAVOR.RANGER.MAX_MEAT, value: `1-${this.upgrades.level('BIGGER_GAME') + 1}` }]
+          ? [{ label: HERO_STATS_FLAVOR.RANGER.MAX_MEAT, value: `${this.upgrades.level('BIGGER_GAME') + 1}` }]
           : []),
       ];
     }
@@ -192,7 +192,7 @@ export class AppComponent implements OnInit, OnDestroy {
       return [
         { label: HERO_STATS_FLAVOR.APOTHECARY.HERBS_BREW,  value: `${YIELDS.APOTHECARY_BREW_HERB_COST}` },
         { label: HERO_STATS_FLAVOR.APOTHECARY.SAVE_CHANCE, value: `${this.herbSaveChance}%`              },
-        { label: HERO_STATS_FLAVOR.APOTHECARY.SELL_RATE,   value: `${this.potionAutoGoldPerSecond}g/s`   },
+        { label: HERO_STATS_FLAVOR.APOTHECARY.SELL_RATE,   value: `${this.potionAutoGoldPerSecond}`   },
       ];
     }
     // Fighter

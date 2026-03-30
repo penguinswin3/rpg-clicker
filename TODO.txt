@@ -1,6 +1,3 @@
-
-- Game Icon
-
 - More characters
   - Chef
     - Like that mastermind game / spicy stew to cook
@@ -21,18 +18,11 @@
   - Slayer
     - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
 
-- More upgrades
-
-
-- Code Refactors
 
 - flesh out the upgrades for the minigames
   - fighter, stronger kobolds
 
 - standardize the character screen summaries to include the unit on the right side of the colon (number/s)
-
-
-- Herb doubling can max out at 100% then a later upgrade will let you bypass that limit
 
 - Bonus tries in the ranger minigame
 
