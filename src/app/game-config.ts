@@ -55,9 +55,9 @@ export const XP_THRESHOLDS = {
   /** XP required before the First Jack purchase appears */
   JACKS_UNLOCK: 1500,
   /** XP required to unlock all character minigame screens */
-  MINIGAME_UNLOCK:   2500,
+  MINIGAME_UNLOCK:   3000,
   /** XP required before the Culinarian unlock offer appears */
-  CULINARIAN_UNLOCK: 10000,
+  CULINARIAN_UNLOCK: 7500,
 } as const;
 
 // ── Jack of All Trades ────────────────────────────────────────

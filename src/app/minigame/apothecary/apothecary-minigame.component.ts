@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { APOTH_MG } from '../../game-config';
-import { CURRENCY_FLAVOR } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
 import { toPct, rollChance } from '../../utils/mathUtils';
 
 @Component({
@@ -137,7 +137,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.barPos       = 0;
     this.barDir       = 1;
     this.lastTime     = undefined;
-    this.lastMsg      = 'Click on beat to raise quality!';
+    this.lastMsg      = MINIGAME_MSG.APOTHECARY.IDLE;
     this.msgClass     = 'msg-neutral';
     this.log.log(`Apothecary begins brewing. (−${this.herbCost} herbs, −${this.potionCost} potion base)`);
     this.startAnimation();
@@ -148,17 +148,17 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
     if (this.isInInnerZone) {
       this.quality  = Math.min(this.maxQuality, this.quality + 2);
-      this.lastMsg  = `Bubbling hit! +2 quality (${this.quality}/${this.maxQuality})`;
+      this.lastMsg  = MINIGAME_MSG.APOTHECARY.HIT_INNER(this.quality, this.maxQuality);
       this.msgClass = 'msg-double';
       if (this.quality >= this.maxQuality) this.onPerfectPotion();
     } else if (this.isInZone) {
       this.quality  = Math.min(this.maxQuality, this.quality + 1);
-      this.lastMsg  = `On beat! +1 quality (${this.quality}/${this.maxQuality})`;
+      this.lastMsg  = MINIGAME_MSG.APOTHECARY.HIT_ZONE(this.quality, this.maxQuality);
       this.msgClass = 'msg-good';
       if (this.quality >= this.maxQuality) this.onPerfectPotion();
     } else {
       this.quality  = Math.max(0, this.quality - 1);
-      this.lastMsg  = `Off beat! −1 quality (${this.quality}/${this.maxQuality})`;
+      this.lastMsg  = MINIGAME_MSG.APOTHECARY.MISS_ZONE(this.quality, this.maxQuality);
       this.msgClass = 'msg-bad';
     }
   }
@@ -228,15 +228,15 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
       if (concentrated === 2) {
         this.log.log(`Dilution success! 2 Concentrated Potions crafted!`, 'success');
-        this.lastMsg  = '** 2x CONCENTRATED POTIONS **';
+        this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FULL;
         this.msgClass = 'msg-good';
       } else if (concentrated === 1) {
         this.log.log(`Dilution partial: 1 Concentrated Potion + 1 Potion Base.`, 'success');
-        this.lastMsg  = '** 1x CONCENTRATED + 1x BASE **';
+        this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_PARTIAL;
         this.msgClass = 'msg-good';
       } else {
         this.log.log(`Dilution failed! 2 Potion Bases produced instead.`, 'warn');
-        this.lastMsg  = '** 2x POTION BASE (diluted!) **';
+        this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FAIL;
         this.msgClass = 'msg-bad';
       }
     } else {
@@ -250,7 +250,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
         this.log.log('A Concentrated Potion has been crafted!', 'success');
       }
 
-      this.lastMsg  = '** PERFECT POTION COMPLETE **';
+      this.lastMsg  = MINIGAME_MSG.APOTHECARY.PERFECT;
       this.msgClass = 'msg-good';
     }
   }

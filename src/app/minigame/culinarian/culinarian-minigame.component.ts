@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { CULINARIAN_MG } from '../../game-config';
-import { CURRENCY_FLAVOR } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
 
 /** Feedback per slot after a guess is submitted. */
 export type PegColor = 'green' | 'yellow' | 'miss';
@@ -116,7 +116,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
     this.lost  = false;
     this.roundActive = true;
     this.dragIngredient = null;
-    this.lastMsg  = `Guess the recipe! ${this.MAX_GUESSES} attempts.`;
+    this.lastMsg  = MINIGAME_MSG.CULINARIAN.ROUND_START(this.MAX_GUESSES);
     this.msgClass = 'msg-neutral';
     this.log.log(`Culinarian begins experimenting. (−${this.INGREDIENT_COST} each ingredient)`);
   }
@@ -136,7 +136,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
     } else {
       const greens  = pegs.filter(p => p === 'green').length;
       const yellows = pegs.filter(p => p === 'yellow').length;
-      this.lastMsg  = `${greens} correct, ${yellows} misplaced. ${this.guessesRemaining} left.`;
+      this.lastMsg  = MINIGAME_MSG.CULINARIAN.GUESS_FEEDBACK(greens, yellows, this.guessesRemaining);
       this.msgClass = 'msg-neutral';
       this.currentGuess = Array(this.SOLUTION_LENGTH).fill(null);
     }
@@ -271,8 +271,8 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
     }
 
     this.lastMsg  = wasteNotBonus > 0
-      ? `** RECIPE COMPLETE! ** (+${wasteNotBonus} bonus)`
-      : '** RECIPE COMPLETE! **';
+      ? MINIGAME_MSG.CULINARIAN.WIN_BONUS(wasteNotBonus)
+      : MINIGAME_MSG.CULINARIAN.WIN;
     this.msgClass = 'msg-good';
   }
 
@@ -280,7 +280,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
     this.lost = true;
     this.roundActive = false;
     this.log.log('The Culinarian failed to find the recipe.', 'warn');
-    this.lastMsg  = 'Out of guesses!';
+    this.lastMsg  = MINIGAME_MSG.CULINARIAN.LOSE;
     this.msgClass = 'msg-bad';
   }
 }

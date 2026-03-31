@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { RANGER_MG } from '../../game-config';
-import { CURRENCY_FLAVOR } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
 import { shuffleInPlace, rollChance } from '../../utils/mathUtils';
 
 type PrizeType = 'meat' | 'herb' | 'pixie' | 'blank';
@@ -145,7 +145,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     this.herbFound    = 0;
     this.pixieFound   = 0;
     this.xpGained     = 0;
-    this.lastMsg      = `Choose ${this.PICKS} boxes...`;
+    this.lastMsg      = MINIGAME_MSG.RANGER.ROUND_START(this.PICKS);
     this.msgClass     = 'msg-neutral';
   }
 

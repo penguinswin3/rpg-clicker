@@ -46,8 +46,6 @@
 -- 5/31 Playthrough Feedback --
 change the order of the minigame currency unlocks so it goes gold-meat-pots rather than gold-pots-meat
 the experience bar maxes out at like 2.5k or something, the next few unlocks should be there too
-XP requirements can scale harder after Jacks upgrades
-  Culinarian needs to be WELL after 5k, as I havent even unlocked minigames yet
 unify hero button / character button terminology?
 Add some more one off big upgrades shortly after minigame unlocks?
 rename "perfect potion complete" message after apoth minigame to say potion concentration complete

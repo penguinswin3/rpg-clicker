@@ -280,3 +280,39 @@ export const HERO_STATS_FLAVOR = {
   },
 } as const;
 
+// ── Minigame Messages ─────────────────────────────────────────
+export const MINIGAME_MSG = {
+
+  FIGHTER: {
+    READY:      '-- Ready to fight --',
+    RESUMED:    '-- Resumed --',
+    NEW_ENEMY:  '-- New enemy! --',
+    FLEEING:    'Fleeing...',
+    ESCAPED:    '-- Escaped! --',
+  },
+
+  APOTHECARY: {
+    IDLE:           'Click on beat to raise quality!',
+    HIT_INNER:      (q: number, max: number) => `Bubbling hit! +2 quality (${q}/${max})`,
+    HIT_ZONE:       (q: number, max: number) => `On beat! +1 quality (${q}/${max})`,
+    MISS_ZONE:      (q: number, max: number) => `Off beat! \u22121 quality (${q}/${max})`,
+    PERFECT:        '** PERFECT POTION COMPLETE **',
+    DILUTE_FULL:    '** 2x CONCENTRATED POTIONS **',
+    DILUTE_PARTIAL: '** 1x CONCENTRATED + 1x BASE **',
+    DILUTE_FAIL:    '** 2x POTION BASE (diluted!) **',
+  },
+
+  RANGER: {
+    ROUND_START: (picks: number) => `Choose ${picks} boxes...`,
+  },
+
+  CULINARIAN: {
+    ROUND_START:    (max: number) => `Guess the recipe! ${max} attempts.`,
+    GUESS_FEEDBACK: (greens: number, yellows: number, remaining: number) =>
+      `${greens} correct, ${yellows} misplaced. ${remaining} left.`,
+    WIN:            '** RECIPE COMPLETE! **',
+    WIN_BONUS:      (bonus: number) => `** RECIPE COMPLETE! ** (+${bonus} bonus)`,
+    LOSE:           'Out of guesses!',
+  },
+
+};

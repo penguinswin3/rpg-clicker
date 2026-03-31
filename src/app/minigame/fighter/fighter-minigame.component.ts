@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { FIGHTER_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant } from '../../flavor-text';
+import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant, MINIGAME_MSG } from '../../flavor-text';
 import { FighterCombatState } from '../../save/save.service';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 
@@ -159,7 +159,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
         const k = this.buildKobold();
         k.hp = Math.min(s.enemyHp, k.maxHp);
         this.enemy = k;
-        this.lastMsg  = '-- Resumed --';
+        this.lastMsg  = MINIGAME_MSG.FIGHTER.RESUMED;
         this.msgLine2 = '';
         this.msgClass = 'msg-neutral';
       } else {
@@ -272,17 +272,18 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.fighterHp = this.maxHp;
     this.enemy     = this.buildKobold();
     this.defeated  = false;
-    this.lastMsg   = '-- Ready to fight --';
+    this.lastMsg   = MINIGAME_MSG.FIGHTER.READY;
     this.msgLine2  = '';
     this.msgClass  = 'msg-neutral';
     this.emitState();
   }
 
+
   flee(): void {
     if (this.fleeDisabled) return;
     this.fleeing       = true;
     this.fleeCountdown = 3;
-    this.lastMsg  = 'Fleeing...';
+    this.lastMsg  = MINIGAME_MSG.FIGHTER.FLEEING;
     this.msgLine2 = `${this.fleeCountdown}s`;
     this.msgClass = 'msg-neutral';
 
@@ -297,7 +298,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
         // Reset the enemy but keep fighter HP
         this.enemy    = this.buildKobold();
-        this.lastMsg  = '-- Escaped! --';
+        this.lastMsg  = MINIGAME_MSG.FIGHTER.ESCAPED;
         this.msgLine2 = '';
         this.msgClass = 'msg-neutral';
         this.log.log('The Fighter fled from combat.', 'default');
@@ -423,7 +424,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.spawnTimer = setTimeout(() => {
       this.enemy        = this.buildKobold();
       this.awaitingSpawn = false;
-      this.lastMsg      = '-- New enemy! --';
+      this.lastMsg      = MINIGAME_MSG.FIGHTER.NEW_ENEMY;
       this.msgLine2     = '';
       this.msgClass     = 'msg-neutral';
       this.emitState();
