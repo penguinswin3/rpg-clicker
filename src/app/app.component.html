@@ -11,6 +11,9 @@
     [bountifulLandsLevel]="upgrades.level('BOUNTIFUL_LANDS')"
     [abundantLandsLevel]="upgrades.level('ABUNDANT_LANDS')"
     [bubblingBrewLevel]="upgrades.level('BUBBLING_BREW')"
+    [biggerBubblesLevel]="upgrades.level('BIGGER_BUBBLES')"
+    [potionDilutionLevel]="upgrades.level('POTION_DILUTION')"
+    [serialDilutionLevel]="upgrades.level('SERIAL_DILUTION')"
     [fighterCombatState]="fighterCombatState"
     (fighterCombatStateChange)="fighterCombatState = $event" />
 
@@ -61,7 +64,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             [DEV {{ devMenuOpen ? '▲' : '▼' }}]
           </button>
           <div class="dev-menu" *ngIf="devMenuOpen">
-            <button class="dev-action-btn" (click)="devGrant()">+250 ALL</button>
+            <button class="dev-action-btn" (click)="devGrant()">+1k ALL</button>
             <button class="dev-action-btn dev-zero-btn" (click)="devZero()">ZERO ALL</button>
             <button class="dev-action-btn dev-xp-btn" (click)="devMaxXp()">XP = 2B</button>
             <button class="dev-action-btn dev-halfmax-btn" (click)="devHalfMaxUpgrades()">HALF MAX</button>

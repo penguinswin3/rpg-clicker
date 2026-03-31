@@ -43,6 +43,12 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() abundantLandsLevel = 0;
   /** Bubbling Brew level — forwarded to the apothecary minigame. */
   @Input() bubblingBrewLevel = 0;
+  /** Bigger Bubbles level — forwarded to the apothecary minigame. */
+  @Input() biggerBubblesLevel = 0;
+  /** Potion Dilution level — forwarded to the apothecary minigame. */
+  @Input() potionDilutionLevel = 0;
+  /** Serial Dilution level — forwarded to the apothecary minigame. */
+  @Input() serialDilutionLevel = 0;
   /** Previously-saved fighter combat state. */
   @Input() fighterCombatState: FighterCombatState | null = null;
   /** Emitted whenever fighter combat state changes. */

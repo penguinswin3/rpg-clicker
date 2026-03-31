@@ -1,16 +1,17 @@
 import { Component, Input, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { APOTH_MG } from '../../game-config';
 import { CURRENCY_FLAVOR } from '../../flavor-text';
-import { toPct } from '../../utils/mathUtils';
+import { toPct, rollChance } from '../../utils/mathUtils';
 
 @Component({
   selector: 'app-apothecary-minigame',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './apothecary-minigame.component.html',
   styleUrls: ['./apothecary-minigame.component.scss'],
 })
@@ -24,6 +25,29 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
   /** Set to true when the Bubbling Brew upgrade has been purchased. */
   @Input() bubblingBrewUnlocked = false;
+  /** Level of Bigger Bubbles upgrade — expands the inner brewing zone. */
+  @Input() biggerBubblesLevel = 0;
+  /** Set to true when the Potion Dilution upgrade has been purchased. */
+  @Input() potionDilutionUnlocked = false;
+  /** Serial Dilution level — each level reduces dilution fail chance by 1%. */
+  @Input() serialDilutionLevel = 0;
+
+  // ── Dilution toggle ───────────────────────
+  dilutionEnabled = false;
+
+  /** Current dilution success chance (50% base plus 1% per Serial Dilution level). */
+  get dilutionSuccessChance(): number {
+    return Math.min(100, 50 + this.serialDilutionLevel);
+  }
+
+  /** Interpolated color from yellow (50%) to green (100%). */
+  get dilutionColor(): string {
+    const pct = (this.dilutionSuccessChance - 50) / 50; // 0 at 50%, 1 at 100%
+    const clamped = Math.max(0, Math.min(1, pct));
+    // Interpolate hue from 60 (yellow) to 120 (green)
+    const hue = Math.round(60 + clamped * 60);
+    return `hsl(${hue}, 80%, 50%)`;
+  }
 
   // ── Wallet-synced ─────────────────────────
   herbs   = 0;
@@ -45,8 +69,19 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   readonly barSpeed     = APOTH_MG.BAR_SPEED;
   readonly zoneMin      = APOTH_MG.ZONE_MIN;
   readonly zoneMax      = APOTH_MG.ZONE_MAX;
-  readonly innerZoneMin = APOTH_MG.INNER_ZONE_MIN;
-  readonly innerZoneMax = APOTH_MG.INNER_ZONE_MAX;
+
+  /** Base inner zone bounds (before Bigger Bubbles expansion) */
+  private readonly baseInnerZoneMin = APOTH_MG.INNER_ZONE_MIN;
+  private readonly baseInnerZoneMax = APOTH_MG.INNER_ZONE_MAX;
+
+  /** Effective inner zone left edge, widened by Bigger Bubbles. */
+  get innerZoneMin(): number {
+    return Math.max(this.zoneMin, this.baseInnerZoneMin - this.biggerBubblesLevel * APOTH_MG.BIGGER_BUBBLES_ZONE_EXPANSION_PER_LEVEL);
+  }
+  /** Effective inner zone right edge, widened by Bigger Bubbles. */
+  get innerZoneMax(): number {
+    return Math.min(this.zoneMax, this.baseInnerZoneMax + this.biggerBubblesLevel * APOTH_MG.BIGGER_BUBBLES_ZONE_EXPANSION_PER_LEVEL);
+  }
 
   // ── Messages ──────────────────────────────
   lastMsg  = '';
@@ -168,17 +203,56 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   private onPerfectPotion(): void {
     this.stopAnimation();
     this.potionActive = false;
-    this.wallet.add('concentrated-potion', 1);
 
-    if (!this.wallet.isCurrencyUnlocked('concentrated-potion')) {
-      this.wallet.unlockCurrency('concentrated-potion');
-      this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
+    if (this.potionDilutionUnlocked && this.dilutionEnabled) {
+      // Dilution: always produce 2 items, but each has a chance to downgrade
+      const failChance = 100 - this.dilutionSuccessChance;
+      let concentrated = 0;
+      let downgraded   = 0;
+
+      for (let i = 0; i < 2; i++) {
+        if (rollChance(failChance)) {
+          downgraded++;
+        } else {
+          concentrated++;
+        }
+      }
+
+      if (concentrated > 0) this.wallet.add('concentrated-potion', concentrated);
+      if (downgraded > 0)   this.wallet.add('potion', downgraded);
+
+      if (!this.wallet.isCurrencyUnlocked('concentrated-potion') && concentrated > 0) {
+        this.wallet.unlockCurrency('concentrated-potion');
+        this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
+      }
+
+      if (concentrated === 2) {
+        this.log.log(`Dilution success! 2 Concentrated Potions crafted!`, 'success');
+        this.lastMsg  = '** 2x CONCENTRATED POTIONS **';
+        this.msgClass = 'msg-good';
+      } else if (concentrated === 1) {
+        this.log.log(`Dilution partial: 1 Concentrated Potion + 1 Potion Base.`, 'success');
+        this.lastMsg  = '** 1x CONCENTRATED + 1x BASE **';
+        this.msgClass = 'msg-good';
+      } else {
+        this.log.log(`Dilution failed! 2 Potion Bases produced instead.`, 'warn');
+        this.lastMsg  = '** 2x POTION BASE (diluted!) **';
+        this.msgClass = 'msg-bad';
+      }
     } else {
-      this.log.log('A Concentrated Potion has been crafted!', 'success');
-    }
+      // Standard: 1 concentrated potion
+      this.wallet.add('concentrated-potion', 1);
 
-    this.lastMsg  = '** PERFECT POTION COMPLETE **';
-    this.msgClass = 'msg-good';
+      if (!this.wallet.isCurrencyUnlocked('concentrated-potion')) {
+        this.wallet.unlockCurrency('concentrated-potion');
+        this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
+      } else {
+        this.log.log('A Concentrated Potion has been crafted!', 'success');
+      }
+
+      this.lastMsg  = '** PERFECT POTION COMPLETE **';
+      this.msgClass = 'msg-good';
+    }
   }
 }
 

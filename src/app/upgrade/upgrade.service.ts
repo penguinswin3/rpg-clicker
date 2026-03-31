@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
-import { UPGRADE_DEFS, UpgradeDef, UpgradeCategory, UpgradeGates } from '../game-config';
+import { UPGRADE_DEFS, UpgradeDef, UpgradeCategory, UpgradeGates, CostDef } from '../game-config';
 import { UPGRADE_FLAVOR } from '../flavor-text';
 import { scaledCost } from '../utils/mathUtils';
 
@@ -69,11 +69,14 @@ export class UpgradeService {
     return this.runtime.get(id)?.currentCosts[currency] ?? 0;
   }
 
-  /** All current costs for an upgrade — [{currency, amount}] in definition order. */
+  /** All current costs for an upgrade — [{currency, amount}] in definition order, filtered to the current level. */
   allCosts(id: string): Array<{ currency: string; amount: number }> {
+    const def = this.defs.get(id);
     const rt = this.runtime.get(id);
-    if (!rt) return [];
-    return Object.entries(rt.currentCosts).map(([currency, amount]) => ({ currency, amount }));
+    if (!def || !rt) return [];
+    return def.costs
+      .filter(c => this.isCostActive(c, rt.level))
+      .map(c => ({ currency: c.currency, amount: rt.currentCosts[c.currency] }));
   }
 
   isMaxed(id: string): boolean {
@@ -82,10 +85,12 @@ export class UpgradeService {
   }
 
   canAfford(id: string): boolean {
+    const def = this.defs.get(id);
     const rt = this.runtime.get(id);
-    if (!rt) return false;
-    return Object.entries(rt.currentCosts)
-      .every(([currency, amount]) => this.wallet.canAfford(currency, amount));
+    if (!def || !rt) return false;
+    return def.costs
+      .filter(c => this.isCostActive(c, rt.level))
+      .every(c => this.wallet.canAfford(c.currency, rt.currentCosts[c.currency]));
   }
 
   /** Returns upgrade IDs for a given character and category, in registry order. */
@@ -112,16 +117,18 @@ export class UpgradeService {
     const rt  = this.runtime.get(id);
     if (!def || !rt || rt.level >= def.max) return false;
 
+    const activeCosts = def.costs.filter(c => this.isCostActive(c, rt.level));
+
     if (!this.canAfford(id)) {
-      const needs = Object.entries(rt.currentCosts)
-        .map(([currency, need]) => `${need} ${currency} (have ${Math.floor(this.wallet.get(currency))})`)
+      const needs = activeCosts
+        .map(c => `${rt.currentCosts[c.currency]} ${c.currency} (have ${Math.floor(this.wallet.get(c.currency))})`)
         .join(', ');
       const name = (UPGRADE_FLAVOR as Record<string, { name: string }>)[id]?.name ?? id;
       this.log.log(`Not enough resources for ${name}. Need: ${needs}.`, 'warn');
       return false;
     }
 
-    for (const c of def.costs) {
+    for (const c of activeCosts) {
       this.wallet.remove(c.currency, rt.currentCosts[c.currency]);
       rt.currentCosts[c.currency] = scaledCost(rt.currentCosts[c.currency], c.scale, 1);
     }
@@ -189,5 +196,17 @@ export class UpgradeService {
       }
       rt.currentCosts = restoredCosts;
     }
+  }
+
+  // ── Private helpers ───────────────────────────────────────────
+
+  /**
+   * Returns true if the given cost definition is active at the specified upgrade level.
+   * Costs without fromLevel/untilLevel are always active (backward compatible).
+   */
+  private isCostActive(costDef: CostDef, currentLevel: number): boolean {
+    if (costDef.fromLevel != null && currentLevel < costDef.fromLevel) return false;
+    if (costDef.untilLevel != null && currentLevel >= costDef.untilLevel) return false;
+    return true;
   }
 }

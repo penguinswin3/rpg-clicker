@@ -225,6 +225,36 @@ $green:  #44dd44;
   text-align: center;
 }
 
+// ── Dilution toggle ───────────────────────
+
+.dilution-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 3px 0;
+  border: 1px solid #222;
+  background: #0a0a0a;
+}
+
+.toggle-label {
+  color: #aaa;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  input[type="checkbox"] {
+    cursor: pointer;
+    accent-color: $purple;
+  }
+}
+
+.dilution-info {
+  font-size: 9px;
+}
+
 // ── Result / status message ───────────────
 
 .brew-msg {

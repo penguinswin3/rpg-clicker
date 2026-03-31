@@ -78,5 +78,13 @@
     {{ potions }} <span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
   </div>
 
+  <!-- ── Flee button ─────────────────────── -->
+  <button class="action-btn flee-btn"
+          [class.slot-invisible]="defeated"
+          [disabled]="fleeDisabled"
+          (click)="flee()">
+    {{ fleeing ? '[ FLEEING... ' + fleeCountdown + 's ]' : '[ FLEE ]' }}
+  </button>
+
 </div>
 

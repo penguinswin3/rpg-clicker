@@ -4,9 +4,9 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { FIGHTER_MG } from '../../game-config';
-import { CURRENCY_FLAVOR } from '../../flavor-text';
+import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant } from '../../flavor-text';
 import { FighterCombatState } from '../../save/save.service';
-import { toPct, randInt } from '../../utils/mathUtils';
+import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 
 interface Enemy {
   name: string;
@@ -18,6 +18,12 @@ interface Enemy {
   earReward: number;
   dmgMax: number;
   ascii: string;
+  /** Optional secondary drop (in addition to the kobold ear). */
+  secondaryDrop: {
+    currencyId: string;
+    amount:     number;
+    chance:     number;   // 0–100
+  } | null;
 }
 
 @Component({
@@ -50,6 +56,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   private sub    = new Subscription();
   private spawnTimer?: ReturnType<typeof setTimeout>;
   private restInterval?: ReturnType<typeof setInterval>;
+  private fleeInterval?: ReturnType<typeof setInterval>;
 
   // ── Fighter state ─────────────────────────
   readonly maxHp   = FIGHTER_MG.MAX_HP;
@@ -63,6 +70,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   // ── Combat state ──────────────────────────
   defeated      = false;
   awaitingSpawn = false;
+  fleeing       = false;
+  fleeCountdown = 0;     // seconds remaining while fleeing
 
   // ── Long rest lockout ─────────────────────
   restCountdown = 0;   // seconds remaining; 0 = can retry
@@ -98,11 +107,15 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   }
 
   get actionsDisabled(): boolean {
-    return this.defeated || this.awaitingSpawn;
+    return this.defeated || this.awaitingSpawn || this.fleeing;
   }
 
   get healDisabled(): boolean {
     return this.actionsDisabled || this.potions < 1 || this.fighterHp >= this.maxHp;
+  }
+
+  get fleeDisabled(): boolean {
+    return this.defeated || this.awaitingSpawn || this.fleeing;
   }
 
   /** Maximum selectable kobold level: base 1 + one per Stronger Kobolds tier. */
@@ -163,17 +176,13 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
         this.msgClass = 'msg-bad';
 
         if (this.restCountdown <= 0) {
-          // Rest already finished while away
-          this.msgLine2 = '-- Press RETRY --';
+          this.msgLine2 = '';
         } else {
-          this.msgLine2 = `Long resting... ${this.restCountdown}s`;
+          this.msgLine2 = '';
           this.restInterval = setInterval(() => {
             this.restCountdown = Math.max(0, this.restCountdown - 1);
             this.emitState();
-            if (this.restCountdown > 0) {
-              this.msgLine2 = `Long resting... ${this.restCountdown}s`;
-            } else {
-              this.msgLine2 = '-- Press RETRY --';
+            if (this.restCountdown <= 0) {
               clearInterval(this.restInterval);
               this.restInterval = undefined;
             }
@@ -181,7 +190,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
         }
       } else if (s.defeated) {
         this.lastMsg  = `!! DEFEATED !!`;
-        this.msgLine2 = '-- Press RETRY --';
+        this.msgLine2 = '';
         this.msgClass = 'msg-bad';
       }
     }
@@ -202,6 +211,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.sub.unsubscribe();
     if (this.spawnTimer)   clearTimeout(this.spawnTimer);
     if (this.restInterval) clearInterval(this.restInterval);
+    if (this.fleeInterval) clearInterval(this.fleeInterval);
   }
 
   // ── Actions ───────────────────────────────
@@ -263,6 +273,34 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.emitState();
   }
 
+  flee(): void {
+    if (this.fleeDisabled) return;
+    this.fleeing       = true;
+    this.fleeCountdown = 3;
+    this.lastMsg  = 'Fleeing...';
+    this.msgLine2 = `${this.fleeCountdown}s`;
+    this.msgClass = 'msg-neutral';
+
+    this.fleeInterval = setInterval(() => {
+      this.fleeCountdown--;
+      if (this.fleeCountdown > 0) {
+        this.msgLine2 = `${this.fleeCountdown}s`;
+      } else {
+        clearInterval(this.fleeInterval);
+        this.fleeInterval = undefined;
+        this.fleeing = false;
+
+        // Reset the enemy but keep fighter HP
+        this.enemy    = this.buildKobold();
+        this.lastMsg  = '-- Escaped! --';
+        this.msgLine2 = '';
+        this.msgClass = 'msg-neutral';
+        this.log.log('The Fighter fled from combat.', 'default');
+        this.emitState();
+      }
+    }, 1000);
+  }
+
   // ── Private helpers ───────────────────────
 
   /**
@@ -275,15 +313,11 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     if (this.restCountdown <= 0) return;   // fully reduced — can retry instantly
 
     this.restEndsAt = Date.now() + this.restCountdown * 1000;
-    this.msgLine2 = `Long resting... ${this.restCountdown}s`;
 
     this.restInterval = setInterval(() => {
       this.restCountdown = Math.max(0, this.restCountdown - 1);
       this.emitState();
-      if (this.restCountdown > 0) {
-        this.msgLine2 = `Long resting... ${this.restCountdown}s`;
-      } else {
-        this.msgLine2 = '-- Press RETRY --';
+      if (this.restCountdown <= 0) {
         clearInterval(this.restInterval);
         this.restInterval = undefined;
       }
@@ -311,20 +345,45 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   private onEnemyDefeated(enemyLastDmg: number): void {
     const gold = randInt(this.enemy.goldMin, this.enemy.goldMax);
 
-    this.wallet.add('gold',        gold);
-    this.wallet.add('xp',          this.enemy.xpReward);
+    this.wallet.add('gold',       gold);
+    this.wallet.add('xp',         this.enemy.xpReward);
     this.wallet.add('kobold-ear', this.enemy.earReward);
 
-    const isFirst = !this.wallet.isCurrencyUnlocked('kobold-ear');
-    if (isFirst) {
+    const isFirstEar = !this.wallet.isCurrencyUnlocked('kobold-ear');
+    if (isFirstEar) {
       this.wallet.unlockCurrency('kobold-ear');
+    }
+
+    // ── Secondary drop roll ───────────────────────
+    let secondaryMsg = '';
+    if (this.enemy.secondaryDrop) {
+      const drop = this.enemy.secondaryDrop;
+      if (rollChance(drop.chance)) {
+        this.wallet.add(drop.currencyId, drop.amount);
+        const isFirstSecondary = !this.wallet.isCurrencyUnlocked(drop.currencyId);
+        if (isFirstSecondary) {
+          this.wallet.unlockCurrency(drop.currencyId);
+          const dropFlavor = (CURRENCY_FLAVOR as Record<string, { name: string; symbol: string; color: string }>)[drop.currencyId];
+          const dropName = dropFlavor?.name ?? drop.currencyId;
+          this.log.log(
+            `The ${this.enemy.name} drops a ${dropName}! A new trophy!`,
+            'rare'
+          );
+        }
+        const dropFlavor = (CURRENCY_FLAVOR as Record<string, { symbol: string }>)[drop.currencyId];
+        secondaryMsg = `, +${drop.amount}${dropFlavor?.symbol ?? '?'}`;
+      }
+    }
+
+    // ── Log message ───────────────────────────────
+    if (isFirstEar) {
       this.log.log(
-        `Victory! The ${this.enemy.name} drops a Kobold Ear! (+${gold}g, +${this.enemy.xpReward} XP)`,
+        `Victory! The ${this.enemy.name} drops a Kobold Ear! (+${gold}g, +${this.enemy.xpReward} XP${secondaryMsg})`,
         'rare'
       );
     } else {
       this.log.log(
-        `Victory! ${this.enemy.name} defeated. (+${gold}g, +${this.enemy.xpReward} XP, +${this.enemy.earReward} ear)`,
+        `Victory! ${this.enemy.name} defeated. (+${gold}g, +${this.enemy.xpReward} XP, +${this.enemy.earReward} ear${secondaryMsg})`,
         'success'
       );
     }
@@ -361,8 +420,13 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     const lvl   = this.selectedKoboldLevel;
     const extra = lvl - 1;
     const hp    = FIGHTER_MG.KOBOLD_HP + extra * FIGHTER_MG.KOBOLD_HP_PER_LEVEL;
+
+    // Pick the variant definition for this level (fall back to the last entry for high levels).
+    const variantIdx = Math.min(lvl - 1, KOBOLD_VARIANTS.length - 1);
+    const variant: KoboldVariant = KOBOLD_VARIANTS[variantIdx];
+
     return {
-      name:      lvl > 1 ? `Kobold Lv.${lvl}` : 'Kobold',
+      name:      variant.name + (lvl > KOBOLD_VARIANTS.length ? ` Lv.${lvl}` : ''),
       hp,
       maxHp:     hp,
       goldMin:   FIGHTER_MG.KOBOLD_GOLD_MIN   + extra * FIGHTER_MG.KOBOLD_GOLD_MIN_PER_LEVEL,
@@ -370,10 +434,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       xpReward:  FIGHTER_MG.KOBOLD_XP_REWARD  + extra * FIGHTER_MG.KOBOLD_XP_PER_LEVEL,
       earReward: FIGHTER_MG.KOBOLD_EAR_REWARD + extra * FIGHTER_MG.KOBOLD_EAR_PER_LEVEL,
       dmgMax:    FIGHTER_MG.ENEMY_DMG_MAX      + extra * FIGHTER_MG.KOBOLD_DMG_PER_LEVEL,
-      ascii:
-        '  <(>_<)>↟  \n' +
-        '   /||-- |   \n' +
-        '   d  b  |   ',
+      ascii:     variant.ascii,
+      secondaryDrop: variant.secondaryDrop ? { ...variant.secondaryDrop } : null,
     };
   }
 }

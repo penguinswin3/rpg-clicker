@@ -6,6 +6,8 @@
  * ════════════════════════════════════════════════════════════
  */
 
+import { KOBOLD_VARIANTS } from './flavor-text';
+
 // ── Shared Upgrade Types ─────────────────────────────────────
 
 export type UpgradeCategory = 'standard' | 'minigame';
@@ -16,6 +18,10 @@ export interface UpgradeGates {
   readonly requiresApothecary?: boolean;
   /** Hide until the Culinarian character is unlocked (i.e. spice is in play). */
   readonly requiresCulinarian?: boolean;
+  /** Hide until the Bubbling Brew minigame upgrade has been purchased. */
+  readonly requiresBubblingBrew?: boolean;
+  /** Hide until the Potion Dilution minigame upgrade has been purchased. */
+  readonly requiresPotionDilution?: boolean;
   /** Minimum XP required before the card is shown. */
   readonly xpMin?: number;
 }
@@ -24,6 +30,10 @@ export interface CostDef {
   readonly currency: string;
   readonly base:     number;
   readonly scale:    number;
+  /** If set, this cost only applies when the upgrade's current level is ≥ fromLevel. */
+  readonly fromLevel?:  number;
+  /** If set, this cost only applies when the upgrade's current level is < untilLevel. */
+  readonly untilLevel?: number;
 }
 
 /** Complete definition for a single upgrade — balance + structure in one place. */
@@ -119,11 +129,13 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'concentrated-potion', base: 3, scale: 1.5 },
       { currency: 'beast',               base: 12, scale: 1.5 },
     ] },
-  { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: 10,   // 10 tiers; each unlocks one higher kobold level
+  { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: KOBOLD_VARIANTS.length - 1,
     gates: { xpMin: 3000 },
     costs: [
-      { currency: 'kobold-ear', base: 10, scale: 2.8 },
-      { currency: 'beast',      base: 25, scale: 2.8 },
+      { currency: 'kobold-ear',    base: 66, scale: 2.8 },                                        // always
+      { currency: 'beast',         base: 500, scale: 1.0, fromLevel: 0, untilLevel: 1 },           // tier 1 only
+      { currency: 'kobold-tongue', base: 66, scale: 1.0, fromLevel: 1, untilLevel: 2 },           // tier 2 only
+      { currency: 'kobold-hair',   base: 66, scale: 1.0, fromLevel: 2, untilLevel: 3 },           // tier 3 only
     ] },
 
   // ── Ranger — standard ────────────────────────────────────────
@@ -152,16 +164,40 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'POTION_MARKETING', characterId: 'apothecary', category: 'standard', max: 999,
     costs: [{ currency: 'gold', base: 30, scale: 1.5 }] },
 
+  // ── Culinarian — standard ────────────────────────────────────
+  { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 20, // +1 spice/click, +24g cost/click per level
+    costs: [{ currency: 'gold', base: 200, scale: 3.8 }] },
+  { id: 'POTION_GLIBNESS',  characterId: 'culinarian', category: 'standard', max: 85,   // 85 × -1% spice purchase cost
+    costs: [
+      { currency: 'concentrated-potion', base: 3,  scale: 1.8 },
+      { currency: 'kobold-tongue',       base: 5,  scale: 1.8 },
+    ] },
+
   // ── Apothecary — minigame ────────────────────────────────────
   { id: 'BUBBLING_BREW', characterId: 'apothecary', category: 'minigame', max: 1,
     costs: [
       { currency: 'gold',       base: 9000, scale: 1.0 },
       { currency: 'kobold-ear', base: 150,  scale: 1.0 },
     ] },
-
-  // ── Culinarian — standard ────────────────────────────────────
-  { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 20, // +1 spice/click, +24g cost/click per level
-    costs: [{ currency: 'gold', base: 200, scale: 3.8 }] },
+  { id: 'BIGGER_BUBBLES', characterId: 'apothecary', category: 'minigame', max: 5,
+    gates: { requiresBubblingBrew: true },
+    costs: [
+      { currency: 'concentrated-potion', base: 20, scale: 2.8 },
+      { currency: 'kobold-ear',          base: 30, scale: 2.8 },
+    ] },
+  { id: 'POTION_DILUTION', characterId: 'apothecary', category: 'minigame', max: 1,
+    costs: [
+      { currency: 'gold',                base: 15_000, scale: 1.0 },
+      { currency: 'potion',              base: 1_000,  scale: 1.0 },
+      { currency: 'concentrated-potion', base: 500,    scale: 1.0 },
+    ] },
+  { id: 'SERIAL_DILUTION', characterId: 'apothecary', category: 'minigame', max: 50,
+    gates: { requiresPotionDilution: true },
+    costs: [
+      { currency: 'gold',                base: 5_000, scale: 1.6 },
+      { currency: 'concentrated-potion', base: 10,    scale: 1.6 },
+      { currency: 'kobold-hair',         base: 5,     scale: 1.6 },
+    ] },
 ];
 
 // ── Resource Yields ───────────────────────────────────────────
@@ -240,6 +276,8 @@ export const APOTH_MG = {
   INNER_ZONE_MIN: 47,
   /** Right edge of the Bubbling Brew inner zone (must be inside ZONE_MIN/MAX) */
   INNER_ZONE_MAX: 53,
+  /** How many percentage points each Bigger Bubbles level expands the inner zone on each side */
+  BIGGER_BUBBLES_ZONE_EXPANSION_PER_LEVEL: 2,
 } as const;
 
 // ── Ranger Minigame ───────────────────────────────────────────

@@ -17,6 +17,8 @@ export const CURRENCY_FLAVOR = {
   potion:                { name: 'Potion Base',               symbol: '⚗',  color: '#ceaedf' },
   'concentrated-potion': { name: 'Concentrated Potion Base',  symbol: '⚗',  color: '#ba70cf' },
   'kobold-ear':          { name: 'Kobold Left Ear',           symbol: '>',  color: '#e02020' },
+  'kobold-tongue':       { name: 'Kobold Tongue',             symbol: 'γ',  color: '#c75050' },
+  'kobold-hair':         { name: 'Kobold Hair',              symbol: 'Ҩ',  color: '#8a4b40' },
   spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
 } as const;
 
@@ -88,9 +90,25 @@ export const UPGRADE_FLAVOR = {
     name: 'Potion Marketing',
     desc: '+1 gold every time you brew a potion base',
   },
+  POTION_GLIBNESS: {
+    name: 'Potion of Glibness',
+    desc: '-1% spice purchase cost per level',
+  },
   BUBBLING_BREW: {
     name: 'Bubbling Brew',
     desc: 'Skilled brewing will award bonus progress',
+  },
+  BIGGER_BUBBLES: {
+    name: 'Bigger Bubbles',
+    desc: 'Increases the size of the Bubbling zone',
+  },
+  POTION_DILUTION: {
+    name: 'Potion Dilution',
+    desc: '2x concentrated potions, 50% chance to downgrade to potion base',
+  },
+  SERIAL_DILUTION: {
+    name: 'Serial Dilution',
+    desc: '-1% dilution failure chance per level',
   },
 
   // Culinarian
@@ -99,6 +117,68 @@ export const UPGRADE_FLAVOR = {
     desc: '+1 spice per click, purchased at a discount!',
   },
 } as const;
+
+// ── Kobold Variants (per fighter-minigame level) ──────────────
+/**
+ * Each entry defines the look and secondary loot for a kobold tier.
+ * Index 0 = base kobold (level 1). Index 1 = level 2, etc.
+ * Entries beyond the array length fall back to the last defined variant.
+ */
+export interface KoboldVariant {
+  /** Display name for this kobold tier. */
+  readonly name: string;
+  /** Multi-line ASCII art shown in the minigame. */
+  readonly ascii: string;
+  /**
+   * Optional secondary drop (in addition to the standard Kobold Ear).
+   * `null` means this level only drops ears.
+   */
+  readonly secondaryDrop: {
+    readonly currencyId: string;
+    readonly amount:     number;
+    /** Base percent chance to drop (0–100). */
+    readonly chance:     number;
+  } | null;
+}
+
+export const KOBOLD_VARIANTS: readonly KoboldVariant[] = [
+  // Level 1 — basic Kobold
+  {
+    name: 'Kobold',
+    ascii:
+      '  <(>_<)>↟  \n' +
+      '   /||-- |   \n' +
+      '   d  b  |   ',
+    secondaryDrop: null,
+  },
+  // Level 2 — Snake Kobold
+  {
+    name: 'Snake Kobold',
+    ascii:
+      '(\\     <(\'w\')>\n' +
+      ' \\\\/‾‾\\_/ /\n' +
+      '  \\_/\\___/',
+    secondaryDrop: {
+      currencyId: 'kobold-tongue',
+      amount: 1,
+      chance: 33,
+    },
+  },
+  // Level 3 — Spider Kobold
+  {
+    name: 'Spider Kobold',
+    ascii:
+      '|| ^ ^ ||  \n' +
+      '\\\\(-.-)// \n' +
+      '//(   )\\\\\n' +
+      '|| ‾‾‾ ||',
+    secondaryDrop: {
+      currencyId: 'kobold-hair',
+      amount: 1,
+      chance: 33,
+    },
+  },
+];
 
 // ── Characters ────────────────────────────────────────────────
 export const CHARACTER_FLAVOR = {
@@ -182,10 +262,12 @@ export const HERO_STATS_FLAVOR = {
     HERBS_BREW:      'Herbs Per Brew   :',
     SAVE_CHANCE:     'Herb Save Chance :',
     GOLD_PER_BREW:   'Gold Per Brew    :',
+    DILUTION_SUCCESS:'Dilution Success :',
   },
   CULINARIAN: {
     SPICE_PER_CLICK: 'Spice Per Click  :',
     GOLD_COST:       'Price Per Spice  :',
+    GOLD_DISCOUNT:   'Spice Discount   :',
   },
 } as const;
 

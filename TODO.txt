@@ -19,16 +19,11 @@
     - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
 
 
-- flesh out the upgrades for the minigames
-  - fighter, stronger kobolds
-
 - Bonus tries in the ranger minigame
 
 - extract log text to flavor file, might need to implement string replacement here idk
 
 - Visions of pixies upgrade that gives a little sparkle effect where a pixie might me. A few tiers with varying accuracies, can scale to up to 3 sparkles
-
-- Add a flee button to the fighter minigame that resets the fight to the new selected level after 5 seconds
 
 - Once an xp threshold is passed, anything unlocked by that threshold should remain, and the threshold should not be tracked again in the currency menu
 
@@ -36,11 +31,11 @@
 
 - Kobold ear currency should be up top, near the other fighter resources
 
-- look at the again idk
+
 
 - 200% herb save isnt saving 2 herbs
 
-- Stronger kobolds can be stronger monsters and do other things like spiders and ogres and stuff
+
 
 - Lore Pages that give context about the character or the world they live in. Can be unlocked by doing certain things in minigames...
 

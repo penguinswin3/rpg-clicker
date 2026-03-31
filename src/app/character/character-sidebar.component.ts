@@ -8,6 +8,7 @@ import { HERO_STATS_FLAVOR } from '../flavor-text';
 export interface HeroStat {
   label: string;
   value: string;
+  color?: string;
 }
 
 @Component({

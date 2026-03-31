@@ -281,4 +281,14 @@ $font: 'Courier New', Courier, monospace;
   &.depleted { color: #444; }
 }
 
+// ── Flee button ───────────────────────────
+
+.flee-btn {
+  border-color: #555;
+  color: #aaa;
+  font-size: 10px;
+  &:hover:not(:disabled) { background: #333; color: #fff; }
+  &:disabled { color: #2a2a2a; border-color: #1a1a1a; }
+}
+
 

@@ -95,8 +95,8 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Passive gold/sec from Contracted Hirelings, multiplied by Hireling's Hirelings level. */
   get autoGoldPerSecond(): number {
     const base       = this.upgrades.level('CONTRACTED_HIRELINGS');
-    const multiplier = Math.max(1, this.upgrades.level('HIRELINGS_HIRELINGS'));
-    return base * multiplier;
+    const multiplier = this.upgrades.level('HIRELINGS_HIRELINGS');
+    return base + (base * multiplier);
   }
   /** Gold earned per potion base brew from Potion Marketing (one per upgrade level). */
   get potionMarketingGoldPerBrew(): number { return this.upgrades.level('POTION_MARKETING'); }
@@ -114,8 +114,10 @@ export class AppComponent implements OnInit, OnDestroy {
   get spicePerClick(): number { return 1 + this.upgrades.level('WHOLESALE_SPICES'); }
   /** Gold cost per Culinarian hero-button click — rises by CULINARIAN_WHOLESALE_GOLD_PER_LEVEL per upgrade level. */
   get culinarianGoldCost(): number {
-    return YIELDS.CULINARIAN_SPICE_COST
+    const baseCost = YIELDS.CULINARIAN_SPICE_COST
       + ((25-this.upgrades.level('WHOLESALE_SPICES') + 24)/2) * this.upgrades.level('WHOLESALE_SPICES');
+    const discount = 1 - this.upgrades.level('POTION_GLIBNESS') / 100;
+    return Math.max(1, Math.floor(baseCost * discount));
   }
 
   // ── Jack computed getters ──────────────────────────────────────
@@ -206,17 +208,32 @@ export class AppComponent implements OnInit, OnDestroy {
       ];
     }
     if (this.activeCharacterId === 'apothecary') {
-      return [
+      const stats: HeroStat[] = [
         { label: HERO_STATS_FLAVOR.APOTHECARY.HERBS_BREW,   value: `${YIELDS.APOTHECARY_BREW_HERB_COST}`         },
         { label: HERO_STATS_FLAVOR.APOTHECARY.SAVE_CHANCE,  value: `${this.herbSaveChance}%`                     },
         { label: HERO_STATS_FLAVOR.APOTHECARY.GOLD_PER_BREW,value: `${this.potionMarketingGoldPerBrew}`          },
       ];
+      if (this.upgrades.level('POTION_DILUTION') >= 1) {
+        const successChance = Math.min(100, 50 + this.upgrades.level('SERIAL_DILUTION'));
+        stats.push({
+          label: HERO_STATS_FLAVOR.APOTHECARY.DILUTION_SUCCESS,
+          value: `${successChance}%`,
+        });
+      }
+      return stats;
     }
     if (this.activeCharacterId === 'culinarian') {
-      return [
+      const stats: HeroStat[] = [
         { label: HERO_STATS_FLAVOR.CULINARIAN.SPICE_PER_CLICK, value: `${this.spicePerClick}`      },
         { label: HERO_STATS_FLAVOR.CULINARIAN.GOLD_COST,        value: `${this.culinarianGoldCost}` },
       ];
+      if (this.upgrades.level('POTION_GLIBNESS') > 0) {
+        stats.push({
+          label: HERO_STATS_FLAVOR.CULINARIAN.GOLD_DISCOUNT,
+          value: `-${this.upgrades.level('POTION_GLIBNESS')}%`,
+        });
+      }
+      return stats;
     }
     // Fighter
     return [
@@ -247,6 +264,8 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!gates) return true;
     if (gates.requiresApothecary  && !this.apothecaryUnlocked)  return false;
     if (gates.requiresCulinarian  && !this.culinarianUnlocked)  return false;
+    if (gates.requiresBubblingBrew && this.upgrades.level('BUBBLING_BREW') < 1) return false;
+    if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1) return false;
     if (gates.xpMin != null && this.xp < gates.xpMin) return false;
     return true;
   }
@@ -607,8 +626,8 @@ export class AppComponent implements OnInit, OnDestroy {
   devMenuOpen = false;
 
   devGrant(): void {
-    for (const c of this.wallet.currencies) this.wallet.add(c.id, 250);
-    this.log.log('[DEV] +250 granted to all resources.', 'warn');
+    for (const c of this.wallet.currencies) this.wallet.add(c.id, 1000);
+    this.log.log('[DEV] +1k granted to all resources.', 'warn');
   }
 
   devZero(): void {

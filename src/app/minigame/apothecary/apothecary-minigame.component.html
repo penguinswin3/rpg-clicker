@@ -71,6 +71,19 @@
     </div>
   </ng-container>
 
+  <!-- ── Dilution toggle ─────────────── -->
+  <div class="dilution-toggle" *ngIf="potionDilutionUnlocked">
+    <label class="toggle-label">
+      <input type="checkbox"
+             [(ngModel)]="dilutionEnabled"
+             [ngModelOptions]="{standalone: true}" />
+      Dilution
+    </label>
+    <span class="dilution-info" *ngIf="dilutionEnabled" [style.color]="dilutionColor">
+      ({{ dilutionSuccessChance }}% success)
+    </span>
+  </div>
+
   <!-- ── Last message ─────────────────── -->
   <div class="brew-msg" *ngIf="lastMsg" [ngClass]="msgClass">
     {{ lastMsg }}

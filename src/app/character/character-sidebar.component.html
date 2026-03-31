@@ -14,7 +14,7 @@
       <div class="box-label">{{ heroStatsFlavor.BOX_TITLE }}</div>
       <div class="stat-row" *ngFor="let s of heroStats">
         <span class="stat-key">{{ s.label }}</span>
-        <span class="stat-val">{{ s.value }}</span>
+        <span class="stat-val" [style.color]="s.color || null">{{ s.value }}</span>
       </div>
     </div>
 
