@@ -11,8 +11,8 @@ export const CURRENCY_FLAVOR = {
   gold:                  { name: 'Gold',                      symbol: '$',  color: '#ffcc00' },
   xp:                    { name: 'Experience',                symbol: '֍',  color: '#53d394' },
   herb:                  { name: 'Herb',                      symbol: '♣',  color: '#247a24' },
-  beast:                 { name: 'Raw Beast Meat',            symbol: 'Ꮻ',  color: '#e8739a' },
-  'cooked-meat':         { name: 'Cooked Meat',               symbol: 'Ꮻ',  color: '#683a0c' },
+  beast:                 { name: 'Beast Meat',                symbol: 'Ꮻ',  color: '#e8739a' },
+  //Might go unused? 'cooked-meat':         { name: 'Cooked Meat',               symbol: 'Ꮻ',  color: '#683a0c' },
   'pixie-dust':          { name: 'Pixie Dust',                symbol: '✦',  color: '#ffe066' },
   potion:                { name: 'Potion Base',               symbol: '⚗',  color: '#ceaedf' },
   'concentrated-potion': { name: 'Concentrated Potion Base',  symbol: '⚗',  color: '#ba70cf' },
@@ -20,7 +20,7 @@ export const CURRENCY_FLAVOR = {
   'kobold-tongue':       { name: 'Kobold Tongue',             symbol: 'γ',  color: '#c75050' },
   'kobold-hair':         { name: 'Kobold Hair',               symbol: 'Ҩ',  color: '#8a4b40' },
   spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
-  'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#776868' },
+  'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#683a0c' },
 } as const;
 
 // ── Upgrades ──────────────────────────────────────────────────

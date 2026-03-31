@@ -1,4 +1,4 @@
-#TODO List
+# TODO List
 ## Systems
 
 ### Lore Pages
@@ -9,14 +9,26 @@
 ### More characters
   - Thief
     - Lockpick minigame
+    - Primary currency: Intel (papers)
+    - Minigame Currency: Treasure (gemstones)
   - Artisan
     - Odd One Out Gems
+    - uses gems from the Thief
+    - can provide temporary bonuses to random gathering targets? 
   - Mage
     - Memory matching / Simon Says
+    - Reads pages from the intel
+    - Generates Mana
+    - Minigame creates Spell Scrolls
+    - Spell scrolls and hexes combine to make Dark Tomes
   - Warlock
     - Connect the dots spellcasting
+    - Generates Brimstone
+    - Minigame creates Hexes
+    - Enables the fighter to harvest bones from the monsters (that have them lol)
   - Chimeramancer
     - Animal parts combination mix and match synergy?
+      - kobold ear, kobold tongue, kobold hair, beast meat, bones, other things from the fighter 
   - Party Face
     - Card game Blackjack?
   - Merchant
