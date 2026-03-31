@@ -278,6 +278,11 @@ export class AppComponent implements OnInit, OnDestroy {
       ?? { symbol: '?', color: '#ccc' };
   }
 
+  /** Whether the player can afford a specific currency amount (used for partial-cost highlighting). */
+  canAffordCurrency(currency: string, amount: number): boolean {
+    return this.wallet.canAfford(currency, amount);
+  }
+
   /** Safe accessor for upgrade flavor by dynamic key. */
   getUpgradeFlavor(id: string): { name: string; desc: string } {
     return (UPGRADE_FLAVOR as Record<string, { name: string; desc: string }>)[id]

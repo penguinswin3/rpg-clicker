@@ -52,6 +52,11 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
     return (CURRENCY_FLAVOR as Record<string, { color: string }>)[currency]?.color ?? '#ccc';
   }
 
+  /** Whether the player can afford a specific currency amount (used for partial-cost highlighting). */
+  canAffordCurrency(currency: string, amount: number): boolean {
+    return this.wallet.canAfford(currency, amount);
+  }
+
   ngOnInit(): void {
     this.sub.add(
       combineLatest([this.charService.characters$, this.wallet.state$])
@@ -89,10 +94,10 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
   }
 
   /** Returns structured cost entries for template rendering with colored symbols. */
-  costsFor(char: Character): { amount: number; symbol: string; color: string }[] {
+  costsFor(char: Character): { currencyId: string; amount: number; symbol: string; color: string }[] {
     return char.unlockCosts.map(cost => {
       const c = this.wallet.currencies.find(cu => cu.id === cost.currencyId);
-      return { amount: cost.amount, symbol: c?.symbol ?? cost.currencyId, color: c?.color ?? '#fff' };
+      return { currencyId: cost.currencyId, amount: cost.amount, symbol: c?.symbol ?? cost.currencyId, color: c?.color ?? '#fff' };
     });
   }
 

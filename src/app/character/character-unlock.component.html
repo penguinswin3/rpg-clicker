@@ -14,7 +14,7 @@
       (click)="jackHire.emit()">
       [HIRE:
       <ng-container *ngFor="let c of jackCosts; let last = last">
-        {{ fmt(c.amount) }}<span [style.color]="getCurrencyColor(c.currency)">{{ getCurrencySymbol(c.currency) }}</span>
+        <span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ fmt(c.amount) }}<span [style.color]="getCurrencyColor(c.currency)">{{ getCurrencySymbol(c.currency) }}</span></span>
         <ng-container *ngIf="!last"> + </ng-container>
       </ng-container>
       ]
@@ -32,11 +32,11 @@
       [disabled]="!canAffordMinigame"
       (click)="minigameUnlock.emit()">
       [UNLOCK:
-      {{ fmt(minigameGoldCost) }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>
+      <span [class.cost-met]="canAffordCurrency('gold', minigameGoldCost)">{{ fmt(minigameGoldCost) }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span></span>
       +
-      {{ fmt(minigamePotionCost) }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
+      <span [class.cost-met]="canAffordCurrency('potion', minigamePotionCost)">{{ fmt(minigamePotionCost) }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span></span>
       +
-      {{ fmt(minigameBeastCost) }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>
+      <span [class.cost-met]="canAffordCurrency('beast', minigameBeastCost)">{{ fmt(minigameBeastCost) }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span></span>
       ]
     </button>
   </div>
@@ -55,7 +55,7 @@
       <ng-container *ngIf="costsFor(c).length > 0">
         [UNLOCK:
         <ng-container *ngFor="let cost of costsFor(c); let last = last">
-          {{ fmt(cost.amount) }}<span [style.color]="cost.color">{{ cost.symbol }}</span><ng-container *ngIf="!last"> + </ng-container>
+          <span [class.cost-met]="canAffordCurrency(cost.currencyId, cost.amount)">{{ fmt(cost.amount) }}<span [style.color]="cost.color">{{ cost.symbol }}</span></span><ng-container *ngIf="!last"> + </ng-container>
         </ng-container>
         ]
       </ng-container>

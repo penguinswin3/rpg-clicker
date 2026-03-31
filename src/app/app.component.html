@@ -90,7 +90,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                   [disabled]="upgrades.isMaxed(id) || !upgrades.canAfford(id)"
                   (click)="upgrades.buy(id)">
                   <ng-container *ngIf="upgrades.isMaxed(id); else costTpl">[MAXED]</ng-container>
-                  <ng-template #costTpl>[BUY: <ng-container *ngFor="let c of upgrades.allCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container>{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></ng-container>]</ng-template>
+                  <ng-template #costTpl>[BUY: <ng-container *ngFor="let c of upgrades.allCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container><span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></span></ng-container>]</ng-template>
                 </button>
                 <span class="upgrade-level">Lv.{{ upgrades.level(id) }}/{{ upgrades.maxLevel(id) }}</span>
               </div>
