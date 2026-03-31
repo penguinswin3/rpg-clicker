@@ -16,7 +16,7 @@
   - Warlock
     - Connect the dots spellcasting
   - Chimeramancer
-    - Animal parts combination mix and match synnergy?
+    - Animal parts combination mix and match synergy?
   - Party Face
     - Card game Blackjack?
   - Merchant
@@ -32,7 +32,7 @@
 
   ### Ranger 
 - Visions of pixies upgrade that gives a little sparkle effect where a pixie might me. A few tiers with varying accuracies, can scale to up to 3 sparkles
-- Burried Treasure upgrade on ranger minigame that gives a big bonus of gold
+- Buried Treasure upgrade on ranger minigame that gives a big bonus of gold
 - "Divide and Conquer" Jacks are more effective when hunting and gathering
 - Dense Woodlands upgrade that gives a base +1 resource yield on herbs and meat in the ranger minigame
 
