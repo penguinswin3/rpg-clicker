@@ -88,7 +88,7 @@ export const UPGRADE_FLAVOR = {
   // Culinarian
   WHOLESALE_SPICES: {
     name: 'Wholesale Spices',
-    desc: '+1 spice per click, discounted to 18g!',
+    desc: '+1 spice per click, purchased at a discount!',
   },
 } as const;
 

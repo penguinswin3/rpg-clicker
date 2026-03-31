@@ -13,16 +13,16 @@
       [disabled]="!canAffordJack"
       (click)="jackHire.emit()">
       [HIRE:
-      {{ jackGoldCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>
+      {{ fmt(jackGoldCost) }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>
       +
-      {{ jackBeastCost }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>
+      {{ fmt(jackBeastCost) }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>
       +
-      {{ jackPotionCost }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
+      {{ fmt(jackPotionCost) }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
       <ng-container *ngIf="jackKoboldEarCost > 0">
         +
-        {{ jackKoboldEarCost }}<span [style.color]="currencyFlavor['kobold-ear'].color">{{ currencyFlavor['kobold-ear'].symbol }}</span>
+        {{ fmt(jackKoboldEarCost) }}<span [style.color]="currencyFlavor['kobold-ear'].color">{{ currencyFlavor['kobold-ear'].symbol }}</span>
         +
-        {{ jackPixieDustCost }}<span [style.color]="currencyFlavor['pixie-dust'].color">{{ currencyFlavor['pixie-dust'].symbol }}</span>
+        {{ fmt(jackPixieDustCost) }}<span [style.color]="currencyFlavor['pixie-dust'].color">{{ currencyFlavor['pixie-dust'].symbol }}</span>
       </ng-container>
       ]
     </button>
@@ -39,11 +39,11 @@
       [disabled]="!canAffordMinigame"
       (click)="minigameUnlock.emit()">
       [UNLOCK:
-      {{ minigameGoldCost }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>
+      {{ fmt(minigameGoldCost) }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span>
       +
-      {{ minigamePotionCost }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
+      {{ fmt(minigamePotionCost) }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
       +
-      {{ minigameBeastCost }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>
+      {{ fmt(minigameBeastCost) }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>
       ]
     </button>
   </div>
@@ -62,7 +62,7 @@
       <ng-container *ngIf="costsFor(c).length > 0">
         [UNLOCK:
         <ng-container *ngFor="let cost of costsFor(c); let last = last">
-          {{ cost.amount }}<span [style.color]="cost.color">{{ cost.symbol }}</span><ng-container *ngIf="!last"> + </ng-container>
+          {{ fmt(cost.amount) }}<span [style.color]="cost.color">{{ cost.symbol }}</span><ng-container *ngIf="!last"> + </ng-container>
         </ng-container>
         ]
       </ng-container>

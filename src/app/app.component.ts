@@ -109,7 +109,7 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Gold cost per Culinarian hero-button click — rises by CULINARIAN_WHOLESALE_GOLD_PER_LEVEL per upgrade level. */
   get culinarianGoldCost(): number {
     return YIELDS.CULINARIAN_SPICE_COST
-      + this.upgrades.level('WHOLESALE_SPICES') *  YIELDS.CULINARIAN_WHOLESALE_DISCOUNTED_GOLD_PER_LEVEL;
+      + ((25-this.upgrades.level('WHOLESALE_SPICES') + 24)/2) * this.upgrades.level('WHOLESALE_SPICES');
   }
 
   // ── Jack computed getters ──────────────────────────────────────
@@ -609,6 +609,12 @@ export class AppComponent implements OnInit, OnDestroy {
   devMaxXp(): void {
     this.wallet.set('xp', 2_000_000_000);
     this.log.log('[DEV] XP set to 2,000,000,000.', 'warn');
+  }
+
+  devHalfMaxUpgrades(): void {
+    this.upgrades.setAllToHalfMax();
+    this.updateAllPerSecond();
+    this.log.log('[DEV] All upgrades set to half of their maximum level.', 'warn');
   }
 
   devClearSave(): void {

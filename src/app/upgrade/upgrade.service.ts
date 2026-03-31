@@ -148,6 +148,24 @@ export class UpgradeService {
   }
 
   /**
+   * Sets every upgrade to floor(max / 2) and rebuilds each cost to match
+   * the new level, so the next purchase shows the correctly-scaled price.
+   * Emits changed$ for each updated upgrade.
+   */
+  setAllToHalfMax(): void {
+    for (const def of this.defs.values()) {
+      const rt = this.runtime.get(def.id);
+      if (!rt) continue;
+      const targetLevel = Math.floor(def.max / 2);
+      rt.level = targetLevel;
+      for (const c of def.costs) {
+        rt.currentCosts[c.currency] = scaledCost(c.base, c.scale, targetLevel);
+      }
+      this.changed$.next(def.id);
+    }
+  }
+
+  /**
    * Restore upgrade levels and costs from a generic snapshot.
    * Costs are rebuilt against the def's currency list — if a saved currency
    * is no longer valid (e.g. cost structure changed), the def's base cost is

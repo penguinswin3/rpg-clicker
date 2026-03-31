@@ -7,17 +7,27 @@
 /**
  * Format a number into compact shorthand.
  * Always floors to an integer before formatting.
- *   999   → "999"
- *   1000  → "1.0k"
- *   11800 → "11.8k"
- *   1.2M  → "1.2M"
- *   1.5B  → "1.5B"
+ *   999         → "999"
+ *   1018        → "1.0k"
+ *   11822       → "11.8k"
+ *   1,200,312   → "1.2M"
+ *   1,501,651,954 → "1.5B"
+ *   7.43216541321e+88     → "7.4e+79B"  (values too large for the B tier use toExponential)
  */
 export function fmtNumber(num: number): string {
   const n = Math.floor(num);
-  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + 'B';
-  if (n >= 1_000_000)     return (n / 1_000_000).toFixed(1) + 'M';
-  if (n >= 1_000)         return (n / 1_000).toFixed(1) + 'k';
+  if (n >= 1_000_000_000) {
+    const v = n / 1_000_000_000;
+    return (v < 1000 ? v.toFixed(1) : v.toExponential(1)) + 'B';
+  }
+  if (n >= 1_000_000) {
+    const v = n / 1_000_000;
+    return (v < 1000 ? v.toFixed(1) : v.toExponential(1)) + 'M';
+  }
+  if (n >= 1_000) {
+    const v = n / 1_000;
+    return (v < 1000 ? v.toFixed(1) : v.toExponential(1)) + 'k';
+  }
   return n.toString();
 }
 

@@ -282,6 +282,16 @@
   }
 }
 
+.dev-halfmax-btn {
+  color: #c080ff;
+  border-color: #5a2080;
+
+  &:hover {
+    background: #c080ff;
+    color: #000;
+  }
+}
+
 .hero-btn {
   background: #000;
   color: #fff;

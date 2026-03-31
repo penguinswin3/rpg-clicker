@@ -5,6 +5,7 @@ import { CharacterService, Character } from './character.service';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { GLOBAL_UPGRADE_FLAVOR, CURRENCY_FLAVOR, JACK_FLAVOR } from '../flavor-text';
+import { fmtNumber } from '../utils/mathUtils';
 
 @Component({
   selector: 'app-character-unlock',
@@ -44,6 +45,8 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
   readonly globalUpgradeFlavor = GLOBAL_UPGRADE_FLAVOR;
   readonly jackFlavor          = JACK_FLAVOR;
   readonly currencyFlavor      = CURRENCY_FLAVOR;
+
+  fmt(n: number): string { return fmtNumber(n); }
 
   ngOnInit(): void {
     this.sub.add(

@@ -145,8 +145,8 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'gold', base: 30, scale: 1.5 }] },
 
   // ── Culinarian — standard ────────────────────────────────────
-  { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 999, // +1 spice/click, +24g cost/click per level
-    costs: [{ currency: 'gold', base: 200, scale: 1.6 }] },
+  { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 20, // +1 spice/click, +24g cost/click per level
+    costs: [{ currency: 'gold', base: 200, scale: 3.8 }] },
 ];
 
 // ── Resource Yields ───────────────────────────────────────────
@@ -166,8 +166,6 @@ export const YIELDS = {
 
   /** Gold spent per Culinarian hero-button press to produce 1 Spice */
   CULINARIAN_SPICE_COST: 25,
-  /** Additional gold cost per click per Wholesale Spices level (= CULINARIAN_SPICE_COST − 1) */
-  CULINARIAN_WHOLESALE_DISCOUNTED_GOLD_PER_LEVEL: 18,
 
 } as const;
 
