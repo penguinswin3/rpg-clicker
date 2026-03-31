@@ -55,8 +55,17 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           <button class="hero-btn" (click)="clickHero()">
             [ >>> {{ questBtnLabel }} <<< ]
           </button>
-          <div class="jack-error" *ngIf="activeCharJackStarved">
-            {{ activeCharJackStarvedMsg }}
+          <div class="hero-subzone">
+            <button class="wholesale-toggle-btn"
+                    [style.visibility]="activeCharacterId === 'culinarian' && upgrades.level('WHOLESALE_SPICES') >= 1 ? 'visible' : 'hidden'"
+                    [class.wt-on]="wholesaleSpicesEnabled"
+                    (click)="toggleWholesaleSpices()">
+              {{ wholesaleSpicesEnabled ? '[ Wholesale Spices: ON  ]' : '[ Wholesale Spices: OFF ]' }}
+            </button>
+            <div class="jack-error"
+                 [style.visibility]="activeCharJackStarved ? 'visible' : 'hidden'">
+              {{ activeCharJackStarvedMsg }}
+            </div>
           </div>
         </div>
 

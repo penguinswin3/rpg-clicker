@@ -20,7 +20,7 @@ export const CURRENCY_FLAVOR = {
   'kobold-tongue':       { name: 'Kobold Tongue',             symbol: 'γ',  color: '#c75050' },
   'kobold-hair':         { name: 'Kobold Hair',               symbol: 'Ҩ',  color: '#8a4b40' },
   spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
-  'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#09600d' },
+  'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#776868' },
 } as const;
 
 // ── Upgrades ──────────────────────────────────────────────────
@@ -296,10 +296,10 @@ export const MINIGAME_MSG = {
     HIT_INNER:      (q: number, max: number) => `Bubbling hit! +2 quality (${q}/${max})`,
     HIT_ZONE:       (q: number, max: number) => `On beat! +1 quality (${q}/${max})`,
     MISS_ZONE:      (q: number, max: number) => `Off beat! \u22121 quality (${q}/${max})`,
-    PERFECT:        '** PERFECT POTION COMPLETE **',
-    DILUTE_FULL:    '** 2x CONCENTRATED POTIONS **',
-    DILUTE_PARTIAL: '** 1x CONCENTRATED + 1x BASE **',
-    DILUTE_FAIL:    '** 2x POTION BASE (diluted!) **',
+    PERFECT:        'Potion concentrated',
+    DILUTE_FULL:    '2x CONCENTRATED POTIONS',
+    DILUTE_PARTIAL: '1x CONCENTRATED + 1x BASE',
+    DILUTE_FAIL:    'Potion ruined!',
   },
 
   RANGER: {

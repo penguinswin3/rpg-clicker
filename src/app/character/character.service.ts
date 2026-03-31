@@ -57,7 +57,7 @@ export class CharacterService {
     {
       id: 'culinarian',
       name: CHARACTER_FLAVOR.CULINARIAN.name,
-      color: '#75390c',
+      color: '#c0c0c0',
       description: CHARACTER_FLAVOR.CULINARIAN.desc,
       unlocked: false,
       unlockCosts: [

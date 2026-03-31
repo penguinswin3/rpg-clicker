@@ -316,13 +316,56 @@
   }
 }
 
-// Wraps the hero button + optional Jack-starvation error so they stack vertically
-// while staying centred in the .click-area flex row.
+// Wraps only the hero button — size is exactly the button, so click-area
+// centering is never disturbed by sub-elements appearing below.
 .hero-area {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+}
+
+// Floats below the hero button without affecting layout flow or centering.
+// Children use visibility (not *ngIf) so this div is always the same size.
+.hero-subzone {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding-top: 0.35rem;
+  white-space: nowrap;
+}
+
+.wholesale-toggle-btn {
+  background: #0a0a0a;
+  color: #555;
+  border: 1px solid #333;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+
+  &:hover {
+    border-color: #666;
+    color: #999;
+  }
+
+  &.wt-on {
+    color: #f07b28;
+    border-color: #7a3d14;
+    background: #120800;
+
+    &:hover {
+      background: #1e0d00;
+      border-color: #f07b28;
+    }
+  }
 }
 
 // Shown beneath the hero button when the active character's Jacks can't complete their action.

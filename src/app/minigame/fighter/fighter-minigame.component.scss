@@ -307,14 +307,6 @@ $font: 'Courier New', Courier, monospace;
   50%       { opacity: 0.55; }
 }
 
-// ── Potion count ──────────────────────────
-
-.potion-row {
-  color: #c37ef0;
-  font-size: 10px;
-  text-align: center;
-  &.depleted { color: #444; }
-}
 
 // ── Flee button ───────────────────────────
 

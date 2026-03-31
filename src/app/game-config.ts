@@ -189,7 +189,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Culinarian — minigame ────────────────────────────────────
   { id: 'WASTE_NOT', characterId: 'culinarian', category: 'minigame', max: 999,
     costs: [
-      { currency: 'spice',       base: 75, scale: 1.9 },
+      { currency: 'spice',       base: 200, scale: 1.7 },
       { currency: 'hearty-meal', base: 5,  scale: 1.2 },
     ] },
 
@@ -334,7 +334,7 @@ export const CULINARIAN_MG = {
   /** Base number of guesses allowed per round. */
   MAX_GUESSES: 4,
   /** Amount of each ingredient consumed to begin a new round. */
-  INGREDIENT_COST: 16,
+  INGREDIENT_COST: 4,
   /** Hearty Meals awarded on a correct guess. */
   MEAL_REWARD: 1,
 } as const;

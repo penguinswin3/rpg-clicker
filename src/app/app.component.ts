@@ -81,6 +81,14 @@ export class AppComponent implements OnInit, OnDestroy {
   hideMinigameUpgrades = false;
   blandMode            = false;
 
+  // ── Culinarian toggles ─────────────────────────────────────────
+  wholesaleSpicesEnabled = true;
+
+  toggleWholesaleSpices(): void {
+    this.wholesaleSpicesEnabled = !this.wholesaleSpicesEnabled;
+    this.updateAllPerSecond();
+  }
+
   // ── Jack of All Trades ─────────────────────────────────────────
   jacksOwned      = 0;
   jacksAllocations: Record<string, number> = {};
@@ -110,12 +118,15 @@ export class AppComponent implements OnInit, OnDestroy {
   }
   /** Herb save chance in % — equals Potion Titration level. */
   get herbSaveChance(): number { return this.upgrades.level('POTION_TITRATION'); }
-  /** Spice gained per Culinarian hero-button click (base 1 + Wholesale Spices level). */
-  get spicePerClick(): number { return 1 + this.upgrades.level('WHOLESALE_SPICES'); }
+  /** Spice gained per Culinarian hero-button click (base 1 + Wholesale Spices level, if enabled). */
+  get spicePerClick(): number {
+    return this.wholesaleSpicesEnabled ? 1 + this.upgrades.level('WHOLESALE_SPICES') : 1;
+  }
   /** Gold cost per Culinarian hero-button click — rises by CULINARIAN_WHOLESALE_GOLD_PER_LEVEL per upgrade level. */
   get culinarianGoldCost(): number {
+    const wsLevel  = this.wholesaleSpicesEnabled ? this.upgrades.level('WHOLESALE_SPICES') : 0;
     const baseCost = YIELDS.CULINARIAN_SPICE_COST
-      + ((25-this.upgrades.level('WHOLESALE_SPICES') + 24)/2) * this.upgrades.level('WHOLESALE_SPICES');
+      + ((25 - wsLevel + 24) / 2) * wsLevel;
     const discount = 1 - this.upgrades.level('POTION_GLIBNESS') / 100;
     return Math.max(1, Math.floor(baseCost * discount));
   }
@@ -385,8 +396,9 @@ export class AppComponent implements OnInit, OnDestroy {
   private updateAllPerSecond(): void {
     const fighterJacks    = this.jacksAllocations['fighter']    ?? 0;
     const rangerJacks     = this.jacksAllocations['ranger']     ?? 0;
-    const apothecaryJacks = this.jacksAllocations['apothecary'] ?? 0;
-    const culinarianJacks = this.jacksAllocations['culinarian'] ?? 0;
+    // Starved jacks produce nothing — exclude them from all display rates.
+    const apothecaryJacks = this.jackStarved['apothecary'] ? 0 : (this.jacksAllocations['apothecary'] ?? 0);
+    const culinarianJacks = this.jackStarved['culinarian'] ? 0 : (this.jacksAllocations['culinarian'] ?? 0);
 
     // Culinarian Jacks cost gold each tick; subtract from total gold income.
     // Apothecary Jacks generate gold per brew via Potion Marketing.
@@ -574,10 +586,16 @@ export class AppComponent implements OnInit, OnDestroy {
     } else if (charId === 'apothecary') {
       const herbCost = YIELDS.APOTHECARY_BREW_HERB_COST;
       if (!this.wallet.canAfford('herb', herbCost)) {
-        if (!this.jackStarved[charId]) this.jackStarved = { ...this.jackStarved, [charId]: true };
+        if (!this.jackStarved[charId]) {
+          this.jackStarved = { ...this.jackStarved, [charId]: true };
+          this.updateAllPerSecond();
+        }
         return;
       }
-      if (this.jackStarved[charId]) this.jackStarved = { ...this.jackStarved, [charId]: false };
+      if (this.jackStarved[charId]) {
+        this.jackStarved = { ...this.jackStarved, [charId]: false };
+        this.updateAllPerSecond();
+      }
       this.wallet.remove('herb', herbCost);
       this.wallet.add('potion', 1);
       this.wallet.add('xp', 1);
@@ -587,10 +605,16 @@ export class AppComponent implements OnInit, OnDestroy {
     } else if (charId === 'culinarian') {
       const goldCost = this.culinarianGoldCost;
       if (!this.wallet.canAfford('gold', goldCost)) {
-        if (!this.jackStarved[charId]) this.jackStarved = { ...this.jackStarved, [charId]: true };
+        if (!this.jackStarved[charId]) {
+          this.jackStarved = { ...this.jackStarved, [charId]: true };
+          this.updateAllPerSecond();
+        }
         return;
       }
-      if (this.jackStarved[charId]) this.jackStarved = { ...this.jackStarved, [charId]: false };
+      if (this.jackStarved[charId]) {
+        this.jackStarved = { ...this.jackStarved, [charId]: false };
+        this.updateAllPerSecond();
+      }
       this.wallet.remove('gold', goldCost);
       this.wallet.add('spice', this.spicePerClick);
       this.wallet.add('xp', 1);

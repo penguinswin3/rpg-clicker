@@ -71,6 +71,11 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   pixieFound = 0;
   xpGained   = 0;
 
+  // Result display
+  resultParts: Array<{ amount: number; symbol: string; color: string }> = [];
+  resultMultiplier = 1;
+  resultXp = 0;
+
   lastMsg  = '';
   msgClass = 'msg-neutral';
 
@@ -232,6 +237,16 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     if (totalHerb  > 0) this.wallet.add('herb',        totalHerb);
     if (totalPixie > 0) this.wallet.add('pixie-dust',  totalPixie);
 
+    // Build result parts for display with colors
+    this.resultParts = [];
+    if (totalMeat  > 0) this.resultParts.push({ amount: totalMeat,  symbol: CURRENCY_FLAVOR['beast'].symbol,       color: CURRENCY_FLAVOR['beast'].color });
+    if (totalHerb  > 0) this.resultParts.push({ amount: totalHerb,  symbol: CURRENCY_FLAVOR['herb'].symbol,        color: CURRENCY_FLAVOR['herb'].color });
+    if (totalPixie > 0) this.resultParts.push({ amount: totalPixie, symbol: CURRENCY_FLAVOR['pixie-dust'].symbol,  color: CURRENCY_FLAVOR['pixie-dust'].color });
+
+    this.resultMultiplier = multiplier;
+    this.resultXp = this.xpGained;
+
+    // Build log message with text for activity log
     const parts: string[] = [];
     if (totalMeat  > 0) parts.push(`${totalMeat}× meat`);
     if (totalHerb  > 0) parts.push(`${totalHerb}× herb`);
@@ -246,7 +261,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
       this.log.log(`Ranger scouted the area: found ${summary}.${xpStr}${multiplierStr}`, type);
     }
 
-    this.lastMsg  = `Found: ${summary}${multiplierStr}${xpStr}`;
+    this.lastMsg  = 'Found:';
     this.msgClass = this.pixieFound > 0 ? 'msg-rare' : 'msg-good';
   }
 }

@@ -142,16 +142,6 @@ $pixie:  #ffe066;
   .prize-blank & { color: #222; }
 }
 
-// ── Legend ────────────────────────────────
-
-.legend {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 4px 6px;
-  border: 1px solid #1a1a1a;
-  background: #040404;
-}
 
 .leg        { font-size: 9px; }
 .meat-leg   { color: $meat;  }
