@@ -135,11 +135,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         (minigameUnlock)="buyMinigameUnlock()"
         [jackHireAvailable]="jacksToPurchase > 0"
         [canAffordJack]="canAffordJack"
-        [jackGoldCost]="jackCurrentGoldCost"
-        [jackBeastCost]="jackCurrentBeastCost"
-        [jackPotionCost]="jackCurrentPotionCost"
-        [jackKoboldEarCost]="jackCurrentKoboldEarCost"
-        [jackPixieDustCost]="jackCurrentPixieDustCost"
+        [jackCosts]="jackCurrentCosts"
         (jackHire)="buyJack()"></app-character-unlock>
 
       <!-- spacer so content isn't hidden behind the fixed log panel -->

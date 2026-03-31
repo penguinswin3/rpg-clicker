@@ -31,11 +31,7 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
   // ── Jack of All Trades hire inputs ────────
   @Input() jackHireAvailable = false;
   @Input() canAffordJack     = false;
-  @Input() jackGoldCost      = 0;
-  @Input() jackBeastCost     = 0;
-  @Input() jackPotionCost    = 0;
-  @Input() jackKoboldEarCost = 0;
-  @Input() jackPixieDustCost = 0;
+  @Input() jackCosts: Array<{ currency: string; amount: number }> = [];
   @Output() jackHire         = new EventEmitter<void>();
 
   /** Locked characters whose XP requirement has been reached. */
@@ -47,6 +43,14 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
   readonly currencyFlavor      = CURRENCY_FLAVOR;
 
   fmt(n: number): string { return fmtNumber(n); }
+
+  getCurrencySymbol(currency: string): string {
+    return (CURRENCY_FLAVOR as Record<string, { symbol: string }>)[currency]?.symbol ?? '?';
+  }
+
+  getCurrencyColor(currency: string): string {
+    return (CURRENCY_FLAVOR as Record<string, { color: string }>)[currency]?.color ?? '#ccc';
+  }
 
   ngOnInit(): void {
     this.sub.add(

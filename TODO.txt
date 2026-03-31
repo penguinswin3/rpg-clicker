@@ -31,7 +31,7 @@
 
 - Kobold ear currency should be up top, near the other fighter resources
 
-
+- Burried Treasure upgrade on ranger minigame that gives a big bonus of gold
 
 - 200% herb save isnt saving 2 herbs
 
@@ -40,3 +40,24 @@
 - Lore Pages that give context about the character or the world they live in. Can be unlocked by doing certain things in minigames...
 
 - Statistics tracking
+
+
+
+-- 5/31 Playthrough Feedback --
+change the order of the minigame currency unlocks so it goes gold-meat-pots rather than gold-pots-meat
+the experience bar maxes out at like 2.5k or something, the next few unlocks should be there too
+XP requirements can scale harder after Jacks upgrades
+  Culinarian needs to be WELL after 5k, as I havent even unlocked minigames yet
+unify hero button / character button terminology?
+Add some more one off big upgrades shortly after minigame unlocks?
+rename "perfect potion complete" message after apoth minigame to say potion concentration complete
+change the post ranger minigame message to use the appropriate resource symbols
+the three resource static reminder text is not required under the ranger minigame
+"Divide and Conquer" Jacks are more effective when hunting and gathering
+potion count display shoul go away when long resting. It could probably just be displayed on the heal button?
+kobold killed by message is too long and isnt wrapping it looks bad
+Culinarian can cost a little less but add Kobold Tongues to the cost
+Add "Wholesale Spice" Toggle under the character button, strikethrough the bulk price in the character stats when active
+"Clean Kills" upgrade that makes uncommon drops from the fighter minigame more likely to be dropped
+partial cost highlighting?
+Dense Woodlands upgrade that gives a base +1 resource yield on herbs and meat in the ranger minigame

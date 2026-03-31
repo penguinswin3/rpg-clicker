@@ -57,31 +57,37 @@ export const XP_THRESHOLDS = {
   /** XP required to unlock all character minigame screens */
   MINIGAME_UNLOCK:   2500,
   /** XP required before the Culinarian unlock offer appears */
-  CULINARIAN_UNLOCK: 5000,
+  CULINARIAN_UNLOCK: 10000,
 } as const;
 
 // ── Jack of All Trades ────────────────────────────────────────
-/** XP thresholds at which one additional Jack can be hired (in order). */
-export const JACK_XP_THRESHOLDS: readonly number[] = [
-  1500, 3000, 5000, 7500, 10_000,
-  15_000, 20_000, 30_000, 50_000,
-];
+/**
+ * Jack hire pricing.
+ * Every Jack costs scaled gold. Starting from the 2nd Jack, the hire
+ * also requires an unscaled flat amount of ONE additional resource —
+ * the next entry in JACK_RESOURCE_PROGRESSION (not all previous ones).
+ */
 
-/** One-time cost to hire a single Jack. Costs scale per Jack purchased. */
-export const JACK_COSTS = {
-  // Base costs (for the first Jack)
-  GOLD:    2200,
-  BEAST:   200,
-  POTIONS: 50,
-  /** Multiplier applied to every cost for each Jack already owned. */
-  SCALE: 1.5,
-  /** After this many Jacks are owned, Kobold Ears and Pixie Dust are also required. */
-  RARE_THRESHOLD: 4,
-  /** Base Kobold Ears cost when rare costs kick in. */
-  KOBOLD_EARS_BASE: 50,
-  /** Base Pixie Dust cost when rare costs kick in. */
-  PIXIE_DUST_BASE: 10,
-} as const;
+/** Gold cost that scales with each Jack owned. */
+export const JACK_GOLD_COST = { base: 1500, scale: 1.3 } as const;
+
+/**
+ * Ordered list of secondary resources introduced with each successive Jack.
+ * Jack 1 = gold only. Jack 2 = gold + first entry. Jack 3 = gold + second entry, etc.
+ * Re-order, adjust, or extend this array to change when each resource appears.
+ */
+export const JACK_RESOURCE_PROGRESSION: readonly { currency: string; base: number }[] = [
+  { currency: 'herb',                 base: 200  },
+  { currency: 'beast',                base: 200  },
+  { currency: 'potion',               base: 50   },
+  { currency: 'pixie-dust',           base: 25   },
+  { currency: 'kobold-ear',           base: 50   },
+  { currency: 'concentrated-potion',  base: 20   },
+  { currency: 'kobold-tongue',        base: 15   },
+  { currency: 'spice',                base: 200  },
+  { currency: 'hearty-meal',          base: 5    },
+  { currency: 'kobold-hair',          base: 10   },
+];
 
 // ── Character Unlock Costs ────────────────────────────────────
 export const UNLOCK_COSTS = {
@@ -109,15 +115,15 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'BETTER_BOUNTIES',      characterId: 'fighter', category: 'standard', max: 999,
     costs: [{ currency: 'gold', base: 10, scale: 1.5 }] },
   { id: 'CONTRACTED_HIRELINGS', characterId: 'fighter', category: 'standard', max: 999,
-    costs: [{ currency: 'gold', base: 25, scale: 1.5 }] },
+    costs: [{ currency: 'gold', base: 25, scale: 1.15 }] },
   { id: 'INSIGHTFUL_CONTRACTS', characterId: 'fighter', category: 'standard', max: 999,
     gates: { xpMin: 500 },
-    costs: [{ currency: 'gold', base: 400, scale: 2.5 }] },
+    costs: [{ currency: 'gold', base: 400, scale: 2.0 }] },
   { id: 'HIRELINGS_HIRELINGS', characterId: 'fighter', category: 'standard', max: 999,
     gates: { requiresCulinarian: true },
     costs: [
       { currency: 'gold',  base: 1000, scale: 2.0 },
-      { currency: 'spice', base: 5000,    scale: 1.5 },
+      { currency: 'spice', base: 1000,    scale: 1.5 },
     ] },
 
   // ── Fighter — minigame ───────────────────────────────────────
@@ -134,7 +140,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [
       { currency: 'gold',        base: 10_000, scale: 1.0 },
       { currency: 'kobold-ear',  base: 200,    scale: 1.0 },
-      { currency: 'hearty-meal', base: 30,     scale: 1.0 },
+      { currency: 'hearty-meal', base: 10,     scale: 1.0 },
     ] },
   { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: KOBOLD_VARIANTS.length - 1,
     gates: { xpMin: 3000 },
@@ -147,16 +153,16 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
 
   // ── Ranger — standard ────────────────────────────────────────
   { id: 'MORE_HERBS',      characterId: 'ranger', category: 'standard', max: 999,
-    costs: [{ currency: 'gold', base: 15, scale: 1.5 }] },
+    costs: [{ currency: 'gold', base: 15, scale: 1.2 }] },
   { id: 'BETTER_TRACKING', characterId: 'ranger', category: 'standard', max: 999,
-    costs: [{ currency: 'gold', base: 20, scale: 1.5 }] },
+    costs: [{ currency: 'gold', base: 20, scale: 1.2 }] },
   { id: 'BIGGER_GAME',     characterId: 'ranger', category: 'standard', max: 999,    // each level +1 max Raw Beast Meat from hero button
-    costs: [{ currency: 'gold', base: 480, scale: 2.4 }] },
+    costs: [{ currency: 'gold', base: 480, scale: 2.0 }] },
   { id: 'POTION_CATS_EYE', characterId: 'ranger', category: 'standard', max: 100,    // 100 levels × +1% = 100% chance to roll both herb and beast
     gates: { requiresApothecary: true },
     costs: [
-      { currency: 'concentrated-potion', base: 5,  scale: 1.5 },
-      { currency: 'pixie-dust',          base: 15, scale: 1.5 },
+      { currency: 'concentrated-potion', base: 5,  scale: 1.3 },
+      { currency: 'pixie-dust',          base: 15, scale: 1.3 },
     ] },
 
   // ── Ranger — minigame ────────────────────────────────────────
@@ -169,11 +175,11 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'POTION_TITRATION', characterId: 'apothecary', category: 'standard', max: 400,  // 400 × +1% save-chance
     costs: [{ currency: 'gold', base: 20, scale: 1.5 }] },
   { id: 'POTION_MARKETING', characterId: 'apothecary', category: 'standard', max: 999,
-    costs: [{ currency: 'gold', base: 30, scale: 1.5 }] },
+    costs: [{ currency: 'gold', base: 30, scale: 1.3 }] },
 
   // ── Culinarian — standard ────────────────────────────────────
   { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 20, // +1 spice/click, +24g cost/click per level
-    costs: [{ currency: 'gold', base: 200, scale: 3.8 }] },
+    costs: [{ currency: 'gold', base: 200, scale: 1.9 }] },
   { id: 'POTION_GLIBNESS',  characterId: 'culinarian', category: 'standard', max: 85,   // 85 × -1% spice purchase cost
     costs: [
       { currency: 'concentrated-potion', base: 3,  scale: 1.8 },
@@ -184,14 +190,14 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'WASTE_NOT', characterId: 'culinarian', category: 'minigame', max: 999,
     costs: [
       { currency: 'spice',       base: 75, scale: 1.9 },
-      { currency: 'hearty-meal', base: 5,  scale: 1.7 },
+      { currency: 'hearty-meal', base: 5,  scale: 1.2 },
     ] },
 
   // ── Apothecary — minigame ────────────────────────────────────
   { id: 'BUBBLING_BREW', characterId: 'apothecary', category: 'minigame', max: 1,
     costs: [
       { currency: 'gold',       base: 9000, scale: 1.0 },
-      { currency: 'kobold-ear', base: 150,  scale: 1.0 },
+      { currency: 'kobold-ear', base: 100,  scale: 1.0 },
     ] },
   { id: 'BIGGER_BUBBLES', characterId: 'apothecary', category: 'minigame', max: 5,
     gates: { requiresBubblingBrew: true },
@@ -201,9 +207,9 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
   { id: 'POTION_DILUTION', characterId: 'apothecary', category: 'minigame', max: 1,
     costs: [
-      { currency: 'gold',                base: 15_000, scale: 1.0 },
+      { currency: 'gold',                base: 10_000, scale: 1.0 },
       { currency: 'potion',              base: 1_000,  scale: 1.0 },
-      { currency: 'concentrated-potion', base: 500,    scale: 1.0 },
+      { currency: 'concentrated-potion', base: 100,    scale: 1.0 },
     ] },
   { id: 'SERIAL_DILUTION', characterId: 'apothecary', category: 'minigame', max: 50,
     gates: { requiresPotionDilution: true },

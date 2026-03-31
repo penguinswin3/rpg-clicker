@@ -12,7 +12,7 @@ import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './save/options-menu.component';
 import { SaveService, UpgradeState, FighterCombatState } from './save/save.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, UNLOCK_COSTS, JACK_XP_THRESHOLDS, JACK_COSTS } from './game-config';
+import { XP_THRESHOLDS, YIELDS, UNLOCK_COSTS, JACK_GOLD_COST, JACK_RESOURCE_PROGRESSION } from './game-config';
 import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR } from './flavor-text';
 import { fmtNumber, clamp, scaledCost, randInt, rollChance, roundTo } from './utils/mathUtils';
 
@@ -121,14 +121,29 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   // ── Jack computed getters ──────────────────────────────────────
-  get jacksUnlockedCount(): number { return JACK_XP_THRESHOLDS.filter(t => this.xp >= t).length; }
-  get jacksToPurchase():    number { return Math.max(0, this.jacksUnlockedCount - this.jacksOwned); }
+  get jacksVisible():       boolean { return this.xp >= XP_THRESHOLDS.JACKS_UNLOCK || this.jacksOwned > 0; }
+  get jacksToPurchase():    number { return this.jacksVisible ? 1 : 0; }
   get jacksPoolFree():      number {
     const allocated = Object.values(this.jacksAllocations).reduce((a, b) => a + b, 0);
     return this.jacksOwned - allocated;
   }
-  get jacksVisible():       boolean { return this.xp >= JACK_XP_THRESHOLDS[0] || this.jacksOwned > 0; }
-  get nextJackThreshold():  number | null { return JACK_XP_THRESHOLDS.find(t => t > this.xp) ?? null; }
+
+  /** Active costs for the next jack hire — scaled gold + one unscaled secondary resource. */
+  get jackCurrentCosts(): Array<{ currency: string; amount: number }> {
+    const costs: Array<{ currency: string; amount: number }> = [
+      { currency: 'gold', amount: scaledCost(JACK_GOLD_COST.base, JACK_GOLD_COST.scale, this.jacksOwned) },
+    ];
+    const resourceIdx = this.jacksOwned - 1;   // Jack 1 = gold only, Jack 2 = index 0, etc.
+    if (resourceIdx >= 0 && resourceIdx < JACK_RESOURCE_PROGRESSION.length) {
+      const res = JACK_RESOURCE_PROGRESSION[resourceIdx];
+      costs.push({ currency: res.currency, amount: res.base });
+    }
+    return costs;
+  }
+
+  get canAffordJack(): boolean {
+    return this.jackCurrentCosts.every(c => this.wallet.canAfford(c.currency, c.amount));
+  }
 
   get activeCharacterInfo(): { id: string; name: string; color: string } | undefined {
     return this.unlockedCharacters.find(c => c.id === this.activeCharacterId);
@@ -150,27 +165,6 @@ export class AppComponent implements OnInit, OnDestroy {
     return '⚠ Jack idle — insufficient resources';
   }
 
-  get canAffordJack(): boolean {
-    if (!this.wallet.canAfford('gold',   this.jackCurrentGoldCost))   return false;
-    if (!this.wallet.canAfford('beast',  this.jackCurrentBeastCost))  return false;
-    if (!this.wallet.canAfford('potion', this.jackCurrentPotionCost)) return false;
-    if (this.jacksOwned >= JACK_COSTS.RARE_THRESHOLD) {
-      if (!this.wallet.canAfford('kobold-ear', this.jackCurrentKoboldEarCost)) return false;
-      if (!this.wallet.canAfford('pixie-dust', this.jackCurrentPixieDustCost)) return false;
-    }
-    return true;
-  }
-  get jackCurrentGoldCost():     number { return scaledCost(JACK_COSTS.GOLD,    JACK_COSTS.SCALE, this.jacksOwned); }
-  get jackCurrentBeastCost():    number { return scaledCost(JACK_COSTS.BEAST,   JACK_COSTS.SCALE, this.jacksOwned); }
-  get jackCurrentPotionCost():   number { return scaledCost(JACK_COSTS.POTIONS, JACK_COSTS.SCALE, this.jacksOwned); }
-  get jackCurrentKoboldEarCost(): number {
-    if (this.jacksOwned < JACK_COSTS.RARE_THRESHOLD) return 0;
-    return scaledCost(JACK_COSTS.KOBOLD_EARS_BASE, JACK_COSTS.SCALE, this.jacksOwned - JACK_COSTS.RARE_THRESHOLD);
-  }
-  get jackCurrentPixieDustCost(): number {
-    if (this.jacksOwned < JACK_COSTS.RARE_THRESHOLD) return 0;
-    return scaledCost(JACK_COSTS.PIXIE_DUST_BASE, JACK_COSTS.SCALE, this.jacksOwned - JACK_COSTS.RARE_THRESHOLD);
-  }
 
   getJackCount(charId: string): number { return this.jacksAllocations[charId] ?? 0; }
 
@@ -274,7 +268,6 @@ export class AppComponent implements OnInit, OnDestroy {
   upgradeDescSuffix(id: string): string {
     switch (id) {
       case 'BETTER_TRACKING':  return ` (now ${this.beastFindChance}%)`;
-      case 'BIGGER_GAME':      return ` (now 1-${this.upgrades.level('BIGGER_GAME') + 1})`;
       default:                 return '';
     }
   }
@@ -437,7 +430,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private clickFighter(): void {
     this.wallet.add('gold', this.goldPerClick);
     this.wallet.add('xp',   this.xpPerBounty);
-    this.log.log(`You ventured forth and found ${this.goldPerClick} gold.`);
+    this.log.log(`You ventured forth and found ${this.goldPerClick} gold. (+${this.xpPerBounty} XP)`);
   }
 
   private clickRanger(): void {
@@ -530,12 +523,8 @@ export class AppComponent implements OnInit, OnDestroy {
       this.log.log('Not enough resources to hire a Jack.', 'warn');
       return;
     }
-    this.wallet.remove('gold',   this.jackCurrentGoldCost);
-    this.wallet.remove('beast',  this.jackCurrentBeastCost);
-    this.wallet.remove('potion', this.jackCurrentPotionCost);
-    if (this.jacksOwned >= JACK_COSTS.RARE_THRESHOLD) {
-      this.wallet.remove('kobold-ear', this.jackCurrentKoboldEarCost);
-      this.wallet.remove('pixie-dust', this.jackCurrentPixieDustCost);
+    for (const c of this.jackCurrentCosts) {
+      this.wallet.remove(c.currency, c.amount);
     }
     this.jacksOwned++;
     this.log.log(`A Jack of All Trades has been hired! (Total: ${this.jacksOwned})`, 'success');
