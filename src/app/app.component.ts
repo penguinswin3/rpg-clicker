@@ -98,8 +98,8 @@ export class AppComponent implements OnInit, OnDestroy {
     const multiplier = Math.max(1, this.upgrades.level('HIRELINGS_HIRELINGS'));
     return base * multiplier;
   }
-  /** Passive gold/sec from Potion Marketing. */
-  get potionAutoGoldPerSecond(): number { return this.upgrades.level('POTION_MARKETING'); }
+  /** Gold earned per potion base brew from Potion Marketing (one per upgrade level). */
+  get potionMarketingGoldPerBrew(): number { return this.upgrades.level('POTION_MARKETING'); }
   /** XP awarded per fighter bounty click. */
   get xpPerBounty(): number { return 1 + this.upgrades.level('INSIGHTFUL_CONTRACTS'); }
   /** Fighter minigame attack power. */
@@ -197,12 +197,9 @@ export class AppComponent implements OnInit, OnDestroy {
   get heroStats(): HeroStat[] {
     if (this.activeCharacterId === 'ranger') {
       return [
-        { label: HERO_STATS_FLAVOR.RANGER.HERB_CHANCE,  value: '50%'                      },
         { label: HERO_STATS_FLAVOR.RANGER.BEAST_CHANCE, value: `${this.beastFindChance}%` },
         { label: HERO_STATS_FLAVOR.RANGER.HERB_DOUBLE,  value: this.herbDoublingDisplay   },
-        ...(this.upgrades.level('POTION_CATS_EYE') > 0
-          ? [{ label: HERO_STATS_FLAVOR.RANGER.CATS_EYE, value: `${this.upgrades.level('POTION_CATS_EYE')}%` }]
-          : []),
+        { label: HERO_STATS_FLAVOR.RANGER.CATS_EYE,     value: `${this.upgrades.level('POTION_CATS_EYE')}%` },
         ...(this.upgrades.level('BIGGER_GAME') > 0
           ? [{ label: HERO_STATS_FLAVOR.RANGER.MAX_MEAT, value: `${this.upgrades.level('BIGGER_GAME') + 1}` }]
           : []),
@@ -210,9 +207,9 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     if (this.activeCharacterId === 'apothecary') {
       return [
-        { label: HERO_STATS_FLAVOR.APOTHECARY.HERBS_BREW,  value: `${YIELDS.APOTHECARY_BREW_HERB_COST}` },
-        { label: HERO_STATS_FLAVOR.APOTHECARY.SAVE_CHANCE, value: `${this.herbSaveChance}%`              },
-        { label: HERO_STATS_FLAVOR.APOTHECARY.SELL_RATE,   value: `${this.potionAutoGoldPerSecond}`   },
+        { label: HERO_STATS_FLAVOR.APOTHECARY.HERBS_BREW,   value: `${YIELDS.APOTHECARY_BREW_HERB_COST}`         },
+        { label: HERO_STATS_FLAVOR.APOTHECARY.SAVE_CHANCE,  value: `${this.herbSaveChance}%`                     },
+        { label: HERO_STATS_FLAVOR.APOTHECARY.GOLD_PER_BREW,value: `${this.potionMarketingGoldPerBrew}`          },
       ];
     }
     if (this.activeCharacterId === 'culinarian') {
@@ -305,10 +302,9 @@ export class AppComponent implements OnInit, OnDestroy {
     // Reactively update per-second display rates whenever any upgrade changes
     this.upgrades.changed$.subscribe(() => this.updateAllPerSecond());
 
-    // Passive gold income (Contracted Hirelings + Potion Marketing)
+    // Passive gold income (Contracted Hirelings only — Potion Marketing is per-brew, not per-second)
     setInterval(() => {
-      const total = this.autoGoldPerSecond + this.potionAutoGoldPerSecond;
-      if (total > 0) this.wallet.add('gold', total);
+      if (this.autoGoldPerSecond > 0) this.wallet.add('gold', this.autoGoldPerSecond);
     }, 1000);
 
     // Jack auto-clicks: each allocated Jack fires once per second
@@ -376,8 +372,10 @@ export class AppComponent implements OnInit, OnDestroy {
     const culinarianJacks = this.jacksAllocations['culinarian'] ?? 0;
 
     // Culinarian Jacks cost gold each tick; subtract from total gold income.
+    // Apothecary Jacks generate gold per brew via Potion Marketing.
     this.wallet.setPerSecond('gold',
-      roundTo(this.autoGoldPerSecond + this.potionAutoGoldPerSecond
+      roundTo(this.autoGoldPerSecond
+        + apothecaryJacks * this.potionMarketingGoldPerBrew
         + fighterJacks * this.goldPerClick
         - culinarianJacks * this.culinarianGoldCost, 2));
 
@@ -468,6 +466,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.wallet.remove('herb', herbCost);
     this.wallet.add('potion', 1);
     this.wallet.add('xp', 1);
+    if (this.potionMarketingGoldPerBrew > 0) this.wallet.add('gold', this.potionMarketingGoldPerBrew);
     if (this.herbSaveChance > 0 && rollChance(this.herbSaveChance)) {
       this.wallet.add('herb', 1);
       this.log.log(`You brewed a potion and recovered a herb! (+1 XP)`, 'success');
@@ -569,6 +568,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.remove('herb', herbCost);
       this.wallet.add('potion', 1);
       this.wallet.add('xp', 1);
+      if (this.potionMarketingGoldPerBrew > 0) this.wallet.add('gold', this.potionMarketingGoldPerBrew);
       if (this.herbSaveChance > 0 && rollChance(this.herbSaveChance)) this.wallet.add('herb', 1);
 
     } else if (charId === 'culinarian') {

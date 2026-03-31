@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
@@ -22,14 +22,19 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   private animFrame?: number;
   private lastTime?: number;
 
+  /** Set to true when the Bubbling Brew upgrade has been purchased. */
+  @Input() bubblingBrewUnlocked = false;
+
   // ── Wallet-synced ─────────────────────────
-  herbs = 0;
+  herbs   = 0;
+  potions = 0;
 
   // ── Potion state ──────────────────────────
   potionActive      = false;
   quality           = 0;
-  readonly maxQuality   = APOTH_MG.MAX_QUALITY;
-  readonly herbCost     = APOTH_MG.HERB_COST;
+  readonly maxQuality     = APOTH_MG.MAX_QUALITY;
+  readonly herbCost       = APOTH_MG.HERB_COST;
+  readonly potionCost     = APOTH_MG.POTION_COST;
   readonly currencyFlavor = CURRENCY_FLAVOR;
 
   // ── Beat bar ──────────────────────────────
@@ -37,11 +42,11 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   barPos = 0;
   /** Movement direction: 1 = right, -1 = left */
   barDir = 1;
-  /** Units per millisecond — full one-way sweep ≈ 2 s */
-  readonly barSpeed = APOTH_MG.BAR_SPEED;
-  /** Target zone boundaries (0 – 100) */
-  readonly zoneMin  = APOTH_MG.ZONE_MIN;
-  readonly zoneMax  = APOTH_MG.ZONE_MAX;
+  readonly barSpeed     = APOTH_MG.BAR_SPEED;
+  readonly zoneMin      = APOTH_MG.ZONE_MIN;
+  readonly zoneMax      = APOTH_MG.ZONE_MAX;
+  readonly innerZoneMin = APOTH_MG.INNER_ZONE_MIN;
+  readonly innerZoneMax = APOTH_MG.INNER_ZONE_MAX;
 
   // ── Messages ──────────────────────────────
   lastMsg  = '';
@@ -61,8 +66,13 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     return this.barPos >= this.zoneMin && this.barPos <= this.zoneMax;
   }
 
+  get isInInnerZone(): boolean {
+    return this.bubblingBrewUnlocked &&
+      this.barPos >= this.innerZoneMin && this.barPos <= this.innerZoneMax;
+  }
+
   get canStart(): boolean {
-    return !this.potionActive && this.herbs >= this.herbCost;
+    return !this.potionActive && this.herbs >= this.herbCost && this.potions >= this.potionCost;
   }
 
   // ── Lifecycle ─────────────────────────────
@@ -70,7 +80,8 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
-        this.herbs = Math.floor(s['herb']?.amount ?? 0);
+        this.herbs   = Math.floor(s['herb']?.amount   ?? 0);
+        this.potions = Math.floor(s['potion']?.amount ?? 0);
       })
     );
   }
@@ -84,7 +95,8 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
   startPotion(): void {
     if (!this.canStart) return;
-    this.wallet.remove('herb', this.herbCost);
+    this.wallet.remove('herb',   this.herbCost);
+    this.wallet.remove('potion', this.potionCost);
     this.potionActive = true;
     this.quality      = 0;
     this.barPos       = 0;
@@ -92,20 +104,23 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.lastTime     = undefined;
     this.lastMsg      = 'Click on beat to raise quality!';
     this.msgClass     = 'msg-neutral';
-    this.log.log('Apothecary begins brewing a potion. (−100 herbs)');
+    this.log.log(`Apothecary begins brewing. (−${this.herbCost} herbs, −${this.potionCost} potion base)`);
     this.startAnimation();
   }
 
   brew(): void {
     if (!this.potionActive) return;
 
-    if (this.isInZone) {
-      this.quality = Math.min(this.maxQuality, this.quality + 1);
+    if (this.isInInnerZone) {
+      this.quality  = Math.min(this.maxQuality, this.quality + 2);
+      this.lastMsg  = `Bubbling hit! +2 quality (${this.quality}/${this.maxQuality})`;
+      this.msgClass = 'msg-double';
+      if (this.quality >= this.maxQuality) this.onPerfectPotion();
+    } else if (this.isInZone) {
+      this.quality  = Math.min(this.maxQuality, this.quality + 1);
       this.lastMsg  = `On beat! +1 quality (${this.quality}/${this.maxQuality})`;
       this.msgClass = 'msg-good';
-      if (this.quality >= this.maxQuality) {
-        this.onPerfectPotion();
-      }
+      if (this.quality >= this.maxQuality) this.onPerfectPotion();
     } else {
       this.quality  = Math.max(0, this.quality - 1);
       this.lastMsg  = `Off beat! −1 quality (${this.quality}/${this.maxQuality})`;

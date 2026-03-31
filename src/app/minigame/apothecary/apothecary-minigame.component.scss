@@ -122,6 +122,17 @@ $green:  #44dd44;
   border-right: 1px solid #090;
 }
 
+// Bubbling Brew inner zone — narrower, purple highlight inside the green zone
+.beat-inner-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(195, 126, 240, 0.22);
+  border-left: 1px solid $purple;
+  border-right: 1px solid $purple;
+  pointer-events: none;
+}
+
 .beat-cursor {
   position: absolute;
   top: 0;
@@ -140,8 +151,9 @@ $green:  #44dd44;
   letter-spacing: 0.05em;
   transition: color 0.05s;
 
-  &.in-zone  { color: #0d0; }
-  &.out-zone { color: #333; }
+  &.in-inner-zone { color: $purple; font-weight: bold; }
+  &.in-zone       { color: #0d0; }
+  &.out-zone      { color: #333; }
 }
 
 // ── Action buttons ────────────────────────
@@ -203,7 +215,7 @@ $green:  #44dd44;
 
 .cost-hint {
   color: #444;
-  font-size: 9px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -225,8 +237,9 @@ $green:  #44dd44;
   word-break: break-word;
   line-height: 1.5;
 
-  &.msg-good    { color: #0d0;  border-color: #020; }
-  &.msg-bad     { color: #f55;  border-color: #300; }
-  &.msg-neutral { color: #666;  border-color: #1e1e1e; }
+  &.msg-good    { color: #0d0;    border-color: #020; }
+  &.msg-bad     { color: #f55;    border-color: #300; }
+  &.msg-neutral { color: #666;    border-color: #1e1e1e; }
+  &.msg-double  { color: $purple; border-color: #4a1a7a; font-weight: bold; }
 }
 

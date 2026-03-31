@@ -86,7 +86,11 @@ export const UPGRADE_FLAVOR = {
   },
   POTION_MARKETING: {
     name: 'Potion Marketing',
-    desc: '+1 gold/sec',
+    desc: '+1 gold every time you brew a potion base',
+  },
+  BUBBLING_BREW: {
+    name: 'Bubbling Brew',
+    desc: 'Skilled brewing will award bonus progress',
   },
 
   // Culinarian
@@ -169,16 +173,15 @@ export const HERO_STATS_FLAVOR = {
     DAMAGE_RANGE: 'Attack Damage    :',
   },
   RANGER: {
-    HERB_CHANCE:  'Herb Chance  :',
-    BEAST_CHANCE: 'Beast Chance :',
-    HERB_DOUBLE:  'Herb Double  :',
-    CATS_EYE:     "Cat's Eye    :",
-    MAX_MEAT:     'Max Meat     :',
+    BEAST_CHANCE: 'Beast Success :',
+    HERB_DOUBLE:  'Herb Double   :',
+    CATS_EYE:     "Cat's Eye     :",
+    MAX_MEAT:     'Max Meat      :',
   },
   APOTHECARY: {
-    HERBS_BREW:  'Herbs Per Brew   :',
-    SAVE_CHANCE: 'Herb Save Chance :',
-    SELL_RATE:   'Sell Rate        :',
+    HERBS_BREW:      'Herbs Per Brew   :',
+    SAVE_CHANCE:     'Herb Save Chance :',
+    GOLD_PER_BREW:   'Gold Per Brew    :',
   },
   CULINARIAN: {
     SPICE_PER_CLICK: 'Spice Per Click  :',

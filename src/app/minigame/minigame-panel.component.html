@@ -22,7 +22,7 @@
 
     <!-- ── Apothecary: alchemy rhythm minigame ── -->
     <ng-container *ngIf="activeCharacterId === 'apothecary'">
-      <app-apothecary-minigame />
+      <app-apothecary-minigame [bubblingBrewUnlocked]="bubblingBrewLevel >= 1" />
     </ng-container>
 
     <!-- ── Ranger: scouting grid minigame ─── -->

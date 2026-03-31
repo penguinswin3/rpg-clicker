@@ -22,13 +22,9 @@
 - flesh out the upgrades for the minigames
   - fighter, stronger kobolds
 
-- standardize the character screen summaries to include the unit on the right side of the colon (number/s)
-
 - Bonus tries in the ranger minigame
 
 - extract log text to flavor file, might need to implement string replacement here idk
-
-- herb chance % is not need in the character stats page it should be above (Both chance)
 
 - Visions of pixies upgrade that gives a little sparkle effect where a pixie might me. A few tiers with varying accuracies, can scale to up to 3 sparkles
 
@@ -40,9 +36,9 @@
 
 - Kobold ear currency should be up top, near the other fighter resources
 
-- remove herb chance and keep cats eye in the character menu
+- look at the again idk
 
-- Add max hit to character tab
+- 200% herb save isnt saving 2 herbs
 
 - Stronger kobolds can be stronger monsters and do other things like spiders and ogres and stuff
 

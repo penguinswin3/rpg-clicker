@@ -41,6 +41,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() bountifulLandsLevel = 0;
   /** Abundant Lands level — forwarded to the ranger minigame. */
   @Input() abundantLandsLevel = 0;
+  /** Bubbling Brew level — forwarded to the apothecary minigame. */
+  @Input() bubblingBrewLevel = 0;
   /** Previously-saved fighter combat state. */
   @Input() fighterCombatState: FighterCombatState | null = null;
   /** Emitted whenever fighter combat state changes. */

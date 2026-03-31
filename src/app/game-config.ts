@@ -152,6 +152,13 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'POTION_MARKETING', characterId: 'apothecary', category: 'standard', max: 999,
     costs: [{ currency: 'gold', base: 30, scale: 1.5 }] },
 
+  // ── Apothecary — minigame ────────────────────────────────────
+  { id: 'BUBBLING_BREW', characterId: 'apothecary', category: 'minigame', max: 1,
+    costs: [
+      { currency: 'gold',       base: 9000, scale: 1.0 },
+      { currency: 'kobold-ear', base: 150,  scale: 1.0 },
+    ] },
+
   // ── Culinarian — standard ────────────────────────────────────
   { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 20, // +1 spice/click, +24g cost/click per level
     costs: [{ currency: 'gold', base: 200, scale: 3.8 }] },
@@ -220,13 +227,19 @@ export const APOTH_MG = {
   /** On-beat clicks required to complete a Concentrated Potion */
   MAX_QUALITY:  10,
   /** Herbs consumed to begin brewing a new potion */
-  HERB_COST:    100,
+  HERB_COST:    50,
+  /** Potion bases consumed to begin brewing a new concentrated potion */
+  POTION_COST:  1,
   /** Cursor speed: units per millisecond (100 units = full bar width) */
   BAR_SPEED:    0.05,
   /** Left edge of the on-beat target zone (percentage 0–100) */
   ZONE_MIN:     35,
   /** Right edge of the on-beat target zone (percentage 0–100) */
   ZONE_MAX:     65,
+  /** Left edge of the Bubbling Brew inner zone (must be inside ZONE_MIN/MAX) */
+  INNER_ZONE_MIN: 47,
+  /** Right edge of the Bubbling Brew inner zone (must be inside ZONE_MIN/MAX) */
+  INNER_ZONE_MAX: 53,
 } as const;
 
 // ── Ranger Minigame ───────────────────────────────────────────
