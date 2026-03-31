@@ -35,7 +35,7 @@
 
 - 200% herb save isnt saving 2 herbs
 
-
+- Rework Jacks upgrades to use the new cost scaling system
 
 - Lore Pages that give context about the character or the world they live in. Can be unlocked by doing certain things in minigames...
 

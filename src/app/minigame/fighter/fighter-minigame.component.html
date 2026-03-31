@@ -71,6 +71,15 @@
       [+ HEAL +{{ potionHealAmount }}]
     </button>
 
+    <!-- Short Rest toggle: below heal, only visible once unlocked -->
+    <div class="short-rest-row" *ngIf="shortRestLevel >= 1">
+      <button class="short-rest-btn"
+              [class.sr-on]="shortRestEnabled"
+              (click)="shortRestEnabled = !shortRestEnabled">
+        {{ shortRestEnabled ? '[ Short Rest: ON  ]' : '[ Short Rest: OFF ]' }}
+      </button>
+    </div>
+
   </div>
 
   <!-- ── Potion count ─────────────────────── -->

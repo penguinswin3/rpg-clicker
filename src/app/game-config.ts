@@ -129,6 +129,13 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'concentrated-potion', base: 3, scale: 1.5 },
       { currency: 'beast',               base: 12, scale: 1.5 },
     ] },
+  { id: 'SHORT_REST', characterId: 'fighter', category: 'minigame', max: 1,
+    gates: { requiresCulinarian: true },
+    costs: [
+      { currency: 'gold',        base: 10_000, scale: 1.0 },
+      { currency: 'kobold-ear',  base: 200,    scale: 1.0 },
+      { currency: 'hearty-meal', base: 30,     scale: 1.0 },
+    ] },
   { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: KOBOLD_VARIANTS.length - 1,
     gates: { xpMin: 3000 },
     costs: [
@@ -171,6 +178,13 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [
       { currency: 'concentrated-potion', base: 3,  scale: 1.8 },
       { currency: 'kobold-tongue',       base: 5,  scale: 1.8 },
+    ] },
+
+  // ── Culinarian — minigame ────────────────────────────────────
+  { id: 'WASTE_NOT', characterId: 'culinarian', category: 'minigame', max: 999,
+    costs: [
+      { currency: 'spice',       base: 75, scale: 1.9 },
+      { currency: 'hearty-meal', base: 5,  scale: 1.7 },
     ] },
 
   // ── Apothecary — minigame ────────────────────────────────────
@@ -305,7 +319,16 @@ export const RANGER_MG = {
   PIXIE_XP: 9,
 } as const;
 
-// ── Culinarian Minigame (placeholder) ────────────────────────
-// TODO: implement the Culinarian minigame mechanics here.
+// ── Culinarian Minigame ──────────────────────────────────────
 export const CULINARIAN_MG = {
+  /** The pool of ingredient currency IDs the solution is drawn from. */
+  INGREDIENTS: ['herb', 'beast', 'kobold-tongue', 'spice'] as readonly string[],
+  /** Number of ingredient slots in the solution. */
+  SOLUTION_LENGTH: 4,
+  /** Base number of guesses allowed per round. */
+  MAX_GUESSES: 4,
+  /** Amount of each ingredient consumed to begin a new round. */
+  INGREDIENT_COST: 16,
+  /** Hearty Meals awarded on a correct guess. */
+  MEAL_REWARD: 1,
 } as const;

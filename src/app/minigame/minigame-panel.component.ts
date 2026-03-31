@@ -6,6 +6,7 @@ import { CharacterService } from '../character/character.service';
 import { FighterMinigameComponent } from './fighter/fighter-minigame.component';
 import { ApothecaryMinigameComponent } from './apothecary/apothecary-minigame.component';
 import { RangerMinigameComponent } from './ranger/ranger-minigame.component';
+import { CulinarianMinigameComponent } from './culinarian/culinarian-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
 import { FighterCombatState } from '../save/save.service';
@@ -18,7 +19,7 @@ interface MinigameInfo {
 @Component({
   selector: 'app-minigame-panel',
   standalone: true,
-  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent],
+  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent],
   templateUrl: './minigame-panel.component.html',
   styleUrls: ['./minigame-panel.component.scss'],
 })
@@ -33,6 +34,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() potionChuggingLevel = 0;
   /** Stronger Kobolds tier — forwarded to the fighter minigame. */
   @Input() strongerKoboldsLevel = 0;
+  /** Short Rest level — forwarded to the fighter minigame. */
+  @Input() shortRestLevel = 0;
   /** Currently-selected kobold difficulty level — forwarded to the fighter minigame. */
   @Input() selectedKoboldLevel = 1;
   /** Emitted when the player changes the kobold level inside the fighter minigame. */
@@ -49,6 +52,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() potionDilutionLevel = 0;
   /** Serial Dilution level — forwarded to the apothecary minigame. */
   @Input() serialDilutionLevel = 0;
+  /** Waste Not level — forwarded to the culinarian minigame. */
+  @Input() wasteNotLevel = 0;
   /** Previously-saved fighter combat state. */
   @Input() fighterCombatState: FighterCombatState | null = null;
   /** Emitted whenever fighter combat state changes. */

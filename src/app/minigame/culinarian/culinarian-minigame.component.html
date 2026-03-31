@@ -1,0 +1,124 @@
+<div class="culinarian-mg">
+
+  <!-- ── Start button (idle) ─────────── -->
+  <div class="primary-slot" *ngIf="!roundActive && !won && !lost">
+    <button class="action-btn start-btn"
+            [disabled]="!canStart"
+            (click)="startRound()">
+      [ GET COOKIN' ]
+    </button>
+    <div class="cost-hint">
+      costs {{ INGREDIENT_COST }} of each:
+      <span *ngFor="let id of INGREDIENTS" [style.color]="ingredientColor(id)">{{ ingredientSymbol(id) }}</span>
+    </div>
+    <div class="herb-warn" *ngIf="!canStart">
+      <span *ngIf="herb < INGREDIENT_COST">
+        need {{ INGREDIENT_COST - herb }} more <span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span>
+      </span>
+      <span *ngIf="beast < INGREDIENT_COST">
+        need {{ INGREDIENT_COST - beast }} more <span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>
+      </span>
+      <span *ngIf="koboldTongue < INGREDIENT_COST">
+        need {{ INGREDIENT_COST - koboldTongue }} more <span [style.color]="currencyFlavor['kobold-tongue'].color">{{ currencyFlavor['kobold-tongue'].symbol }}</span>
+      </span>
+      <span *ngIf="spice < INGREDIENT_COST">
+        need {{ INGREDIENT_COST - spice }} more <span [style.color]="currencyFlavor['spice'].color">{{ currencyFlavor['spice'].symbol }}</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- ══════ ACTIVE ROUND / RESULTS ══════ -->
+  <ng-container *ngIf="roundActive || won || lost">
+
+    <!-- ── Ingredient palette ─────────── -->
+    <div class="palette">
+      <div class="palette-label">INGREDIENTS</div>
+      <div class="palette-row">
+        <div class="palette-item"
+             *ngFor="let id of INGREDIENTS"
+             draggable="true"
+             (dragstart)="onDragStart($event, id)"
+             (click)="selectIngredient(id)">
+          <span class="p-symbol" [style.color]="ingredientColor(id)">{{ ingredientSymbol(id) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Current guess slots ────────── -->
+    <div class="guess-row current-guess" *ngIf="!won && !lost">
+      <div class="guess-slot"
+           *ngFor="let slot of currentGuess; let i = index"
+           [class.filled]="slot !== null"
+           [class.drop-target]="dragIngredient !== null && slot === null"
+           (dragover)="onDragOver($event)"
+           (drop)="onDrop($event, i)"
+           (click)="slotClick(i)">
+        <span *ngIf="slot" class="slot-symbol" [style.color]="ingredientColor(slot)">
+          {{ ingredientSymbol(slot) }}
+        </span>
+        <span *ngIf="!slot" class="slot-empty">_</span>
+      </div>
+    </div>
+
+    <!-- ── Submit / Clear ─────────────── -->
+    <div class="action-row" *ngIf="!won && !lost">
+      <button class="action-btn submit-btn"
+              [disabled]="!canSubmit"
+              (click)="submitGuess()">
+        [ SUBMIT ]
+      </button>
+      <button class="action-btn clear-btn"
+              (click)="clearGuess()">
+        [ CLEAR ]
+      </button>
+    </div>
+
+    <!-- ── Guesses remaining ──────────── -->
+    <div class="guesses-left" *ngIf="!won && !lost">
+      Guesses: {{ guessesRemaining }} / {{ MAX_GUESSES }}
+    </div>
+
+    <!-- ── History grid ───────────────── -->
+    <div class="history" *ngIf="guessHistory.length > 0">
+      <div class="history-label">HISTORY</div>
+      <div class="history-row" *ngFor="let row of guessHistory">
+        <div class="history-slots">
+          <span class="h-slot"
+                *ngFor="let id of row.ingredients; let i = index"
+                [style.color]="ingredientColor(id)"
+                [style.background]="pegBgColor(row.pegs[i])">
+            {{ ingredientSymbol(id) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Solution reveal on loss ────── -->
+    <div class="solution-reveal" *ngIf="lost">
+      <div class="sol-label">ANSWER:</div>
+      <div class="sol-row">
+        <span class="sol-slot" *ngFor="let id of solution"
+              [style.color]="ingredientColor(id)">
+          {{ ingredientSymbol(id) }}
+        </span>
+      </div>
+    </div>
+
+    <!-- ── Play again ─────────────────── -->
+    <div class="play-again" *ngIf="won || lost">
+      <button class="action-btn start-btn"
+              [disabled]="!canStart"
+              (click)="startRound()">
+        [ COOK AGAIN ]
+      </button>
+    </div>
+
+  </ng-container>
+
+  <!-- ── Status message ───────────────── -->
+  <div class="brew-msg" *ngIf="lastMsg" [ngClass]="msgClass">
+    {{ lastMsg }}
+  </div>
+
+</div>
+

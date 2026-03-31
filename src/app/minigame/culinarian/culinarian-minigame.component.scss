@@ -1,0 +1,299 @@
+// Culinarian minigame — Mastermind-style recipe puzzle
+$font: 'Courier New', Courier, monospace;
+$gold: #d4a017;
+$green: #44dd44;
+
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.culinarian-mg {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: $font;
+  font-size: 11px;
+  color: #ccc;
+}
+
+// ── Primary slot / start button ───────────
+
+.primary-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+// ── Action buttons ────────────────────────
+
+.action-btn {
+  background: #000;
+  border: 1px solid #333;
+  color: #888;
+  font-family: $font;
+  font-size: 11px;
+  padding: 6px 4px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: background 0.08s, color 0.08s, border-color 0.08s;
+
+  &:hover:not(:disabled) {
+    background: #888;
+    color: #000;
+  }
+
+  &:disabled {
+    color: #2a2a2a;
+    border-color: #1a1a1a;
+    cursor: not-allowed;
+  }
+}
+
+.start-btn {
+  border-color: $gold;
+  color: $gold;
+  &:hover:not(:disabled) { background: $gold; color: #000; }
+}
+
+.submit-btn {
+  border-color: $green;
+  color: $green;
+  &:hover:not(:disabled) { background: $green; color: #000; }
+}
+
+.clear-btn {
+  border-color: #666;
+  color: #666;
+  font-size: 9px;
+  padding: 3px 4px;
+  &:hover:not(:disabled) { background: #444; color: #fff; }
+}
+
+// ── Cost / warning hints ──────────────────
+
+.cost-hint {
+  color: #444;
+  font-size: 12px;
+  text-align: center;
+}
+
+.herb-warn {
+  color: #f44;
+  font-size: 9px;
+  text-align: center;
+}
+
+// ── Ingredient palette ────────────────────
+
+.palette {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.palette-label {
+  color: #555;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.palette-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.palette-item {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #444;
+  background: #0a0a0a;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s;
+  user-select: none;
+
+  &:hover {
+    border-color: #888;
+    background: #1a1a1a;
+  }
+
+  &.selected {
+    border-color: #fff;
+    background: #222;
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+  }
+}
+
+.p-symbol {
+  font-size: 14px;
+  line-height: 1;
+}
+
+// ── Current guess row ─────────────────────
+
+.current-guess {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.guess-slot {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #333;
+  background: #050505;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.1s, background 0.1s;
+
+  &.filled {
+    border-style: solid;
+    border-color: #555;
+  }
+
+  &.drop-target {
+    border-color: $gold;
+    background: #111;
+  }
+}
+
+.slot-symbol {
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+}
+
+.slot-empty {
+  color: #333;
+  font-size: 12px;
+  user-select: none;
+}
+
+// ── Action row ────────────────────────────
+
+.action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+// ── Guesses remaining ─────────────────────
+
+.guesses-left {
+  color: #555;
+  font-size: 9px;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+// ── History grid ──────────────────────────
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-top: 1px solid #1e1e1e;
+  padding-top: 5px;
+}
+
+.history-label {
+  color: #444;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-slots {
+  display: flex;
+  gap: 3px;
+
+  .h-slot {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #222;
+    font-size: 11px;
+  }
+}
+
+
+// ── Solution reveal ───────────────────────
+
+.solution-reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 0;
+  border: 1px solid #400;
+  background: #0a0000;
+}
+
+.sol-label {
+  color: #f44;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+}
+
+.sol-row {
+  display: flex;
+  gap: 4px;
+
+  .sol-slot {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #444;
+    background: #111;
+    font-size: 13px;
+  }
+}
+
+// ── Play again ────────────────────────────
+
+.play-again {
+  width: 100%;
+}
+
+// ── Status message ────────────────────────
+
+.brew-msg {
+  padding: 4px 6px;
+  border: 1px solid #1e1e1e;
+  background: #050505;
+  font-size: 10px;
+  text-align: center;
+  min-height: 22px;
+  word-break: break-word;
+  line-height: 1.5;
+
+  &.msg-good    { color: #0d0;  border-color: #020; }
+  &.msg-bad     { color: #f55;  border-color: #300; }
+  &.msg-neutral { color: #666;  border-color: #1e1e1e; }
+}
+

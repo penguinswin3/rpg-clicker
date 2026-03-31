@@ -40,6 +40,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   @Input() potionChuggingLevel = 0;
   /** Future upgrades reduce the long-rest lockout by this many seconds. */
   @Input() recoveryReductionSec = 0;
+  /** Short Rest upgrade level — unlocks the auto-heal toggle. */
+  @Input() shortRestLevel = 0;
   /** Number of Stronger Kobolds tiers purchased — determines max selectable level. */
   @Input() strongerKoboldsLevel = 0;
   /** Currently-selected kobold difficulty (1 = base). */
@@ -72,6 +74,9 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   awaitingSpawn = false;
   fleeing       = false;
   fleeCountdown = 0;     // seconds remaining while fleeing
+
+  /** When true, potions are consumed automatically to top up HP after each kill. */
+  shortRestEnabled = false;
 
   // ── Long rest lockout ─────────────────────
   restCountdown = 0;   // seconds remaining; 0 = can retry
@@ -328,6 +333,14 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     return Math.max(0, randInt(1, this.enemy.dmgMax) - this.defense);
   }
 
+  /** Consume potions one at a time until HP is full or potions run out. */
+  private autoHealToFull(): void {
+    while (this.potions > 0 && this.fighterHp < this.maxHp) {
+      this.wallet.remove('potion', 1);
+      this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount);
+    }
+  }
+
   private applyEnemyDamage(dmg: number): void {
     this.fighterHp -= dmg;
     if (this.fighterHp <= 0) {
@@ -404,6 +417,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.msgLine2      = `Kobold hits back: ${enemyLastDmg} dmg!`;
     this.msgClass      = 'msg-good';
     this.awaitingSpawn = true;
+    if (this.shortRestEnabled) this.autoHealToFull();
     this.emitState();
 
     this.spawnTimer = setTimeout(() => {

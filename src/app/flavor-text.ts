@@ -18,8 +18,9 @@ export const CURRENCY_FLAVOR = {
   'concentrated-potion': { name: 'Concentrated Potion Base',  symbol: '⚗',  color: '#ba70cf' },
   'kobold-ear':          { name: 'Kobold Left Ear',           symbol: '>',  color: '#e02020' },
   'kobold-tongue':       { name: 'Kobold Tongue',             symbol: 'γ',  color: '#c75050' },
-  'kobold-hair':         { name: 'Kobold Hair',              symbol: 'Ҩ',  color: '#8a4b40' },
+  'kobold-hair':         { name: 'Kobold Hair',               symbol: 'Ҩ',  color: '#8a4b40' },
   spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
+  'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#09600d' },
 } as const;
 
 // ── Upgrades ──────────────────────────────────────────────────
@@ -44,6 +45,10 @@ export const UPGRADE_FLAVOR = {
   POTION_CHUGGING: {
     name: 'Potion of Fortitude',
     desc: '+1 HP per potion heal',
+  },
+  SHORT_REST: {
+    name: 'Short Rest',
+    desc: 'Adds a toggle to auto-heal to full HP with potions after each victory',
   },
   SHARPER_SWORDS: {
     name: 'Sharper Swords',
@@ -115,6 +120,10 @@ export const UPGRADE_FLAVOR = {
   WHOLESALE_SPICES: {
     name: 'Wholesale Spices',
     desc: '+1 spice per click, purchased at a discount!',
+  },
+  WASTE_NOT: {
+    name: 'Waste Not',
+    desc: '+1 hearty meal per unused guess on a successful recipe',
   },
 } as const;
 
