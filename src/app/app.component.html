@@ -74,20 +74,20 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
         <!-- Shared upgrade card template — used by both columns -->
         <ng-template #upgradeCard let-id>
-          <div class="upgrade-card">
-            <div class="upgrade-info">
-              <span class="upgrade-name cyan-text">{{ getUpgradeFlavor(id).name }}</span>
+          <div class="upgrade-card" [class.bland]="blandMode">
+            <span class="upgrade-name cyan-text">{{ getUpgradeFlavor(id).name }}</span>
+            <div class="upgrade-body">
               <span class="upgrade-desc" *ngIf="!blandMode">{{ getUpgradeFlavor(id).desc }}{{ upgradeDescSuffix(id) }}</span>
-            </div>
-            <div class="upgrade-btn-wrap">
-              <button class="upgrade-btn"
-                [class.upgrade-maxed]="upgrades.isMaxed(id)"
-                [disabled]="upgrades.isMaxed(id) || !upgrades.canAfford(id)"
-                (click)="upgrades.buy(id)">
-                <ng-container *ngIf="upgrades.isMaxed(id); else costTpl">[MAXED]</ng-container>
-                <ng-template #costTpl>[BUY: <ng-container *ngFor="let c of upgrades.allCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container>{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></ng-container>]</ng-template>
-              </button>
-              <span class="upgrade-level">Lv.{{ upgrades.level(id) }}/{{ upgrades.maxLevel(id) }}</span>
+              <div class="upgrade-btn-wrap">
+                <button class="upgrade-btn"
+                  [class.upgrade-maxed]="upgrades.isMaxed(id)"
+                  [disabled]="upgrades.isMaxed(id) || !upgrades.canAfford(id)"
+                  (click)="upgrades.buy(id)">
+                  <ng-container *ngIf="upgrades.isMaxed(id); else costTpl">[MAXED]</ng-container>
+                  <ng-template #costTpl>[BUY: <ng-container *ngFor="let c of upgrades.allCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container>{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></ng-container>]</ng-template>
+                </button>
+                <span class="upgrade-level">Lv.{{ upgrades.level(id) }}/{{ upgrades.maxLevel(id) }}</span>
+              </div>
             </div>
           </div>
         </ng-template>
