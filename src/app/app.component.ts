@@ -59,6 +59,7 @@ export class AppComponent implements OnInit, OnDestroy {
   // ── Character state ────────────────────────────────────────────
   activeCharacterId  = 'fighter';
   apothecaryUnlocked = false;
+  culinarianUnlocked = false;
   unlockedCharacters: { id: string; name: string; color: string }[] = [];
 
   // ── Minigame ───────────────────────────────────────────────────
@@ -78,6 +79,7 @@ export class AppComponent implements OnInit, OnDestroy {
   // ── UI preference flags ────────────────────────────────────────
   hideMaxedUpgrades    = false;
   hideMinigameUpgrades = false;
+  blandMode            = false;
 
   // ── Jack of All Trades ─────────────────────────────────────────
   jacksOwned      = 0;
@@ -90,8 +92,12 @@ export class AppComponent implements OnInit, OnDestroy {
   get goldPerClick(): number {
     return YIELDS.FIGHTER_GOLD_PER_CLICK + this.upgrades.level('BETTER_BOUNTIES');
   }
-  /** Passive gold/sec from Contracted Hirelings. */
-  get autoGoldPerSecond(): number { return this.upgrades.level('CONTRACTED_HIRELINGS'); }
+  /** Passive gold/sec from Contracted Hirelings, multiplied by Hireling's Hirelings level. */
+  get autoGoldPerSecond(): number {
+    const base       = this.upgrades.level('CONTRACTED_HIRELINGS');
+    const multiplier = Math.max(1, this.upgrades.level('HIRELINGS_HIRELINGS'));
+    return base * multiplier;
+  }
   /** Passive gold/sec from Potion Marketing. */
   get potionAutoGoldPerSecond(): number { return this.upgrades.level('POTION_MARKETING'); }
   /** XP awarded per fighter bounty click. */
@@ -217,8 +223,9 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     // Fighter
     return [
-      { label: HERO_STATS_FLAVOR.FIGHTER.PER_CLICK,  value: `${this.goldPerClick}`      },
-      { label: HERO_STATS_FLAVOR.FIGHTER.PER_SECOND, value: `${this.autoGoldPerSecond}` },
+      { label: HERO_STATS_FLAVOR.FIGHTER.PER_CLICK,    value: `${this.goldPerClick}`      },
+      { label: HERO_STATS_FLAVOR.FIGHTER.PER_SECOND,   value: `${this.autoGoldPerSecond}` },
+      { label: HERO_STATS_FLAVOR.FIGHTER.DAMAGE_RANGE, value: `1-${1 + this.upgrades.level('SHARPER_SWORDS')}` },
       ...(this.upgrades.level('INSIGHTFUL_CONTRACTS') > 0
         ? [{ label: HERO_STATS_FLAVOR.FIGHTER.XP_PER_CLICK, value: `${this.xpPerBounty}` }]
         : []),
@@ -237,11 +244,12 @@ export class AppComponent implements OnInit, OnDestroy {
       .filter(id => this.isUpgradeVisible(id) && this.shouldShowUpgrade(this.upgrades.isMaxed(id)));
   }
 
-  /** Checks gate conditions (apothecary unlock, XP threshold) for an upgrade. */
+  /** Checks gate conditions (apothecary unlock, culinarian unlock, XP threshold) for an upgrade. */
   isUpgradeVisible(id: string): boolean {
     const gates = this.upgrades.getGates(id);
     if (!gates) return true;
-    if (gates.requiresApothecary && !this.apothecaryUnlocked) return false;
+    if (gates.requiresApothecary  && !this.apothecaryUnlocked)  return false;
+    if (gates.requiresCulinarian  && !this.culinarianUnlocked)  return false;
     if (gates.xpMin != null && this.xp < gates.xpMin) return false;
     return true;
   }
@@ -290,6 +298,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.charService.activeId$.subscribe(id => { this.activeCharacterId = id; });
     this.charService.characters$.subscribe(chars => {
       this.apothecaryUnlocked = chars.find(c => c.id === 'apothecary')?.unlocked ?? false;
+      this.culinarianUnlocked = chars.find(c => c.id === 'culinarian')?.unlocked ?? false;
       this.unlockedCharacters = chars.filter(c => c.unlocked).map(c => ({ id: c.id, name: c.name, color: c.color }));
     });
 
@@ -317,6 +326,7 @@ export class AppComponent implements OnInit, OnDestroy {
     );
     this.saveService.hideMaxedUpgrades$.subscribe(v    => this.hideMaxedUpgrades    = v);
     this.saveService.hideMinigameUpgrades$.subscribe(v => this.hideMinigameUpgrades = v);
+    this.saveService.blandMode$.subscribe(v            => this.blandMode            = v);
     if (this.saveService.hasSave()) this.saveService.loadFromLocalStorage();
     this.saveService.startAutoSave();
   }

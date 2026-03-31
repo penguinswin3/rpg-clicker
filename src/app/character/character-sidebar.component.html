@@ -32,7 +32,7 @@
         <span class="badge-jacks" *ngIf="getJackCount(c.id) > 0">({{ getJackCount(c.id) }})</span>
       </div>
 
-      <p class="char-desc">{{ c.description }}</p>
+      <p class="char-desc" *ngIf="!blandMode">{{ c.description }}</p>
 
 
     </div>

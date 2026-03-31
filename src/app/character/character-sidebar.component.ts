@@ -2,6 +2,7 @@ import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { CharacterService, Character } from './character.service';
+import { SaveService } from '../save/save.service';
 import { HERO_STATS_FLAVOR } from '../flavor-text';
 
 export interface HeroStat {
@@ -26,11 +27,13 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   }
 
   private charService = inject(CharacterService);
+  private saveService = inject(SaveService);
   private sub = new Subscription();
 
   characters: Character[] = [];
   activeId  = 'fighter';
   collapsed = false;
+  blandMode = false;
 
   readonly heroStatsFlavor = HERO_STATS_FLAVOR;
 
@@ -42,6 +45,7 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
     this.sub.add(this.charService.characters$.subscribe(c => (this.characters = c)));
     this.sub.add(this.charService.activeId$.subscribe(id => (this.activeId = id)));
     this.sub.add(this.charService.sidebarCollapsed$.subscribe(v => (this.collapsed = v)));
+    this.sub.add(this.saveService.blandMode$.subscribe(v => (this.blandMode = v)));
   }
 
   ngOnDestroy(): void {

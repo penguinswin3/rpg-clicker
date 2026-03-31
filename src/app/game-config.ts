@@ -14,6 +14,8 @@ export type UpgradeCategory = 'standard' | 'minigame';
 export interface UpgradeGates {
   /** Hide until the Apothecary character is unlocked. */
   readonly requiresApothecary?: boolean;
+  /** Hide until the Culinarian character is unlocked (i.e. spice is in play). */
+  readonly requiresCulinarian?: boolean;
   /** Minimum XP required before the card is shown. */
   readonly xpMin?: number;
 }
@@ -101,6 +103,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'INSIGHTFUL_CONTRACTS', characterId: 'fighter', category: 'standard', max: 999,
     gates: { xpMin: 500 },
     costs: [{ currency: 'gold', base: 400, scale: 2.5 }] },
+  { id: 'HIRELINGS_HIRELINGS', characterId: 'fighter', category: 'standard', max: 999,
+    gates: { requiresCulinarian: true },
+    costs: [
+      { currency: 'gold',  base: 1000, scale: 2.0 },
+      { currency: 'spice', base: 5000,    scale: 1.5 },
+    ] },
 
   // ── Fighter — minigame ───────────────────────────────────────
   { id: 'SHARPER_SWORDS',   characterId: 'fighter', category: 'minigame', max: 999,

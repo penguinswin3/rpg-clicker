@@ -77,7 +77,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           <div class="upgrade-card">
             <div class="upgrade-info">
               <span class="upgrade-name cyan-text">{{ getUpgradeFlavor(id).name }}</span>
-              <span class="upgrade-desc">{{ getUpgradeFlavor(id).desc }}{{ upgradeDescSuffix(id) }}</span>
+              <span class="upgrade-desc" *ngIf="!blandMode">{{ getUpgradeFlavor(id).desc }}{{ upgradeDescSuffix(id) }}</span>
             </div>
             <div class="upgrade-btn-wrap">
               <button class="upgrade-btn"

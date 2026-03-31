@@ -134,6 +134,7 @@ export interface UiPrefs {
   /** Optional — absent in older saves, defaults to false. */
   hideMaxedUpgrades?: boolean;
   hideMinigameUpgrades?: boolean;
+  blandMode?: boolean;
 }
 
 export interface SaveSnapshot {
@@ -170,15 +171,19 @@ export class SaveService {
   // ── Upgrade display preferences ───────────────────────────────
   private hideMaxedSource        = new BehaviorSubject<boolean>(false);
   private hideMinigameSource     = new BehaviorSubject<boolean>(false);
+  private blandModeSource        = new BehaviorSubject<boolean>(false);
 
   readonly hideMaxedUpgrades$    = this.hideMaxedSource.asObservable();
   readonly hideMinigameUpgrades$ = this.hideMinigameSource.asObservable();
+  readonly blandMode$            = this.blandModeSource.asObservable();
 
   get hideMaxedUpgrades():    boolean { return this.hideMaxedSource.getValue(); }
   get hideMinigameUpgrades(): boolean { return this.hideMinigameSource.getValue(); }
+  get blandMode():            boolean { return this.blandModeSource.getValue(); }
 
   setHideMaxedUpgrades(v: boolean):    void { this.hideMaxedSource.next(v); }
   setHideMinigameUpgrades(v: boolean): void { this.hideMinigameSource.next(v); }
+  setBlandMode(v: boolean):            void { this.blandModeSource.next(v); }
 
   /** When true the next beforeunload save is skipped (used by dev clear-save). */
   private _skipNextSave = false;
@@ -251,6 +256,7 @@ export class SaveService {
       characterSidebarCollapsed: this.charService.sidebarCollapsed,
       hideMaxedUpgrades:    this.hideMaxedUpgrades,
       hideMinigameUpgrades: this.hideMinigameUpgrades,
+      blandMode:            this.blandMode,
     };
 
     return {
@@ -304,6 +310,7 @@ export class SaveService {
       this.charService.setSidebarCollapsed(p.characterSidebarCollapsed ?? false);
       this.setHideMaxedUpgrades(p.hideMaxedUpgrades       ?? false);
       this.setHideMinigameUpgrades(p.hideMinigameUpgrades ?? false);
+      this.setBlandMode(p.blandMode                       ?? false);
     }
   }
 

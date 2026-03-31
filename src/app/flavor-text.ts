@@ -35,6 +35,10 @@ export const UPGRADE_FLAVOR = {
     name: 'Insightful Contracts',
     desc: '+1 XP per bounty completed',
   },
+  HIRELINGS_HIRELINGS: {
+    name: "Hireling's Hirelings",
+    desc: 'Each hireling gets this many hirelings, also generating +1 gold/sec',
+  },
   POTION_CHUGGING: {
     name: 'Potion of Fortitude',
     desc: '+1 HP per potion heal',
@@ -162,6 +166,7 @@ export const HERO_STATS_FLAVOR = {
     PER_CLICK:    'Gold Per Click   :',
     PER_SECOND:   'Gold Per Second  :',
     XP_PER_CLICK: 'XP Per Bounty    :',
+    DAMAGE_RANGE: 'Attack Damage    :',
   },
   RANGER: {
     HERB_CHANCE:  'Herb Chance  :',

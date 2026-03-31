@@ -100,9 +100,11 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
 
   get hideMaxedUpgrades():    boolean { return this.saveService.hideMaxedUpgrades; }
   get hideMinigameUpgrades(): boolean { return this.saveService.hideMinigameUpgrades; }
+  get blandMode():            boolean { return this.saveService.blandMode; }
 
   toggleHideMaxed():    void { this.saveService.setHideMaxedUpgrades(!this.saveService.hideMaxedUpgrades); }
   toggleHideMinigame(): void { this.saveService.setHideMinigameUpgrades(!this.saveService.hideMinigameUpgrades); }
+  toggleBlandMode():    void { this.saveService.setBlandMode(!this.saveService.blandMode); }
 
   requestClearSave(): void {
     this.showClearConfirm = true;
