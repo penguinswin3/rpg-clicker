@@ -69,7 +69,7 @@ export const XP_THRESHOLDS = {
  */
 
 /** Gold cost that scales with each Jack owned. */
-export const JACK_GOLD_COST = { base: 1500, scale: 1.3 } as const;
+export const JACK_GOLD_COST = { base: 1500, scale: 1.5 } as const;
 
 /**
  * Ordered list of secondary resources introduced with each successive Jack.
