@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { CharacterService } from '../character/character.service';
 import { ActivityLogService, LogFilterType } from '../activity-log/activity-log.service';
-import { UPGRADE_DEFS } from '../game-config';
+import { UPGRADE_DEFS, VERSION } from '../game-config';
 import { UpgradesSnapshot } from '../upgrade/upgrade.service';
 import { scaledCost } from '../utils/mathUtils';
 
@@ -29,6 +29,9 @@ export interface UpgradeState {
   jacksOwned?: number;
   jacksAllocations?: Record<string, number>;
   fighterCombatState?: FighterCombatState;
+  /** Persisted UI toggle states — optional for backward compat. */
+  shortRestEnabled?: boolean;
+  wholesaleSpicesEnabled?: boolean;
 }
 
 // ── Legacy save migration ─────────────────────────────────────
@@ -138,8 +141,8 @@ export interface UiPrefs {
 }
 
 export interface SaveSnapshot {
-  /** Bump this if the schema ever changes incompatibly. */
-  version: number;
+  /** Game version string (e.g. "Alpha 1.0.0"). */
+  version: string;
   timestamp: number;
   /** Only currency amounts are persisted. perSecond rates are re-derived from upgrade levels on load. */
   wallet: Record<string, { amount: number }>;
@@ -152,7 +155,6 @@ export interface SaveSnapshot {
 }
 
 const SAVE_KEY = 'rpg-clicker-save';
-const CURRENT_VERSION = 1;
 /** Auto-save interval: every 5 minutes of play time. */
 const AUTO_SAVE_MS = 5 * 60 * 1000;
 
@@ -260,7 +262,7 @@ export class SaveService {
     };
 
     return {
-      version: CURRENT_VERSION,
+      version: VERSION,
       timestamp: Date.now(),
       wallet: walletAmounts,
       characters,
@@ -325,7 +327,7 @@ export class SaveService {
     try {
       const json = decodeURIComponent(escape(atob(encoded.trim())));
       const snap = JSON.parse(json) as SaveSnapshot;
-      if (!snap || typeof snap.version !== 'number') return null;
+      if (!snap || typeof snap.version !== 'string') return null;
       return snap;
     } catch {
       return null;

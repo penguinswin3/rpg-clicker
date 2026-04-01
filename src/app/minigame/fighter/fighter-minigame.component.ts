@@ -42,6 +42,10 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   @Input() recoveryReductionSec = 0;
   /** Short Rest upgrade level — unlocks the auto-heal toggle. */
   @Input() shortRestLevel = 0;
+  /** Whether Short Rest auto-heal is currently enabled. */
+  @Input() shortRestEnabled = false;
+  /** Emitted when the player toggles Short Rest on/off. */
+  @Output() shortRestEnabledChange = new EventEmitter<boolean>();
   /** Number of Stronger Kobolds tiers purchased — determines max selectable level. */
   @Input() strongerKoboldsLevel = 0;
   /** Currently-selected kobold difficulty (1 = base). */
@@ -76,7 +80,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   fleeCountdown = 0;     // seconds remaining while fleeing
 
   /** When true, potions are consumed automatically to top up HP after each kill. */
-  shortRestEnabled = false;
+  // shortRestEnabled is now an @Input() — see above
 
   // ── Long rest lockout ─────────────────────
   restCountdown = 0;   // seconds remaining; 0 = can retry
@@ -138,6 +142,10 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     if (this.selectedKoboldLevel > 1) {
       this.selectedKoboldLevelChange.emit(this.selectedKoboldLevel - 1);
     }
+  }
+
+  toggleShortRest(): void {
+    this.shortRestEnabledChange.emit(!this.shortRestEnabled);
   }
 
   // ── Lifecycle ─────────────────────────────

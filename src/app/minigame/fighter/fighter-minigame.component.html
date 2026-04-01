@@ -75,7 +75,7 @@
     <div class="short-rest-row" *ngIf="shortRestLevel >= 1">
       <button class="short-rest-btn"
               [class.sr-on]="shortRestEnabled"
-              (click)="shortRestEnabled = !shortRestEnabled">
+              (click)="toggleShortRest()">
         {{ shortRestEnabled ? '[ Short Rest: ON  ]' : '[ Short Rest: OFF ]' }}
       </button>
     </div>

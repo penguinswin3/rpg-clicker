@@ -75,6 +75,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // ── Fighter combat state ───────────────────────────────────────
   fighterCombatState: FighterCombatState | null = null;
+  /** Whether the Short Rest auto-heal toggle is enabled in the fighter minigame. */
+  shortRestEnabled = false;
 
   // ── UI preference flags ────────────────────────────────────────
   hideMaxedUpgrades    = false;
@@ -132,8 +134,10 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   // ── Jack computed getters ──────────────────────────────────────
+  /** Maximum jacks that can ever be hired: 1 gold-only + one per progression entry. */
+  private get jacksMax(): number { return 1 + JACK_RESOURCE_PROGRESSION.length; }
   get jacksVisible():       boolean { return this.xp >= XP_THRESHOLDS.JACKS_UNLOCK || this.jacksOwned > 0; }
-  get jacksToPurchase():    number { return this.jacksVisible ? 1 : 0; }
+  get jacksToPurchase():    number { return this.jacksVisible && this.jacksOwned < this.jacksMax ? 1 : 0; }
   get jacksPoolFree():      number {
     const allocated = Object.values(this.jacksAllocations).reduce((a, b) => a + b, 0);
     return this.jacksOwned - allocated;
@@ -244,7 +248,9 @@ export class AppComponent implements OnInit, OnDestroy {
     return [
       { label: HERO_STATS_FLAVOR.FIGHTER.PER_CLICK,    value: `${this.goldPerClick}`      },
       { label: HERO_STATS_FLAVOR.FIGHTER.PER_SECOND,   value: `${this.autoGoldPerSecond}` },
-      { label: HERO_STATS_FLAVOR.FIGHTER.DAMAGE_RANGE, value: `1-${1 + this.upgrades.level('SHARPER_SWORDS')}` },
+      ...(this.minigameUnlocked
+        ? [{ label: HERO_STATS_FLAVOR.FIGHTER.DAMAGE_RANGE, value: `1-${1 + this.upgrades.level('SHARPER_SWORDS')}` }]
+        : []),
       ...(this.upgrades.level('INSIGHTFUL_CONTRACTS') > 0
         ? [{ label: HERO_STATS_FLAVOR.FIGHTER.XP_PER_CLICK, value: `${this.xpPerBounty}` }]
         : []),
@@ -368,12 +374,14 @@ export class AppComponent implements OnInit, OnDestroy {
 
   getUpgradeState(): UpgradeState {
     return {
-      upgradeLevels:       this.upgrades.snapshot(),
-      selectedKoboldLevel: this.selectedKoboldLevel,
-      minigameUnlocked:    this.minigameUnlocked,
-      jacksOwned:          this.jacksOwned,
-      jacksAllocations:    { ...this.jacksAllocations },
-      fighterCombatState:  this.fighterCombatState ?? undefined,
+      upgradeLevels:          this.upgrades.snapshot(),
+      selectedKoboldLevel:    this.selectedKoboldLevel,
+      minigameUnlocked:       this.minigameUnlocked,
+      jacksOwned:             this.jacksOwned,
+      jacksAllocations:       { ...this.jacksAllocations },
+      fighterCombatState:     this.fighterCombatState ?? undefined,
+      shortRestEnabled:       this.shortRestEnabled,
+      wholesaleSpicesEnabled: this.wholesaleSpicesEnabled,
     };
   }
 
@@ -384,10 +392,12 @@ export class AppComponent implements OnInit, OnDestroy {
       1,
       this.upgrades.level('STRONGER_KOBOLDS') + 1,
     );
-    this.minigameUnlocked   = s.minigameUnlocked   ?? false;
-    this.jacksOwned         = s.jacksOwned         ?? 0;
-    this.jacksAllocations   = s.jacksAllocations ? { ...s.jacksAllocations } : {};
-    this.fighterCombatState = s.fighterCombatState ?? null;
+    this.minigameUnlocked       = s.minigameUnlocked       ?? false;
+    this.jacksOwned             = s.jacksOwned             ?? 0;
+    this.jacksAllocations       = s.jacksAllocations ? { ...s.jacksAllocations } : {};
+    this.fighterCombatState     = s.fighterCombatState     ?? null;
+    this.shortRestEnabled       = s.shortRestEnabled       ?? false;
+    this.wholesaleSpicesEnabled = s.wholesaleSpicesEnabled ?? true;
     this.updateAllPerSecond();
   }
 

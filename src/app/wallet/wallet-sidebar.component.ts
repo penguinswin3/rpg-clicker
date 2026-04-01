@@ -53,7 +53,7 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
   get characterFilters(): { key: string; label: string; color: string }[] {
     const result: { key: string; label: string; color: string }[] = [];
     if (this.visibleCurrencies.some(c => !c.requiredCharacterId)) {
-      result.push({ key: 'global', label: 'BASE', color: '#aaa' });
+      result.push({ key: 'global', label: 'FIGHTER', color: '#c87941' });
     }
     for (const char of this.unlockedCharacters) {
       if (this.visibleCurrencies.some(c => c.requiredCharacterId === char.id)) {

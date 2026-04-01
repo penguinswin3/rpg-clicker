@@ -34,9 +34,9 @@
       [UNLOCK:
       <span [class.cost-met]="canAffordCurrency('gold', minigameGoldCost)">{{ fmt(minigameGoldCost) }}<span [style.color]="currencyFlavor['gold'].color">{{ currencyFlavor['gold'].symbol }}</span></span>
       +
-      <span [class.cost-met]="canAffordCurrency('potion', minigamePotionCost)">{{ fmt(minigamePotionCost) }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span></span>
-      +
       <span [class.cost-met]="canAffordCurrency('beast', minigameBeastCost)">{{ fmt(minigameBeastCost) }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span></span>
+      +
+      <span [class.cost-met]="canAffordCurrency('potion', minigamePotionCost)">{{ fmt(minigamePotionCost) }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span></span>
       ]
     </button>
   </div>

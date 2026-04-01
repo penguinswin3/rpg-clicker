@@ -36,6 +36,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() strongerKoboldsLevel = 0;
   /** Short Rest level — forwarded to the fighter minigame. */
   @Input() shortRestLevel = 0;
+  /** Whether Short Rest auto-heal is currently enabled — forwarded to the fighter minigame. */
+  @Input() shortRestEnabled = false;
+  /** Emitted when the player toggles Short Rest inside the fighter minigame. */
+  @Output() shortRestEnabledChange = new EventEmitter<boolean>();
   /** Currently-selected kobold difficulty level — forwarded to the fighter minigame. */
   @Input() selectedKoboldLevel = 1;
   /** Emitted when the player changes the kobold level inside the fighter minigame. */

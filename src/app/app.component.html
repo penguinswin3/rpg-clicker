@@ -7,6 +7,8 @@
     [potionChuggingLevel]="upgrades.level('POTION_CHUGGING')"
     [strongerKoboldsLevel]="upgrades.level('STRONGER_KOBOLDS')"
     [shortRestLevel]="upgrades.level('SHORT_REST')"
+    [shortRestEnabled]="shortRestEnabled"
+    (shortRestEnabledChange)="shortRestEnabled = $event"
     [selectedKoboldLevel]="selectedKoboldLevel"
     (selectedKoboldLevelChange)="selectedKoboldLevel = $event"
     [bountifulLandsLevel]="upgrades.level('BOUNTIFUL_LANDS')"

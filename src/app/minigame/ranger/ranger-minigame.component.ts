@@ -142,16 +142,19 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
       }),
     ];
     shuffleInPlace(pool);
-    this.cells        = pool;
-    this.picksLeft    = this.PICKS;
-    this.roundOver    = false;
-    this.roundStarted = true;
-    this.meatFound    = 0;
-    this.herbFound    = 0;
-    this.pixieFound   = 0;
-    this.xpGained     = 0;
-    this.lastMsg      = MINIGAME_MSG.RANGER.ROUND_START(this.PICKS);
-    this.msgClass     = 'msg-neutral';
+    this.cells            = pool;
+    this.picksLeft        = this.PICKS;
+    this.roundOver        = false;
+    this.roundStarted     = true;
+    this.meatFound        = 0;
+    this.herbFound        = 0;
+    this.pixieFound       = 0;
+    this.xpGained         = 0;
+    this.resultParts      = [];
+    this.resultMultiplier = 1;
+    this.resultXp         = 0;
+    this.lastMsg          = MINIGAME_MSG.RANGER.ROUND_START(this.PICKS);
+    this.msgClass         = 'msg-neutral';
   }
 
   // ── Helpers ───────────────────────────────
@@ -261,8 +264,8 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
       this.log.log(`Ranger scouted the area: found ${summary}.${xpStr}${multiplierStr}`, type);
     }
 
-    this.lastMsg  = 'Found:';
-    this.msgClass = this.pixieFound > 0 ? 'msg-rare' : 'msg-good';
+    this.lastMsg  = successCount === 0 ? 'Found: Nothing...' : 'Found:';
+    this.msgClass = successCount === 0 ? 'msg-neutral' : (this.pixieFound > 0 ? 'msg-rare' : 'msg-good');
   }
 }
 
