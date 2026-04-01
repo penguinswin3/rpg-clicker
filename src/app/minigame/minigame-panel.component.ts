@@ -9,7 +9,7 @@ import { RangerMinigameComponent } from './ranger/ranger-minigame.component';
 import { CulinarianMinigameComponent } from './culinarian/culinarian-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
-import { FighterCombatState } from '../save/save.service';
+import { FighterCombatState } from '../options/save.service';
 
 interface MinigameInfo {
   characterId: string;

@@ -9,8 +9,8 @@ import { CharacterSidebarComponent, HeroStat } from './character/character-sideb
 import { CharacterUnlockComponent } from './character/character-unlock.component';
 import { CharacterService } from './character/character.service';
 import { MinigamePanelComponent } from './minigame/minigame-panel.component';
-import { OptionsMenuComponent } from './save/options-menu.component';
-import { SaveService, UpgradeState, FighterCombatState } from './save/save.service';
+import { OptionsMenuComponent } from './options/options-menu.component';
+import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
 import { XP_THRESHOLDS, YIELDS, UNLOCK_COSTS, JACK_GOLD_COST, JACK_RESOURCE_PROGRESSION } from './game-config';
 import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR } from './flavor-text';

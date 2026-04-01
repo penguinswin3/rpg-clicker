@@ -2,7 +2,7 @@ import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { CharacterService, Character } from './character.service';
-import { SaveService } from '../save/save.service';
+import { SaveService } from '../options/save.service';
 import { HERO_STATS_FLAVOR } from '../flavor-text';
 
 export interface HeroStat {
