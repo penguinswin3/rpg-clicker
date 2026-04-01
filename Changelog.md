@@ -18,11 +18,13 @@
 - Potion marketing costs a tad more to start
 - Log messages now reflect the rarity of the drop in the fighter minigame
 - Kobold hairs have a new coat of paint
+- Made the attack and heal button not selectable
 
 ## Bugfixes
 - Cleanup up the mutual kill message as to not cause excessive wrapping in the fighter minigame
 - The XP Progress track now reflects all XP unlock milestones
 - Missing costs are now shown when restarting the culinarian minigame
+- Named the wholesale price character stat properly
 ----------------------------
 # Version Alpha 1.0.0
  Initial Alpha Release

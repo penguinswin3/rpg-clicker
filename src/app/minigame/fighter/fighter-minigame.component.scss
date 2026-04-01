@@ -278,12 +278,14 @@ $font: 'Courier New', Courier, monospace;
 .atk-btn {
   border-color: #822;
   color: #f88;
+  user-select: none;
   &:hover:not(:disabled) { background: #822; color: #fff; }
 }
 
 .heal-btn {
   border-color: #226;
   color: #88f;
+  user-select: none;
   &:hover:not(:disabled) { background: #226; color: #fff; }
 }
 

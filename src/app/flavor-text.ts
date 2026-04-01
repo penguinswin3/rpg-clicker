@@ -275,7 +275,7 @@ export const HERO_STATS_FLAVOR = {
   },
   CULINARIAN: {
     SPICE_PER_CLICK: 'Spice Per Click  :',
-    GOLD_COST:       'Price Per Spice  :',
+    GOLD_COST:       'Wholesale Total  :',
     GOLD_DISCOUNT:   'Spice Discount   :',
   },
 } as const;
