@@ -109,11 +109,11 @@ export const UPGRADE_FLAVOR = {
   },
   POTION_DILUTION: {
     name: 'Potion Dilution',
-    desc: '2x concentrated potions, 50% chance to downgrade to potion base',
+    desc: '2x concentrated potions, with a risk of failure',
   },
   SERIAL_DILUTION: {
     name: 'Serial Dilution',
-    desc: '-1% dilution failure chance per level',
+    desc: '+1% dilution success chance per level',
   },
 
   // Culinarian
@@ -228,7 +228,7 @@ export const MINIGAME_FLAVOR = {
     desc: 'Combine rare ingredients to brew\npowerful concoctions.',
   },
   CULINARIAN: {
-    name: 'The Kitchen',
+    name: 'Test Kitchen',
     desc: 'Master the art of spice and flame\nto craft legendary dishes.',
   },
 } as const;

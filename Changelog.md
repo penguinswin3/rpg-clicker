@@ -1,3 +1,18 @@
+# Version Alpha 1.0.1
+
+## Added
+- Add version number to the option menu
+
+## Removed
+ 
+## Changed
+- Renamed the Culinarian minigame to the "Test Kitchen"
+- Changed the description of Potion Dilution to make it a tad more clear what effects it might have
+
+## Bugfixes
+- Cleanup up the mutual kill message as to not cause excessive wrapping in the fighter minigame
+
+----------------------------
 # Version Alpha 1.0.0
  Initial Alpha Release
 
@@ -21,3 +36,15 @@
 
 ## Bugfixes
 - Jacks upgrades no longer show up after the last one is purchased. 
+
+----------------------------
+
+# Version Alpha X.X.X
+
+## Added
+
+## Removed
+
+## Changed
+
+## Bugfixes

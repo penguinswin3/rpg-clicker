@@ -414,8 +414,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       // Mutual kill — awards still granted, but fighter is defeated
       this.fighterHp = 0;
       this.defeated  = true;
-      this.lastMsg   = `${this.enemy.name} falls! (mutual kill)`;
-      this.msgLine2  = `Kobold's last strike: ${enemyLastDmg} dmg!`;
+      this.lastMsg   = `${this.enemy.name} falls! `;
+      this.msgLine2  = `Last strike: ${enemyLastDmg} dmg!`;
       this.msgClass  = 'msg-bad';
       this.startRest();
       this.emitState();

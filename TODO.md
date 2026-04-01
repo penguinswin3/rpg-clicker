@@ -80,6 +80,5 @@
 - 200% herb save isn't saving 2 herbs
 - the experience bar maxes out at like 2.5k or something, the next few unlocks should be there too
 
-
 ## Code Refactors
 - extract log text to flavor file, might need to implement string replacement here idk

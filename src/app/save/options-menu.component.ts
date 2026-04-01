@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { SaveService } from './save.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { CharacterService } from '../character/character.service';
+import { UPGRADE_DEFS, VERSION } from '../game-config';
 
 /** px width of the character sidebar in each state (must match character-sidebar.component.scss) */
 const SIDEBAR_EXPANDED  = 220;
@@ -14,6 +15,7 @@ const SIDEBAR_GAP = 4;
 /** px height of the activity log in each state (must match activity-log.component.scss) */
 const LOG_EXPANDED  = 210;
 const LOG_MINIMIZED =  36;
+
 
 @Component({
   selector: 'app-options-menu',
@@ -27,6 +29,7 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
   private log         = inject(ActivityLogService);
   private charService = inject(CharacterService);
   private sub         = new Subscription();
+  public version = VERSION;
 
   isOpen           = false;
   importString     = '';
