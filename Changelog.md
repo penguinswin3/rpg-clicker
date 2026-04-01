@@ -10,10 +10,13 @@
 - Renamed the Culinarian minigame to the "Test Kitchen"
 - Changed the description of Potion Dilution to make it a tad more clear what effects it might have
 - Reduced the scaling of most upgrades
+- Increased the XP threshold for unlocking some of the later XP milestones
+- Make the Potion of Cat's Eye a little cheaper
+- Potion marketing costs a tad more to start
 
 ## Bugfixes
 - Cleanup up the mutual kill message as to not cause excessive wrapping in the fighter minigame
-
+- The XP Progress track now reflects all XP unlock milestones
 ----------------------------
 # Version Alpha 1.0.0
  Initial Alpha Release

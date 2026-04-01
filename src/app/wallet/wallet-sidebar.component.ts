@@ -70,12 +70,8 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
   /** 0–100 percentage progress toward the next XP unlock threshold. */
   get xpProgressPct(): number {
     const xp = Math.floor(this.state['xp']?.amount ?? 0);
-    const thresholds = [
-      XP_THRESHOLDS.RANGER_UNLOCK,
-      XP_THRESHOLDS.APOTHECARY_UNLOCK,
-      XP_THRESHOLDS.JACKS_UNLOCK,
-      XP_THRESHOLDS.MINIGAME_UNLOCK,
-    ];
+    const thresholds = Object.values(XP_THRESHOLDS).sort((a, b) => a - b);
+
     let prev = 0;
     for (const t of thresholds) {
       if (xp < t) return Math.min(100, ((xp - prev) / (t - prev)) * 100);

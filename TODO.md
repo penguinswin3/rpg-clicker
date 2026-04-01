@@ -15,18 +15,20 @@
     - Odd One Out Gems
     - uses gems from the Thief
     - can provide temporary bonuses to random gathering targets? 
+  - Warlock
+    - Connect the dots spellcasting
+    - Generates Brimstone
+    - Minigame creates Soul Stones
+      - It consumes XP!
+    - Enables the fighter to harvest bones from the monsters (that have them lol)
+    - Soul Stones can be used to conjure temporary Jacks? familiars?
   - Mage
     - Memory matching / Simon Says
     - Reads pages from the intel
     - Generates Mana
     - Minigame creates Spell Scrolls
-    - Spell scrolls and hexes combine to make Dark Tomes
-  - Warlock
-    - Connect the dots spellcasting
-    - Generates Brimstone
-    - Minigame creates Soul Stones
-      - It consumes XP! 
-    - Enables the fighter to harvest bones from the monsters (that have them lol)
+    - Spell Scrolls can be used to buff familiars? 
+
   - Chimeramancer
     - Animal parts combination mix and match synergy?
       - kobold ear, kobold tongue, kobold hair, beast meat, bones, other things from the fighter 
@@ -36,6 +38,9 @@
     - Stock market game where you can sell your materials for gp, and buy other materials for gp
   - Slayer
     - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
+
+### Jacks Upgrades
+- Each character will have a (singular) Jacks upgrade that makes Jacks more effective on that character only? 
 
 ### Easter Eggs
 - Fairy Ring codes in the ranger minigame
@@ -69,16 +74,27 @@
 - Any upgrade with a 1 level cap (or no level cap like JoAT) should have a golden left color bar
 - Victory should be a base info log unless you receive a secondary drop.
 - Hovering over or clicking on a per second should show you all fo the factors adding or subtracting to that value 
+- Missing ingredients should show up in the Culinarian minigame when trying to "cook again"
+- ? Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have? 
 
 ## Balancing
 - Add some more one off big upgrades shortly after minigame unlocks?
-- Some of the upgrades maybe don't need to go to 999 and can instead just progress multiple % per level, and scale a little harder in return? 
+- Some of the upgrades maybe don't need to go to 999 and can instead just progress multiple % per level, and scale a little harder in return?
+  - Or some could just be more Chunky and give discrete values, like Bountiful Lands
+    - Bountiful lands (+1 resource node, max +5)
+    - Bubbling Brew adds a new randomly placed bonus area, up to 5 at max level
 - Short rest basically makes you invincible, it should operate at reduced potion efficiency 
+  - Maybe start with First strike and then get short rest later? 
+  - Short rest only heals up to a % threshold and can be upgraded
+  - Maybe short rest will use up to the unlocked number of potions after a fight?
 - Pixie dust could use another use 
+- Culinarian doesn't use any potion to unlock? 
+- Should the culinarian be locked behind kobold ears? Just a couple
 
 ## Bug Fixes
 - 200% herb save isn't saving 2 herbs
 - the experience bar maxes out at like 2.5k or something, the next few unlocks should be there too
+- Current prices should be updated on the buttons when the cost is changed in the game config (savegame related?)
 
 ## Code Refactors
 - extract log text to flavor file, might need to implement string replacement here idk

@@ -58,9 +58,9 @@ export const XP_THRESHOLDS = {
   /** XP required before the First Jack purchase appears */
   JACKS_UNLOCK: 1500,
   /** XP required to unlock all character minigame screens */
-  MINIGAME_UNLOCK:   3000,
+  MINIGAME_UNLOCK:   4000,
   /** XP required before the Culinarian unlock offer appears */
-  CULINARIAN_UNLOCK: 7500,
+  CULINARIAN_UNLOCK: 10000,
 } as const;
 
 // ── Jack of All Trades ────────────────────────────────────────
@@ -116,7 +116,7 @@ export const UNLOCK_COSTS = {
 export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Fighter — standard ───────────────────────────────────────
   { id: 'BETTER_BOUNTIES',      characterId: 'fighter', category: 'standard', max: 999,
-    costs: [{ currency: 'gold', base: 10, scale: 1.25 }] },
+    costs: [{ currency: 'gold', base: 10, scale: 1.35 }] },
   { id: 'CONTRACTED_HIRELINGS', characterId: 'fighter', category: 'standard', max: 999,
     costs: [{ currency: 'gold', base: 25, scale: 1.15 }] },
   { id: 'INSIGHTFUL_CONTRACTS', characterId: 'fighter', category: 'standard', max: 999,
@@ -165,7 +165,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     gates: { requiresApothecary: true },
     costs: [
       { currency: 'concentrated-potion', base: 5,  scale: 1.3 },
-      { currency: 'pixie-dust',          base: 15, scale: 1.3 },
+      { currency: 'pixie-dust',          base: 2, scale: 1.3 },
     ] },
 
   // ── Ranger — minigame ────────────────────────────────────────
@@ -178,7 +178,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'POTION_TITRATION', characterId: 'apothecary', category: 'standard', max: 400,  // 400 × +1% save-chance
     costs: [{ currency: 'gold', base: 20, scale: 1.2 }] },
   { id: 'POTION_MARKETING', characterId: 'apothecary', category: 'standard', max: 999,
-    costs: [{ currency: 'gold', base: 30, scale: 1.05 }] },
+    costs: [{ currency: 'gold', base: 50, scale: 1.07 }] },
 
   // ── Culinarian — standard ────────────────────────────────────
   { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 20, // +1 spice/click, +24g cost/click per level
