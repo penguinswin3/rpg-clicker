@@ -378,10 +378,12 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
     // ── Secondary drop roll ───────────────────────
     let secondaryMsg = '';
+    let gotSecondaryDrop = false;
     if (this.enemy.secondaryDrop) {
       const drop = this.enemy.secondaryDrop;
       if (rollChance(drop.chance)) {
         this.wallet.add(drop.currencyId, drop.amount);
+        gotSecondaryDrop = true;
         const isFirstSecondary = !this.wallet.isCurrencyUnlocked(drop.currencyId);
         if (isFirstSecondary) {
           this.wallet.unlockCurrency(drop.currencyId);
@@ -398,6 +400,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     }
 
     // ── Log message ───────────────────────────────
+    const logType = gotSecondaryDrop ? 'success' : (isFirstEar ? 'rare' : 'default');
     if (isFirstEar) {
       this.log.log(
         `Victory! The ${this.enemy.name} drops a Kobold Ear! (+${gold}g, +${this.enemy.xpReward} XP${secondaryMsg})`,
@@ -406,7 +409,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     } else {
       this.log.log(
         `Victory! ${this.enemy.name} defeated. (+${gold}g, +${this.enemy.xpReward} XP, +${this.enemy.earReward} ear${secondaryMsg})`,
-        'success'
+        logType
       );
     }
 

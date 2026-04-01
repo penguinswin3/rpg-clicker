@@ -3,6 +3,7 @@
 ## Added
 - Add version number to the option menu
 - New Jacks management Buttons
+- Special upgrade coloring for one off powerful upgrades
 
 ## Removed
  - Removed the beat bar label form the apothecary minigame
@@ -12,9 +13,9 @@
 - Changed the description of Potion Dilution to make it a tad more clear what effects it might have
 - Reduced the scaling of most upgrades
 - Increased the XP threshold for unlocking some of the later XP milestones
-- Make the Potion of Cat's Eye a little cheaper
+- All upgrades that use concentrated potions cost less
 - Potion marketing costs a tad more to start
-
+- Log messages now reflect the rarity of the drop in the fighter minigame
 ## Bugfixes
 - Cleanup up the mutual kill message as to not cause excessive wrapping in the fighter minigame
 - The XP Progress track now reflects all XP unlock milestones

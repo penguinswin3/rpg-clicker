@@ -471,6 +471,16 @@
   }
 }
 
+// Single-level (one-time) upgrades use gold accent to match unlock-card style
+.upgrade-card.one-time {
+  border-left-color: #ffcc00;
+
+  &:hover {
+    border-left-color: #ffe066;
+    background: #0a0900;
+  }
+}
+
 .upgrade-name {
   font-weight: bold;
   font-size: 0.95rem;

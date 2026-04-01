@@ -85,7 +85,7 @@ export const JACK_RESOURCE_PROGRESSION: readonly { currency: string; base: numbe
   { currency: 'potion',               base: 50   },
   { currency: 'pixie-dust',           base: 25   },
   { currency: 'kobold-ear',           base: 50   },
-  { currency: 'concentrated-potion',  base: 20   },
+  { currency: 'concentrated-potion',  base: 10   },
   { currency: 'kobold-tongue',        base: 15   },
   { currency: 'spice',                base: 200  },
   { currency: 'hearty-meal',          base: 5    },
@@ -135,7 +135,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'POTION_CHUGGING',  characterId: 'fighter', category: 'minigame', max: 999,
     gates: { requiresApothecary: true },
     costs: [
-      { currency: 'concentrated-potion', base: 3, scale: 1.5 },
+      { currency: 'concentrated-potion', base: 2, scale: 1.5 },
       { currency: 'beast',               base: 12, scale: 1.5 },
     ] },
   { id: 'SHORT_REST', characterId: 'fighter', category: 'minigame', max: 1,
@@ -164,7 +164,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'POTION_CATS_EYE', characterId: 'ranger', category: 'standard', max: 100,    // 100 levels × +1% = 100% chance to roll both herb and beast
     gates: { requiresApothecary: true },
     costs: [
-      { currency: 'concentrated-potion', base: 5,  scale: 1.3 },
+      { currency: 'concentrated-potion', base: 2,  scale: 1.3 },
       { currency: 'pixie-dust',          base: 2, scale: 1.3 },
     ] },
 
@@ -185,7 +185,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'gold', base: 200, scale: 1.3 }] },
   { id: 'POTION_GLIBNESS',  characterId: 'culinarian', category: 'standard', max: 85,   // 85 × -1% spice purchase cost
     costs: [
-      { currency: 'concentrated-potion', base: 3,  scale: 1.5 },
+      { currency: 'concentrated-potion', base: 2,  scale: 1.5 },
       { currency: 'kobold-tongue',       base: 5,  scale: 1.5 },
     ] },
 
@@ -205,20 +205,20 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'BIGGER_BUBBLES', characterId: 'apothecary', category: 'minigame', max: 5,
     gates: { requiresBubblingBrew: true },
     costs: [
-      { currency: 'concentrated-potion', base: 20, scale: 1.2 },
+      { currency: 'concentrated-potion', base: 5, scale: 1.2 },
       { currency: 'kobold-ear',          base: 30, scale: 1.2 },
     ] },
   { id: 'POTION_DILUTION', characterId: 'apothecary', category: 'minigame', max: 1,
     costs: [
       { currency: 'gold',                base: 10_000, scale: 1.0 },
       { currency: 'potion',              base: 1_000,  scale: 1.0 },
-      { currency: 'concentrated-potion', base: 100,    scale: 1.0 },
+      { currency: 'concentrated-potion', base: 10,    scale: 1.0 },
     ] },
   { id: 'SERIAL_DILUTION', characterId: 'apothecary', category: 'minigame', max: 50,
     gates: { requiresPotionDilution: true },
     costs: [
       { currency: 'gold',                base: 5_000, scale: 1.3 },
-      { currency: 'concentrated-potion', base: 10,    scale: 1.3 },
+      { currency: 'concentrated-potion', base: 2,    scale: 1.3 },
       { currency: 'kobold-hair',         base: 5,     scale: 1.3 },
     ] },
 ];

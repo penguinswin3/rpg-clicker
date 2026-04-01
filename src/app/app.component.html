@@ -97,8 +97,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
         <!-- Shared upgrade card template — used by both columns -->
         <ng-template #upgradeCard let-id>
-          <div class="upgrade-card" [class.bland]="blandMode">
-            <span class="upgrade-name cyan-text">{{ getUpgradeFlavor(id).name }}</span>
+          <div class="upgrade-card" [class.bland]="blandMode" [class.one-time]="upgrades.maxLevel(id) === 1">
+            <span class="upgrade-name" [class.cyan-text]="upgrades.maxLevel(id) !== 1" [class.gold-text]="upgrades.maxLevel(id) === 1">{{ getUpgradeFlavor(id).name }}</span>
             <div class="upgrade-body">
               <span class="upgrade-desc" *ngIf="!blandMode">{{ getUpgradeFlavor(id).desc }}{{ upgradeDescSuffix(id) }}</span>
               <div class="upgrade-btn-wrap">
