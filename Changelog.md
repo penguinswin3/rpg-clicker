@@ -17,6 +17,8 @@
 - All upgrades that use concentrated potions cost less
 - Potion marketing costs a tad more to start
 - Log messages now reflect the rarity of the drop in the fighter minigame
+- Kobold hairs have a new coat of paint
+
 ## Bugfixes
 - Cleanup up the mutual kill message as to not cause excessive wrapping in the fighter minigame
 - The XP Progress track now reflects all XP unlock milestones

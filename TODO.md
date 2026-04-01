@@ -71,7 +71,7 @@
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
 - Hovering over or clicking on a per second should show you all fo the factors adding or subtracting to that value 
 - ? Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have? 
-- Short rest should log how many potions were consumed
+
 
 ## Balancing
 - Add some more one off big upgrades shortly after minigame unlocks?
@@ -84,7 +84,7 @@
   - Short rest only heals up to a % threshold and can be upgraded
   - Maybe short rest will use up to the unlocked number of potions after a fight?
 - Pixie dust could use another use 
-- Culinarian doesn't use any potion to unlock? 
+- Culinarian doesn't use any apoth resources to unlock? 
 - Should the culinarian be locked behind kobold ears? Just a couple
 
 ## Bug Fixes

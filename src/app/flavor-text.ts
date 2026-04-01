@@ -18,7 +18,7 @@ export const CURRENCY_FLAVOR = {
   'concentrated-potion': { name: 'Concentrated Potion Base',  symbol: '⚗',  color: '#ba70cf' },
   'kobold-ear':          { name: 'Kobold Left Ear',           symbol: '>',  color: '#e02020' },
   'kobold-tongue':       { name: 'Kobold Tongue',             symbol: 'γ',  color: '#c75050' },
-  'kobold-hair':         { name: 'Kobold Hair',               symbol: 'Ҩ',  color: '#8a4b40' },
+  'kobold-hair':         { name: 'Kobold Hair',               symbol: 'Ҩ',  color: '#ac7c5a' },
   spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
   'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#683a0c' },
 } as const;
