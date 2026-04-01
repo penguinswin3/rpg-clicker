@@ -4,7 +4,8 @@
 - Add version number to the option menu
 
 ## Removed
- 
+ - Removed the beat bar label form the apothecary minigame
+
 ## Changed
 - Renamed the Culinarian minigame to the "Test Kitchen"
 - Changed the description of Potion Dilution to make it a tad more clear what effects it might have
