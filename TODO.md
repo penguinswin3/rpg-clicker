@@ -77,7 +77,7 @@
 - Hovering over or clicking on a per second should show you all fo the factors adding or subtracting to that value 
 
 ## Balancing
--Add some more one off big upgrades shortly after minigame unlocks?
+- Add some more one off big upgrades shortly after minigame unlocks?
 - Some of the upgrades maybe don't need to go to 999 and can instead just progress multiple % per level, and scale a little harder in return? 
 - Short rest basically makes you invincible, it should operate at reduced potion efficiency 
 - Pixie dust could use another use 
