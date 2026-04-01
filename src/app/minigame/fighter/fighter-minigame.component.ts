@@ -344,10 +344,13 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
   /** Consume potions one at a time until HP is full or potions run out. */
   private autoHealToFull(): void {
+    let potionsConsumed = 0;
     while (this.potions > 0 && this.fighterHp < this.maxHp) {
       this.wallet.remove('potion', 1);
+      potionsConsumed++;
       this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount);
     }
+    this.log.log(`Chugged ${potionsConsumed} potion(s) during a short rest.`, "default")
   }
 
   private applyEnemyDamage(dmg: number): void {

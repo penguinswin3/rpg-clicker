@@ -4,6 +4,7 @@
 - Add version number to the option menu
 - New Jacks management Buttons
 - Special upgrade coloring for one off powerful upgrades
+- Short rest potion chugging logging
 
 ## Removed
  - Removed the beat bar label form the apothecary minigame
