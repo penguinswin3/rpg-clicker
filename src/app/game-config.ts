@@ -116,16 +116,16 @@ export const UNLOCK_COSTS = {
 export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Fighter — standard ───────────────────────────────────────
   { id: 'BETTER_BOUNTIES',      characterId: 'fighter', category: 'standard', max: 999,
-    costs: [{ currency: 'gold', base: 10, scale: 1.5 }] },
+    costs: [{ currency: 'gold', base: 10, scale: 1.25 }] },
   { id: 'CONTRACTED_HIRELINGS', characterId: 'fighter', category: 'standard', max: 999,
     costs: [{ currency: 'gold', base: 25, scale: 1.15 }] },
   { id: 'INSIGHTFUL_CONTRACTS', characterId: 'fighter', category: 'standard', max: 999,
     gates: { xpMin: 500 },
-    costs: [{ currency: 'gold', base: 400, scale: 2.0 }] },
+    costs: [{ currency: 'gold', base: 400, scale: 1.4 }] },
   { id: 'HIRELINGS_HIRELINGS', characterId: 'fighter', category: 'standard', max: 999,
     gates: { requiresCulinarian: true },
     costs: [
-      { currency: 'gold',  base: 1000, scale: 2.0 },
+      { currency: 'gold',  base: 1000, scale: 1.5 },
       { currency: 'spice', base: 1000,    scale: 1.5 },
     ] },
 
@@ -148,7 +148,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: KOBOLD_VARIANTS.length - 1,
     gates: { xpMin: 3000 },
     costs: [
-      { currency: 'kobold-ear',    base: 66, scale: 2.8 },                                        // always
+      { currency: 'kobold-ear',    base: 66, scale: 2.0 },                                        // always
       { currency: 'beast',         base: 500, scale: 1.0, fromLevel: 0, untilLevel: 1 },           // tier 1 only
       { currency: 'kobold-tongue', base: 66, scale: 1.0, fromLevel: 1, untilLevel: 2 },           // tier 2 only
       { currency: 'kobold-hair',   base: 66, scale: 1.0, fromLevel: 2, untilLevel: 3 },           // tier 3 only
@@ -158,9 +158,9 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'MORE_HERBS',      characterId: 'ranger', category: 'standard', max: 999,
     costs: [{ currency: 'gold', base: 15, scale: 1.2 }] },
   { id: 'BETTER_TRACKING', characterId: 'ranger', category: 'standard', max: 999,
-    costs: [{ currency: 'gold', base: 20, scale: 1.2 }] },
+    costs: [{ currency: 'gold', base: 30, scale: 1.3 }] },
   { id: 'BIGGER_GAME',     characterId: 'ranger', category: 'standard', max: 999,    // each level +1 max Raw Beast Meat from hero button
-    costs: [{ currency: 'gold', base: 480, scale: 2.0 }] },
+    costs: [{ currency: 'gold', base: 480, scale: 1.75 }] },
   { id: 'POTION_CATS_EYE', characterId: 'ranger', category: 'standard', max: 100,    // 100 levels × +1% = 100% chance to roll both herb and beast
     gates: { requiresApothecary: true },
     costs: [
@@ -170,29 +170,29 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
 
   // ── Ranger — minigame ────────────────────────────────────────
   { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 100,    // 100% = every blank cell guaranteed a prize
-    costs: [{ currency: 'kobold-ear', base: 10, scale: 1.5 }] },
+    costs: [{ currency: 'kobold-ear', base: 10, scale: 1.2 }] },
   { id: 'ABUNDANT_LANDS',  characterId: 'ranger', category: 'minigame', max: 1,      // binary unlock
     costs: [{ currency: 'pixie-dust', base: 5, scale: 1.0 }] },
 
   // ── Apothecary — standard ────────────────────────────────────
   { id: 'POTION_TITRATION', characterId: 'apothecary', category: 'standard', max: 400,  // 400 × +1% save-chance
-    costs: [{ currency: 'gold', base: 20, scale: 1.5 }] },
+    costs: [{ currency: 'gold', base: 20, scale: 1.2 }] },
   { id: 'POTION_MARKETING', characterId: 'apothecary', category: 'standard', max: 999,
-    costs: [{ currency: 'gold', base: 30, scale: 1.3 }] },
+    costs: [{ currency: 'gold', base: 30, scale: 1.05 }] },
 
   // ── Culinarian — standard ────────────────────────────────────
   { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 20, // +1 spice/click, +24g cost/click per level
-    costs: [{ currency: 'gold', base: 200, scale: 1.9 }] },
+    costs: [{ currency: 'gold', base: 200, scale: 1.3 }] },
   { id: 'POTION_GLIBNESS',  characterId: 'culinarian', category: 'standard', max: 85,   // 85 × -1% spice purchase cost
     costs: [
-      { currency: 'concentrated-potion', base: 3,  scale: 1.8 },
-      { currency: 'kobold-tongue',       base: 5,  scale: 1.8 },
+      { currency: 'concentrated-potion', base: 3,  scale: 1.5 },
+      { currency: 'kobold-tongue',       base: 5,  scale: 1.5 },
     ] },
 
   // ── Culinarian — minigame ────────────────────────────────────
   { id: 'WASTE_NOT', characterId: 'culinarian', category: 'minigame', max: 999,
     costs: [
-      { currency: 'spice',       base: 200, scale: 1.7 },
+      { currency: 'spice',       base: 200, scale: 1.5 },
       { currency: 'hearty-meal', base: 5,  scale: 1.2 },
     ] },
 
@@ -205,8 +205,8 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'BIGGER_BUBBLES', characterId: 'apothecary', category: 'minigame', max: 5,
     gates: { requiresBubblingBrew: true },
     costs: [
-      { currency: 'concentrated-potion', base: 20, scale: 2.8 },
-      { currency: 'kobold-ear',          base: 30, scale: 2.8 },
+      { currency: 'concentrated-potion', base: 20, scale: 1.2 },
+      { currency: 'kobold-ear',          base: 30, scale: 1.2 },
     ] },
   { id: 'POTION_DILUTION', characterId: 'apothecary', category: 'minigame', max: 1,
     costs: [
@@ -217,9 +217,9 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'SERIAL_DILUTION', characterId: 'apothecary', category: 'minigame', max: 50,
     gates: { requiresPotionDilution: true },
     costs: [
-      { currency: 'gold',                base: 5_000, scale: 1.6 },
-      { currency: 'concentrated-potion', base: 10,    scale: 1.6 },
-      { currency: 'kobold-hair',         base: 5,     scale: 1.6 },
+      { currency: 'gold',                base: 5_000, scale: 1.3 },
+      { currency: 'concentrated-potion', base: 10,    scale: 1.3 },
+      { currency: 'kobold-hair',         base: 5,     scale: 1.3 },
     ] },
 ];
 
