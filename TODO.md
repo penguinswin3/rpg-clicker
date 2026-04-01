@@ -68,13 +68,10 @@
 
 ## UI Tweaks
 - Once a xp threshold is passed, anything unlocked by that threshold should remain, and the threshold should not be tracked again in the currency menu
-- Recall all jacks button 
-- After unlocking 5 jacks, add a "remove all and add all" button above and below the jacks box 
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
 - Any upgrade with a 1 level cap (or no level cap like JoAT) should have a golden left color bar
 - Victory should be a base info log unless you receive a secondary drop.
 - Hovering over or clicking on a per second should show you all fo the factors adding or subtracting to that value 
-- Missing ingredients should show up in the Culinarian minigame when trying to "cook again"
 - ? Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have? 
 
 ## Balancing

@@ -18,6 +18,7 @@
 ## Bugfixes
 - Cleanup up the mutual kill message as to not cause excessive wrapping in the fighter minigame
 - The XP Progress track now reflects all XP unlock milestones
+- Missing costs are now shown when restarting the culinarian minigame
 ----------------------------
 # Version Alpha 1.0.0
  Initial Alpha Release

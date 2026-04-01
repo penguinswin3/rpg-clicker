@@ -111,6 +111,20 @@
               (click)="startRound()">
         [ COOK AGAIN ]
       </button>
+      <div class="cook-again-warn" *ngIf="!canStart">
+        <span *ngIf="herb < INGREDIENT_COST">
+          need {{ INGREDIENT_COST - herb }} more <span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span>
+        </span>
+        <span *ngIf="beast < INGREDIENT_COST">
+          need {{ INGREDIENT_COST - beast }} more <span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>
+        </span>
+        <span *ngIf="koboldTongue < INGREDIENT_COST">
+          need {{ INGREDIENT_COST - koboldTongue }} more <span [style.color]="currencyFlavor['kobold-tongue'].color">{{ currencyFlavor['kobold-tongue'].symbol }}</span>
+        </span>
+        <span *ngIf="spice < INGREDIENT_COST">
+          need {{ INGREDIENT_COST - spice }} more <span [style.color]="currencyFlavor['spice'].color">{{ currencyFlavor['spice'].symbol }}</span>
+        </span>
+      </div>
     </div>
 
   </ng-container>
