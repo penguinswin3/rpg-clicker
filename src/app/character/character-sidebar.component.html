@@ -39,6 +39,15 @@
 
   </div><!-- /sidebar-content -->
 
+    <!-- Unassign All Jacks — anchored bottom of expanded sidebar -->
+    <div class="sidebar-unassign-wrap" *ngIf="!collapsed && jacksOwned >= 5">
+      <button class="sidebar-unassign-btn"
+              [disabled]="totalJacksAssigned <= 0"
+              (click)="emitUnassignAll()">
+        [ Unassign all Jacks ]
+      </button>
+    </div>
+
   <!-- ══ Collapsed ══════════════════════ -->
   <div class="collapsed-list" *ngIf="collapsed">
     <div

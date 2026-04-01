@@ -570,6 +570,29 @@ export class AppComponent implements OnInit, OnDestroy {
     this.updateAllPerSecond();
   }
 
+  /** Assign all free jacks to the current character. Requires ≥5 jacks owned. */
+  allocateAllJacks(charId: string): void {
+    if (this.jacksPoolFree <= 0) return;
+    this.jacksAllocations = {
+      ...this.jacksAllocations,
+      [charId]: (this.jacksAllocations[charId] ?? 0) + this.jacksPoolFree,
+    };
+    this.updateAllPerSecond();
+  }
+
+  /** Remove all jacks assigned to the current character. Requires ≥5 jacks owned. */
+  deallocateAllJacks(charId: string): void {
+    if ((this.jacksAllocations[charId] ?? 0) <= 0) return;
+    this.jacksAllocations = { ...this.jacksAllocations, [charId]: 0 };
+    this.updateAllPerSecond();
+  }
+
+  /** Remove all jacks from every character. */
+  unassignAllJacks(): void {
+    this.jacksAllocations = {};
+    this.updateAllPerSecond();
+  }
+
   private jackAutoClick(charId: string): void {
     if (charId === 'fighter') {
       this.wallet.add('gold', this.goldPerClick);

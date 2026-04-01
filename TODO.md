@@ -98,3 +98,4 @@
 
 ## Code Refactors
 - extract log text to flavor file, might need to implement string replacement here idk
+- Fighter minigame combat log is a mess lmao 

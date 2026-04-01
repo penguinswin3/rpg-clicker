@@ -2,6 +2,7 @@
 
 ## Added
 - Add version number to the option menu
+- New Jacks management Buttons
 
 ## Removed
  - Removed the beat bar label form the apothecary minigame

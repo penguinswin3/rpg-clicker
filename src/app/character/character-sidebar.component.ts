@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { CharacterService, Character } from './character.service';
@@ -22,9 +22,19 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   @Input() heroStats: HeroStat[] = [];
   /** Passed in from AppComponent so the sidebar can display Jack assignment counts. */
   @Input() jacksAllocations: Record<string, number> = {};
+  @Input() jacksOwned = 0;
+  @Output() unassignAllJacks = new EventEmitter<void>();
 
   getJackCount(charId: string): number {
     return this.jacksAllocations[charId] ?? 0;
+  }
+
+  get totalJacksAssigned(): number {
+    return Object.values(this.jacksAllocations).reduce((a, b) => a + b, 0);
+  }
+
+  emitUnassignAll(): void {
+    this.unassignAllJacks.emit();
   }
 
   private charService = inject(CharacterService);

@@ -239,3 +239,33 @@ $cyan: #0ff;
   line-height: 1;
 }
 
+// ── Unassign all Jacks button ──────────────────────────────────
+
+.sidebar-unassign-wrap {
+  padding: 0.4rem 0.5rem 0.5rem;
+  border-top: 1px solid $border;
+}
+
+.sidebar-unassign-btn {
+  width: 100%;
+  background: #000;
+  color: #aaa;
+  border: 1px solid #444;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.7rem;
+  padding: 0.25rem 0;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.1s, color 0.1s;
+
+  &:hover:not(:disabled) {
+    background: #222;
+    color: #fff;
+  }
+
+  &:disabled {
+    border-color: #222;
+    color: #333;
+    cursor: not-allowed;
+  }
+}

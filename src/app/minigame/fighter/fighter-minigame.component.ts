@@ -423,7 +423,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     }
 
     this.lastMsg       = `${this.enemy.name} defeated!`;
-    this.msgLine2      = `Kobold hits back: ${enemyLastDmg} dmg!`;
+    this.msgLine2      = `Final blow: ${enemyLastDmg} dmg!`;
     this.msgClass      = 'msg-good';
     this.awaitingSpawn = true;
     if (this.shortRestEnabled) this.autoHealToFull();

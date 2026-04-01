@@ -43,6 +43,9 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           <div class="jack-pool-info">
             <span class="jack-pool-label" [style.visibility]="jacksPoolFree > 0 ? 'visible' : 'hidden'">Avail: <span class="jack-pool-count">{{ jacksPoolFree }}</span></span>
           </div>
+          <button class="jack-bulk-btn" *ngIf="jacksOwned >= 5"
+                  [disabled]="jacksPoolFree <= 0"
+                  (click)="allocateAllJacks(activeCharacterInfo.id)">[ALL]</button>
           <div class="jack-alloc-stack">
             <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack(activeCharacterInfo.id)">[+]</button>
             <div class="jack-assigned-display">
@@ -51,6 +54,9 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             </div>
             <button class="jack-alloc-btn" [disabled]="getJackCount(activeCharacterInfo.id) <= 0" (click)="deallocateJack(activeCharacterInfo.id)">[-]</button>
           </div>
+          <button class="jack-bulk-btn" *ngIf="jacksOwned >= 5"
+                  [disabled]="getJackCount(activeCharacterInfo.id) <= 0"
+                  (click)="deallocateAllJacks(activeCharacterInfo.id)">[NONE]</button>
         </div>
 
         <div class="hero-area">
@@ -156,7 +162,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
   </div>
 
   <!-- Right sidebar -->
-  <app-character-sidebar [heroStats]="heroStats" [jacksAllocations]="jacksAllocations" />
+  <app-character-sidebar [heroStats]="heroStats" [jacksAllocations]="jacksAllocations" [jacksOwned]="jacksOwned" (unassignAllJacks)="unassignAllJacks()" />
 </div>
 
 <router-outlet />
