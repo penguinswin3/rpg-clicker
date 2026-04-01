@@ -43,23 +43,23 @@
 
 ## Upgrade Ideas
 
-  ### Fighter
+### Fighter
 - "Clean Kills" upgrade that makes uncommon drops from the fighter minigame more likely to be dropped
 - Make enemies drop more gold. Maybe combine this with the above and make it "more loot"
 - Auto attack type button? Maybe just click once to start a kill and then another later that auto restarts?
   - Maybe assign a jack to it idk If I like that 
 
-    ### Ranger 
+### Ranger 
 - Visions of pixies upgrade that gives a little sparkle effect where a pixie might me. A few tiers with varying accuracies, can scale to up to 3 sparkles
 - Buried Treasure upgrade on ranger minigame that gives a big bonus of gold
 - "Divide and Conquer" Jacks are more effective when hunting and gathering
 - Dense Woodlands upgrade that gives a base +1 resource yield on herbs and meat in the ranger minigame
 
 
-  ### Apothecary
+### Apothecary
 
 
-  ## Culinarian
+### Culinarian
 
 ## UI Tweaks
 - Once a xp threshold is passed, anything unlocked by that threshold should remain, and the threshold should not be tracked again in the currency menu
