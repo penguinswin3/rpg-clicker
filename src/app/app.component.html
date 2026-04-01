@@ -18,6 +18,7 @@
     [potionDilutionLevel]="upgrades.level('POTION_DILUTION')"
     [serialDilutionLevel]="upgrades.level('SERIAL_DILUTION')"
     [wasteNotLevel]="upgrades.level('WASTE_NOT')"
+    [largerCookbooksLevel]="upgrades.level('LARGER_COOKBOOKS')"
     [fighterCombatState]="fighterCombatState"
     (fighterCombatStateChange)="fighterCombatState = $event" />
 
@@ -60,8 +61,9 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         </div>
 
         <div class="hero-area">
-          <button class="hero-btn" (click)="clickHero()">
-            [ >>> {{ questBtnLabel }} <<< ]
+          <button class="hero-btn" [disabled]="isHeroDisabled" (click)="clickHero()">
+            <div class="stun-fill-bar" *ngIf="isHeroDisabled" [ngStyle]="thiefStunAnimStyle"></div>
+            <span class="hero-btn-label">[ >>> {{ questBtnLabel }} <<< ]</span>
           </button>
           <div class="hero-subzone">
             <button class="wholesale-toggle-btn"

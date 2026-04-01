@@ -58,6 +58,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() serialDilutionLevel = 0;
   /** Waste Not level — forwarded to the culinarian minigame. */
   @Input() wasteNotLevel = 0;
+  /** Larger Cookbooks level — forwarded to the culinarian minigame. */
+  @Input() largerCookbooksLevel = 0;
   /** Previously-saved fighter combat state. */
   @Input() fighterCombatState: FighterCombatState | null = null;
   /** Emitted whenever fighter combat state changes. */
@@ -83,6 +85,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     {
       characterId: 'culinarian',
       title: MINIGAME_FLAVOR.CULINARIAN.name,
+    },
+    {
+      characterId: 'thief',
+      title: MINIGAME_FLAVOR.THIEF.name,
     },
   ];
 

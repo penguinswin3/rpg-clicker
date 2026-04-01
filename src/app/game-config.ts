@@ -21,6 +21,8 @@ export interface UpgradeGates {
   readonly requiresApothecary?: boolean;
   /** Hide until the Culinarian character is unlocked (i.e. spice is in play). */
   readonly requiresCulinarian?: boolean;
+  /** Hide until the Thief character is unlocked. */
+  readonly requiresThief?: boolean;
   /** Hide until the Bubbling Brew minigame upgrade has been purchased. */
   readonly requiresBubblingBrew?: boolean;
   /** Hide until the Potion Dilution minigame upgrade has been purchased. */
@@ -61,6 +63,8 @@ export const XP_THRESHOLDS = {
   MINIGAME_UNLOCK:   4000,
   /** XP required before the Culinarian unlock offer appears */
   CULINARIAN_UNLOCK: 10000,
+  /** XP required before the Thief unlock offer appears */
+  THIEF_UNLOCK:      40000,
 } as const;
 
 // ── Jack of All Trades ────────────────────────────────────────
@@ -102,6 +106,10 @@ export const UNLOCK_COSTS = {
   CULINARIAN_GOLD:   15_000,
   CULINARIAN_BEAST:   1_500,
   CULINARIAN_HERBS:   1_500,
+
+  THIEF_GOLD:        50_000,
+  THIEF_SPICE:       10_000,
+  THIEF_KOBOLD_HAIR: 100,
 
   /** Minigame system unlock — available once XP >= MINIGAME_UNLOCK threshold */
   MINIGAME_GOLD:    10000,
@@ -179,6 +187,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'gold', base: 20, scale: 1.2 }] },
   { id: 'POTION_MARKETING', characterId: 'apothecary', category: 'standard', max: 999,
     costs: [{ currency: 'gold', base: 50, scale: 1.07 }] },
+  { id: 'SECRET_RECIPE', characterId: 'apothecary', category: 'standard', max: 100,
+    gates: { requiresThief: true },
+    costs: [
+      { currency: 'gold',    base: 500, scale: 1.2 },
+      { currency: 'dossier', base: 50,   scale: 1.1 },
+    ] },
 
   // ── Culinarian — standard ────────────────────────────────────
   { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 20, // +1 spice/click, +24g cost/click per level
@@ -195,6 +209,16 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'spice',       base: 200, scale: 1.5 },
       { currency: 'hearty-meal', base: 5,  scale: 1.2 },
     ] },
+  { id: 'LARGER_COOKBOOKS', characterId: 'culinarian', category: 'minigame', max: 1,
+    costs: [
+      { currency: 'gold',        base: 100_000, scale: 1.0 },
+      { currency: 'hearty-meal', base: 15,      scale: 1.0 },
+      { currency: 'dossier',     base: 2_500,   scale: 1.0 },
+    ] },
+
+  // ── Thief — standard ─────────────────────────────────────────
+  { id: 'METICULOUS_PLANNING', characterId: 'thief', category: 'standard', max: 50,
+    costs: [{ currency: 'gold', base: 1000, scale: 1.25 }] },
 
   // ── Apothecary — minigame ────────────────────────────────────
   { id: 'BUBBLING_BREW', characterId: 'apothecary', category: 'minigame', max: 1,
@@ -240,6 +264,11 @@ export const YIELDS = {
 
   /** Gold spent per Culinarian hero-button press to produce 1 Spice */
   CULINARIAN_SPICE_COST: 25,
+
+  /** Base % chance the Thief successfully breaks & enters on a hero-button click */
+  THIEF_BASE_SUCCESS_CHANCE: 50,
+  /** Duration in ms the Thief is stunned on a failed break-in */
+  THIEF_STUN_DURATION_MS: 3_000,
 
 } as const;
 

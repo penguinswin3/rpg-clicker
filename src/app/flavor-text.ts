@@ -21,6 +21,7 @@ export const CURRENCY_FLAVOR = {
   'kobold-hair':         { name: 'Kobold Hair',               symbol: 'Ҩ',  color: '#ac7c5a' },
   spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
   'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#683a0c' },
+  dossier:               { name: 'Dossier',                   symbol: '⌸', color: '#c0cedc' },
 } as const;
 
 // ── Upgrades ──────────────────────────────────────────────────
@@ -115,6 +116,10 @@ export const UPGRADE_FLAVOR = {
     name: 'Serial Dilution',
     desc: '+1% dilution success chance per level',
   },
+  SECRET_RECIPE: {
+    name: 'Secret Recipe',
+    desc: '+1% chance for a bonus concentrated potion',
+  },
 
   // Culinarian
   WHOLESALE_SPICES: {
@@ -124,6 +129,16 @@ export const UPGRADE_FLAVOR = {
   WASTE_NOT: {
     name: 'Waste Not',
     desc: '+1 hearty meal per unused guess on a successful recipe',
+  },
+  LARGER_COOKBOOKS: {
+    name: 'Ancient Cookbook',
+    desc: 'The first ingredient in the recipe is always revealed at the start',
+  },
+
+  // Thief
+  METICULOUS_PLANNING: {
+    name: 'Meticulous Planning',
+    desc: '+1% thieving success chance per level',
   },
 } as const;
 
@@ -211,6 +226,11 @@ export const CHARACTER_FLAVOR = {
     desc: 'A seasoned chef who sources only the finest ingredients. Can craft never before tasted dishes with peculiar potency...',
     questBtn: 'Source Ingredients',
   },
+  THIEF: {
+    name: 'Thief',
+    desc: "A lady doesn't need to always lurk in the shadows",
+    questBtn: 'Break & Enter',
+  },
 } as const;
 
 // ── Minigames ─────────────────────────────────────────────────
@@ -230,6 +250,10 @@ export const MINIGAME_FLAVOR = {
   CULINARIAN: {
     name: 'Test Kitchen',
     desc: 'Master the art of spice and flame\nto craft legendary dishes.',
+  },
+  THIEF: {
+    name: 'Heist Planning',
+    desc: 'Coordinate the perfect heist.\nEvery detail matters.',
   },
 } as const;
 
@@ -268,15 +292,20 @@ export const HERO_STATS_FLAVOR = {
     MAX_MEAT:     'Max Meat      :',
   },
   APOTHECARY: {
-    HERBS_BREW:      'Herbs Per Brew   :',
-    SAVE_CHANCE:     'Herb Save Chance :',
-    GOLD_PER_BREW:   'Gold Per Brew    :',
-    DILUTION_SUCCESS:'Dilution Success :',
+    HERBS_BREW:           'Herbs Per Brew   :',
+    SAVE_CHANCE:          'Herb Save Chance :',
+    GOLD_PER_BREW:        'Gold Per Brew    :',
+    DILUTION_SUCCESS:     'Dilution Success :',
+    SECRET_RECIPE_CHANCE: 'Secret Recipes   :',
   },
   CULINARIAN: {
     SPICE_PER_CLICK: 'Spice Per Click  :',
     GOLD_COST:       'Wholesale Total  :',
     GOLD_DISCOUNT:   'Spice Discount   :',
+  },
+  THIEF: {
+    SUCCESS_CHANCE: 'Success Chance :',
+    DOSSIERS_PER_S: 'Dossiers/sec   :',
   },
 } as const;
 

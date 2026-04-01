@@ -175,6 +175,13 @@ $green: #44dd44;
     border-color: $gold;
     background: #111;
   }
+
+  &.revealed {
+    border-style: solid;
+    border-color: #5588aa;
+    background: rgba(50, 90, 120, 0.25);
+    cursor: default;
+  }
 }
 
 .slot-symbol {

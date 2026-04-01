@@ -35,6 +35,8 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
 
   /** Level of the Waste Not upgrade — grants +1 hearty meal per unused guess on win. */
   @Input() wasteNotLevel = 0;
+  /** Level of the Larger Cookbooks upgrade — reveals the first ingredient at round start. */
+  @Input() largerCookbooksLevel = 0;
 
   // ── Wallet-synced ─────────────────────────
   herb         = 0;
@@ -47,6 +49,8 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
   solution: string[] = [];
   guessHistory: GuessRow[] = [];
   currentGuess: (string | null)[] = [];
+  /** Indices that are locked as revealed hints and cannot be cleared or overwritten. */
+  revealedSlots = new Set<number>();
   guessesUsed = 0;
   won   = false;
   lost  = false;
@@ -111,11 +115,19 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
 
     this.guessHistory = [];
     this.currentGuess = Array(this.SOLUTION_LENGTH).fill(null);
+    this.revealedSlots = new Set<number>();
     this.guessesUsed  = 0;
     this.won   = false;
     this.lost  = false;
     this.roundActive = true;
     this.dragIngredient = null;
+
+    // Larger Cookbooks: reveal and lock the first ingredient
+    if (this.largerCookbooksLevel >= 1) {
+      this.currentGuess[0] = this.solution[0];
+      this.revealedSlots.add(0);
+    }
+
     this.lastMsg  = MINIGAME_MSG.CULINARIAN.ROUND_START(this.MAX_GUESSES);
     this.msgClass = 'msg-neutral';
     this.log.log(`Culinarian begins experimenting. (−${this.INGREDIENT_COST} each ingredient)`);
@@ -139,29 +151,36 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
       this.lastMsg  = MINIGAME_MSG.CULINARIAN.GUESS_FEEDBACK(greens, yellows, this.guessesRemaining);
       this.msgClass = 'msg-neutral';
       this.currentGuess = Array(this.SOLUTION_LENGTH).fill(null);
+      // Re-apply any Larger Cookbooks revealed slots so they persist across every guess row.
+      for (const idx of this.revealedSlots) {
+        this.currentGuess[idx] = this.solution[idx];
+      }
     }
   }
 
   clearGuess(): void {
-    this.currentGuess = Array(this.SOLUTION_LENGTH).fill(null);
+    // Preserve any revealed slots — only clear the player-placed ones.
+    this.currentGuess = this.currentGuess.map((v, i) =>
+      this.revealedSlots.has(i) ? v : null
+    );
     this.dragIngredient = null;
   }
 
   // ── Click-to-place (primary interaction) ──
 
-  /** Place ingredient into the leftmost empty slot immediately. */
+  /** Place ingredient into the leftmost empty, non-revealed slot. */
   selectIngredient(id: string): void {
     if (this.won || this.lost) return;
-    const idx = this.currentGuess.indexOf(null);
+    const idx = this.currentGuess.findIndex((v, i) => v === null && !this.revealedSlots.has(i));
     if (idx !== -1) {
       this.currentGuess[idx] = id;
     }
   }
 
-  /** Clicking a filled slot clears it. */
+  /** Clicking a filled, non-revealed slot clears it. */
   slotClick(index: number): void {
     if (this.won || this.lost) return;
-    if (this.currentGuess[index] !== null) {
+    if (!this.revealedSlots.has(index) && this.currentGuess[index] !== null) {
       this.currentGuess[index] = null;
     }
   }
@@ -179,6 +198,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
 
   onDrop(event: DragEvent, index: number): void {
     event.preventDefault();
+    if (this.revealedSlots.has(index)) return;
     const id = event.dataTransfer?.getData('text/plain') ?? this.dragIngredient;
     if (id && this.INGREDIENTS.includes(id)) {
       this.currentGuess[index] = id;

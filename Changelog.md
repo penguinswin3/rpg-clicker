@@ -1,3 +1,18 @@
+# Version Alpha 1.1.0
+
+## Added
+- Add a new character, the Thief. They will collect knowledge in the form of Dossiers
+- Add a handful of new upgrades for the thief
+- Added a new upgrade for the Apothecary, Secret Recipie
+- Added a new upgrade for the Culinarian, Ancient Cookbook
+
+## Removed
+
+## Changed
+
+## Bugfixes
+- Fixed costs not scaling properly when loading from an outdated save game 
+----------------------------
 # Version Alpha 1.0.1
 
 ## Added
@@ -61,3 +76,5 @@
 ## Changed
 
 ## Bugfixes
+
+----------------------------

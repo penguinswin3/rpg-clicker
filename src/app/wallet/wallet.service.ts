@@ -45,6 +45,8 @@ export class WalletService {
     // ── Culinarian ───────────────────────────────────────────────────────────
     { id: 'spice',                ...CURRENCY_FLAVOR['spice'],                 requiredCharacterId: 'culinarian'   },
     { id: 'hearty-meal',          ...CURRENCY_FLAVOR['hearty-meal'],           requiredCharacterId: 'culinarian', manualUnlock: true },
+    // ── Thief ─────────────────────────────────────────────────────────────────
+    { id: 'dossier',              ...CURRENCY_FLAVOR['dossier'],               requiredCharacterId: 'thief'        },
   ];
 
   private readonly stateSource = new BehaviorSubject<WalletState>(

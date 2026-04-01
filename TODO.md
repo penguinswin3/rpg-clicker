@@ -14,7 +14,7 @@
   - Artisan
     - Odd One Out Gems
     - uses gems from the Thief
-    - can provide temporary bonuses to random gathering targets? 
+    - can provide temporary bonuses to random gathering targets?
   - Warlock
     - Connect the dots spellcasting
     - Generates Brimstone
