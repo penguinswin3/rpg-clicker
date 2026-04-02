@@ -177,8 +177,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Ranger — minigame ────────────────────────────────────────
-  { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 100,    // 100% = every blank cell guaranteed a prize
-    costs: [{ currency: 'kobold-ear', base: 10, scale: 1.2 }] },
+  { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 5,      // each level adds +1 guaranteed prize node
+    costs: [
+      { currency: 'kobold-ear',    base: 50, scale: 1.0, fromLevel: 0, untilLevel: 1 },  // level 1 only
+      { currency: 'kobold-tongue', base: 50, scale: 1.0, fromLevel: 1, untilLevel: 2 },  // level 2 only
+      { currency: 'kobold-hair',   base: 50, scale: 1.0, fromLevel: 2 },                 // levels 3–5
+    ] },
   { id: 'ABUNDANT_LANDS',  characterId: 'ranger', category: 'minigame', max: 1,      // binary unlock
     costs: [{ currency: 'pixie-dust', base: 5, scale: 1.0 }] },
   { id: 'FAIRY_HOSTAGE',   characterId: 'ranger', category: 'minigame', max: 1,      // binary unlock, requires thief

@@ -72,7 +72,7 @@ export const UPGRADE_FLAVOR = {
   },
   BOUNTIFUL_LANDS: {
     name: 'Bountiful Lands',
-    desc: '+1% chance to get an additional resource cell',
+    desc: '+1 guaranteed prize node per level (max 5)',
   },
   ABUNDANT_LANDS: {
     name: 'Abundant Lands',

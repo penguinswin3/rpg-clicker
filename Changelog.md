@@ -13,6 +13,7 @@
 
 ## Changed
 - Nerfed Short Rest Potion Efficiency
+- Changed Bountiful lands to give a flat +1 node, costed around the fighter minigame resources
 
 ## Bugfixes
 - Fixed costs not scaling properly when loading from an outdated save game 

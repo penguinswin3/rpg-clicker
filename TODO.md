@@ -75,20 +75,11 @@
 - Add some more one off big upgrades shortly after minigame unlocks?
 - Some of the upgrades maybe don't need to go to 999 and can instead just progress multiple % per level, and scale a little harder in return?
   - Or some could just be more Chunky and give discrete values, like Bountiful Lands
-    - Bountiful lands (+1 resource node, max +5)
     - Bubbling Brew adds a new randomly placed bonus area, up to 5 at max level
-- Short rest basically makes you invincible, it should operate at reduced potion efficiency 
-  - Maybe start with First strike and then get short rest later? 
-  - Short rest only heals up to a % threshold and can be upgraded
-  - Maybe short rest will use up to the unlocked number of potions after a fight?
-- Pixie dust could use another use 
-- Culinarian doesn't use any apoth resources to unlock? 
-- Should the culinarian be locked behind kobold ears? Just a couple
+
 
 ## Bug Fixes
 - 200% herb save isn't saving 2 herbs
-- the experience bar maxes out at like 2.5k or something, the next few unlocks should be there too
-- Current prices should be updated on the buttons when the cost is changed in the game config (savegame related?)
 
 ## Code Refactors
 - extract log text to flavor file, might need to implement string replacement here idk

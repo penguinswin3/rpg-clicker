@@ -5,7 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { RANGER_MG } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
-import { shuffleInPlace, rollChance } from '../../utils/mathUtils';
+import { shuffleInPlace } from '../../utils/mathUtils';
 
 type PrizeType = 'meat' | 'herb' | 'pixie' | 'blank';
 
@@ -136,15 +136,14 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     this.log.log(`Ranger sets out to scout the area. (−${this.SCOUT_COST} Raw Beast Meat)`);
 
     // Prize cells + blank cells, all shuffled.
-    // Bountiful Lands: each blank cell has a bountifulLandsLevel% chance to become a prize.
-    const convertChance = Math.min(100, this.bountifulLandsLevel);
-    const prizeCells = RANGER_MG.GRID_SIZE - RANGER_MG.BLANK_CELLS;
+    // Bountiful Lands: each level adds +1 guaranteed prize node (up to all blanks converted).
+    const basePrize  = RANGER_MG.GRID_SIZE - RANGER_MG.BLANK_CELLS;
+    const extraPrize = Math.min(this.bountifulLandsLevel, RANGER_MG.BLANK_CELLS);
+    const totalPrize = basePrize + extraPrize;
+    const totalBlank = RANGER_MG.GRID_SIZE - totalPrize;
     const pool: GridCell[] = [
-      ...Array.from({ length: prizeCells }, () => ({ prize: this.rollPrize(), revealed: false })),
-      ...Array.from({ length: RANGER_MG.BLANK_CELLS }, () => {
-        const isPrize = convertChance > 0 && rollChance(convertChance);
-        return { prize: (isPrize ? this.rollPrize() : 'blank') as PrizeType, revealed: false };
-      }),
+      ...Array.from({ length: totalPrize }, () => ({ prize: this.rollPrize(), revealed: false })),
+      ...Array.from({ length: totalBlank }, () => ({ prize: 'blank' as PrizeType, revealed: false })),
     ];
     shuffleInPlace(pool);
     this.cells            = pool;
