@@ -281,7 +281,7 @@ export const CHARACTER_FLAVOR = {
   },
   THIEF: {
     name: 'Thief',
-    desc: "A Lady doesn't need to always lurk in the shadows. ",
+    desc: "A Lady doesn't need to always lurk in the shadows.",
     questBtn: 'Break & Enter',
   },
 } as const;
