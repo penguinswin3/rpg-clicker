@@ -78,6 +78,10 @@ export const UPGRADE_FLAVOR = {
     name: 'Abundant Lands',
     desc: 'Resource gain is multiplied by the number of successful finds',
   },
+  FAIRY_HOSTAGE: {
+    name: 'Fairy Hostage',
+    desc: 'A pixie, if present, will betray her hiding spot with a faint shimmer',
+  },
   POTION_CATS_EYE: {
     name: "Potion of Cat's Eye",
     desc: "+1% chance to roll both herb AND beast",
@@ -116,9 +120,9 @@ export const UPGRADE_FLAVOR = {
     name: 'Serial Dilution',
     desc: '+1% dilution success chance per level',
   },
-  SECRET_RECIPE: {
-    name: 'Secret Recipe',
-    desc: '+1% chance for a bonus concentrated potion',
+  PERFECT_POTIONS: {
+    name: 'Perfect Potions',
+    desc: '+1 concentrated potion per level on a flawless brew',
   },
 
   // Culinarian
@@ -139,6 +143,14 @@ export const UPGRADE_FLAVOR = {
   METICULOUS_PLANNING: {
     name: 'Meticulous Planning',
     desc: '+1% thieving success chance per level',
+  },
+  PLENTIFUL_PLUNDERING: {
+    name: 'Plentiful Plundering',
+    desc: 'Each successful heist awards gold equal to dossiers collected × upgrade level',
+  },
+  POTION_OF_STICKY_FINGERS: {
+    name: 'Potion of Sticky Fingers',
+    desc: '+1 max dossier yield per heist per level',
   },
 } as const;
 
@@ -296,7 +308,6 @@ export const HERO_STATS_FLAVOR = {
     SAVE_CHANCE:          'Herb Save Chance :',
     GOLD_PER_BREW:        'Gold Per Brew    :',
     DILUTION_SUCCESS:     'Dilution Success :',
-    SECRET_RECIPE_CHANCE: 'Secret Recipes   :',
   },
   CULINARIAN: {
     SPICE_PER_CLICK: 'Spice Per Click  :',
@@ -306,6 +317,7 @@ export const HERO_STATS_FLAVOR = {
   THIEF: {
     SUCCESS_CHANCE: 'Success Chance :',
     DOSSIERS_PER_S: 'Dossiers/sec   :',
+    DOSSIER_YIELD:  'Dossier Yield  :',
   },
 } as const;
 

@@ -30,12 +30,13 @@
         [biggerBubblesLevel]="biggerBubblesLevel"
         [potionDilutionUnlocked]="potionDilutionLevel >= 1"
         [serialDilutionLevel]="serialDilutionLevel"
+        [perfectPotionsLevel]="perfectPotionsLevel"
       />
     </ng-container>
 
     <!-- ── Ranger: scouting grid minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'ranger'">
-      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" />
+      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" [fairyHostageLevel]="fairyHostageLevel" />
     </ng-container>
 
     <!-- ── Culinarian: Mastermind recipe minigame ─── -->

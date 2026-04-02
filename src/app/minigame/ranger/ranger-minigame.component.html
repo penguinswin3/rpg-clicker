@@ -39,6 +39,7 @@
         (click)="cellClick(i)">
         <span class="cell-sym" [style.color]="symbolColor(cell)">{{ symbol(cell) }}</span>
         <span class="cell-sub" *ngIf="cell.revealed">{{ subLabel(cell) }}</span>
+        <span class="fairy-sparkle" *ngIf="hasFairyHint(i, cell)" aria-hidden="true">✦</span>
       </button>
     </div>
 

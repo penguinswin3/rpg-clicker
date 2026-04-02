@@ -306,7 +306,17 @@
   }
 }
 
-.dev-halfmax-btn {
+.dev-upgzero-btn {
+  color: #f84;
+  border-color: #642000;
+
+  &:hover {
+    background: #f84;
+    color: #000;
+  }
+}
+
+.dev-upgmax-btn {
   color: #c080ff;
   border-color: #5a2080;
 

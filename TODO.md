@@ -9,8 +9,7 @@
 ### More characters
   - Thief
     - Lockpick minigame
-    - Primary currency: Intel (papers)
-    - Minigame Currency: Treasure (gemstones)
+    - Minigame Currency: Treasure 
   - Artisan
     - Odd One Out Gems
     - uses gems from the Thief

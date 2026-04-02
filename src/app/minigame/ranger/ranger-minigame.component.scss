@@ -70,6 +70,7 @@ $pixie:  #ffe066;
   padding: 0;
   overflow: hidden;          /* prevent revealed content from pushing column width */
   box-sizing: border-box;
+  position: relative;        /* anchor for .fairy-sparkle absolute positioning */
   transition: background 0.07s, border-color 0.07s, color 0.07s;
   user-select: none;
 
@@ -119,6 +120,57 @@ $pixie:  #ffe066;
   }
 }
 
+// ── Fairy Hostage sparkle overlay ────────────────────────────
+
+@keyframes fairy-sparkle {
+  0%   { opacity: 0;    transform: translate(-50%, -50%) scale(0.6); }
+  40%  { opacity: 0.75; transform: translate(-50%, -50%) scale(1.1); }
+  70%  { opacity: 0.5;  transform: translate(-50%, -50%) scale(0.9); }
+  100% { opacity: 0;    transform: translate(-50%, -50%) scale(0.6); }
+}
+
+@keyframes fairy-mote-a {
+  0%   { opacity: 0;   transform: translate(-50%, -50%) translate(  0px,   0px); }
+  25%  { opacity: 0.9; transform: translate(-50%, -50%) translate( -6px,  -6px); }
+  60%  { opacity: 0.5; transform: translate(-50%, -50%) translate( -8px, -12px); }
+  100% { opacity: 0;   transform: translate(-50%, -50%) translate( -5px, -17px); }
+}
+
+@keyframes fairy-mote-b {
+  0%   { opacity: 0;   transform: translate(-50%, -50%) translate( 0px,   0px); }
+  25%  { opacity: 0.9; transform: translate(-50%, -50%) translate( 7px,  -5px); }
+  60%  { opacity: 0.5; transform: translate(-50%, -50%) translate( 9px, -11px); }
+  100% { opacity: 0;   transform: translate(-50%, -50%) translate( 6px, -16px); }
+}
+
+.fairy-sparkle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  color: $pixie;
+  pointer-events: none;
+  animation: fairy-sparkle 2.4s ease-in-out infinite;
+  text-shadow: 0 0 6px rgba(255, 224, 102, 0.8), 0 0 12px rgba(255, 224, 102, 0.4);
+
+  // Two small floating motes that drift upward at staggered offsets
+  &::before,
+  &::after {
+    content: '✦';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 7px;
+    color: $pixie;
+    pointer-events: none;
+    text-shadow: 0 0 5px rgba(255, 224, 102, 0.95);
+  }
+
+  &::before { animation: fairy-mote-a 2.4s 0.55s ease-in-out infinite; }
+  &::after  { animation: fairy-mote-b 2.4s 1.35s ease-in-out infinite; }
+}
+
 .cell-sym {
   font-size: 15px;
   font-weight: bold;
@@ -141,7 +193,7 @@ $pixie:  #ffe066;
   .prize-pixie & { color: darken($pixie, 10%); }
   .prize-blank & { color: #222; }
 }
-
+r
 
 .leg        { font-size: 9px; }
 .meat-leg   { color: $meat;  }

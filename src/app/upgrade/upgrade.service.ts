@@ -160,6 +160,39 @@ export class UpgradeService {
   }
 
   /**
+   * Sets every upgrade to 0 and resets each cost back to its base value.
+   * Emits changed$ for each updated upgrade.
+   */
+  setAllToZero(): void {
+    for (const def of this.defs.values()) {
+      const rt = this.runtime.get(def.id);
+      if (!rt) continue;
+      rt.level = 0;
+      for (const c of def.costs) {
+        rt.currentCosts[c.currency] = c.base;
+      }
+      this.changed$.next(def.id);
+    }
+  }
+
+  /**
+   * Sets every upgrade to its maximum level and rebuilds each cost to match,
+   * so the button correctly shows "MAXED".
+   * Emits changed$ for each updated upgrade.
+   */
+  setAllToMax(): void {
+    for (const def of this.defs.values()) {
+      const rt = this.runtime.get(def.id);
+      if (!rt) continue;
+      rt.level = def.max;
+      for (const c of def.costs) {
+        rt.currentCosts[c.currency] = scaledCost(c.base, c.scale, def.max);
+      }
+      this.changed$.next(def.id);
+    }
+  }
+
+  /**
    * Sets every upgrade to floor(max / 2) and rebuilds each cost to match
    * the new level, so the next purchase shows the correctly-scaled price.
    * Emits changed$ for each updated upgrade.

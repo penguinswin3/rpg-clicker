@@ -31,6 +31,8 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   @Input() potionDilutionUnlocked = false;
   /** Serial Dilution level — each level reduces dilution fail chance by 1%. */
   @Input() serialDilutionLevel = 0;
+  /** Perfect Potions level — awards +1 concentrated potion per level on a flawless brew (no misses). */
+  @Input() perfectPotionsLevel = 0;
 
   // ── Dilution toggle ───────────────────────
   dilutionEnabled = false;
@@ -55,6 +57,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
   // ── Potion state ──────────────────────────
   potionActive      = false;
+  hadMistake        = false;
   quality           = 0;
   readonly maxQuality     = APOTH_MG.MAX_QUALITY;
   readonly herbCost       = APOTH_MG.HERB_COST;
@@ -133,6 +136,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.wallet.remove('herb',   this.herbCost);
     this.wallet.remove('potion', this.potionCost);
     this.potionActive = true;
+    this.hadMistake   = false;
     this.quality      = 0;
     this.barPos       = 0;
     this.barDir       = 1;
@@ -157,9 +161,10 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
       this.msgClass = 'msg-good';
       if (this.quality >= this.maxQuality) this.onPerfectPotion();
     } else {
-      this.quality  = Math.max(0, this.quality - 1);
-      this.lastMsg  = MINIGAME_MSG.APOTHECARY.MISS_ZONE(this.quality, this.maxQuality);
-      this.msgClass = 'msg-bad';
+      this.quality    = Math.max(0, this.quality - 1);
+      this.hadMistake = true;
+      this.lastMsg    = MINIGAME_MSG.APOTHECARY.MISS_ZONE(this.quality, this.maxQuality);
+      this.msgClass   = 'msg-bad';
     }
   }
 
@@ -243,9 +248,14 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
       // Standard: 1 concentrated potion
       this.wallet.add('concentrated-potion', 1);
 
+      const flawlessBonus = !this.hadMistake && this.perfectPotionsLevel > 0 ? this.perfectPotionsLevel : 0;
+      if (flawlessBonus > 0) this.wallet.add('concentrated-potion', flawlessBonus);
+
       if (!this.wallet.isCurrencyUnlocked('concentrated-potion')) {
         this.wallet.unlockCurrency('concentrated-potion');
         this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
+      } else if (flawlessBonus > 0) {
+        this.log.log(`A Concentrated Potion has been crafted! Flawless brew: +${flawlessBonus} bonus!`, 'success');
       } else {
         this.log.log('A Concentrated Potion has been crafted!', 'success');
       }

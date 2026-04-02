@@ -56,6 +56,8 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   @Input() bountifulLandsLevel = 0;
   /** When >= 1 the total currency yield is multiplied by the number of successful squares. */
   @Input() abundantLandsLevel = 0;
+  /** When >= 1 a subtle sparkle animates on any hidden cell containing a pixie. */
+  @Input() fairyHostageLevel = 0;
 
   // Wallet-synced
   beastMeat = 0;
@@ -64,6 +66,9 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   picksLeft          = this.PICKS;
   roundOver          = false;
   roundStarted       = false;   // false = show idle/cost screen
+
+  /** Indices of cells that contain a pixie — used by Fairy Hostage sparkle hint. */
+  pixieCellIndices = new Set<number>();
 
   // Round tallies
   meatFound  = 0;
@@ -155,6 +160,13 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     this.resultXp         = 0;
     this.lastMsg          = MINIGAME_MSG.RANGER.ROUND_START(this.PICKS);
     this.msgClass         = 'msg-neutral';
+
+    // Track one random pixie cell for the Fairy Hostage sparkle hint
+    this.pixieCellIndices.clear();
+    const pixieIndices = pool.reduce<number[]>((acc, c, i) => { if (c.prize === 'pixie') acc.push(i); return acc; }, []);
+    if (pixieIndices.length > 0) {
+      this.pixieCellIndices.add(pixieIndices[Math.floor(Math.random() * pixieIndices.length)]);
+    }
   }
 
   // ── Helpers ───────────────────────────────
@@ -174,6 +186,11 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   cellClass(cell: GridCell): string {
     if (!cell.revealed) return '';
     return `prize-${cell.prize}`;
+  }
+
+  /** Returns true when Fairy Hostage is active and this cell is a hidden pixie cell. */
+  hasFairyHint(i: number, cell: GridCell): boolean {
+    return this.fairyHostageLevel >= 1 && !cell.revealed && this.pixieCellIndices.has(i);
   }
 
   // ── Private ───────────────────────────────

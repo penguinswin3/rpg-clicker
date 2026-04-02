@@ -181,18 +181,19 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'kobold-ear', base: 10, scale: 1.2 }] },
   { id: 'ABUNDANT_LANDS',  characterId: 'ranger', category: 'minigame', max: 1,      // binary unlock
     costs: [{ currency: 'pixie-dust', base: 5, scale: 1.0 }] },
+  { id: 'FAIRY_HOSTAGE',   characterId: 'ranger', category: 'minigame', max: 1,      // binary unlock, requires thief
+    gates: { requiresThief: true },
+    costs: [
+      { currency: 'pixie-dust', base: 25,  scale: 1.0 },
+      { currency: 'spice',      base: 600, scale: 1.0 },
+      { currency: 'dossier',    base: 600, scale: 1.0 },
+    ] },
 
   // ── Apothecary — standard ────────────────────────────────────
   { id: 'POTION_TITRATION', characterId: 'apothecary', category: 'standard', max: 400,  // 400 × +1% save-chance
     costs: [{ currency: 'gold', base: 20, scale: 1.2 }] },
   { id: 'POTION_MARKETING', characterId: 'apothecary', category: 'standard', max: 999,
     costs: [{ currency: 'gold', base: 50, scale: 1.07 }] },
-  { id: 'SECRET_RECIPE', characterId: 'apothecary', category: 'standard', max: 100,
-    gates: { requiresThief: true },
-    costs: [
-      { currency: 'gold',    base: 500, scale: 1.2 },
-      { currency: 'dossier', base: 50,   scale: 1.1 },
-    ] },
 
   // ── Culinarian — standard ────────────────────────────────────
   { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 20, // +1 spice/click, +24g cost/click per level
@@ -218,7 +219,16 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
 
   // ── Thief — standard ─────────────────────────────────────────
   { id: 'METICULOUS_PLANNING', characterId: 'thief', category: 'standard', max: 50,
-    costs: [{ currency: 'gold', base: 1000, scale: 1.25 }] },
+    costs: [{ currency: 'gold', base: 50,       scale: 1.12 },
+            { currency: 'dossier', base: 5,     scale: 1.08 },] },
+  { id: 'PLENTIFUL_PLUNDERING', characterId: 'thief', category: 'standard', max: 999,
+    costs: [{ currency: 'gold',    base: 100, scale: 1.15 },
+            { currency: 'dossier', base: 10,  scale: 1.10 }] },
+  { id: 'POTION_OF_STICKY_FINGERS', characterId: 'thief', category: 'standard', max: 25,
+    costs: [
+      { currency: 'concentrated-potion', base: 2, scale: 1.3 },
+      { currency: 'kobold-hair',         base: 5, scale: 1.2 },
+    ] },
 
   // ── Apothecary — minigame ────────────────────────────────────
   { id: 'BUBBLING_BREW', characterId: 'apothecary', category: 'minigame', max: 1,
@@ -244,6 +254,11 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'gold',                base: 5_000, scale: 1.3 },
       { currency: 'concentrated-potion', base: 2,    scale: 1.3 },
       { currency: 'kobold-hair',         base: 5,     scale: 1.3 },
+    ] },
+  { id: 'PERFECT_POTIONS', characterId: 'apothecary', category: 'minigame', max: 100,
+    costs: [
+      { currency: 'gold',    base: 500, scale: 1.2 },
+      { currency: 'dossier', base: 50,  scale: 1.1 },
     ] },
 ];
 

@@ -48,6 +48,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() bountifulLandsLevel = 0;
   /** Abundant Lands level — forwarded to the ranger minigame. */
   @Input() abundantLandsLevel = 0;
+  /** Fairy Hostage level — forwarded to the ranger minigame. */
+  @Input() fairyHostageLevel = 0;
   /** Bubbling Brew level — forwarded to the apothecary minigame. */
   @Input() bubblingBrewLevel = 0;
   /** Bigger Bubbles level — forwarded to the apothecary minigame. */
@@ -56,6 +58,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() potionDilutionLevel = 0;
   /** Serial Dilution level — forwarded to the apothecary minigame. */
   @Input() serialDilutionLevel = 0;
+  /** Perfect Potions level — forwarded to the apothecary minigame. */
+  @Input() perfectPotionsLevel = 0;
   /** Waste Not level — forwarded to the culinarian minigame. */
   @Input() wasteNotLevel = 0;
   /** Larger Cookbooks level — forwarded to the culinarian minigame. */

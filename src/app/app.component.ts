@@ -135,8 +135,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
   /** Herb save chance in % — equals Potion Titration level. */
   get herbSaveChance(): number { return this.upgrades.level('POTION_TITRATION'); }
-  /** Secret Recipe bonus chance in % — each level gives +1% chance for a concentrated potion on brew. */
-  get secretRecipeChance(): number { return this.upgrades.level('SECRET_RECIPE'); }
   /** Spice gained per Culinarian hero-button click (base 1 + Wholesale Spices level, if enabled). */
   get spicePerClick(): number {
     return this.wholesaleSpicesEnabled ? 1 + this.upgrades.level('WHOLESALE_SPICES') : 1;
@@ -153,6 +151,15 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Success chance for the Thief's Break & Enter action (base 50% + Meticulous Planning). */
   get thiefSuccessChance(): number {
     return YIELDS.THIEF_BASE_SUCCESS_CHANCE + this.upgrades.level('METICULOUS_PLANNING');
+  }
+  /** Gold awarded per successful heist per dossier held × Plentiful Plundering level. */
+  get plentifulPlunderingLevel(): number { return this.upgrades.level('PLENTIFUL_PLUNDERING'); }
+  /** Max dossier yield per heist bonus from Potion of Sticky Fingers. */
+  get stickyFingersLevel(): number { return this.upgrades.level('POTION_OF_STICKY_FINGERS'); }
+  /** Average dossier yield per successful heist (1 at base, scales with Sticky Fingers). */
+  get expectedDossierYield(): number {
+    const sf = this.stickyFingersLevel;
+    return sf > 0 ? 1 + sf / 2 : 1;  // avg of randInt(1, 1+sf)
   }
   /** True while the Thief is in a stun lockout after a failed break-in. */
   get isThiefStunned(): boolean { return Date.now() < this.thiefStunUntil; }
@@ -263,9 +270,6 @@ export class AppComponent implements OnInit, OnDestroy {
         const successChance = Math.min(100, 50 + this.upgrades.level('SERIAL_DILUTION'));
         stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.DILUTION_SUCCESS, value: `${successChance}%` });
       }
-      if (this.secretRecipeChance > 0) {
-        stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.SECRET_RECIPE_CHANCE, value: `${this.secretRecipeChance}%` });
-      }
       return stats;
     }
     if (this.activeCharacterId === 'culinarian') {
@@ -283,13 +287,22 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     if (this.activeCharacterId === 'thief') {
       const thiefJacks = this.jacksAllocations['thief'] ?? 0;
-      const expectedPerSec = roundTo(thiefJacks * (this.thiefSuccessChance / 100), 2);
-      return [
+      const sf = this.stickyFingersLevel;
+      const avgYield = this.expectedDossierYield;
+      const expectedPerSec = roundTo(thiefJacks * (this.thiefSuccessChance / 100) * avgYield, 2);
+      const isMPMaxed = this.upgrades.level('METICULOUS_PLANNING') >= this.upgrades.maxLevel('METICULOUS_PLANNING');
+      // Show ~ when either the success chance or the yield is non-deterministic.
+      const isExact = isMPMaxed && sf === 0;
+      const stats: HeroStat[] = [
         { label: HERO_STATS_FLAVOR.THIEF.SUCCESS_CHANCE, value: `${this.thiefSuccessChance}%` },
-        ...(thiefJacks > 0
-          ? [{ label: HERO_STATS_FLAVOR.THIEF.DOSSIERS_PER_S, value: `~${expectedPerSec}` }]
-          : []),
       ];
+      if (sf > 0) {
+        stats.push({ label: HERO_STATS_FLAVOR.THIEF.DOSSIER_YIELD, value: `1 - ${1 + sf}` });
+      }
+      if (thiefJacks > 0) {
+        stats.push({ label: HERO_STATS_FLAVOR.THIEF.DOSSIERS_PER_S, value: `${isExact ? '' : '~'}${expectedPerSec}` });
+      }
+      return stats;
     }
     // Fighter
     return [
@@ -467,12 +480,17 @@ export class AppComponent implements OnInit, OnDestroy {
     const thiefJacks      = this.jacksAllocations['thief'] ?? 0;
     const thiefSuccessRate = this.thiefSuccessChance / 100;
     const effectiveThiefRate = this.isThiefStunned ? 0 : thiefJacks * thiefSuccessRate;
+    // Sticky Fingers raises the average dossier yield per heist.
+    const avgDossierYield = this.expectedDossierYield;
+    // Plentiful Plundering: gold/s = dossiers/s × ppLevel.
+    const ppGoldPerSecond = effectiveThiefRate * avgDossierYield * this.plentifulPlunderingLevel;
 
     this.wallet.setPerSecond('gold',
       roundTo(this.autoGoldPerSecond
         + apothecaryJacks * this.potionMarketingGoldPerBrew
         + fighterJacks * this.goldPerClick
-        - culinarianJacks * this.culinarianGoldCost, 2));
+        - culinarianJacks * this.culinarianGoldCost
+        + ppGoldPerSecond, 2));
 
     this.wallet.setPerSecond('xp',
       roundTo(fighterJacks * this.xpPerBounty + rangerJacks + apothecaryJacks + culinarianJacks + effectiveThiefRate, 2));
@@ -487,7 +505,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.wallet.setPerSecond('potion',  roundTo(apothecaryJacks, 2));
     this.wallet.setPerSecond('spice',   roundTo(culinarianJacks * this.spicePerClick, 2));
-    this.wallet.setPerSecond('dossier', roundTo(effectiveThiefRate, 2));
+    this.wallet.setPerSecond('dossier', roundTo(effectiveThiefRate * avgDossierYield, 2));
   }
 
   /**
@@ -514,9 +532,20 @@ export class AppComponent implements OnInit, OnDestroy {
   private clickThief(): void {
     if (this.isThiefStunned) return;
     if (rollChance(this.thiefSuccessChance)) {
-      this.wallet.add('dossier', 1);
+      const dossierYield = this.stickyFingersLevel > 0
+        ? randInt(1, 1 + this.stickyFingersLevel)
+        : 1;
+      this.wallet.add('dossier', dossierYield);
       this.wallet.add('xp', 1);
-      this.log.log(`You slipped in undetected and secured a dossier. (+1 XP)`, 'default');
+      const ppLevel = this.plentifulPlunderingLevel;
+      if (ppLevel > 0) {
+        const dossiers = Math.floor(this.wallet.get('dossier'));
+        const bonus = dossiers * ppLevel;
+        if (bonus > 0) this.wallet.add('gold', bonus);
+        this.log.log(`You slipped in undetected and secured ${dossierYield === 1 ? 'a dossier' : `${dossierYield} dossiers`}. (+1 XP, +${bonus}g)`, 'default');
+      } else {
+        this.log.log(`You slipped in undetected and secured ${dossierYield === 1 ? 'a dossier' : `${dossierYield} dossiers`}. (+1 XP)`, 'default');
+      }
     } else {
       this.applyThiefStun();
       this.log.log(`You were spotted! Retreating for ${YIELDS.THIEF_STUN_DURATION_MS / 1000} seconds...`, 'warn');
@@ -620,14 +649,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.wallet.add('xp', 1);
     if (this.potionMarketingGoldPerBrew > 0) this.wallet.add('gold', this.potionMarketingGoldPerBrew);
 
-    const secretBonus = this.secretRecipeChance > 0 && rollChance(this.secretRecipeChance);
-    if (secretBonus) this.wallet.add('concentrated-potion', 1);
-
     if (this.herbSaveChance > 0 && rollChance(this.herbSaveChance)) {
       this.wallet.add('herb', 1);
-      this.log.log(`You brewed a potion and recovered a herb!${secretBonus ? ' (+1 Concentrated Potion)' : ''} (+1 XP)`, 'success');
-    } else if (secretBonus) {
-      this.log.log(`You brewed a potion. Secret Recipe: +1 Concentrated Potion! (+1 XP)`, 'success');
+      this.log.log(`You brewed a potion and recovered a herb! (+1 XP)`, 'success');
     } else {
       this.log.log(`You brewed a potion from ${herbCost} herbs. (+1 XP)`);
     }
@@ -752,7 +776,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.add('potion', 1);
       this.wallet.add('xp', 1);
       if (this.potionMarketingGoldPerBrew > 0) this.wallet.add('gold', this.potionMarketingGoldPerBrew);
-      if (this.secretRecipeChance > 0 && rollChance(this.secretRecipeChance)) this.wallet.add('concentrated-potion', 1);
       if (this.herbSaveChance > 0 && rollChance(this.herbSaveChance)) this.wallet.add('herb', 1);
 
     } else if (charId === 'culinarian') {
@@ -778,6 +801,11 @@ export class AppComponent implements OnInit, OnDestroy {
       if (rollChance(this.thiefSuccessChance)) {
         this.wallet.add('dossier', 1);
         this.wallet.add('xp', 1);
+        const ppLevel = this.plentifulPlunderingLevel;
+        if (ppLevel > 0) {
+          const bonus = Math.floor(this.wallet.get('dossier')) * ppLevel;
+          if (bonus > 0) this.wallet.add('gold', bonus);
+        }
       } else {
         // On failure, stun blocks all subsequent thief jacks this tick and
         // recalculates per-second rates immediately + schedules a restore.
@@ -807,6 +835,7 @@ export class AppComponent implements OnInit, OnDestroy {
   // ── Dev tools ──────────────────────────────────────────────────
 
   devMenuOpen = false;
+  get devToolsEnabled(): boolean { return this.saveService.enableDevTools; }
 
   devGrant(): void {
     for (const c of this.wallet.currencies) this.wallet.add(c.id, 1000);
@@ -827,6 +856,18 @@ export class AppComponent implements OnInit, OnDestroy {
     this.upgrades.setAllToHalfMax();
     this.updateAllPerSecond();
     this.log.log('[DEV] All upgrades set to half of their maximum level.', 'warn');
+  }
+
+  devZeroUpgrades(): void {
+    this.upgrades.setAllToZero();
+    this.updateAllPerSecond();
+    this.log.log('[DEV] All upgrades set to level 0.', 'warn');
+  }
+
+  devMaxUpgrades(): void {
+    this.upgrades.setAllToMax();
+    this.updateAllPerSecond();
+    this.log.log('[DEV] All upgrades set to maximum level.', 'warn');
   }
 
   devClearSave(): void {
