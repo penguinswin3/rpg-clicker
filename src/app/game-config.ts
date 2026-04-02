@@ -156,9 +156,9 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'SHORT_REST', characterId: 'fighter', category: 'minigame', max: 1,
     gates: { requiresCulinarian: true },
     costs: [
-      { currency: 'gold',        base: 10_000, scale: 1.0 },
-      { currency: 'kobold-ear',  base: 200,    scale: 1.0 },
-      { currency: 'hearty-meal', base: 10,     scale: 1.0 },
+      { currency: 'gold',        base: 25_000, scale: 1.0 },
+      { currency: 'kobold-ear',  base: 250,    scale: 1.0 },
+      { currency: 'hearty-meal', base: 25,     scale: 1.0 },
     ] },
   { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: KOBOLD_VARIANTS.length - 1,
     gates: { xpMin: 3000 },
@@ -167,6 +167,11 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'beast',         base: 500, scale: 1.0, fromLevel: 0, untilLevel: 1 },           // tier 1 only
       { currency: 'kobold-tongue', base: 66, scale: 1.0, fromLevel: 1, untilLevel: 2 },           // tier 2 only
       { currency: 'kobold-hair',   base: 66, scale: 1.0, fromLevel: 2, untilLevel: 3 },           // tier 3 only
+    ] },
+  { id: 'FIRST_STRIKE', characterId: 'fighter', category: 'minigame', max: 1,
+    costs: [
+      { currency: 'dossier',     base: 1500, scale: 1.0 },
+      { currency: 'kobold-fang', base: 33,   scale: 1.0 },
     ] },
 
   // ── Ranger — standard ────────────────────────────────────────
@@ -244,12 +249,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Thief — minigame ─────────────────────────────────────────
   { id: 'VANISHING_POWDER', characterId: 'thief', category: 'minigame', max: 20,
     costs: [
-      { currency: 'gold',       base: 600, scale: 1.3  },
+      { currency: 'gold',       base: 1000, scale: 1.3  },
       { currency: 'pixie-dust', base: 10,  scale: 1.2  },
     ] },
   { id: 'POTION_CATS_EARS', characterId: 'thief', category: 'minigame', max: 20,
     costs: [
-      { currency: 'concentrated-potion', base: 5,  scale: 1.3  },
+      { currency: 'concentrated-potion', base: 2,  scale: 1.3  },
       { currency: 'kobold-ear',          base: 25, scale: 1.25 },
     ] },
   { id: 'BAG_OF_HOLDING', characterId: 'thief', category: 'minigame', max: 50,
@@ -265,9 +270,9 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
   { id: 'LOCKED_IN', characterId: 'thief', category: 'minigame', max: 1,
     costs: [
-      { currency: 'gold',     base: 5_000, scale: 1.0 },
-      { currency: 'dossier',  base: 150,   scale: 1.0 },
-      { currency: 'treasure', base: 20,    scale: 1.0 },
+      { currency: 'gold',     base: 15_000, scale: 1.0 },
+      { currency: 'dossier',  base: 250,   scale: 1.0 },
+      { currency: 'treasure', base: 10,    scale: 1.0 },
     ] },
 
   // ── Apothecary — minigame ────────────────────────────────────

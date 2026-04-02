@@ -35,6 +35,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() potionChuggingLevel = 0;
   /** Stronger Kobolds tier — forwarded to the fighter minigame. */
   @Input() strongerKoboldsLevel = 0;
+  /** First Strike level — forwarded to the fighter minigame. */
+  @Input() firstStrikeLevel = 0;
   /** Short Rest level — forwarded to the fighter minigame. */
   @Input() shortRestLevel = 0;
   /** Whether Short Rest auto-heal is currently enabled — forwarded to the fighter minigame. */

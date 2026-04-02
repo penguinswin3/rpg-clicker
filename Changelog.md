@@ -1,12 +1,14 @@
 # Version Alpha 1.1.0
 
 ## Added
-- Add a new character, the Thief. They will collect knowledge in the form of Dossiers, and crack safes for treasure and a handful of very rare relics...
-- Add a handful of new upgrades for the thief
-- Added a new upgrade for the Apothecary, Perfect Potion
-- Added a new upgrade for the Culinarian, Ancient Cookbook
-- Added Plentiful Plundering upgrade for the Thief — awards gold per heist equal to dossiers × upgrade level
-- Added a new ranger upgrade, Fairy Hostage, that reveals the location of one randomly chosen pixie tile with a sparkle animation
+- A new character, the Thief. They will collect knowledge in the form of Dossiers, and crack safes for treasure and a handful of very rare relics...
+- A handful of new upgrades for the thief
+- A new upgrade for the Apothecary, Perfect Potion
+- A new upgrade for the Culinarian, Ancient Cookbook
+- Plentiful Plundering upgrade for the Thief — awards gold per heist equal to dossiers × upgrade level
+- A new ranger upgrade, Fairy Hostage, that reveals the location of one randomly chosen pixie tile with a sparkle animation
+- A new tier of Kobold
+- First Strike, allowing you to take less damage from Kobolds, and a cool hidden feature...!
 
 ## Removed
 - Dev Tools button... Unless?

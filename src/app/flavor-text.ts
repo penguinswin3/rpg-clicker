@@ -62,6 +62,10 @@ export const UPGRADE_FLAVOR = {
     name: 'Stronger Kobolds',
     desc: 'They grow...',
   },
+  FIRST_STRIKE: {
+    name: 'First Strike',
+    desc: 'The Fighter attacks before the enemy. Let the slaughter begin!',
+  },
 
   // Ranger
   MORE_HERBS: {
@@ -83,7 +87,7 @@ export const UPGRADE_FLAVOR = {
   },
   FAIRY_HOSTAGE: {
     name: 'Fairy Hostage',
-    desc: 'A pixie, if present, will betray her hiding spot with a faint shimmer',
+    desc: 'A pixie, if present, will call out to a friend for help...',
   },
   POTION_CATS_EYE: {
     name: "Potion of Cat's Eye",
@@ -149,7 +153,7 @@ export const UPGRADE_FLAVOR = {
   },
   PLENTIFUL_PLUNDERING: {
     name: 'Plentiful Plundering',
-    desc: 'Each successful heist awards gold equal to dossiers collected × upgrade level',
+    desc: 'Each successful heist awards gold equal to dossiers collected, per level',
   },
   POTION_OF_STICKY_FINGERS: {
     name: 'Potion of Sticky Fingers',
@@ -165,7 +169,7 @@ export const UPGRADE_FLAVOR = {
   },
   BAG_OF_HOLDING: {
     name: 'Bag of Holding',
-    desc: 'Increases maximum gold and treasure yield (scales with detection efficiency)',
+    desc: 'Increases maximum gold and treasure yield',
   },
   RELIC_HUNTER: {
     name: 'Relic Hunter',
@@ -233,6 +237,20 @@ export const KOBOLD_VARIANTS: readonly KoboldVariant[] = [
       '|| ‾‾‾ ||',
     secondaryDrop: {
       currencyId: 'kobold-hair',
+      amount: 1,
+      chance: 33,
+    },
+  },
+  // Level 4 — Kobold Mountain Lion
+  {
+    name: 'Kobold Mountain Lion',
+    ascii:
+      ' _._     _,-\'""\`-._\n' +
+      '(,-.`._,\'(       |\\`-/|\n' +
+      '    `-.-\' \\ )-`( , o o)\n' +
+      '          `-    \\`_ ৲"৲-',
+    secondaryDrop: {
+      currencyId: 'kobold-fang',
       amount: 1,
       chance: 33,
     },
