@@ -92,6 +92,8 @@ export class AppComponent implements OnInit, OnDestroy {
   fighterCombatState: FighterCombatState | null = null;
   /** Whether the Short Rest auto-heal toggle is enabled in the fighter minigame. */
   shortRestEnabled = false;
+  /** Whether the Potion Dilution toggle is enabled in the apothecary minigame. */
+  dilutionEnabled  = false;
 
   // ── UI preference flags ────────────────────────────────────────
   hideMaxedUpgrades    = false;
@@ -128,7 +130,7 @@ export class AppComponent implements OnInit, OnDestroy {
   /** XP awarded per fighter bounty click. */
   get xpPerBounty(): number { return 1 + this.upgrades.level('INSIGHTFUL_CONTRACTS'); }
   /** Fighter minigame attack power. */
-  get fighterAttackPower(): number { return this.goldPerClick + this.upgrades.level('SHARPER_SWORDS'); }
+  get fighterAttackPower(): number { return this.upgrades.level('SHARPER_SWORDS'); }
   /** Current beast-find percentage (capped). */
   get beastFindChance(): number {
     return clamp(YIELDS.RANGER_BASE_BEAST_CHANCE + this.upgrades.level('BETTER_TRACKING'), 0, YIELDS.RANGER_BEAST_CHANCE_CAP);
@@ -208,7 +210,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
   get activeCharJackStarvedMsg(): string {
     if (this.activeCharacterId === 'thief') {
-      return `⚠ Jack idle — thief stunned`;
+      return `⚠ Jack idle — Stunned!`;
     }
     if (this.activeCharacterId === 'apothecary') {
       const need = YIELDS.APOTHECARY_BREW_HERB_COST;
@@ -273,9 +275,11 @@ export class AppComponent implements OnInit, OnDestroy {
       return stats;
     }
     if (this.activeCharacterId === 'culinarian') {
+      const pricePerSpice = roundTo(this.culinarianGoldCost / this.spicePerClick, 2);
       const stats: HeroStat[] = [
         { label: HERO_STATS_FLAVOR.CULINARIAN.SPICE_PER_CLICK, value: `${this.spicePerClick}`      },
         { label: HERO_STATS_FLAVOR.CULINARIAN.GOLD_COST,        value: `${this.culinarianGoldCost}` },
+        { label: HERO_STATS_FLAVOR.CULINARIAN.PRICE_PER_SPICE,  value: `${pricePerSpice}g`          },
       ];
       if (this.upgrades.level('POTION_GLIBNESS') > 0) {
         stats.push({
@@ -353,6 +357,8 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresCulinarian    && !this.culinarianUnlocked)                     return false;
     if (gates.requiresThief         && !this.thiefUnlocked)                          return false;
     if (gates.requiresRelic         && !this.wallet.isCurrencyUnlocked('relic'))     return false;
+    if (gates.requiresFang          && !this.wallet.isCurrencyUnlocked('kobold-fang')) return false;
+    if (gates.requiresDossier       && !this.wallet.isCurrencyUnlocked('dossier'))   return false;
     if (gates.requiresBubblingBrew  && this.upgrades.level('BUBBLING_BREW') < 1)     return false;
     if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1)  return false;
     if (gates.xpMin != null && this.xp < gates.xpMin) return false;
@@ -473,6 +479,7 @@ export class AppComponent implements OnInit, OnDestroy {
       fighterCombatState:     this.fighterCombatState ?? undefined,
       shortRestEnabled:       this.shortRestEnabled,
       wholesaleSpicesEnabled: this.wholesaleSpicesEnabled,
+      dilutionEnabled:        this.dilutionEnabled,
     };
   }
 
@@ -489,6 +496,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.fighterCombatState     = s.fighterCombatState     ?? null;
     this.shortRestEnabled       = s.shortRestEnabled       ?? false;
     this.wholesaleSpicesEnabled = s.wholesaleSpicesEnabled ?? true;
+    this.dilutionEnabled        = s.dilutionEnabled        ?? false;
     this.updateAllPerSecond();
   }
 
@@ -563,7 +571,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.add('xp', 1);
       const ppLevel = this.plentifulPlunderingLevel;
       if (ppLevel > 0) {
-        const dossiers = Math.floor(this.wallet.get('dossier'));
+        const dossiers = randInt(1, 1 + this.stickyFingersLevel)
         const bonus = dossiers * ppLevel;
         if (bonus > 0) this.wallet.add('gold', bonus);
         this.log.log(`You slipped in undetected and secured ${dossierYield === 1 ? 'a dossier' : `${dossierYield} dossiers`}. (+1 XP, +${bonus}g)`, 'default');
@@ -823,11 +831,12 @@ export class AppComponent implements OnInit, OnDestroy {
       // Jacks cannot act while the thief is stunned.
       if (this.isThiefStunned) return;
       if (rollChance(this.thiefSuccessChance)) {
-        this.wallet.add('dossier', 1);
+        const dossierToAward = randInt(1, 1 + this.stickyFingersLevel)
+        this.wallet.add('dossier', dossierToAward);
         this.wallet.add('xp', 1);
         const ppLevel = this.plentifulPlunderingLevel;
         if (ppLevel > 0) {
-          const bonus = Math.floor(this.wallet.get('dossier')) * ppLevel;
+          const bonus = Math.floor(dossierToAward) * ppLevel;
           if (bonus > 0) this.wallet.add('gold', bonus);
         }
       } else {

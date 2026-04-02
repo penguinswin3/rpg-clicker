@@ -9,6 +9,7 @@
 - A new ranger upgrade, Fairy Hostage, that reveals the location of one randomly chosen pixie tile with a sparkle animation
 - A new tier of Kobold
 - First Strike, allowing you to take less damage from Kobolds, and a cool hidden feature...!
+- The currencies panel now pins gold and xp to the top, and moved them to a "global" currency group
 
 ## Removed
 - Dev Tools button... Unless?
@@ -16,11 +17,16 @@
 ## Changed
 - Nerfed Short Rest Potion Efficiency
 - Changed Bountiful lands to give a flat +1 node, costed around the fighter minigame resources
+- Assorted lore changes
+- Tweaked the XP unlock milestones
+- Ranger minigame requires a little more meat
+- Buffed Kobold Tongue drop rate
+- Nerfed Waste Not Scaling
 
 ## Bugfixes
 - Fixed costs not scaling properly when loading from an outdated save game 
-
-
+- Fixed a bug where the fighters attack power was factored in twice
+- Savegame now remembers the dilution toggle
 ----------------------------
 # Version Alpha 1.0.1
 

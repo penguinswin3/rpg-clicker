@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -35,7 +35,16 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   @Input() perfectPotionsLevel = 0;
 
   // ── Dilution toggle ───────────────────────
-  dilutionEnabled = false;
+  /** Whether dilution is active — owned by AppComponent, persisted across tab switches. */
+  @Input()  dilutionEnabled = false;
+  @Output() dilutionEnabledChange = new EventEmitter<boolean>();
+
+  onDilutionChange(val: boolean): void {
+    // Update the local field immediately so [ngModel] is never stale between the
+    // user's click and the parent passing the new @Input value back down.
+    this.dilutionEnabled = val;
+    this.dilutionEnabledChange.emit(val);
+  }
 
   /** Current dilution success chance (50% base plus 1% per Serial Dilution level). */
   get dilutionSuccessChance(): number {

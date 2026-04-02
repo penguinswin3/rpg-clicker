@@ -10,7 +10,7 @@ export interface LogMessage {
   type?: LogFilterType;
 }
 
-const MAX_MESSAGES = 100;
+const MAX_MESSAGES = 500;
 
 @Injectable({ providedIn: 'root' })
 export class ActivityLogService {

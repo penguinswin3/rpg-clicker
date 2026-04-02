@@ -28,7 +28,9 @@
     [relicHunterLevel]="upgrades.level('RELIC_HUNTER')"
     [lockedInLevel]="upgrades.level('LOCKED_IN')"
     [fighterCombatState]="fighterCombatState"
-    (fighterCombatStateChange)="fighterCombatState = $event" />
+    (fighterCombatStateChange)="fighterCombatState = $event"
+    [dilutionEnabled]="dilutionEnabled"
+    (dilutionEnabledChange)="dilutionEnabled = $event" />
 
   <div class="game-wrapper">
     <div class="game-container">

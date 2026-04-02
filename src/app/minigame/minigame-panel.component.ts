@@ -81,6 +81,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() fighterCombatState: FighterCombatState | null = null;
   /** Emitted whenever fighter combat state changes. */
   @Output() fighterCombatStateChange = new EventEmitter<FighterCombatState>();
+  /** Whether the Potion Dilution toggle is enabled — forwarded to the apothecary minigame. */
+  @Input() dilutionEnabled = false;
+  /** Emitted when the player toggles dilution inside the apothecary minigame. */
+  @Output() dilutionEnabledChange = new EventEmitter<boolean>();
 
   xp = 0;
   activeCharacterId = 'fighter';

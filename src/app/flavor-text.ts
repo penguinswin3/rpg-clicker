@@ -224,7 +224,7 @@ export const KOBOLD_VARIANTS: readonly KoboldVariant[] = [
     secondaryDrop: {
       currencyId: 'kobold-tongue',
       amount: 1,
-      chance: 33,
+      chance: 50,
     },
   },
   // Level 3 — Spider Kobold
@@ -266,7 +266,7 @@ export const CHARACTER_FLAVOR = {
   },
   RANGER: {
     name: 'Ranger',
-    desc: 'A perceptive folk, and a warden of the woods. Even when her prey escapes, she manages to always bring something home.',
+    desc: 'A perceptive folk, and a warden of the woods. Even if she hunts no prey, she manages to always bring something else home.',
     questBtn: 'Hunt & Gather',
   },
   APOTHECARY: {
@@ -281,7 +281,7 @@ export const CHARACTER_FLAVOR = {
   },
   THIEF: {
     name: 'Thief',
-    desc: "A lady doesn't need to always lurk in the shadows.",
+    desc: "A Lady doesn't need to always lurk in the shadows. ",
     questBtn: 'Break & Enter',
   },
 } as const;
@@ -314,7 +314,7 @@ export const MINIGAME_FLAVOR = {
 export const GLOBAL_UPGRADE_FLAVOR = {
   UNLOCK_MINIGAMES: {
     name: 'Unlock Minigames',
-    desc: 'Unlocks character-specific minigame challenges',
+    desc: 'Unlocks character-specific minigames',
   },
 } as const;
 
@@ -333,7 +333,7 @@ export const HERO_STATS_FLAVOR = {
   BOX_TITLE: '[ CHARACTER STATS ]',
 
   FIGHTER: {
-    PER_CLICK:    'Gold Per Click   :',
+    PER_CLICK:    'Gold Per Bounty   :',
     PER_SECOND:   'Gold Per Second  :',
     XP_PER_CLICK: 'XP Per Bounty    :',
     DAMAGE_RANGE: 'Attack Damage    :',
@@ -351,9 +351,10 @@ export const HERO_STATS_FLAVOR = {
     DILUTION_SUCCESS:     'Dilution Success :',
   },
   CULINARIAN: {
-    SPICE_PER_CLICK: 'Spice Per Click  :',
-    GOLD_COST:       'Wholesale Total  :',
-    GOLD_DISCOUNT:   'Spice Discount   :',
+    SPICE_PER_CLICK:  'Spice Per Click  :',
+    GOLD_COST:        'Wholesale Total  :',
+    GOLD_DISCOUNT:    'Spice Discount   :',
+    PRICE_PER_SPICE:  'Gold Per Spice   :',
   },
   THIEF: {
     SUCCESS_CHANCE: 'Success Chance :',

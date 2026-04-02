@@ -32,6 +32,8 @@
         [potionDilutionUnlocked]="potionDilutionLevel >= 1"
         [serialDilutionLevel]="serialDilutionLevel"
         [perfectPotionsLevel]="perfectPotionsLevel"
+        [dilutionEnabled]="dilutionEnabled"
+        (dilutionEnabledChange)="dilutionEnabledChange.emit($event)"
       />
     </ng-container>
 

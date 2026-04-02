@@ -32,6 +32,7 @@ export interface UpgradeState {
   /** Persisted UI toggle states — optional for backward compat. */
   shortRestEnabled?: boolean;
   wholesaleSpicesEnabled?: boolean;
+  dilutionEnabled?: boolean;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

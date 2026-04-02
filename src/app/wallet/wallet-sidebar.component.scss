@@ -100,6 +100,27 @@ $muted: #555;
   }
 }
 
+// ── Pinned currencies (gold, xp) ─────────
+
+.currency-pinned {
+  flex-shrink: 0;
+  border-bottom: 1px solid #2a2a2a;
+
+  // Keep row borders inside the pinned block — don't suppress the last one
+  .currency-row:last-child {
+    border-bottom: 1px solid #1a1a1a;
+  }
+}
+
+.currency-pinned-compact {
+  flex-shrink: 0;
+  border-bottom: 1px solid #2a2a2a;
+
+  .currency-compact:last-child {
+    border-bottom: 1px dotted #1e1e1e;
+  }
+}
+
 // ── Currency list (scrollable) ────────────
 
 .currency-list {

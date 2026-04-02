@@ -41,6 +41,9 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Currency IDs always floated to the top of the list when visible. */
+  private static readonly PINNED_IDS = ['gold', 'xp'];
+
   /** visibleCurrencies further narrowed by the active character filters. */
   get filteredCurrencies(): Currency[] {
     if (this.activeCharacterFilters.size === 0) return this.visibleCurrencies;
@@ -49,11 +52,21 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
     );
   }
 
+  /** Pinned currencies (gold, xp) from the filtered set — rendered above the scroll area. */
+  get pinnedCurrencies(): Currency[] {
+    return this.filteredCurrencies.filter(c => WalletSidebarComponent.PINNED_IDS.includes(c.id));
+  }
+
+  /** All other filtered currencies — rendered in the scrollable area below. */
+  get scrollableCurrencies(): Currency[] {
+    return this.filteredCurrencies.filter(c => !WalletSidebarComponent.PINNED_IDS.includes(c.id));
+  }
+
   /** Filter button descriptors, built from whatever is currently visible. */
   get characterFilters(): { key: string; label: string; color: string }[] {
     const result: { key: string; label: string; color: string }[] = [];
     if (this.visibleCurrencies.some(c => !c.requiredCharacterId)) {
-      result.push({ key: 'global', label: 'FIGHTER', color: '#c87941' });
+      result.push({ key: 'global', label: 'GLOBAL', color: '#888' });
     }
     for (const char of this.unlockedCharacters) {
       if (this.visibleCurrencies.some(c => c.requiredCharacterId === char.id)) {
