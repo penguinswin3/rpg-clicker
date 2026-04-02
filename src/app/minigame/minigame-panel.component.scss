@@ -12,7 +12,7 @@ $accent: #0ff;
   position: sticky;
   top: 0;
   // Stop before the fixed activity log (~210px tall when expanded)
-  height: calc(100vh - 210px);
+  height: calc(100vh - var(--log-height, 210px));
   display: flex;
   flex-direction: column;
   overflow: hidden;

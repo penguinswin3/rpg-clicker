@@ -6,6 +6,7 @@
     [fighterAttack]="fighterAttackPower"
     [potionChuggingLevel]="upgrades.level('POTION_CHUGGING')"
     [strongerKoboldsLevel]="upgrades.level('STRONGER_KOBOLDS')"
+    [firstStrikeLevel]="upgrades.level('FIRST_STRIKE')"
     [shortRestLevel]="upgrades.level('SHORT_REST')"
     [shortRestEnabled]="shortRestEnabled"
     (shortRestEnabledChange)="shortRestEnabled = $event"
@@ -13,13 +14,23 @@
     (selectedKoboldLevelChange)="selectedKoboldLevel = $event"
     [bountifulLandsLevel]="upgrades.level('BOUNTIFUL_LANDS')"
     [abundantLandsLevel]="upgrades.level('ABUNDANT_LANDS')"
+    [fairyHostageLevel]="upgrades.level('FAIRY_HOSTAGE')"
     [bubblingBrewLevel]="upgrades.level('BUBBLING_BREW')"
     [biggerBubblesLevel]="upgrades.level('BIGGER_BUBBLES')"
     [potionDilutionLevel]="upgrades.level('POTION_DILUTION')"
     [serialDilutionLevel]="upgrades.level('SERIAL_DILUTION')"
+    [perfectPotionsLevel]="upgrades.level('PERFECT_POTIONS')"
     [wasteNotLevel]="upgrades.level('WASTE_NOT')"
+    [largerCookbooksLevel]="upgrades.level('LARGER_COOKBOOKS')"
+    [vanishingPowderLevel]="upgrades.level('VANISHING_POWDER')"
+    [potionCatEarsLevel]="upgrades.level('POTION_CATS_EARS')"
+    [bagOfHoldingLevel]="upgrades.level('BAG_OF_HOLDING')"
+    [relicHunterLevel]="upgrades.level('RELIC_HUNTER')"
+    [lockedInLevel]="upgrades.level('LOCKED_IN')"
     [fighterCombatState]="fighterCombatState"
-    (fighterCombatStateChange)="fighterCombatState = $event" />
+    (fighterCombatStateChange)="fighterCombatState = $event"
+    [dilutionEnabled]="dilutionEnabled"
+    (dilutionEnabledChange)="dilutionEnabled = $event" />
 
   <div class="game-wrapper">
     <div class="game-container">
@@ -60,8 +71,9 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         </div>
 
         <div class="hero-area">
-          <button class="hero-btn" (click)="clickHero()">
-            [ >>> {{ questBtnLabel }} <<< ]
+          <button class="hero-btn" [disabled]="isHeroDisabled" (click)="clickHero()">
+            <div class="stun-fill-bar" *ngIf="isHeroDisabled" [ngStyle]="thiefStunAnimStyle"></div>
+            <span class="hero-btn-label">[ >>> {{ questBtnLabel }} <<< ]</span>
           </button>
           <div class="hero-subzone">
             <button class="wholesale-toggle-btn"
@@ -78,7 +90,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         </div>
 
         <!-- Dev menu -->
-        <div class="dev-menu-wrap">
+        <div class="dev-menu-wrap" *ngIf="devToolsEnabled">
           <button class="dev-toggle-btn" (click)="devMenuOpen = !devMenuOpen">
             [DEV {{ devMenuOpen ? '▲' : '▼' }}]
           </button>
@@ -86,7 +98,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <button class="dev-action-btn" (click)="devGrant()">+1k ALL</button>
             <button class="dev-action-btn dev-zero-btn" (click)="devZero()">ZERO ALL</button>
             <button class="dev-action-btn dev-xp-btn" (click)="devMaxXp()">XP = 2B</button>
-            <button class="dev-action-btn dev-halfmax-btn" (click)="devHalfMaxUpgrades()">HALF MAX</button>
+            <button class="dev-action-btn dev-upgzero-btn" (click)="devZeroUpgrades()">LVL 0</button>
+            <button class="dev-action-btn dev-upgmax-btn" (click)="devMaxUpgrades()">LVL MAX</button>
             <button class="dev-action-btn dev-clrsave-btn" (click)="devClearSave()">CLR SAVE</button>
           </div>
         </div>

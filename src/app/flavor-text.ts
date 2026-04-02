@@ -12,7 +12,6 @@ export const CURRENCY_FLAVOR = {
   xp:                    { name: 'Experience',                symbol: '֍',  color: '#53d394' },
   herb:                  { name: 'Herb',                      symbol: '♣',  color: '#247a24' },
   beast:                 { name: 'Beast Meat',                symbol: 'Ꮻ',  color: '#e8739a' },
-  //Might go unused? 'cooked-meat':         { name: 'Cooked Meat',               symbol: 'Ꮻ',  color: '#683a0c' },
   'pixie-dust':          { name: 'Pixie Dust',                symbol: '✦',  color: '#ffe066' },
   potion:                { name: 'Potion Base',               symbol: '⚗',  color: '#ceaedf' },
   'concentrated-potion': { name: 'Concentrated Potion Base',  symbol: '⚗',  color: '#ba70cf' },
@@ -21,8 +20,13 @@ export const CURRENCY_FLAVOR = {
   'kobold-hair':         { name: 'Kobold Hair',               symbol: 'Ҩ',  color: '#ac7c5a' },
   spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
   'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#683a0c' },
+  dossier:               { name: 'Dossier',                   symbol: '⌸', color: '#c0cedc' },
+  treasure:              { name: 'Treasure',                  symbol: '⚱', color: '#989c3a' },
+  relic:                 { name: 'Relic',                     symbol: 'ᛝ', color: '#8be4e1' },
+  'kobold-fang':         { name: 'Kobold Fang',               symbol: '৲', color: '#969790' },
 } as const;
 
+// ꔮ 𐓑  ᛝ ᚕ
 // ── Upgrades ──────────────────────────────────────────────────
 export const UPGRADE_FLAVOR = {
   // Fighter
@@ -48,7 +52,7 @@ export const UPGRADE_FLAVOR = {
   },
   SHORT_REST: {
     name: 'Short Rest',
-    desc: 'Adds a toggle to auto-heal to full HP with potions after each victory',
+    desc: 'Auto-heal to full HP with potions after each victory at a reduced efficiency',
   },
   SHARPER_SWORDS: {
     name: 'Sharper Swords',
@@ -57,6 +61,10 @@ export const UPGRADE_FLAVOR = {
   STRONGER_KOBOLDS: {
     name: 'Stronger Kobolds',
     desc: 'They grow...',
+  },
+  FIRST_STRIKE: {
+    name: 'First Strike',
+    desc: 'The Fighter attacks before the enemy. Let the slaughter begin!',
   },
 
   // Ranger
@@ -71,11 +79,15 @@ export const UPGRADE_FLAVOR = {
   },
   BOUNTIFUL_LANDS: {
     name: 'Bountiful Lands',
-    desc: '+1% chance to get an additional resource cell',
+    desc: '+1 guaranteed prize node per level (max 5)',
   },
   ABUNDANT_LANDS: {
     name: 'Abundant Lands',
     desc: 'Resource gain is multiplied by the number of successful finds',
+  },
+  FAIRY_HOSTAGE: {
+    name: 'Fairy Hostage',
+    desc: 'A pixie, if present, will call out to a friend for help...',
   },
   POTION_CATS_EYE: {
     name: "Potion of Cat's Eye",
@@ -115,6 +127,10 @@ export const UPGRADE_FLAVOR = {
     name: 'Serial Dilution',
     desc: '+1% dilution success chance per level',
   },
+  PERFECT_POTIONS: {
+    name: 'Perfect Potions',
+    desc: '+1 concentrated potion per level on a flawless brew',
+  },
 
   // Culinarian
   WHOLESALE_SPICES: {
@@ -124,6 +140,44 @@ export const UPGRADE_FLAVOR = {
   WASTE_NOT: {
     name: 'Waste Not',
     desc: '+1 hearty meal per unused guess on a successful recipe',
+  },
+  LARGER_COOKBOOKS: {
+    name: 'Ancient Cookbook',
+    desc: 'The first ingredient in the recipe is always revealed at the start',
+  },
+
+  // Thief
+  METICULOUS_PLANNING: {
+    name: 'Meticulous Planning',
+    desc: '+1% thieving success chance per level',
+  },
+  PLENTIFUL_PLUNDERING: {
+    name: 'Plentiful Plundering',
+    desc: 'Each successful heist awards gold equal to dossiers collected, per level',
+  },
+  POTION_OF_STICKY_FINGERS: {
+    name: 'Potion of Sticky Fingers',
+    desc: '+1 max dossier yield per level',
+  },
+  VANISHING_POWDER: {
+    name: 'Vanishing Powder',
+    desc: '+1 max detection tolerance per level',
+  },
+  POTION_CATS_EARS: {
+    name: "Potion of Cat's Ears",
+    desc: '+3° sweet spot size per level',
+  },
+  BAG_OF_HOLDING: {
+    name: 'Bag of Holding',
+    desc: 'Increases maximum gold and treasure yield',
+  },
+  RELIC_HUNTER: {
+    name: 'Relic Hunter',
+    desc: '+1% relic drop chance per level',
+  },
+  LOCKED_IN: {
+    name: 'Locked In',
+    desc: 'Marks failed click positions on the dial with a red tick',
   },
 } as const;
 
@@ -170,7 +224,7 @@ export const KOBOLD_VARIANTS: readonly KoboldVariant[] = [
     secondaryDrop: {
       currencyId: 'kobold-tongue',
       amount: 1,
-      chance: 33,
+      chance: 50,
     },
   },
   // Level 3 — Spider Kobold
@@ -187,6 +241,20 @@ export const KOBOLD_VARIANTS: readonly KoboldVariant[] = [
       chance: 33,
     },
   },
+  // Level 4 — Kobold Mountain Lion
+  {
+    name: 'Kobold Mountain Lion',
+    ascii:
+      ' _._     _,-\'""\`-._\n' +
+      '(,-.`._,\'(       |\\`-/|\n' +
+      '    `-.-\' \\ )-`( , o o)\n' +
+      '          `-    \\`_ ৲"৲-',
+    secondaryDrop: {
+      currencyId: 'kobold-fang',
+      amount: 1,
+      chance: 33,
+    },
+  },
 ];
 
 // ── Characters ────────────────────────────────────────────────
@@ -198,7 +266,7 @@ export const CHARACTER_FLAVOR = {
   },
   RANGER: {
     name: 'Ranger',
-    desc: 'A perceptive folk, and a warden of the woods. Even when her prey escapes, she manages to always bring something home.',
+    desc: 'A perceptive folk, and a warden of the woods. Even if she hunts no prey, she manages to always bring something else home.',
     questBtn: 'Hunt & Gather',
   },
   APOTHECARY: {
@@ -210,6 +278,11 @@ export const CHARACTER_FLAVOR = {
     name: 'Culinarian',
     desc: 'A seasoned chef who sources only the finest ingredients. Can craft never before tasted dishes with peculiar potency...',
     questBtn: 'Source Ingredients',
+  },
+  THIEF: {
+    name: 'Thief',
+    desc: "A Lady doesn't need to always lurk in the shadows. ",
+    questBtn: 'Break & Enter',
   },
 } as const;
 
@@ -231,13 +304,17 @@ export const MINIGAME_FLAVOR = {
     name: 'Test Kitchen',
     desc: 'Master the art of spice and flame\nto craft legendary dishes.',
   },
+  THIEF: {
+    name: 'Big Heist',
+    desc: 'Crack the safe before you\nare detected.',
+  },
 } as const;
 
 // ── Global Upgrades ───────────────────────────────────────────
 export const GLOBAL_UPGRADE_FLAVOR = {
   UNLOCK_MINIGAMES: {
     name: 'Unlock Minigames',
-    desc: 'Unlocks character-specific minigame challenges',
+    desc: 'Unlocks character-specific minigames',
   },
 } as const;
 
@@ -256,7 +333,7 @@ export const HERO_STATS_FLAVOR = {
   BOX_TITLE: '[ CHARACTER STATS ]',
 
   FIGHTER: {
-    PER_CLICK:    'Gold Per Click   :',
+    PER_CLICK:    'Gold Per Bounty   :',
     PER_SECOND:   'Gold Per Second  :',
     XP_PER_CLICK: 'XP Per Bounty    :',
     DAMAGE_RANGE: 'Attack Damage    :',
@@ -268,15 +345,24 @@ export const HERO_STATS_FLAVOR = {
     MAX_MEAT:     'Max Meat      :',
   },
   APOTHECARY: {
-    HERBS_BREW:      'Herbs Per Brew   :',
-    SAVE_CHANCE:     'Herb Save Chance :',
-    GOLD_PER_BREW:   'Gold Per Brew    :',
-    DILUTION_SUCCESS:'Dilution Success :',
+    HERBS_BREW:           'Herbs Per Brew   :',
+    SAVE_CHANCE:          'Herb Save Chance :',
+    GOLD_PER_BREW:        'Gold Per Brew    :',
+    DILUTION_SUCCESS:     'Dilution Success :',
   },
   CULINARIAN: {
-    SPICE_PER_CLICK: 'Spice Per Click  :',
-    GOLD_COST:       'Wholesale Total  :',
-    GOLD_DISCOUNT:   'Spice Discount   :',
+    SPICE_PER_CLICK:  'Spice Per Click  :',
+    GOLD_COST:        'Wholesale Total  :',
+    GOLD_DISCOUNT:    'Spice Discount   :',
+    PRICE_PER_SPICE:  'Gold Per Spice   :',
+  },
+  THIEF: {
+    SUCCESS_CHANCE: 'Success Chance :',
+    DOSSIERS_PER_S: 'Dossiers/sec   :',
+    DOSSIER_YIELD:  'Dossier Yield  :',
+    GOLD_RANGE:     'Gold Yield     :',
+    TREASURE_RANGE: 'Treasure Yield :',
+    RELIC_CHANCE:   'Relic Chance   :',
   },
 } as const;
 
@@ -313,6 +399,14 @@ export const MINIGAME_MSG = {
     WIN:            '** RECIPE COMPLETE! **',
     WIN_BONUS:      (bonus: number) => `** RECIPE COMPLETE! ** (+${bonus} bonus)`,
     LOSE:           'Out of guesses!',
+  },
+
+  THIEF: {
+    IDLE:     'Find the sweet spot on the dial!',
+    MISS:     (det: number, max: number) => `Miss! Detection ${det}/${max}`,
+    HIT:      'Sweet spot found!',
+    BUSTED:   'DETECTED! Heist failed.',
+    SUCCESS:  'Safe cracked!',
   },
 
 };

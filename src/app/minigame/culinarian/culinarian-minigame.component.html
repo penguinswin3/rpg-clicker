@@ -49,7 +49,8 @@
       <div class="guess-slot"
            *ngFor="let slot of currentGuess; let i = index"
            [class.filled]="slot !== null"
-           [class.drop-target]="dragIngredient !== null && slot === null"
+           [class.revealed]="revealedSlots.has(i)"
+           [class.drop-target]="dragIngredient !== null && slot === null && !revealedSlots.has(i)"
            (dragover)="onDragOver($event)"
            (drop)="onDrop($event, i)"
            (click)="slotClick(i)">

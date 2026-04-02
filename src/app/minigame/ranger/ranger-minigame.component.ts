@@ -5,7 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { RANGER_MG } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
-import { shuffleInPlace, rollChance } from '../../utils/mathUtils';
+import { shuffleInPlace } from '../../utils/mathUtils';
 
 type PrizeType = 'meat' | 'herb' | 'pixie' | 'blank';
 
@@ -56,6 +56,8 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   @Input() bountifulLandsLevel = 0;
   /** When >= 1 the total currency yield is multiplied by the number of successful squares. */
   @Input() abundantLandsLevel = 0;
+  /** When >= 1 a subtle sparkle animates on any hidden cell containing a pixie. */
+  @Input() fairyHostageLevel = 0;
 
   // Wallet-synced
   beastMeat = 0;
@@ -64,6 +66,9 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   picksLeft          = this.PICKS;
   roundOver          = false;
   roundStarted       = false;   // false = show idle/cost screen
+
+  /** Indices of cells that contain a pixie — used by Fairy Hostage sparkle hint. */
+  pixieCellIndices = new Set<number>();
 
   // Round tallies
   meatFound  = 0;
@@ -131,15 +136,14 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     this.log.log(`Ranger sets out to scout the area. (−${this.SCOUT_COST} Raw Beast Meat)`);
 
     // Prize cells + blank cells, all shuffled.
-    // Bountiful Lands: each blank cell has a bountifulLandsLevel% chance to become a prize.
-    const convertChance = Math.min(100, this.bountifulLandsLevel);
-    const prizeCells = RANGER_MG.GRID_SIZE - RANGER_MG.BLANK_CELLS;
+    // Bountiful Lands: each level adds +1 guaranteed prize node (up to all blanks converted).
+    const basePrize  = RANGER_MG.GRID_SIZE - RANGER_MG.BLANK_CELLS;
+    const extraPrize = Math.min(this.bountifulLandsLevel, RANGER_MG.BLANK_CELLS);
+    const totalPrize = basePrize + extraPrize;
+    const totalBlank = RANGER_MG.GRID_SIZE - totalPrize;
     const pool: GridCell[] = [
-      ...Array.from({ length: prizeCells }, () => ({ prize: this.rollPrize(), revealed: false })),
-      ...Array.from({ length: RANGER_MG.BLANK_CELLS }, () => {
-        const isPrize = convertChance > 0 && rollChance(convertChance);
-        return { prize: (isPrize ? this.rollPrize() : 'blank') as PrizeType, revealed: false };
-      }),
+      ...Array.from({ length: totalPrize }, () => ({ prize: this.rollPrize(), revealed: false })),
+      ...Array.from({ length: totalBlank }, () => ({ prize: 'blank' as PrizeType, revealed: false })),
     ];
     shuffleInPlace(pool);
     this.cells            = pool;
@@ -155,6 +159,13 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     this.resultXp         = 0;
     this.lastMsg          = MINIGAME_MSG.RANGER.ROUND_START(this.PICKS);
     this.msgClass         = 'msg-neutral';
+
+    // Track one random pixie cell for the Fairy Hostage sparkle hint
+    this.pixieCellIndices.clear();
+    const pixieIndices = pool.reduce<number[]>((acc, c, i) => { if (c.prize === 'pixie') acc.push(i); return acc; }, []);
+    if (pixieIndices.length > 0) {
+      this.pixieCellIndices.add(pixieIndices[Math.floor(Math.random() * pixieIndices.length)]);
+    }
   }
 
   // ── Helpers ───────────────────────────────
@@ -174,6 +185,11 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   cellClass(cell: GridCell): string {
     if (!cell.revealed) return '';
     return `prize-${cell.prize}`;
+  }
+
+  /** Returns true when Fairy Hostage is active and this cell is a hidden pixie cell. */
+  hasFairyHint(i: number, cell: GridCell): boolean {
+    return this.fairyHostageLevel >= 1 && !cell.revealed && this.pixieCellIndices.has(i);
   }
 
   // ── Private ───────────────────────────────

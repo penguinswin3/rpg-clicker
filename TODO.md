@@ -7,14 +7,10 @@
 
 
 ### More characters
-  - Thief
-    - Lockpick minigame
-    - Primary currency: Intel (papers)
-    - Minigame Currency: Treasure (gemstones)
   - Artisan
     - Odd One Out Gems
     - uses gems from the Thief
-    - can provide temporary bonuses to random gathering targets? 
+    - can provide temporary bonuses to random gathering targets?
   - Warlock
     - Connect the dots spellcasting
     - Generates Brimstone
@@ -39,23 +35,23 @@
   - Slayer
     - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
 
+
+
 ### Jacks Upgrades
 - Each character will have a (singular) Jacks upgrade that makes Jacks more effective on that character only? 
-
+- Should this be from the relics? 
 ### Easter Eggs
 - Fairy Ring codes in the ranger minigame
-- Kobold Killing... The numbers... What do they meam? Numbers Station... s: 0–2–5–8–8
+- Kobold Killing... The numbers... What do they mean? Numbers Station... s: 0–2–5–8–8
 
 ## Upgrade Ideas
 
 ### Fighter
 - "Clean Kills" upgrade that makes uncommon drops from the fighter minigame more likely to be dropped
 - Make enemies drop more gold. Maybe combine this with the above and make it "more loot"
-- Auto attack type button? Maybe just click once to start a kill and then another later that auto restarts?
-  - Maybe assign a jack to it idk If I like that 
+- "Advantage!" Rolls damage twice and takes the higher
 
 ### Ranger 
-- Visions of pixies upgrade that gives a little sparkle effect where a pixie might me. A few tiers with varying accuracies, can scale to up to 3 sparkles
 - Buried Treasure upgrade on ranger minigame that gives a big bonus of gold
 - "Divide and Conquer" Jacks are more effective when hunting and gathering
 - Dense Woodlands upgrade that gives a base +1 resource yield on herbs and meat in the ranger minigame
@@ -70,28 +66,29 @@
 - Once a xp threshold is passed, anything unlocked by that threshold should remain, and the threshold should not be tracked again in the currency menu
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
 - Hovering over or clicking on a per second should show you all fo the factors adding or subtracting to that value 
-- ? Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have? 
-
+- ? Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have?
+- In game Changelog? 
+- Add an "effective price per spice" display in the character stats menu 
+- Gold and Exp can be "pinned" to the top of the currency menu 
 
 ## Balancing
 - Add some more one off big upgrades shortly after minigame unlocks?
 - Some of the upgrades maybe don't need to go to 999 and can instead just progress multiple % per level, and scale a little harder in return?
   - Or some could just be more Chunky and give discrete values, like Bountiful Lands
-    - Bountiful lands (+1 resource node, max +5)
     - Bubbling Brew adds a new randomly placed bonus area, up to 5 at max level
-- Short rest basically makes you invincible, it should operate at reduced potion efficiency 
-  - Maybe start with First strike and then get short rest later? 
-  - Short rest only heals up to a % threshold and can be upgraded
-  - Maybe short rest will use up to the unlocked number of potions after a fight?
-- Pixie dust could use another use 
-- Culinarian doesn't use any apoth resources to unlock? 
-- Should the culinarian be locked behind kobold ears? Just a couple
+- Bigger game is kinda whatever and not super interesting
 
 ## Bug Fixes
 - 200% herb save isn't saving 2 herbs
-- the experience bar maxes out at like 2.5k or something, the next few unlocks should be there too
-- Current prices should be updated on the buttons when the cost is changed in the game config (savegame related?)
+
+
 
 ## Code Refactors
 - extract log text to flavor file, might need to implement string replacement here idk
+  - Make sure the logs use the symbols not the names 
+  - Make it so default info logs are ignored if filtered out. Other messages should persist 
 - Fighter minigame combat log is a mess lmao 
+- Add a "Start Time" in the save file upon first navigating to the page, only on fresh saves
+- Extract monster info into the game config 
+- Try to take some of the character stats and put them somehwere else?
+- take the per seconds out of app component and put them somewhere else? 

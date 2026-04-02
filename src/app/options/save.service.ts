@@ -32,6 +32,7 @@ export interface UpgradeState {
   /** Persisted UI toggle states — optional for backward compat. */
   shortRestEnabled?: boolean;
   wholesaleSpicesEnabled?: boolean;
+  dilutionEnabled?: boolean;
 }
 
 // ── Legacy save migration ─────────────────────────────────────
@@ -138,6 +139,7 @@ export interface UiPrefs {
   hideMaxedUpgrades?: boolean;
   hideMinigameUpgrades?: boolean;
   blandMode?: boolean;
+  enableDevTools?: boolean;
 }
 
 export interface SaveSnapshot {
@@ -174,18 +176,22 @@ export class SaveService {
   private hideMaxedSource        = new BehaviorSubject<boolean>(false);
   private hideMinigameSource     = new BehaviorSubject<boolean>(false);
   private blandModeSource        = new BehaviorSubject<boolean>(false);
+  private enableDevToolsSource   = new BehaviorSubject<boolean>(false);
 
   readonly hideMaxedUpgrades$    = this.hideMaxedSource.asObservable();
   readonly hideMinigameUpgrades$ = this.hideMinigameSource.asObservable();
   readonly blandMode$            = this.blandModeSource.asObservable();
+  readonly enableDevTools$       = this.enableDevToolsSource.asObservable();
 
   get hideMaxedUpgrades():    boolean { return this.hideMaxedSource.getValue(); }
   get hideMinigameUpgrades(): boolean { return this.hideMinigameSource.getValue(); }
   get blandMode():            boolean { return this.blandModeSource.getValue(); }
+  get enableDevTools():       boolean { return this.enableDevToolsSource.getValue(); }
 
   setHideMaxedUpgrades(v: boolean):    void { this.hideMaxedSource.next(v); }
   setHideMinigameUpgrades(v: boolean): void { this.hideMinigameSource.next(v); }
   setBlandMode(v: boolean):            void { this.blandModeSource.next(v); }
+  setEnableDevTools(v: boolean):       void { this.enableDevToolsSource.next(v); }
 
   /** When true the next beforeunload save is skipped (used by dev clear-save). */
   private _skipNextSave = false;
@@ -259,6 +265,7 @@ export class SaveService {
       hideMaxedUpgrades:    this.hideMaxedUpgrades,
       hideMinigameUpgrades: this.hideMinigameUpgrades,
       blandMode:            this.blandMode,
+      enableDevTools:       this.enableDevTools,
     };
 
     return {
@@ -313,6 +320,7 @@ export class SaveService {
       this.setHideMaxedUpgrades(p.hideMaxedUpgrades       ?? false);
       this.setHideMinigameUpgrades(p.hideMinigameUpgrades ?? false);
       this.setBlandMode(p.blandMode                       ?? false);
+      this.setEnableDevTools(p.enableDevTools             ?? false);
     }
   }
 

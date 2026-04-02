@@ -12,7 +12,7 @@ import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './options/options-menu.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, UNLOCK_COSTS, JACK_GOLD_COST, JACK_RESOURCE_PROGRESSION } from './game-config';
+import {XP_THRESHOLDS, YIELDS, UNLOCK_COSTS, JACK_GOLD_COST, JACK_RESOURCE_PROGRESSION, APOTH_MG, THIEF_MG} from './game-config';
 import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR } from './flavor-text';
 import { fmtNumber, clamp, scaledCost, randInt, rollChance, roundTo } from './utils/mathUtils';
 
@@ -60,7 +60,22 @@ export class AppComponent implements OnInit, OnDestroy {
   activeCharacterId  = 'fighter';
   apothecaryUnlocked = false;
   culinarianUnlocked = false;
+  thiefUnlocked      = false;
   unlockedCharacters: { id: string; name: string; color: string }[] = [];
+
+  // ── Thief stun state ───────────────────────────────────────────
+  /** Absolute timestamp (ms) when the Thief's stun expires. 0 = not stunned. */
+  thiefStunUntil = 0;
+  /** Handle for the post-stun updateAllPerSecond timeout, so stale callbacks can be cancelled. */
+  private thiefStunTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  /**
+   * Cached inline styles for the stun fill-bar. This is a plain property (NOT a getter)
+   * so Angular does not re-evaluate it on every change-detection cycle — which would
+   * produce a new animation-delay each tick and cause the bar to restart continuously.
+   * Updated exactly once when a stun starts (delay=0) and once more if the player
+   * switches back to the thief tab while the stun is still active.
+   */
+  thiefStunAnimStyle: Record<string, string> = {};
 
   // ── Minigame ───────────────────────────────────────────────────
   minigameUnlocked = false;
@@ -77,6 +92,8 @@ export class AppComponent implements OnInit, OnDestroy {
   fighterCombatState: FighterCombatState | null = null;
   /** Whether the Short Rest auto-heal toggle is enabled in the fighter minigame. */
   shortRestEnabled = false;
+  /** Whether the Potion Dilution toggle is enabled in the apothecary minigame. */
+  dilutionEnabled  = false;
 
   // ── UI preference flags ────────────────────────────────────────
   hideMaxedUpgrades    = false;
@@ -113,7 +130,7 @@ export class AppComponent implements OnInit, OnDestroy {
   /** XP awarded per fighter bounty click. */
   get xpPerBounty(): number { return 1 + this.upgrades.level('INSIGHTFUL_CONTRACTS'); }
   /** Fighter minigame attack power. */
-  get fighterAttackPower(): number { return this.goldPerClick + this.upgrades.level('SHARPER_SWORDS'); }
+  get fighterAttackPower(): number { return this.upgrades.level('SHARPER_SWORDS'); }
   /** Current beast-find percentage (capped). */
   get beastFindChance(): number {
     return clamp(YIELDS.RANGER_BASE_BEAST_CHANCE + this.upgrades.level('BETTER_TRACKING'), 0, YIELDS.RANGER_BEAST_CHANCE_CAP);
@@ -131,6 +148,30 @@ export class AppComponent implements OnInit, OnDestroy {
       + ((25 - wsLevel + 24) / 2) * wsLevel;
     const discount = 1 - this.upgrades.level('POTION_GLIBNESS') / 100;
     return Math.max(1, Math.floor(baseCost * discount));
+  }
+
+  /** Success chance for the Thief's Break & Enter action (base 50% + Meticulous Planning). */
+  get thiefSuccessChance(): number {
+    return YIELDS.THIEF_BASE_SUCCESS_CHANCE + this.upgrades.level('METICULOUS_PLANNING');
+  }
+  /** Gold awarded per successful heist per dossier held × Plentiful Plundering level. */
+  get plentifulPlunderingLevel(): number { return this.upgrades.level('PLENTIFUL_PLUNDERING'); }
+  /** Max dossier yield per heist bonus from Potion of Sticky Fingers. */
+  get stickyFingersLevel(): number { return this.upgrades.level('POTION_OF_STICKY_FINGERS'); }
+  /** Average dossier yield per successful heist (1 at base, scales with Sticky Fingers). */
+  get expectedDossierYield(): number {
+    const sf = this.stickyFingersLevel;
+    return sf > 0 ? 1 + sf / 2 : 1;  // avg of randInt(1, 1+sf)
+  }
+  /** True while the Thief is in a stun lockout after a failed break-in. */
+  get isThiefStunned(): boolean { return Date.now() < this.thiefStunUntil; }
+  /** Seconds remaining in the Thief stun (0 if not stunned). */
+  get thiefStunRemaining(): number {
+    return Math.ceil(Math.max(0, this.thiefStunUntil - Date.now()) / 1000);
+  }
+  /** Whether the hero button should be disabled (only true for thief while stunned). */
+  get isHeroDisabled(): boolean {
+    return this.activeCharacterId === 'thief' && this.isThiefStunned;
   }
 
   // ── Jack computed getters ──────────────────────────────────────
@@ -164,9 +205,13 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.unlockedCharacters.find(c => c.id === this.activeCharacterId);
   }
   get activeCharJackStarved(): boolean {
+    if (this.activeCharacterId === 'thief') return this.isThiefStunned && (this.jacksAllocations['thief'] ?? 0) > 0;
     return this.getJackCount(this.activeCharacterId) > 0 && !!this.jackStarved[this.activeCharacterId];
   }
   get activeCharJackStarvedMsg(): string {
+    if (this.activeCharacterId === 'thief') {
+      return `⚠ Jack idle — Stunned!`;
+    }
     if (this.activeCharacterId === 'apothecary') {
       const need = YIELDS.APOTHECARY_BREW_HERB_COST;
       const have = Math.floor(this.wallet.get('herb'));
@@ -191,6 +236,7 @@ export class AppComponent implements OnInit, OnDestroy {
       ranger:     CHARACTER_FLAVOR.RANGER.questBtn,
       apothecary: CHARACTER_FLAVOR.APOTHECARY.questBtn,
       culinarian: CHARACTER_FLAVOR.CULINARIAN.questBtn,
+      thief:      CHARACTER_FLAVOR.THIEF.questBtn,
     };
     return map[this.activeCharacterId] ?? CHARACTER_FLAVOR.FIGHTER.questBtn;
   }
@@ -223,24 +269,58 @@ export class AppComponent implements OnInit, OnDestroy {
         { label: HERO_STATS_FLAVOR.APOTHECARY.GOLD_PER_BREW,value: `${this.potionMarketingGoldPerBrew}`          },
       ];
       if (this.upgrades.level('POTION_DILUTION') >= 1) {
-        const successChance = Math.min(100, 50 + this.upgrades.level('SERIAL_DILUTION'));
-        stats.push({
-          label: HERO_STATS_FLAVOR.APOTHECARY.DILUTION_SUCCESS,
-          value: `${successChance}%`,
-        });
+        const successChance = Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE + this.upgrades.level('SERIAL_DILUTION'));
+        stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.DILUTION_SUCCESS, value: `${successChance}%` });
       }
       return stats;
     }
     if (this.activeCharacterId === 'culinarian') {
+      const pricePerSpice = roundTo(this.culinarianGoldCost / this.spicePerClick, 2);
       const stats: HeroStat[] = [
         { label: HERO_STATS_FLAVOR.CULINARIAN.SPICE_PER_CLICK, value: `${this.spicePerClick}`      },
         { label: HERO_STATS_FLAVOR.CULINARIAN.GOLD_COST,        value: `${this.culinarianGoldCost}` },
+        { label: HERO_STATS_FLAVOR.CULINARIAN.PRICE_PER_SPICE,  value: `${pricePerSpice}g`          },
       ];
       if (this.upgrades.level('POTION_GLIBNESS') > 0) {
         stats.push({
           label: HERO_STATS_FLAVOR.CULINARIAN.GOLD_DISCOUNT,
           value: `-${this.upgrades.level('POTION_GLIBNESS')}%`,
         });
+      }
+      return stats;
+    }
+    if (this.activeCharacterId === 'thief') {
+      const thiefJacks = this.jacksAllocations['thief'] ?? 0;
+      const sf = this.stickyFingersLevel;
+      const avgYield = this.expectedDossierYield;
+      const expectedPerSec = roundTo(thiefJacks * (this.thiefSuccessChance / 100) * avgYield, 2);
+      const isMPMaxed = this.upgrades.level('METICULOUS_PLANNING') >= this.upgrades.maxLevel('METICULOUS_PLANNING');
+      const isExact = isMPMaxed && sf === 0;
+
+      // Yield ranges (min = 0 detection unused, max = full detection pool unused)
+      const bagGoldBonus     = this.upgrades.level('BAG_OF_HOLDING') * THIEF_MG.BAG_OF_HOLDING_GOLD_YIELD_PER_LEVEL;
+      const bagTreasureBonus = this.upgrades.level('BAG_OF_HOLDING') * THIEF_MG.BAG_OF_HOLDING_TREASURE_YIELD_PER_LEVEL;
+      const maxDetect    = THIEF_MG.MAX_DETECTION + this.upgrades.level('VANISHING_POWDER') * THIEF_MG.VANISHING_POWDER_DETECT_PER_LEVEL;
+      const goldMin      = THIEF_MG.GOLD_BASE;
+      const goldMax      = THIEF_MG.GOLD_BASE     + THIEF_MG.GOLD_PER_UNUSED     * maxDetect + bagGoldBonus;
+      const treasureMin  = THIEF_MG.TREASURE_BASE;
+      const treasureMax  = THIEF_MG.TREASURE_BASE + THIEF_MG.TREASURE_PER_UNUSED * maxDetect + bagTreasureBonus;
+      const relicChance  = THIEF_MG.RELIC_CHANCE  + this.upgrades.level('RELIC_HUNTER') * THIEF_MG.RELIC_HUNTER_CHANCE_PER_LEVEL;
+      const relicUnlocked = this.wallet.isCurrencyUnlocked('relic');
+
+      const stats: HeroStat[] = [
+        { label: HERO_STATS_FLAVOR.THIEF.SUCCESS_CHANCE,  value: `${this.thiefSuccessChance}%` },
+        { label: HERO_STATS_FLAVOR.THIEF.GOLD_RANGE,      value: `${goldMin} - ${goldMax}`      },
+        { label: HERO_STATS_FLAVOR.THIEF.TREASURE_RANGE,  value: `${treasureMin} - ${treasureMax}` },
+      ];
+      if (sf > 0) {
+        stats.push({ label: HERO_STATS_FLAVOR.THIEF.DOSSIER_YIELD, value: `1 - ${1 + sf}` });
+      }
+      if (thiefJacks > 0) {
+        stats.push({ label: HERO_STATS_FLAVOR.THIEF.DOSSIERS_PER_S, value: `${isExact ? '' : '~'}${expectedPerSec}` });
+      }
+      if (relicUnlocked) {
+        stats.push({ label: HERO_STATS_FLAVOR.THIEF.RELIC_CHANCE, value: `${relicChance}%` });
       }
       return stats;
     }
@@ -273,10 +353,14 @@ export class AppComponent implements OnInit, OnDestroy {
   isUpgradeVisible(id: string): boolean {
     const gates = this.upgrades.getGates(id);
     if (!gates) return true;
-    if (gates.requiresApothecary  && !this.apothecaryUnlocked)  return false;
-    if (gates.requiresCulinarian  && !this.culinarianUnlocked)  return false;
-    if (gates.requiresBubblingBrew && this.upgrades.level('BUBBLING_BREW') < 1) return false;
-    if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1) return false;
+    if (gates.requiresApothecary    && !this.apothecaryUnlocked)                     return false;
+    if (gates.requiresCulinarian    && !this.culinarianUnlocked)                     return false;
+    if (gates.requiresThief         && !this.thiefUnlocked)                          return false;
+    if (gates.requiresRelic         && !this.wallet.isCurrencyUnlocked('relic'))     return false;
+    if (gates.requiresFang          && !this.wallet.isCurrencyUnlocked('kobold-fang')) return false;
+    if (gates.requiresDossier       && !this.wallet.isCurrencyUnlocked('dossier'))   return false;
+    if (gates.requiresBubblingBrew  && this.upgrades.level('BUBBLING_BREW') < 1)     return false;
+    if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1)  return false;
     if (gates.xpMin != null && this.xp < gates.xpMin) return false;
     return true;
   }
@@ -326,10 +410,16 @@ export class AppComponent implements OnInit, OnDestroy {
       this.spice               = Math.floor(state['spice']?.amount               ?? 0);
     });
 
-    this.charService.activeId$.subscribe(id => { this.activeCharacterId = id; });
+    this.charService.activeId$.subscribe(id => {
+      this.activeCharacterId = id;
+      // When switching back to the thief tab mid-stun the *ngIf re-creates the
+      // fill-bar element, so we need a fresh (negative-delayed) style snapshot.
+      if (id === 'thief' && this.isThiefStunned) this.refreshThiefStunAnimStyle();
+    });
     this.charService.characters$.subscribe(chars => {
       this.apothecaryUnlocked = chars.find(c => c.id === 'apothecary')?.unlocked ?? false;
       this.culinarianUnlocked = chars.find(c => c.id === 'culinarian')?.unlocked ?? false;
+      this.thiefUnlocked      = chars.find(c => c.id === 'thief')?.unlocked      ?? false;
       this.unlockedCharacters = chars.filter(c => c.unlocked).map(c => ({ id: c.id, name: c.name, color: c.color }));
     });
 
@@ -357,6 +447,13 @@ export class AppComponent implements OnInit, OnDestroy {
     this.saveService.hideMaxedUpgrades$.subscribe(v    => this.hideMaxedUpgrades    = v);
     this.saveService.hideMinigameUpgrades$.subscribe(v => this.hideMinigameUpgrades = v);
     this.saveService.blandMode$.subscribe(v            => this.blandMode            = v);
+
+    // Keep --log-height in sync so sidebars shrink when the log is expanded.
+    this.log.minimized$.subscribe(minimized => {
+      const px = minimized ? 30 : 210;
+      document.documentElement.style.setProperty('--log-height', `${px}px`);
+    });
+
     if (this.saveService.hasSave()) this.saveService.loadFromLocalStorage();
     this.saveService.startAutoSave();
   }
@@ -382,6 +479,7 @@ export class AppComponent implements OnInit, OnDestroy {
       fighterCombatState:     this.fighterCombatState ?? undefined,
       shortRestEnabled:       this.shortRestEnabled,
       wholesaleSpicesEnabled: this.wholesaleSpicesEnabled,
+      dilutionEnabled:        this.dilutionEnabled,
     };
   }
 
@@ -398,6 +496,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.fighterCombatState     = s.fighterCombatState     ?? null;
     this.shortRestEnabled       = s.shortRestEnabled       ?? false;
     this.wholesaleSpicesEnabled = s.wholesaleSpicesEnabled ?? true;
+    this.dilutionEnabled        = s.dilutionEnabled        ?? false;
     this.updateAllPerSecond();
   }
 
@@ -409,18 +508,24 @@ export class AppComponent implements OnInit, OnDestroy {
     // Starved jacks produce nothing — exclude them from all display rates.
     const apothecaryJacks = this.jackStarved['apothecary'] ? 0 : (this.jacksAllocations['apothecary'] ?? 0);
     const culinarianJacks = this.jackStarved['culinarian'] ? 0 : (this.jacksAllocations['culinarian'] ?? 0);
+    // Thief jacks cannot fire while the thief is stunned — treat as 0 during that window.
+    const thiefJacks      = this.jacksAllocations['thief'] ?? 0;
+    const thiefSuccessRate = this.thiefSuccessChance / 100;
+    const effectiveThiefRate = this.isThiefStunned ? 0 : thiefJacks * thiefSuccessRate;
+    // Sticky Fingers raises the average dossier yield per heist.
+    const avgDossierYield = this.expectedDossierYield;
+    // Plentiful Plundering: gold/s = dossiers/s × ppLevel.
+    const ppGoldPerSecond = effectiveThiefRate * avgDossierYield * this.plentifulPlunderingLevel;
 
-    // Culinarian Jacks cost gold each tick; subtract from total gold income.
-    // Apothecary Jacks generate gold per brew via Potion Marketing.
     this.wallet.setPerSecond('gold',
       roundTo(this.autoGoldPerSecond
         + apothecaryJacks * this.potionMarketingGoldPerBrew
         + fighterJacks * this.goldPerClick
-        - culinarianJacks * this.culinarianGoldCost, 2));
+        - culinarianJacks * this.culinarianGoldCost
+        + ppGoldPerSecond, 2));
 
-    // Fighter jacks fire xpPerBounty per click; all other jacks give 1 XP each.
     this.wallet.setPerSecond('xp',
-      roundTo(fighterJacks * this.xpPerBounty + rangerJacks + apothecaryJacks + culinarianJacks, 2));
+      roundTo(fighterJacks * this.xpPerBounty + rangerJacks + apothecaryJacks + culinarianJacks + effectiveThiefRate, 2));
 
     const herbProduced = rangerJacks * 0.5 * this.expectedHerbPerRangerClick();
     const herbConsumed = apothecaryJacks * (YIELDS.APOTHECARY_BREW_HERB_COST - this.herbSaveChance / 100);
@@ -430,8 +535,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.wallet.setPerSecond('beast',
       roundTo(rangerJacks * 0.5 * (this.beastFindChance / 100) * expectedMeatYield, 2));
 
-    this.wallet.setPerSecond('potion', roundTo(apothecaryJacks, 2));
-    this.wallet.setPerSecond('spice',  roundTo(culinarianJacks * this.spicePerClick, 2));
+    this.wallet.setPerSecond('potion',  roundTo(apothecaryJacks, 2));
+    this.wallet.setPerSecond('spice',   roundTo(culinarianJacks * this.spicePerClick, 2));
+    this.wallet.setPerSecond('dossier', roundTo(effectiveThiefRate * avgDossierYield, 2));
   }
 
   /**
@@ -451,7 +557,75 @@ export class AppComponent implements OnInit, OnDestroy {
     if      (this.activeCharacterId === 'ranger')     this.clickRanger();
     else if (this.activeCharacterId === 'apothecary') this.clickApothecary();
     else if (this.activeCharacterId === 'culinarian') this.clickCulinarian();
+    else if (this.activeCharacterId === 'thief')      this.clickThief();
     else                                               this.clickFighter();
+  }
+
+  private clickThief(): void {
+    if (this.isThiefStunned) return;
+    if (rollChance(this.thiefSuccessChance)) {
+      const dossierYield = this.stickyFingersLevel > 0
+        ? randInt(1, 1 + this.stickyFingersLevel)
+        : 1;
+      this.wallet.add('dossier', dossierYield);
+      this.wallet.add('xp', 1);
+      const ppLevel = this.plentifulPlunderingLevel;
+      if (ppLevel > 0) {
+        const dossiers = randInt(1, 1 + this.stickyFingersLevel)
+        const bonus = dossiers * ppLevel;
+        if (bonus > 0) this.wallet.add('gold', bonus);
+        this.log.log(`You slipped in undetected and secured ${dossierYield === 1 ? 'a dossier' : `${dossierYield} dossiers`}. (+1 XP, +${bonus}g)`, 'default');
+      } else {
+        this.log.log(`You slipped in undetected and secured ${dossierYield === 1 ? 'a dossier' : `${dossierYield} dossiers`}. (+1 XP)`, 'default');
+      }
+    } else {
+      this.applyThiefStun();
+      this.log.log(`You were spotted! Retreating for ${YIELDS.THIEF_STUN_DURATION_MS / 1000} seconds...`, 'warn');
+    }
+  }
+
+  /**
+   * Apply the thief stun: set the expiry timestamp, lock in the animation style,
+   * immediately recalculate per-second rates (→ 0 while stunned), then schedule
+   * another recalculation the moment the stun expires so the display restores.
+   */
+  private applyThiefStun(): void {
+    // Silent guard — if a stun is already running, do not refresh or extend it.
+    if (this.isThiefStunned) return;
+    // Cancel any stale post-stun callback so it can't fire unexpectedly mid-stun.
+    if (this.thiefStunTimeoutId !== null) {
+      clearTimeout(this.thiefStunTimeoutId);
+      this.thiefStunTimeoutId = null;
+    }
+    this.thiefStunUntil = Date.now() + YIELDS.THIEF_STUN_DURATION_MS;
+    // Snapshot the style ONCE at stun start (elapsed = 0 → no delay needed).
+    // This is a stable object reference; Angular will not update the DOM binding
+    // again until we replace this reference, so the CSS animation runs uninterrupted.
+    this.thiefStunAnimStyle = {
+      'animation-duration': `${YIELDS.THIEF_STUN_DURATION_MS / 1000}s`,
+      'animation-delay':    '0s',
+    };
+    this.updateAllPerSecond();
+    this.thiefStunTimeoutId = setTimeout(() => {
+      this.thiefStunTimeoutId = null;
+      this.updateAllPerSecond();
+    }, YIELDS.THIEF_STUN_DURATION_MS + 50);
+  }
+
+  /**
+   * Recompute the stun-bar animation style mid-stun, e.g. when the player
+   * switches back to the thief panel while a stun is already in progress.
+   * The *ngIf re-creates the DOM element so we need a correct negative delay
+   * to place the bar at the right fill position.
+   */
+  private refreshThiefStunAnimStyle(): void {
+    if (!this.isThiefStunned) return;
+    const total   = YIELDS.THIEF_STUN_DURATION_MS;
+    const elapsed = total - Math.max(0, this.thiefStunUntil - Date.now());
+    this.thiefStunAnimStyle = {
+      'animation-duration': `${total / 1000}s`,
+      'animation-delay':    `-${elapsed / 1000}s`,
+    };
   }
 
   private clickFighter(): void {
@@ -506,6 +680,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.wallet.add('potion', 1);
     this.wallet.add('xp', 1);
     if (this.potionMarketingGoldPerBrew > 0) this.wallet.add('gold', this.potionMarketingGoldPerBrew);
+
     if (this.herbSaveChance > 0 && rollChance(this.herbSaveChance)) {
       this.wallet.add('herb', 1);
       this.log.log(`You brewed a potion and recovered a herb! (+1 XP)`, 'success');
@@ -651,6 +826,24 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.remove('gold', goldCost);
       this.wallet.add('spice', this.spicePerClick);
       this.wallet.add('xp', 1);
+
+    } else if (charId === 'thief') {
+      // Jacks cannot act while the thief is stunned.
+      if (this.isThiefStunned) return;
+      if (rollChance(this.thiefSuccessChance)) {
+        const dossierToAward = randInt(1, 1 + this.stickyFingersLevel)
+        this.wallet.add('dossier', dossierToAward);
+        this.wallet.add('xp', 1);
+        const ppLevel = this.plentifulPlunderingLevel;
+        if (ppLevel > 0) {
+          const bonus = Math.floor(dossierToAward) * ppLevel;
+          if (bonus > 0) this.wallet.add('gold', bonus);
+        }
+      } else {
+        // On failure, stun blocks all subsequent thief jacks this tick and
+        // recalculates per-second rates immediately + schedules a restore.
+        this.applyThiefStun();
+      }
     }
   }
 
@@ -675,6 +868,7 @@ export class AppComponent implements OnInit, OnDestroy {
   // ── Dev tools ──────────────────────────────────────────────────
 
   devMenuOpen = false;
+  get devToolsEnabled(): boolean { return this.saveService.enableDevTools; }
 
   devGrant(): void {
     for (const c of this.wallet.currencies) this.wallet.add(c.id, 1000);
@@ -695,6 +889,18 @@ export class AppComponent implements OnInit, OnDestroy {
     this.upgrades.setAllToHalfMax();
     this.updateAllPerSecond();
     this.log.log('[DEV] All upgrades set to half of their maximum level.', 'warn');
+  }
+
+  devZeroUpgrades(): void {
+    this.upgrades.setAllToZero();
+    this.updateAllPerSecond();
+    this.log.log('[DEV] All upgrades set to level 0.', 'warn');
+  }
+
+  devMaxUpgrades(): void {
+    this.upgrades.setAllToMax();
+    this.updateAllPerSecond();
+    this.log.log('[DEV] All upgrades set to maximum level.', 'warn');
   }
 
   devClearSave(): void {

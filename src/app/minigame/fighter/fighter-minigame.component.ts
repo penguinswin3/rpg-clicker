@@ -52,6 +52,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   @Input() selectedKoboldLevel = 1;
   /** Emitted when the player clicks +/- on the kobold level selector. */
   @Output() selectedKoboldLevelChange = new EventEmitter<number>();
+  /** First Strike level — when ≥ 1, the fighter attacks before the enemy can counter on a killing blow. */
+  @Input() firstStrikeLevel = 0;
   /** Previously-saved combat state to restore on init. */
   @Input() savedState: FighterCombatState | null = null;
   /** Emitted whenever combat state changes (HP, defeated, rest countdown). */
@@ -78,6 +80,10 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   awaitingSpawn = false;
   fleeing       = false;
   fleeCountdown = 0;     // seconds remaining while fleeing
+  /** True while a First Strike chain is running — flee is permitted even though awaitingSpawn is true. */
+  inFirstStrikeChain = false;
+  /** Number of consecutive First Strike kills in the current chain (0 when no chain active). */
+  private firstStrikeChainCount = 0;
 
   /** When true, potions are consumed automatically to top up HP after each kill. */
   // shortRestEnabled is now an @Input() — see above
@@ -115,6 +121,10 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     return FIGHTER_MG.POTION_HEAL + this.potionChuggingLevel;
   }
 
+  get potionHealEfficiency(): number{
+    return FIGHTER_MG.BASE_SR_POTION_HEAL;
+  }
+
   get actionsDisabled(): boolean {
     return this.defeated || this.awaitingSpawn || this.fleeing;
   }
@@ -124,7 +134,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   }
 
   get fleeDisabled(): boolean {
-    return this.defeated || this.awaitingSpawn || this.fleeing;
+    // Allow fleeing during a first-strike chain so the player can break out
+    return this.defeated || (this.awaitingSpawn && !this.inFirstStrikeChain) || this.fleeing;
   }
 
   /** Maximum selectable kobold level: base 1 + one per Stronger Kobolds tier. */
@@ -289,6 +300,18 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
   flee(): void {
     if (this.fleeDisabled) return;
+
+    // If fleeing mid-chain, cancel the pending spawn and clear chain state
+    if (this.inFirstStrikeChain) {
+      if (this.spawnTimer) {
+        clearTimeout(this.spawnTimer);
+        this.spawnTimer = undefined;
+      }
+      this.inFirstStrikeChain    = false;
+      this.firstStrikeChainCount = 0;
+      this.awaitingSpawn         = false;
+    }
+
     this.fleeing       = true;
     this.fleeCountdown = 3;
     this.lastMsg  = MINIGAME_MSG.FIGHTER.FLEEING;
@@ -348,7 +371,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     while (this.potions > 0 && this.fighterHp < this.maxHp) {
       this.wallet.remove('potion', 1);
       potionsConsumed++;
-      this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount);
+      this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount*this.potionHealEfficiency);
     }
     this.log.log(`Chugged ${potionsConsumed} potion(s) during a short rest.`, "default")
   }
@@ -367,7 +390,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.emitState();
   }
 
-  private onEnemyDefeated(enemyLastDmg: number): void {
+  private onEnemyDefeated(enemyLastDmg: number, firstStrike: boolean = false): void {
     const gold = randInt(this.enemy.goldMin, this.enemy.goldMax);
 
     this.wallet.add('gold',       gold);
@@ -429,7 +452,9 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     }
 
     this.lastMsg       = `${this.enemy.name} defeated!`;
-    this.msgLine2      = `Final blow: ${enemyLastDmg} dmg!`;
+    this.msgLine2      = firstStrike
+      ? (this.firstStrikeChainCount >= 2 ? `[ CHAIN x${this.firstStrikeChainCount}! ]` : `[ FIRST STRIKE! ]`)
+      : `Final blow: ${enemyLastDmg} dmg!`;
     this.msgClass      = 'msg-good';
     this.awaitingSpawn = true;
     if (this.shortRestEnabled) this.autoHealToFull();
@@ -442,7 +467,41 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.msgLine2     = '';
       this.msgClass     = 'msg-neutral';
       this.emitState();
+
+      // First Strike: free opening hit at the start of every combat encounter.
+      // Only fires here (enemy spawned after a kill), never after fleeing.
+      if (this.firstStrikeLevel >= 1) {
+        this.applyFirstStrike();
+      }
     }, FIGHTER_MG.SPAWN_DELAY_MS);
+  }
+
+  /**
+   * First Strike free hit — applied automatically when a new enemy spawns after a kill.
+   * The fighter deals normal attack damage with no enemy counter.
+   * If the hit kills the enemy, rewards are awarded and the chain continues
+   * (the next spawn also gets a First Strike hit).
+   */
+  private applyFirstStrike(): void {
+    const dmg = randInt(1, this.attackPower + 1);
+    this.enemy.hp = Math.max(0, this.enemy.hp - dmg);
+
+    if (this.enemy.hp <= 0) {
+      // Count the kill: fresh chain starts at 1, continuation increments
+      this.firstStrikeChainCount = this.inFirstStrikeChain
+        ? this.firstStrikeChainCount + 1
+        : 1;
+      this.inFirstStrikeChain = true;
+      this.onEnemyDefeated(0, true);
+    } else {
+      // Enemy survived — chain is over, normal combat resumes
+      this.inFirstStrikeChain    = false;
+      this.firstStrikeChainCount = 0;
+      this.lastMsg  = `First Strike! ${dmg} dmg!`;
+      this.msgLine2 = `The kobold can't keep up!`;
+      this.msgClass = 'msg-good';
+      this.emitState();
+    }
   }
 
   private buildKobold(): Enemy {

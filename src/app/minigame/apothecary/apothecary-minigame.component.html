@@ -74,7 +74,8 @@
   <div class="dilution-toggle" *ngIf="potionDilutionUnlocked">
     <label class="toggle-label">
       <input type="checkbox"
-             [(ngModel)]="dilutionEnabled"
+             [ngModel]="dilutionEnabled"
+             (ngModelChange)="onDilutionChange($event)"
              [ngModelOptions]="{standalone: true}" />
       Dilution
     </label>

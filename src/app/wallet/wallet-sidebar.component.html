@@ -28,9 +28,9 @@
       </button>
     </div>
 
-    <!-- Currency rows -->
-    <div class="currency-list">
-      <div class="currency-row" *ngFor="let c of filteredCurrencies">
+    <!-- Pinned currencies (gold, xp) — never scroll -->
+    <div class="currency-pinned" *ngIf="pinnedCurrencies.length > 0">
+      <div class="currency-row" *ngFor="let c of pinnedCurrencies">
         <div class="currency-header">
           <span class="currency-name" [style.color]="c.color">{{ c.name }}</span>
           <span class="currency-short" [style.color]="c.color">{{ c.symbol }}</span>
@@ -43,7 +43,6 @@
             {{ fmtRate(getEntry(c.id).perSecond) }}
           </span>
         </div>
-        <!-- XP unlock progress bar — absolutely positioned, no layout impact -->
         <div class="xp-progress-track" *ngIf="c.id === 'xp'">
           <div class="xp-progress-fill"
                [class.xp-rainbow]="xpComplete"
@@ -51,7 +50,25 @@
                [style.background]="xpComplete ? null : c.color"></div>
         </div>
       </div>
-      <div class="currency-empty" *ngIf="filteredCurrencies.length === 0">
+    </div>
+
+    <!-- Scrollable currencies -->
+    <div class="currency-list">
+      <div class="currency-row" *ngFor="let c of scrollableCurrencies">
+        <div class="currency-header">
+          <span class="currency-name" [style.color]="c.color">{{ c.name }}</span>
+          <span class="currency-short" [style.color]="c.color">{{ c.symbol }}</span>
+        </div>
+        <div class="currency-data">
+          <span class="currency-amount">{{ fmtNumber(getEntry(c.id).amount) }}</span>
+          <span class="currency-rate"
+                [class.inactive]="getEntry(c.id).perSecond === 0"
+                [class.negative]="getEntry(c.id).perSecond < 0">
+            {{ fmtRate(getEntry(c.id).perSecond) }}
+          </span>
+        </div>
+      </div>
+      <div class="currency-empty" *ngIf="scrollableCurrencies.length === 0 && pinnedCurrencies.length === 0">
         -- none --
       </div>
     </div>
@@ -60,15 +77,26 @@
 
   <!-- ── Collapsed view ─────────────────── -->
   <ng-container *ngIf="collapsed">
-    <div class="currency-compact" *ngFor="let c of filteredCurrencies">
-      <span class="compact-amount" [style.color]="c.color">{{ fmtNumber(getEntry(c.id).amount) }}</span>
-      <span class="compact-short" [style.color]="c.color">{{ c.symbol }}</span>
-      <!-- XP unlock progress bar — absolutely positioned, no layout impact -->
-      <div class="xp-progress-track xp-track-compact" *ngIf="c.id === 'xp'">
-        <div class="xp-progress-fill"
-             [class.xp-rainbow]="xpComplete"
-             [style.width.%]="xpProgressPct"
-             [style.background]="xpComplete ? null : c.color"></div>
+
+    <!-- Pinned compact (gold, xp) — never scroll -->
+    <div class="currency-pinned-compact" *ngIf="pinnedCurrencies.length > 0">
+      <div class="currency-compact" *ngFor="let c of pinnedCurrencies">
+        <span class="compact-amount" [style.color]="c.color">{{ fmtNumber(getEntry(c.id).amount) }}</span>
+        <span class="compact-short" [style.color]="c.color">{{ c.symbol }}</span>
+        <div class="xp-progress-track xp-track-compact" *ngIf="c.id === 'xp'">
+          <div class="xp-progress-fill"
+               [class.xp-rainbow]="xpComplete"
+               [style.width.%]="xpProgressPct"
+               [style.background]="xpComplete ? null : c.color"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scrollable compact -->
+    <div class="currency-compact-list">
+      <div class="currency-compact" *ngFor="let c of scrollableCurrencies">
+        <span class="compact-amount" [style.color]="c.color">{{ fmtNumber(getEntry(c.id).amount) }}</span>
+        <span class="compact-short" [style.color]="c.color">{{ c.symbol }}</span>
       </div>
     </div>
   </ng-container>

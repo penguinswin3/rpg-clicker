@@ -21,10 +21,18 @@ export interface UpgradeGates {
   readonly requiresApothecary?: boolean;
   /** Hide until the Culinarian character is unlocked (i.e. spice is in play). */
   readonly requiresCulinarian?: boolean;
+  /** Hide until the Thief character is unlocked. */
+  readonly requiresThief?: boolean;
   /** Hide until the Bubbling Brew minigame upgrade has been purchased. */
   readonly requiresBubblingBrew?: boolean;
   /** Hide until the Potion Dilution minigame upgrade has been purchased. */
   readonly requiresPotionDilution?: boolean;
+  /** Hide until the player has received at least one Relic. */
+  readonly requiresRelic?: boolean;
+  /** Hide until the player has obtained at least one Kobold Fang. */
+  readonly requiresFang?: boolean;
+  /** Hide until the player has obtained at least one Dossier. */
+  readonly requiresDossier?: boolean;
   /** Minimum XP required before the card is shown. */
   readonly xpMin?: number;
 }
@@ -60,7 +68,9 @@ export const XP_THRESHOLDS = {
   /** XP required to unlock all character minigame screens */
   MINIGAME_UNLOCK:   4000,
   /** XP required before the Culinarian unlock offer appears */
-  CULINARIAN_UNLOCK: 10000,
+  CULINARIAN_UNLOCK: 18000,
+  /** XP required before the Thief unlock offer appears */
+  THIEF_UNLOCK:      70000,
 } as const;
 
 // ── Jack of All Trades ────────────────────────────────────────
@@ -90,6 +100,11 @@ export const JACK_RESOURCE_PROGRESSION: readonly { currency: string; base: numbe
   { currency: 'spice',                base: 200  },
   { currency: 'hearty-meal',          base: 5    },
   { currency: 'kobold-hair',          base: 10   },
+  { currency: 'dossier',              base: 150  },
+  { currency: 'treasure',             base: 150  },
+  { currency: 'kobold-fang',          base: 10   },
+  { currency: 'relic',                base: 1    },
+
 ];
 
 // ── Character Unlock Costs ────────────────────────────────────
@@ -102,6 +117,10 @@ export const UNLOCK_COSTS = {
   CULINARIAN_GOLD:   15_000,
   CULINARIAN_BEAST:   1_500,
   CULINARIAN_HERBS:   1_500,
+
+  THIEF_GOLD:        50_000,
+  THIEF_SPICE:       10_000,
+  THIEF_KOBOLD_HAIR: 100,
 
   /** Minigame system unlock — available once XP >= MINIGAME_UNLOCK threshold */
   MINIGAME_GOLD:    10000,
@@ -131,19 +150,19 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
 
   // ── Fighter — minigame ───────────────────────────────────────
   { id: 'SHARPER_SWORDS',   characterId: 'fighter', category: 'minigame', max: 999,
-    costs: [{ currency: 'gold', base: 50, scale: 1.5 }] },
+    costs: [{ currency: 'gold', base: 50, scale: 1.3 }] },
   { id: 'POTION_CHUGGING',  characterId: 'fighter', category: 'minigame', max: 999,
     gates: { requiresApothecary: true },
     costs: [
       { currency: 'concentrated-potion', base: 2, scale: 1.5 },
-      { currency: 'beast',               base: 12, scale: 1.5 },
+      { currency: 'beast',               base: 50, scale: 1.3 },
     ] },
   { id: 'SHORT_REST', characterId: 'fighter', category: 'minigame', max: 1,
     gates: { requiresCulinarian: true },
     costs: [
-      { currency: 'gold',        base: 10_000, scale: 1.0 },
-      { currency: 'kobold-ear',  base: 200,    scale: 1.0 },
-      { currency: 'hearty-meal', base: 10,     scale: 1.0 },
+      { currency: 'gold',        base: 25_000, scale: 1.0 },
+      { currency: 'kobold-ear',  base: 250,    scale: 1.0 },
+      { currency: 'hearty-meal', base: 25,     scale: 1.0 },
     ] },
   { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: KOBOLD_VARIANTS.length - 1,
     gates: { xpMin: 3000 },
@@ -152,6 +171,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'beast',         base: 500, scale: 1.0, fromLevel: 0, untilLevel: 1 },           // tier 1 only
       { currency: 'kobold-tongue', base: 66, scale: 1.0, fromLevel: 1, untilLevel: 2 },           // tier 2 only
       { currency: 'kobold-hair',   base: 66, scale: 1.0, fromLevel: 2, untilLevel: 3 },           // tier 3 only
+    ] },
+  { id: 'FIRST_STRIKE', characterId: 'fighter', category: 'minigame', max: 1,
+    gates: { requiresFang: true },
+    costs: [
+      { currency: 'dossier',     base: 1500, scale: 1.0 },
+      { currency: 'kobold-fang', base: 33,   scale: 1.0 },
     ] },
 
   // ── Ranger — standard ────────────────────────────────────────
@@ -169,10 +194,22 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Ranger — minigame ────────────────────────────────────────
-  { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 100,    // 100% = every blank cell guaranteed a prize
-    costs: [{ currency: 'kobold-ear', base: 10, scale: 1.2 }] },
+  { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 5,      // each level adds +1 guaranteed prize node
+    costs: [
+      { currency: 'kobold-ear',    base: 50, scale: 1.0, fromLevel: 0, untilLevel: 1 },  // level 1 only
+      { currency: 'kobold-tongue', base: 50, scale: 1.0, fromLevel: 1, untilLevel: 2 },  // level 2 only
+      { currency: 'kobold-hair',   base: 50, scale: 1.0, fromLevel: 2, untilLevel: 3 },  // level 3 only
+      { currency: 'kobold-fang',   base: 50, scale: 1.0, fromLevel: 3 },
+    ] },
   { id: 'ABUNDANT_LANDS',  characterId: 'ranger', category: 'minigame', max: 1,      // binary unlock
     costs: [{ currency: 'pixie-dust', base: 5, scale: 1.0 }] },
+  { id: 'FAIRY_HOSTAGE',   characterId: 'ranger', category: 'minigame', max: 1,      // binary unlock, requires thief
+    gates: { requiresThief: true },
+    costs: [
+      { currency: 'pixie-dust', base: 25,  scale: 1.0 },
+      { currency: 'spice',      base: 600, scale: 1.0 },
+      { currency: 'dossier',    base: 600, scale: 1.0 },
+    ] },
 
   // ── Apothecary — standard ────────────────────────────────────
   { id: 'POTION_TITRATION', characterId: 'apothecary', category: 'standard', max: 400,  // 400 × +1% save-chance
@@ -190,10 +227,59 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Culinarian — minigame ────────────────────────────────────
-  { id: 'WASTE_NOT', characterId: 'culinarian', category: 'minigame', max: 999,
+  { id: 'WASTE_NOT', characterId: 'culinarian', category: 'minigame', max: 5,
     costs: [
       { currency: 'spice',       base: 200, scale: 1.5 },
-      { currency: 'hearty-meal', base: 5,  scale: 1.2 },
+      { currency: 'hearty-meal', base: 5,  scale: 1.4 },
+    ] },
+  { id: 'LARGER_COOKBOOKS', characterId: 'culinarian', category: 'minigame', max: 1,
+    gates: { requiresDossier: true },
+    costs: [
+      { currency: 'gold',        base: 100_000, scale: 1.0 },
+      { currency: 'hearty-meal', base: 15,      scale: 1.0 },
+      { currency: 'dossier',     base: 2_500,   scale: 1.0 },
+    ] },
+
+  // ── Thief — standard ─────────────────────────────────────────
+  { id: 'METICULOUS_PLANNING', characterId: 'thief', category: 'standard', max: 50,
+    costs: [{ currency: 'gold', base: 1000,       scale: 1.12 },
+            { currency: 'dossier', base: 5,     scale: 1.08 },] },
+  { id: 'PLENTIFUL_PLUNDERING', characterId: 'thief', category: 'standard', max: 999,
+    costs: [{ currency: 'gold',    base: 1000, scale: 1.15 },
+            { currency: 'dossier', base: 10,  scale: 1.10 }] },
+  { id: 'POTION_OF_STICKY_FINGERS', characterId: 'thief', category: 'standard', max: 25,
+    costs: [
+      { currency: 'concentrated-potion', base: 2, scale: 1.3 },
+      { currency: 'kobold-hair',         base: 5, scale: 1.2 },
+    ] },
+
+  // ── Thief — minigame ─────────────────────────────────────────
+  { id: 'VANISHING_POWDER', characterId: 'thief', category: 'minigame', max: 5,
+    costs: [
+      { currency: 'gold',       base: 85000, scale: 1.3  },
+      { currency: 'pixie-dust', base: 100,  scale: 1.3  },
+    ] },
+  { id: 'POTION_CATS_EARS', characterId: 'thief', category: 'minigame', max: 20,
+    costs: [
+      { currency: 'concentrated-potion', base: 2,  scale: 1.3  },
+      { currency: 'kobold-ear',          base: 25, scale: 1.3 },
+    ] },
+  { id: 'BAG_OF_HOLDING', characterId: 'thief', category: 'minigame', max: 50,
+    costs: [
+      { currency: 'gold',     base: 20_000, scale: 1.2 },
+      { currency: 'treasure', base: 20,     scale: 1.25 },
+    ] },
+  { id: 'RELIC_HUNTER', characterId: 'thief', category: 'minigame', max: 4,
+    gates: { requiresRelic: true },
+    costs: [
+      { currency: 'hearty-meal', base: 35,  scale: 2.0 },
+      { currency: 'dossier',     base: 500, scale: 2.0 },
+    ] },
+  { id: 'LOCKED_IN', characterId: 'thief', category: 'minigame', max: 1,
+    costs: [
+      { currency: 'gold',     base: 15_000, scale: 1.0 },
+      { currency: 'dossier',  base: 250,   scale: 1.0 },
+      { currency: 'treasure', base: 50,    scale: 1.0 },
     ] },
 
   // ── Apothecary — minigame ────────────────────────────────────
@@ -202,7 +288,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'gold',       base: 9000, scale: 1.0 },
       { currency: 'kobold-ear', base: 100,  scale: 1.0 },
     ] },
-  { id: 'BIGGER_BUBBLES', characterId: 'apothecary', category: 'minigame', max: 5,
+  { id: 'BIGGER_BUBBLES', characterId: 'apothecary', category: 'minigame', max: 6,
     gates: { requiresBubblingBrew: true },
     costs: [
       { currency: 'concentrated-potion', base: 5, scale: 1.2 },
@@ -214,12 +300,18 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'potion',              base: 1_000,  scale: 1.0 },
       { currency: 'concentrated-potion', base: 10,    scale: 1.0 },
     ] },
-  { id: 'SERIAL_DILUTION', characterId: 'apothecary', category: 'minigame', max: 50,
+  { id: 'SERIAL_DILUTION', characterId: 'apothecary', category: 'minigame', max: 30,
     gates: { requiresPotionDilution: true },
     costs: [
       { currency: 'gold',                base: 5_000, scale: 1.3 },
       { currency: 'concentrated-potion', base: 2,    scale: 1.3 },
       { currency: 'kobold-hair',         base: 5,     scale: 1.3 },
+    ] },
+  { id: 'PERFECT_POTIONS', characterId: 'apothecary', category: 'minigame', max: 100,
+    gates: { requiresDossier: true },
+    costs: [
+      { currency: 'gold',    base: 500, scale: 1.4 },
+      { currency: 'dossier', base: 50,  scale: 1.1 },
     ] },
 ];
 
@@ -241,6 +333,11 @@ export const YIELDS = {
   /** Gold spent per Culinarian hero-button press to produce 1 Spice */
   CULINARIAN_SPICE_COST: 25,
 
+  /** Base % chance the Thief successfully breaks & enters on a hero-button click */
+  THIEF_BASE_SUCCESS_CHANCE: 50,
+  /** Duration in ms the Thief is stunned on a failed break-in */
+  THIEF_STUN_DURATION_MS: 3_000,
+
 } as const;
 
 // ── Fighter Minigame ──────────────────────────────────────────
@@ -251,6 +348,8 @@ export const FIGHTER_MG = {
   DEFENSE:           0,
   /** HP restored when the Fighter consumes one Potion */
   POTION_HEAL:       10,
+  /** Short Rest Potion Healing Percent **/
+  BASE_SR_POTION_HEAL: .5,
 
   // Kobold — the current (and only) enemy
   KOBOLD_HP:         20,
@@ -301,6 +400,8 @@ export const APOTH_MG = {
   INNER_ZONE_MAX: 53,
   /** How many percentage points each Bigger Bubbles level expands the inner zone on each side */
   BIGGER_BUBBLES_ZONE_EXPANSION_PER_LEVEL: 2,
+  /** The base success chance of getting a successful potion dilution, rolled independently */
+  DILUTION_BASE_CHANCE: 70,
 } as const;
 
 // ── Ranger Minigame ───────────────────────────────────────────
@@ -312,7 +413,7 @@ export const RANGER_MG = {
   /** How many of those cells are blank (no reward) */
   BLANK_CELLS:  5,
   /** Raw Beast Meat cost to begin a scouting round */
-  SCOUT_COST:   9,
+  SCOUT_COST:   18,
 
   /** Probability a prize cell contains Pixie Dust (0–1) */
   PIXIE_CHANCE: 0.10,
@@ -326,6 +427,51 @@ export const RANGER_MG = {
   HERB_XP:  3,
   /** XP awarded when the player uncovers a Pixie Dust cell */
   PIXIE_XP: 9,
+} as const;
+
+// ── Thief Minigame ────────────────────────────────────────────
+export const THIEF_MG = {
+  /** Dossier cost to start a heist. */
+  DOSSIER_COST: 50,
+
+  // ── Dial ────────────────────────────────────────────────────
+  /** Degrees per second the pointer rotates (clockwise). */
+  DIAL_SPEED: 120,
+  /** Size of the sweet spot in degrees (centered on a random angle). */
+  SWEET_SPOT_SIZE: 25,
+
+  // ── Detection ───────────────────────────────────────────────
+  /** Maximum detection level (progress bar fills to this). */
+  MAX_DETECTION: 5,
+  /** Detection added per missed click. */
+  DETECTION_PER_MISS: 1,
+
+  // ── Rewards ─────────────────────────────────────────────────
+  /** Base treasure awarded on success. */
+  TREASURE_BASE: 2,
+  /** Bonus treasure per unused detection point. */
+  TREASURE_PER_UNUSED: 1,
+  /** Base gold awarded on success. */
+  GOLD_BASE: 50,
+  /** Bonus gold per unused detection point. */
+  GOLD_PER_UNUSED: 25,
+  /** Percent chance of receiving a relic on a successful heist (0–100). */
+  RELIC_CHANCE: 1,
+  /** Number of relics awarded when the relic roll succeeds. */
+  RELIC_AMOUNT: 1,
+  /** XP awarded on a successful heist. */
+  XP_REWARD: 10,
+
+  // ── Upgrade per-level effects ────────────────────────────────
+  /** Extra max detection per Vanishing Powder level */
+  VANISHING_POWDER_DETECT_PER_LEVEL: 1,
+  /** Degrees added to the sweet spot per Potion of Cat's Ears level */
+  CATS_EARS_SPOT_PER_LEVEL: 3,
+  /** Extra base gold AND treasure yield per Bag of Holding level */
+  BAG_OF_HOLDING_GOLD_YIELD_PER_LEVEL: 10,
+  BAG_OF_HOLDING_TREASURE_YIELD_PER_LEVEL: 1,
+  /** Extra relic drop % per Relic Hunter level */
+  RELIC_HUNTER_CHANCE_PER_LEVEL: 1,
 } as const;
 
 // ── Culinarian Minigame ──────────────────────────────────────

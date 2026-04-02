@@ -130,9 +130,14 @@ export class UpgradeService {
 
     for (const c of activeCosts) {
       this.wallet.remove(c.currency, rt.currentCosts[c.currency]);
-      rt.currentCosts[c.currency] = scaledCost(rt.currentCosts[c.currency], c.scale, 1);
     }
     rt.level++;
+
+    // Recalculate costs for the new level from the canonical formula
+    // (base × scale^level) so buy and restore always agree.
+    for (const c of def.costs) {
+      rt.currentCosts[c.currency] = scaledCost(c.base, c.scale, rt.level);
+    }
 
     const name = (UPGRADE_FLAVOR as Record<string, { name: string }>)[id]?.name ?? id;
     this.log.log(`${name} upgraded to Lv.${rt.level}.`, 'success');
@@ -155,6 +160,39 @@ export class UpgradeService {
   }
 
   /**
+   * Sets every upgrade to 0 and resets each cost back to its base value.
+   * Emits changed$ for each updated upgrade.
+   */
+  setAllToZero(): void {
+    for (const def of this.defs.values()) {
+      const rt = this.runtime.get(def.id);
+      if (!rt) continue;
+      rt.level = 0;
+      for (const c of def.costs) {
+        rt.currentCosts[c.currency] = c.base;
+      }
+      this.changed$.next(def.id);
+    }
+  }
+
+  /**
+   * Sets every upgrade to its maximum level and rebuilds each cost to match,
+   * so the button correctly shows "MAXED".
+   * Emits changed$ for each updated upgrade.
+   */
+  setAllToMax(): void {
+    for (const def of this.defs.values()) {
+      const rt = this.runtime.get(def.id);
+      if (!rt) continue;
+      rt.level = def.max;
+      for (const c of def.costs) {
+        rt.currentCosts[c.currency] = scaledCost(c.base, c.scale, def.max);
+      }
+      this.changed$.next(def.id);
+    }
+  }
+
+  /**
    * Sets every upgrade to floor(max / 2) and rebuilds each cost to match
    * the new level, so the next purchase shows the correctly-scaled price.
    * Emits changed$ for each updated upgrade.
@@ -173,10 +211,12 @@ export class UpgradeService {
   }
 
   /**
-   * Restore upgrade levels and costs from a generic snapshot.
-   * Costs are rebuilt against the def's currency list — if a saved currency
-   * is no longer valid (e.g. cost structure changed), the def's base cost is
-   * used as a fallback instead of blindly applying the stale value.
+   * Restore upgrade levels from a generic snapshot.
+   * Costs are always **recalculated** from the current config definition
+   * (base × scale^level) — saved cost values are intentionally discarded.
+   * This ensures that balance changes to base/scale in UPGRADE_DEFS are
+   * reflected immediately on load, rather than carrying forward stale
+   * numbers from an older save.
    * Unknown upgrade IDs are silently ignored (forward-compat).
    */
   restore(data: UpgradesSnapshot): void {
@@ -187,12 +227,11 @@ export class UpgradeService {
 
       rt.level = entry.level;
 
-      // Rebuild costs using the def's currency list as the authority.
-      // Use the saved amount if the key matches; fall back to the def's base cost
-      // if the save has a stale or renamed currency (e.g. after a balance change).
+      // Always rebuild costs from the live config so balance tweaks take
+      // effect immediately without requiring a save wipe.
       const restoredCosts: Record<string, number> = {};
       for (const costDef of def.costs) {
-        restoredCosts[costDef.currency] = entry.costs[costDef.currency] ?? costDef.base;
+        restoredCosts[costDef.currency] = scaledCost(costDef.base, costDef.scale, rt.level);
       }
       rt.currentCosts = restoredCosts;
     }

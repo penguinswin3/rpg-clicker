@@ -7,6 +7,7 @@ import { FighterMinigameComponent } from './fighter/fighter-minigame.component';
 import { ApothecaryMinigameComponent } from './apothecary/apothecary-minigame.component';
 import { RangerMinigameComponent } from './ranger/ranger-minigame.component';
 import { CulinarianMinigameComponent } from './culinarian/culinarian-minigame.component';
+import { ThiefMinigameComponent } from './thief/thief-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
 import { FighterCombatState } from '../options/save.service';
@@ -19,7 +20,7 @@ interface MinigameInfo {
 @Component({
   selector: 'app-minigame-panel',
   standalone: true,
-  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent],
+  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent],
   templateUrl: './minigame-panel.component.html',
   styleUrls: ['./minigame-panel.component.scss'],
 })
@@ -34,6 +35,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() potionChuggingLevel = 0;
   /** Stronger Kobolds tier — forwarded to the fighter minigame. */
   @Input() strongerKoboldsLevel = 0;
+  /** First Strike level — forwarded to the fighter minigame. */
+  @Input() firstStrikeLevel = 0;
   /** Short Rest level — forwarded to the fighter minigame. */
   @Input() shortRestLevel = 0;
   /** Whether Short Rest auto-heal is currently enabled — forwarded to the fighter minigame. */
@@ -48,6 +51,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() bountifulLandsLevel = 0;
   /** Abundant Lands level — forwarded to the ranger minigame. */
   @Input() abundantLandsLevel = 0;
+  /** Fairy Hostage level — forwarded to the ranger minigame. */
+  @Input() fairyHostageLevel = 0;
   /** Bubbling Brew level — forwarded to the apothecary minigame. */
   @Input() bubblingBrewLevel = 0;
   /** Bigger Bubbles level — forwarded to the apothecary minigame. */
@@ -56,12 +61,30 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() potionDilutionLevel = 0;
   /** Serial Dilution level — forwarded to the apothecary minigame. */
   @Input() serialDilutionLevel = 0;
+  /** Perfect Potions level — forwarded to the apothecary minigame. */
+  @Input() perfectPotionsLevel = 0;
   /** Waste Not level — forwarded to the culinarian minigame. */
   @Input() wasteNotLevel = 0;
+  /** Larger Cookbooks level — forwarded to the culinarian minigame. */
+  @Input() largerCookbooksLevel = 0;
+  /** Vanishing Powder level — forwarded to the thief minigame. */
+  @Input() vanishingPowderLevel = 0;
+  /** Potion of Cat's Ears level — forwarded to the thief minigame. */
+  @Input() potionCatEarsLevel = 0;
+  /** Bag of Holding level — forwarded to the thief minigame. */
+  @Input() bagOfHoldingLevel = 0;
+  /** Relic Hunter level — forwarded to the thief minigame. */
+  @Input() relicHunterLevel = 0;
+  /** Locked In level — forwarded to the thief minigame. */
+  @Input() lockedInLevel = 0;
   /** Previously-saved fighter combat state. */
   @Input() fighterCombatState: FighterCombatState | null = null;
   /** Emitted whenever fighter combat state changes. */
   @Output() fighterCombatStateChange = new EventEmitter<FighterCombatState>();
+  /** Whether the Potion Dilution toggle is enabled — forwarded to the apothecary minigame. */
+  @Input() dilutionEnabled = false;
+  /** Emitted when the player toggles dilution inside the apothecary minigame. */
+  @Output() dilutionEnabledChange = new EventEmitter<boolean>();
 
   xp = 0;
   activeCharacterId = 'fighter';
@@ -83,6 +106,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     {
       characterId: 'culinarian',
       title: MINIGAME_FLAVOR.CULINARIAN.name,
+    },
+    {
+      characterId: 'thief',
+      title: MINIGAME_FLAVOR.THIEF.name,
     },
   ];
 

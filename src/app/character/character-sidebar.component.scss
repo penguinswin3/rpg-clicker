@@ -11,9 +11,10 @@ $cyan: #0ff;
   flex-shrink: 0;
   position: sticky;
   top: 0;
-  height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  height: calc(100vh - var(--log-height, 210px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: $bg;
   border-left: 1px solid $border;
   font-family: 'Courier New', Courier, monospace;
@@ -22,17 +23,13 @@ $cyan: #0ff;
 
   &.collapsed {
     width: 46px;
-    overflow-y: hidden;
   }
-
-  &::-webkit-scrollbar       { width: 4px; }
-  &::-webkit-scrollbar-track { background: #000; }
-  &::-webkit-scrollbar-thumb { background: #333; }
 }
 
 // ── Header ────────────────────────────────
 
 .sidebar-header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -43,9 +40,6 @@ $cyan: #0ff;
   user-select: none;
   white-space: nowrap;
   min-height: 28px;
-  position: sticky;
-  top: 0;
-  z-index: 1;
 
   &:hover { background: #1a1a1a; }
 }
@@ -63,10 +57,28 @@ $cyan: #0ff;
   letter-spacing: 0.08em;
 }
 
+// ── Expanded wrapper (fills remaining height, flex column) ─────
+
+.expanded-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
 // ── Content wrapper ───────────────────────
 
 .sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 8px;
+  min-height: 0;
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: #000; }
+  &::-webkit-scrollbar-thumb { background: #333; }
 }
 
 // ── Hero Stats box ────────────────────────
@@ -198,7 +210,14 @@ $cyan: #0ff;
 // ── Collapsed list ────────────────────────
 
 .collapsed-list {
+  flex: 1;
+  overflow-y: auto;
   padding: 6px 0;
+  min-height: 0;
+
+  &::-webkit-scrollbar       { width: 3px; }
+  &::-webkit-scrollbar-track { background: #000; }
+  &::-webkit-scrollbar-thumb { background: #333; }
 }
 
 .compact-char {

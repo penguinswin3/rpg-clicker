@@ -67,6 +67,19 @@ export class CharacterService {
       ],
       xpRequirement: XP_THRESHOLDS.CULINARIAN_UNLOCK,
     },
+    {
+      id: 'thief',
+      name: CHARACTER_FLAVOR.THIEF.name,
+      color: '#4a9b8e',
+      description: CHARACTER_FLAVOR.THIEF.desc,
+      unlocked: false,
+      unlockCosts: [
+        { currencyId: 'gold',         amount: UNLOCK_COSTS.THIEF_GOLD         },
+        { currencyId: 'spice',        amount: UNLOCK_COSTS.THIEF_SPICE        },
+        { currencyId: 'kobold-hair',  amount: UNLOCK_COSTS.THIEF_KOBOLD_HAIR  },
+      ],
+      xpRequirement: XP_THRESHOLDS.THIEF_UNLOCK,
+    },
   ];
 
   private readonly charactersSource = new BehaviorSubject<Character[]>(

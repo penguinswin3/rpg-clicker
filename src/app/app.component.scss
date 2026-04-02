@@ -306,7 +306,17 @@
   }
 }
 
-.dev-halfmax-btn {
+.dev-upgzero-btn {
+  color: #f84;
+  border-color: #642000;
+
+  &:hover {
+    background: #f84;
+    color: #000;
+  }
+}
+
+.dev-upgmax-btn {
   color: #c080ff;
   border-color: #5a2080;
 
@@ -317,6 +327,8 @@
 }
 
 .hero-btn {
+  position: relative;
+  overflow: hidden;
   background: #000;
   color: #fff;
   border: 2px solid #fff;
@@ -329,15 +341,45 @@
   user-select: none;
   transition: background 0.1s, color 0.1s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: #fff;
     color: #000;
   }
 
-  &:active {
+  &:active:not(:disabled) {
     outline: 2px dashed #fff;
     outline-offset: 3px;
   }
+
+  &:disabled {
+    border-color: #555;
+    color: #555;
+    cursor: not-allowed;
+  }
+}
+
+// Label sits above the fill bar so text is always readable.
+.hero-btn-label {
+  position: relative;
+  z-index: 1;
+}
+
+// Animated fill bar — grows left → right over the stun duration.
+@keyframes stun-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+.stun-fill-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, rgba(160, 30, 30, 0.55), rgba(220, 70, 70, 0.25));
+  animation: stun-fill linear forwards;
+  pointer-events: none;
+  z-index: 0;
 }
 
 // Wraps only the hero button — size is exactly the button, so click-area

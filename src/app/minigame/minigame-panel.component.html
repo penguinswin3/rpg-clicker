@@ -13,6 +13,7 @@
         [attackPower]="fighterAttack"
         [potionChuggingLevel]="potionChuggingLevel"
         [strongerKoboldsLevel]="strongerKoboldsLevel"
+        [firstStrikeLevel]="firstStrikeLevel"
         [shortRestLevel]="shortRestLevel"
         [shortRestEnabled]="shortRestEnabled"
         (shortRestEnabledChange)="shortRestEnabledChange.emit($event)"
@@ -30,21 +31,34 @@
         [biggerBubblesLevel]="biggerBubblesLevel"
         [potionDilutionUnlocked]="potionDilutionLevel >= 1"
         [serialDilutionLevel]="serialDilutionLevel"
+        [perfectPotionsLevel]="perfectPotionsLevel"
+        [dilutionEnabled]="dilutionEnabled"
+        (dilutionEnabledChange)="dilutionEnabledChange.emit($event)"
       />
     </ng-container>
 
     <!-- ── Ranger: scouting grid minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'ranger'">
-      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" />
+      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" [fairyHostageLevel]="fairyHostageLevel" />
     </ng-container>
 
     <!-- ── Culinarian: Mastermind recipe minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'culinarian'">
-      <app-culinarian-minigame [wasteNotLevel]="wasteNotLevel" />
+      <app-culinarian-minigame [wasteNotLevel]="wasteNotLevel" [largerCookbooksLevel]="largerCookbooksLevel" />
+    </ng-container>
+
+    <!-- ── Thief: Big Heist safe-cracking minigame ─── -->
+    <ng-container *ngIf="activeCharacterId === 'thief'">
+      <app-thief-minigame
+        [vanishingPowderLevel]="vanishingPowderLevel"
+        [potionCatEarsLevel]="potionCatEarsLevel"
+        [bagOfHoldingLevel]="bagOfHoldingLevel"
+        [relicHunterLevel]="relicHunterLevel"
+        [lockedInLevel]="lockedInLevel" />
     </ng-container>
 
     <!-- ── Other characters: placeholder ── -->
-    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian'">
+    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian' && activeCharacterId !== 'thief'">
 
       <div class="mg-divider">+----------+</div>
 

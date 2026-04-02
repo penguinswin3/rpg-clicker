@@ -25,6 +25,12 @@
         (click)="toggleBlandMode()">
         [ {{ blandMode ? '■' : '□' }} ] Bland Mode
       </button>
+      <button
+        class="opt-btn opt-toggle-btn"
+        [class.opt-toggle-active]="enableDevTools"
+        (click)="toggleEnableDevTools()">
+        [ {{ enableDevTools ? '■' : '□' }} ] Enable Dev Tools
+      </button>
     </div>
 
     <!-- Save -->
@@ -63,10 +69,10 @@
     <div class="confirm-header">!! WARNING !!</div>
 
     <pre class="confirm-ascii">
- /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
+|‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾|
 |  DELETE BROWSER SAVE?   |
 |  This cannot be undone. |
- \_________________________/</pre>
+|_________________________|</pre>
 
     <p class="confirm-body">
       Your saved progress will be permanently erased from<br>
