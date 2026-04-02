@@ -12,7 +12,7 @@ import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './options/options-menu.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import {XP_THRESHOLDS, YIELDS, UNLOCK_COSTS, JACK_GOLD_COST, JACK_RESOURCE_PROGRESSION, APOTH_MG} from './game-config';
+import {XP_THRESHOLDS, YIELDS, UNLOCK_COSTS, JACK_GOLD_COST, JACK_RESOURCE_PROGRESSION, APOTH_MG, THIEF_MG} from './game-config';
 import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR } from './flavor-text';
 import { fmtNumber, clamp, scaledCost, randInt, rollChance, roundTo } from './utils/mathUtils';
 
@@ -291,16 +291,32 @@ export class AppComponent implements OnInit, OnDestroy {
       const avgYield = this.expectedDossierYield;
       const expectedPerSec = roundTo(thiefJacks * (this.thiefSuccessChance / 100) * avgYield, 2);
       const isMPMaxed = this.upgrades.level('METICULOUS_PLANNING') >= this.upgrades.maxLevel('METICULOUS_PLANNING');
-      // Show ~ when either the success chance or the yield is non-deterministic.
       const isExact = isMPMaxed && sf === 0;
+
+      // Yield ranges (min = 0 detection unused, max = full detection pool unused)
+      const bagGoldBonus     = this.upgrades.level('BAG_OF_HOLDING') * THIEF_MG.BAG_OF_HOLDING_GOLD_YIELD_PER_LEVEL;
+      const bagTreasureBonus = this.upgrades.level('BAG_OF_HOLDING') * THIEF_MG.BAG_OF_HOLDING_TREASURE_YIELD_PER_LEVEL;
+      const maxDetect    = THIEF_MG.MAX_DETECTION + this.upgrades.level('VANISHING_POWDER') * THIEF_MG.VANISHING_POWDER_DETECT_PER_LEVEL;
+      const goldMin      = THIEF_MG.GOLD_BASE;
+      const goldMax      = THIEF_MG.GOLD_BASE     + THIEF_MG.GOLD_PER_UNUSED     * maxDetect + bagGoldBonus;
+      const treasureMin  = THIEF_MG.TREASURE_BASE;
+      const treasureMax  = THIEF_MG.TREASURE_BASE + THIEF_MG.TREASURE_PER_UNUSED * maxDetect + bagTreasureBonus;
+      const relicChance  = THIEF_MG.RELIC_CHANCE  + this.upgrades.level('RELIC_HUNTER') * THIEF_MG.RELIC_HUNTER_CHANCE_PER_LEVEL;
+      const relicUnlocked = this.wallet.isCurrencyUnlocked('relic');
+
       const stats: HeroStat[] = [
-        { label: HERO_STATS_FLAVOR.THIEF.SUCCESS_CHANCE, value: `${this.thiefSuccessChance}%` },
+        { label: HERO_STATS_FLAVOR.THIEF.SUCCESS_CHANCE,  value: `${this.thiefSuccessChance}%` },
+        { label: HERO_STATS_FLAVOR.THIEF.GOLD_RANGE,      value: `${goldMin} - ${goldMax}`      },
+        { label: HERO_STATS_FLAVOR.THIEF.TREASURE_RANGE,  value: `${treasureMin} - ${treasureMax}` },
       ];
       if (sf > 0) {
         stats.push({ label: HERO_STATS_FLAVOR.THIEF.DOSSIER_YIELD, value: `1 - ${1 + sf}` });
       }
       if (thiefJacks > 0) {
         stats.push({ label: HERO_STATS_FLAVOR.THIEF.DOSSIERS_PER_S, value: `${isExact ? '' : '~'}${expectedPerSec}` });
+      }
+      if (relicUnlocked) {
+        stats.push({ label: HERO_STATS_FLAVOR.THIEF.RELIC_CHANCE, value: `${relicChance}%` });
       }
       return stats;
     }
@@ -333,11 +349,12 @@ export class AppComponent implements OnInit, OnDestroy {
   isUpgradeVisible(id: string): boolean {
     const gates = this.upgrades.getGates(id);
     if (!gates) return true;
-    if (gates.requiresApothecary  && !this.apothecaryUnlocked)  return false;
-    if (gates.requiresCulinarian  && !this.culinarianUnlocked)  return false;
-    if (gates.requiresThief       && !this.thiefUnlocked)       return false;
-    if (gates.requiresBubblingBrew && this.upgrades.level('BUBBLING_BREW') < 1) return false;
-    if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1) return false;
+    if (gates.requiresApothecary    && !this.apothecaryUnlocked)                     return false;
+    if (gates.requiresCulinarian    && !this.culinarianUnlocked)                     return false;
+    if (gates.requiresThief         && !this.thiefUnlocked)                          return false;
+    if (gates.requiresRelic         && !this.wallet.isCurrencyUnlocked('relic'))     return false;
+    if (gates.requiresBubblingBrew  && this.upgrades.level('BUBBLING_BREW') < 1)     return false;
+    if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1)  return false;
     if (gates.xpMin != null && this.xp < gates.xpMin) return false;
     return true;
   }
@@ -424,6 +441,13 @@ export class AppComponent implements OnInit, OnDestroy {
     this.saveService.hideMaxedUpgrades$.subscribe(v    => this.hideMaxedUpgrades    = v);
     this.saveService.hideMinigameUpgrades$.subscribe(v => this.hideMinigameUpgrades = v);
     this.saveService.blandMode$.subscribe(v            => this.blandMode            = v);
+
+    // Keep --log-height in sync so sidebars shrink when the log is expanded.
+    this.log.minimized$.subscribe(minimized => {
+      const px = minimized ? 30 : 210;
+      document.documentElement.style.setProperty('--log-height', `${px}px`);
+    });
+
     if (this.saveService.hasSave()) this.saveService.loadFromLocalStorage();
     this.saveService.startAutoSave();
   }

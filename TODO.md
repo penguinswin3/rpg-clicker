@@ -70,6 +70,7 @@
 - Hovering over or clicking on a per second should show you all fo the factors adding or subtracting to that value 
 - ? Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have? 
 - Clean up the hard delete save button 
+- In game Changelog? 
 
 ## Balancing
 - Add some more one off big upgrades shortly after minigame unlocks?

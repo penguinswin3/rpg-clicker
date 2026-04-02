@@ -7,46 +7,48 @@
   </div>
 
   <!-- ══ Expanded ════════════════════════ -->
-  <div class="sidebar-content" *ngIf="!collapsed">
+  <div class="expanded-wrapper" *ngIf="!collapsed">
+    <div class="sidebar-content">
 
-    <!-- Hero Stats -->
-    <div class="hero-stats-box">
-      <div class="box-label">{{ heroStatsFlavor.BOX_TITLE }}</div>
-      <div class="stat-row" *ngFor="let s of heroStats">
-        <span class="stat-key">{{ s.label }}</span>
-        <span class="stat-val" [style.color]="s.color || null">{{ s.value }}</span>
-      </div>
-    </div>
-
-    <div class="rule">---[ PARTY ]---</div>
-
-    <!-- Only unlocked characters -->
-    <div
-      class="char-card"
-      *ngFor="let c of unlockedCharacters"
-      [class.is-active]="c.id === activeId"
-      (click)="setActive(c.id)">
-
-      <div class="char-header">
-        <span class="char-name" [style.color]="c.color">{{ c.name }}</span>
-        <span class="badge-jacks" *ngIf="getJackCount(c.id) > 0">({{ getJackCount(c.id) }})</span>
+      <!-- Hero Stats -->
+      <div class="hero-stats-box">
+        <div class="box-label">{{ heroStatsFlavor.BOX_TITLE }}</div>
+        <div class="stat-row" *ngFor="let s of heroStats">
+          <span class="stat-key">{{ s.label }}</span>
+          <span class="stat-val" [style.color]="s.color || null">{{ s.value }}</span>
+        </div>
       </div>
 
-      <p class="char-desc" *ngIf="!blandMode">{{ c.description }}</p>
+      <div class="rule">---[ PARTY ]---</div>
 
+      <!-- Only unlocked characters -->
+      <div
+        class="char-card"
+        *ngFor="let c of unlockedCharacters"
+        [class.is-active]="c.id === activeId"
+        (click)="setActive(c.id)">
 
-    </div>
+        <div class="char-header">
+          <span class="char-name" [style.color]="c.color">{{ c.name }}</span>
+          <span class="badge-jacks" *ngIf="getJackCount(c.id) > 0">({{ getJackCount(c.id) }})</span>
+        </div>
 
-  </div><!-- /sidebar-content -->
+        <p class="char-desc" *ngIf="!blandMode">{{ c.description }}</p>
 
-    <!-- Unassign All Jacks — anchored bottom of expanded sidebar -->
-    <div class="sidebar-unassign-wrap" *ngIf="!collapsed && jacksOwned >= 5">
+      </div>
+
+    </div><!-- /sidebar-content -->
+
+    <!-- Unassign All Jacks — anchored to bottom of expanded sidebar -->
+    <div class="sidebar-unassign-wrap" *ngIf="jacksOwned >= 5">
       <button class="sidebar-unassign-btn"
               [disabled]="totalJacksAssigned <= 0"
               (click)="emitUnassignAll()">
         [ Unassign all Jacks ]
       </button>
     </div>
+
+  </div><!-- /expanded-wrapper -->
 
   <!-- ══ Collapsed ══════════════════════ -->
   <div class="collapsed-list" *ngIf="collapsed">

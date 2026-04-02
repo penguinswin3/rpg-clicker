@@ -7,6 +7,7 @@ import { FighterMinigameComponent } from './fighter/fighter-minigame.component';
 import { ApothecaryMinigameComponent } from './apothecary/apothecary-minigame.component';
 import { RangerMinigameComponent } from './ranger/ranger-minigame.component';
 import { CulinarianMinigameComponent } from './culinarian/culinarian-minigame.component';
+import { ThiefMinigameComponent } from './thief/thief-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
 import { FighterCombatState } from '../options/save.service';
@@ -19,7 +20,7 @@ interface MinigameInfo {
 @Component({
   selector: 'app-minigame-panel',
   standalone: true,
-  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent],
+  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent],
   templateUrl: './minigame-panel.component.html',
   styleUrls: ['./minigame-panel.component.scss'],
 })
@@ -64,6 +65,16 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() wasteNotLevel = 0;
   /** Larger Cookbooks level — forwarded to the culinarian minigame. */
   @Input() largerCookbooksLevel = 0;
+  /** Vanishing Powder level — forwarded to the thief minigame. */
+  @Input() vanishingPowderLevel = 0;
+  /** Potion of Cat's Ears level — forwarded to the thief minigame. */
+  @Input() potionCatEarsLevel = 0;
+  /** Bag of Holding level — forwarded to the thief minigame. */
+  @Input() bagOfHoldingLevel = 0;
+  /** Relic Hunter level — forwarded to the thief minigame. */
+  @Input() relicHunterLevel = 0;
+  /** Locked In level — forwarded to the thief minigame. */
+  @Input() lockedInLevel = 0;
   /** Previously-saved fighter combat state. */
   @Input() fighterCombatState: FighterCombatState | null = null;
   /** Emitted whenever fighter combat state changes. */

@@ -60,15 +60,17 @@
 
   <!-- ── Collapsed view ─────────────────── -->
   <ng-container *ngIf="collapsed">
-    <div class="currency-compact" *ngFor="let c of filteredCurrencies">
-      <span class="compact-amount" [style.color]="c.color">{{ fmtNumber(getEntry(c.id).amount) }}</span>
-      <span class="compact-short" [style.color]="c.color">{{ c.symbol }}</span>
-      <!-- XP unlock progress bar — absolutely positioned, no layout impact -->
-      <div class="xp-progress-track xp-track-compact" *ngIf="c.id === 'xp'">
-        <div class="xp-progress-fill"
-             [class.xp-rainbow]="xpComplete"
-             [style.width.%]="xpProgressPct"
-             [style.background]="xpComplete ? null : c.color"></div>
+    <div class="currency-compact-list">
+      <div class="currency-compact" *ngFor="let c of filteredCurrencies">
+        <span class="compact-amount" [style.color]="c.color">{{ fmtNumber(getEntry(c.id).amount) }}</span>
+        <span class="compact-short" [style.color]="c.color">{{ c.symbol }}</span>
+        <!-- XP unlock progress bar — absolutely positioned, no layout impact -->
+        <div class="xp-progress-track xp-track-compact" *ngIf="c.id === 'xp'">
+          <div class="xp-progress-fill"
+               [class.xp-rainbow]="xpComplete"
+               [style.width.%]="xpProgressPct"
+               [style.background]="xpComplete ? null : c.color"></div>
+        </div>
       </div>
     </div>
   </ng-container>

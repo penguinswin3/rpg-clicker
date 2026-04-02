@@ -21,7 +21,7 @@ export const CURRENCY_FLAVOR = {
   spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
   'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#683a0c' },
   dossier:               { name: 'Dossier',                   symbol: '⌸', color: '#c0cedc' },
-  treasure:              { name: 'Treasure',                  symbol: '⚱', color: '#7b7e31' },
+  treasure:              { name: 'Treasure',                  symbol: '⚱', color: '#989c3a' },
   relic:                 { name: 'Relic',                     symbol: 'ᛝ', color: '#8be4e1' },
   'kobold-fang':         { name: 'Kobold Fang',               symbol: '৲', color: '#969790' },
 } as const;
@@ -153,7 +153,27 @@ export const UPGRADE_FLAVOR = {
   },
   POTION_OF_STICKY_FINGERS: {
     name: 'Potion of Sticky Fingers',
-    desc: '+1 max dossier yield per heist per level',
+    desc: '+1 max dossier yield per level',
+  },
+  VANISHING_POWDER: {
+    name: 'Vanishing Powder',
+    desc: '+1 max detection tolerance per level',
+  },
+  POTION_CATS_EARS: {
+    name: "Potion of Cat's Ears",
+    desc: '+3° sweet spot size per level',
+  },
+  BAG_OF_HOLDING: {
+    name: 'Bag of Holding',
+    desc: 'Increases maximum gold and treasure yield (scales with detection efficiency)',
+  },
+  RELIC_HUNTER: {
+    name: 'Relic Hunter',
+    desc: '+1% relic drop chance per level',
+  },
+  LOCKED_IN: {
+    name: 'Locked In',
+    desc: 'Marks failed click positions on the dial with a red tick',
   },
 } as const;
 
@@ -267,8 +287,8 @@ export const MINIGAME_FLAVOR = {
     desc: 'Master the art of spice and flame\nto craft legendary dishes.',
   },
   THIEF: {
-    name: 'Heist Planning',
-    desc: 'Coordinate the perfect heist.\nEvery detail matters.',
+    name: 'Big Heist',
+    desc: 'Crack the safe before you\nare detected.',
   },
 } as const;
 
@@ -321,6 +341,9 @@ export const HERO_STATS_FLAVOR = {
     SUCCESS_CHANCE: 'Success Chance :',
     DOSSIERS_PER_S: 'Dossiers/sec   :',
     DOSSIER_YIELD:  'Dossier Yield  :',
+    GOLD_RANGE:     'Gold Yield     :',
+    TREASURE_RANGE: 'Treasure Yield :',
+    RELIC_CHANCE:   'Relic Chance   :',
   },
 } as const;
 
@@ -357,6 +380,14 @@ export const MINIGAME_MSG = {
     WIN:            '** RECIPE COMPLETE! **',
     WIN_BONUS:      (bonus: number) => `** RECIPE COMPLETE! ** (+${bonus} bonus)`,
     LOSE:           'Out of guesses!',
+  },
+
+  THIEF: {
+    IDLE:     'Find the sweet spot on the dial!',
+    MISS:     (det: number, max: number) => `Miss! Detection ${det}/${max}`,
+    HIT:      'Sweet spot found!',
+    BUSTED:   'DETECTED! Heist failed.',
+    SUCCESS:  'Safe cracked!',
   },
 
 };

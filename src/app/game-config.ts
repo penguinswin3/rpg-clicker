@@ -27,6 +27,8 @@ export interface UpgradeGates {
   readonly requiresBubblingBrew?: boolean;
   /** Hide until the Potion Dilution minigame upgrade has been purchased. */
   readonly requiresPotionDilution?: boolean;
+  /** Hide until the player has received at least one Relic. */
+  readonly requiresRelic?: boolean;
   /** Minimum XP required before the card is shown. */
   readonly xpMin?: number;
 }
@@ -239,6 +241,35 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'kobold-hair',         base: 5, scale: 1.2 },
     ] },
 
+  // ── Thief — minigame ─────────────────────────────────────────
+  { id: 'VANISHING_POWDER', characterId: 'thief', category: 'minigame', max: 20,
+    costs: [
+      { currency: 'gold',       base: 600, scale: 1.3  },
+      { currency: 'pixie-dust', base: 10,  scale: 1.2  },
+    ] },
+  { id: 'POTION_CATS_EARS', characterId: 'thief', category: 'minigame', max: 20,
+    costs: [
+      { currency: 'concentrated-potion', base: 5,  scale: 1.3  },
+      { currency: 'kobold-ear',          base: 25, scale: 1.25 },
+    ] },
+  { id: 'BAG_OF_HOLDING', characterId: 'thief', category: 'minigame', max: 50,
+    costs: [
+      { currency: 'gold',     base: 2_000, scale: 1.35 },
+      { currency: 'treasure', base: 5,     scale: 1.25 },
+    ] },
+  { id: 'RELIC_HUNTER', characterId: 'thief', category: 'minigame', max: 4,
+    gates: { requiresRelic: true },
+    costs: [
+      { currency: 'hearty-meal', base: 25,  scale: 2.0 },
+      { currency: 'dossier',     base: 500, scale: 2.0 },
+    ] },
+  { id: 'LOCKED_IN', characterId: 'thief', category: 'minigame', max: 1,
+    costs: [
+      { currency: 'gold',     base: 5_000, scale: 1.0 },
+      { currency: 'dossier',  base: 150,   scale: 1.0 },
+      { currency: 'treasure', base: 20,    scale: 1.0 },
+    ] },
+
   // ── Apothecary — minigame ────────────────────────────────────
   { id: 'BUBBLING_BREW', characterId: 'apothecary', category: 'minigame', max: 1,
     costs: [
@@ -383,6 +414,51 @@ export const RANGER_MG = {
   HERB_XP:  3,
   /** XP awarded when the player uncovers a Pixie Dust cell */
   PIXIE_XP: 9,
+} as const;
+
+// ── Thief Minigame ────────────────────────────────────────────
+export const THIEF_MG = {
+  /** Dossier cost to start a heist. */
+  DOSSIER_COST: 50,
+
+  // ── Dial ────────────────────────────────────────────────────
+  /** Degrees per second the pointer rotates (clockwise). */
+  DIAL_SPEED: 120,
+  /** Size of the sweet spot in degrees (centered on a random angle). */
+  SWEET_SPOT_SIZE: 25,
+
+  // ── Detection ───────────────────────────────────────────────
+  /** Maximum detection level (progress bar fills to this). */
+  MAX_DETECTION: 5,
+  /** Detection added per missed click. */
+  DETECTION_PER_MISS: 1,
+
+  // ── Rewards ─────────────────────────────────────────────────
+  /** Base treasure awarded on success. */
+  TREASURE_BASE: 2,
+  /** Bonus treasure per unused detection point. */
+  TREASURE_PER_UNUSED: 1,
+  /** Base gold awarded on success. */
+  GOLD_BASE: 50,
+  /** Bonus gold per unused detection point. */
+  GOLD_PER_UNUSED: 10,
+  /** Percent chance of receiving a relic on a successful heist (0–100). */
+  RELIC_CHANCE: 1,
+  /** Number of relics awarded when the relic roll succeeds. */
+  RELIC_AMOUNT: 1,
+  /** XP awarded on a successful heist. */
+  XP_REWARD: 10,
+
+  // ── Upgrade per-level effects ────────────────────────────────
+  /** Extra max detection per Vanishing Powder level */
+  VANISHING_POWDER_DETECT_PER_LEVEL: 1,
+  /** Degrees added to the sweet spot per Potion of Cat's Ears level */
+  CATS_EARS_SPOT_PER_LEVEL: 3,
+  /** Extra base gold AND treasure yield per Bag of Holding level */
+  BAG_OF_HOLDING_GOLD_YIELD_PER_LEVEL: 10,
+  BAG_OF_HOLDING_TREASURE_YIELD_PER_LEVEL: 1,
+  /** Extra relic drop % per Relic Hunter level */
+  RELIC_HUNTER_CHANCE_PER_LEVEL: 1,
 } as const;
 
 // ── Culinarian Minigame ──────────────────────────────────────
