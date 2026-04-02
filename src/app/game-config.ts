@@ -295,6 +295,8 @@ export const FIGHTER_MG = {
   DEFENSE:           0,
   /** HP restored when the Fighter consumes one Potion */
   POTION_HEAL:       10,
+  /** Short Rest Potion Healing Percent **/
+  BASE_SR_POTION_HEAL: .5,
 
   // Kobold — the current (and only) enemy
   KOBOLD_HP:         20,

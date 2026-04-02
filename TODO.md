@@ -54,7 +54,6 @@
   - Maybe assign a jack to it idk If I like that 
 
 ### Ranger 
-- Visions of pixies upgrade that gives a little sparkle effect where a pixie might me. A few tiers with varying accuracies, can scale to up to 3 sparkles
 - Buried Treasure upgrade on ranger minigame that gives a big bonus of gold
 - "Divide and Conquer" Jacks are more effective when hunting and gathering
 - Dense Woodlands upgrade that gives a base +1 resource yield on herbs and meat in the ranger minigame

@@ -12,6 +12,7 @@
 - Dev Tools button... Unless?
 
 ## Changed
+- Nerfed Short Rest Potion Efficiency
 
 ## Bugfixes
 - Fixed costs not scaling properly when loading from an outdated save game 

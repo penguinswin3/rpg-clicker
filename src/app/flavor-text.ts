@@ -49,7 +49,7 @@ export const UPGRADE_FLAVOR = {
   },
   SHORT_REST: {
     name: 'Short Rest',
-    desc: 'Adds a toggle to auto-heal to full HP with potions after each victory',
+    desc: 'Auto-heal to full HP with potions after each victory at a reduced efficiency',
   },
   SHARPER_SWORDS: {
     name: 'Sharper Swords',

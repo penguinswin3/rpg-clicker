@@ -115,6 +115,10 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     return FIGHTER_MG.POTION_HEAL + this.potionChuggingLevel;
   }
 
+  get potionHealEfficiency(): number{
+    return FIGHTER_MG.BASE_SR_POTION_HEAL;
+  }
+
   get actionsDisabled(): boolean {
     return this.defeated || this.awaitingSpawn || this.fleeing;
   }
@@ -348,7 +352,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     while (this.potions > 0 && this.fighterHp < this.maxHp) {
       this.wallet.remove('potion', 1);
       potionsConsumed++;
-      this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount);
+      this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount*this.potionHealEfficiency);
     }
     this.log.log(`Chugged ${potionsConsumed} potion(s) during a short rest.`, "default")
   }
