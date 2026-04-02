@@ -12,7 +12,7 @@ import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './options/options-menu.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, UNLOCK_COSTS, JACK_GOLD_COST, JACK_RESOURCE_PROGRESSION } from './game-config';
+import {XP_THRESHOLDS, YIELDS, UNLOCK_COSTS, JACK_GOLD_COST, JACK_RESOURCE_PROGRESSION, APOTH_MG} from './game-config';
 import { UPGRADE_FLAVOR, HERO_STATS_FLAVOR, CHARACTER_FLAVOR, CURRENCY_FLAVOR } from './flavor-text';
 import { fmtNumber, clamp, scaledCost, randInt, rollChance, roundTo } from './utils/mathUtils';
 
@@ -267,7 +267,7 @@ export class AppComponent implements OnInit, OnDestroy {
         { label: HERO_STATS_FLAVOR.APOTHECARY.GOLD_PER_BREW,value: `${this.potionMarketingGoldPerBrew}`          },
       ];
       if (this.upgrades.level('POTION_DILUTION') >= 1) {
-        const successChance = Math.min(100, 50 + this.upgrades.level('SERIAL_DILUTION'));
+        const successChance = Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE + this.upgrades.level('SERIAL_DILUTION'));
         stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.DILUTION_SUCCESS, value: `${successChance}%` });
       }
       return stats;

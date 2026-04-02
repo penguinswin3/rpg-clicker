@@ -12,7 +12,6 @@ export const CURRENCY_FLAVOR = {
   xp:                    { name: 'Experience',                symbol: '֍',  color: '#53d394' },
   herb:                  { name: 'Herb',                      symbol: '♣',  color: '#247a24' },
   beast:                 { name: 'Beast Meat',                symbol: 'Ꮻ',  color: '#e8739a' },
-  //Might go unused? 'cooked-meat':         { name: 'Cooked Meat',               symbol: 'Ꮻ',  color: '#683a0c' },
   'pixie-dust':          { name: 'Pixie Dust',                symbol: '✦',  color: '#ffe066' },
   potion:                { name: 'Potion Base',               symbol: '⚗',  color: '#ceaedf' },
   'concentrated-potion': { name: 'Concentrated Potion Base',  symbol: '⚗',  color: '#ba70cf' },
@@ -22,8 +21,12 @@ export const CURRENCY_FLAVOR = {
   spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
   'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#683a0c' },
   dossier:               { name: 'Dossier',                   symbol: '⌸', color: '#c0cedc' },
+  treasure:              { name: 'Treasure',                  symbol: '⚱', color: '#7b7e31' },
+  relic:                 { name: 'Relic',                     symbol: 'ᛝ', color: '#8be4e1' },
+  'kobold-fang':         { name: 'Kobold Fang',               symbol: '৲', color: '#969790' },
 } as const;
 
+// ꔮ 𐓑  ᛝ ᚕ
 // ── Upgrades ──────────────────────────────────────────────────
 export const UPGRADE_FLAVOR = {
   // Fighter
@@ -240,7 +243,7 @@ export const CHARACTER_FLAVOR = {
   },
   THIEF: {
     name: 'Thief',
-    desc: "A lady doesn't need to always lurk in the shadows",
+    desc: "A lady doesn't need to always lurk in the shadows.",
     questBtn: 'Break & Enter',
   },
 } as const;

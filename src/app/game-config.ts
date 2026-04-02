@@ -94,6 +94,11 @@ export const JACK_RESOURCE_PROGRESSION: readonly { currency: string; base: numbe
   { currency: 'spice',                base: 200  },
   { currency: 'hearty-meal',          base: 5    },
   { currency: 'kobold-hair',          base: 10   },
+  { currency: 'dossier',              base: 150  },
+  { currency: 'treasure',             base: 25   },
+  { currency: 'kobold-fang',          base: 10   },
+  { currency: 'relic',                base: 1    },
+
 ];
 
 // ── Character Unlock Costs ────────────────────────────────────
@@ -252,7 +257,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'potion',              base: 1_000,  scale: 1.0 },
       { currency: 'concentrated-potion', base: 10,    scale: 1.0 },
     ] },
-  { id: 'SERIAL_DILUTION', characterId: 'apothecary', category: 'minigame', max: 50,
+  { id: 'SERIAL_DILUTION', characterId: 'apothecary', category: 'minigame', max: 30,
     gates: { requiresPotionDilution: true },
     costs: [
       { currency: 'gold',                base: 5_000, scale: 1.3 },
@@ -261,7 +266,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
   { id: 'PERFECT_POTIONS', characterId: 'apothecary', category: 'minigame', max: 100,
     costs: [
-      { currency: 'gold',    base: 500, scale: 1.2 },
+      { currency: 'gold',    base: 500, scale: 1.4 },
       { currency: 'dossier', base: 50,  scale: 1.1 },
     ] },
 ];
@@ -351,6 +356,8 @@ export const APOTH_MG = {
   INNER_ZONE_MAX: 53,
   /** How many percentage points each Bigger Bubbles level expands the inner zone on each side */
   BIGGER_BUBBLES_ZONE_EXPANSION_PER_LEVEL: 2,
+  /** The base success chance of getting a successful potion dilution, rolled independently */
+  DILUTION_BASE_CHANCE: 70,
 } as const;
 
 // ── Ranger Minigame ───────────────────────────────────────────

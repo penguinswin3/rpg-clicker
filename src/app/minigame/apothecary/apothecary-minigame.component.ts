@@ -39,7 +39,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
   /** Current dilution success chance (50% base plus 1% per Serial Dilution level). */
   get dilutionSuccessChance(): number {
-    return Math.min(100, 50 + this.serialDilutionLevel);
+    return Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE + this.serialDilutionLevel);
   }
 
   /** Interpolated color from yellow (50%) to green (100%). */

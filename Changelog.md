@@ -1,7 +1,7 @@
 # Version Alpha 1.1.0
 
 ## Added
-- Add a new character, the Thief. They will collect knowledge in the form of Dossiers
+- Add a new character, the Thief. They will collect knowledge in the form of Dossiers, and crack safes for treasure and a handful of very rare relics...
 - Add a handful of new upgrades for the thief
 - Added a new upgrade for the Apothecary, Perfect Potion
 - Added a new upgrade for the Culinarian, Ancient Cookbook
@@ -17,6 +17,8 @@
 
 ## Bugfixes
 - Fixed costs not scaling properly when loading from an outdated save game 
+
+
 ----------------------------
 # Version Alpha 1.0.1
 
@@ -39,6 +41,7 @@
 - Log messages now reflect the rarity of the drop in the fighter minigame
 - Kobold hairs have a new coat of paint
 - Made the attack and heal button not selectable
+- Potion dilution has a higher start chance
 
 ## Bugfixes
 - Cleanup up the mutual kill message as to not cause excessive wrapping in the fighter minigame

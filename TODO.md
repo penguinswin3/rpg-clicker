@@ -43,7 +43,7 @@
 
 ### Easter Eggs
 - Fairy Ring codes in the ranger minigame
-- Kobold Killing... The numbers... What do they meam? Numbers Station... s: 0–2–5–8–8
+- Kobold Killing... The numbers... What do they mean? Numbers Station... s: 0–2–5–8–8
 
 ## Upgrade Ideas
 
@@ -69,7 +69,7 @@
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
 - Hovering over or clicking on a per second should show you all fo the factors adding or subtracting to that value 
 - ? Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have? 
-
+- Clean up the hard delete save button 
 
 ## Balancing
 - Add some more one off big upgrades shortly after minigame unlocks?
