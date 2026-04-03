@@ -44,8 +44,9 @@ export class ActivityLogService {
   /** Add a message to the activity log. */
   log(text: string, type: LogFilterType = 'default'): void {
     // Skip default messages if they're filtered out (optimization — don't process if not shown)
-    console.log(this.activeFiltersSource.getValue());
-    if (type === 'default' && !(this.activeFiltersSource.getValue().has('default') || (this.activeFiltersSource.getValue().size == 0))) {return;}
+    const filters = this.activeFiltersSource.getValue();
+    const shouldSkipDefaultMessage = type === 'default' && !(filters.has('default') || filters.size === 0);
+    if (shouldSkipDefaultMessage) { return; }
 
     const now = new Date();
     const timestamp = now.toLocaleTimeString('en-US', {
