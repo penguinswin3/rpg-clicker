@@ -13,7 +13,7 @@ import { OptionsMenuComponent } from './options/options-menu.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
 import { XP_THRESHOLDS, YIELDS, UNLOCK_COSTS } from './game-config';
-import { UPGRADE_FLAVOR, CURRENCY_FLAVOR } from './flavor-text';
+import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
 // ── Extracted hero helpers ─────────────────────────────────────
@@ -95,6 +95,13 @@ export class AppComponent implements OnInit, OnDestroy {
   hideMinigameUpgrades   = false;
   blandMode              = false;
   wholesaleSpicesEnabled = true;
+
+  // ── Relic popup state ─────────────────────────────────────────
+  /** ID of the relic upgrade whose popup is currently shown, or null. */
+  relicPopupId: string | null = null;
+
+  /** The currency symbol used for the compact relic icon (from CURRENCY_FLAVOR). */
+  readonly relicSymbol = CURRENCY_FLAVOR.relic.symbol;
 
   // ── Thief stun state ───────────────────────────────────────────
   /** Absolute timestamp (ms) when the Thief's stun expires. 0 = not stunned. */
@@ -190,7 +197,12 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Returns visible upgrade IDs for the active character in the given column. */
   getVisibleUpgrades(category: UpgradeCategory): string[] {
     return this.upgrades.getUpgradesFor(this.activeCharacterId, category)
-      .filter(id => this.isUpgradeVisible(id) && this.shouldShowUpgrade(this.upgrades.isMaxed(id)));
+      .filter(id => {
+        if (!this.isUpgradeVisible(id)) return false;
+        // Relic upgrades are always shown (they collapse to an icon when maxed).
+        if (category === 'relic') return true;
+        return this.shouldShowUpgrade(this.upgrades.isMaxed(id));
+      });
   }
 
   /** Checks gate conditions for an upgrade. */
@@ -234,9 +246,31 @@ export class AppComponent implements OnInit, OnDestroy {
       ?? { name: id, desc: '' };
   }
 
+  /**
+   * Returns the accent color for an upgrade card (title text + left border).
+   * Relic upgrades → relic color.
+   * Single-level or maxed-out upgrades → rare color.
+   * Everything else → standard color.
+   */
+  getUpgradeColor(id: string): string {
+    if (this.upgrades.category(id) === 'relic') return UPGRADE_COLORS.relic;
+    if (this.upgrades.maxLevel(id) === 1 || this.upgrades.isMaxed(id)) return UPGRADE_COLORS.rare;
+    return UPGRADE_COLORS.standard;
+  }
+
   /** Format large numbers as shorthand. */
   formatNumber(num: number): string {
     return fmtNumber(num);
+  }
+
+  // ── Relic popup ────────────────────────────────────────────────
+
+  openRelicPopup(id: string): void { this.relicPopupId = id; }
+  closeRelicPopup(): void          { this.relicPopupId = null; }
+
+  /** True if the active character has at least one relic upgrade not yet purchased. */
+  get anyRelicUnpurchased(): boolean {
+    return this.getVisibleUpgrades('relic').some(id => !this.upgrades.isMaxed(id));
   }
 
   // ── Lifecycle ──────────────────────────────────────────────────

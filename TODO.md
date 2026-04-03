@@ -36,10 +36,7 @@
     - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
 
 
-
-### Jacks Upgrades
-- Each character will have a (singular) Jacks upgrade that makes Jacks more effective on that character only? 
-- Should this be from the relics? 
+  
 ### Easter Eggs
 - Fairy Ring codes in the ranger minigame
 - Kobold Killing... The numbers... What do they mean? Numbers Station... s: 0–2–5–8–8
@@ -90,5 +87,4 @@
 - Fighter minigame combat log is a mess lmao 
 - Add a "Start Time" in the save file upon first navigating to the page, only on fresh saves
 - Extract monster info into the game config 
-- Try to take some of the character stats and put them somehwere else?
-- take the per seconds out of app component and put them somewhere else? 
+

@@ -145,6 +145,13 @@ export interface UiPrefs {
 export interface SaveSnapshot {
   /** Game version string (e.g. "Alpha 1.0.0"). */
   version: string;
+  /**
+   * Wall-clock ms timestamp (as a string) of when this save file was first created.
+   * Written exactly once — never overwritten on subsequent saves.
+   * For saves ported from a legacy format that had no timestamp, the value is
+   * the ms timestamp of the migration moment with "-legacy" appended.
+   */
+  startTimestamp?: string;
   timestamp: number;
   /** Only currency amounts are persisted. perSecond rates are re-derived from upgrade levels on load. */
   wallet: Record<string, { amount: number }>;
@@ -195,6 +202,12 @@ export class SaveService {
 
   /** When true the next beforeunload save is skipped (used by dev clear-save). */
   private _skipNextSave = false;
+
+  /**
+   * The start timestamp for this save file. Set once and never overwritten.
+   * null means the game has not been saved yet (new session, no localStorage).
+   */
+  private _startTimestamp: string | null = null;
 
   /** Tell the service to skip the very next beforeunload save. */
   suppressNextSave(): void { this._skipNextSave = true; }
@@ -270,6 +283,7 @@ export class SaveService {
 
     return {
       version: VERSION,
+      startTimestamp: this._startTimestamp ?? (this._startTimestamp = Date.now().toString()),
       timestamp: Date.now(),
       wallet: walletAmounts,
       characters,
@@ -281,7 +295,12 @@ export class SaveService {
   }
 
   applySnapshot(snap: SaveSnapshot): void {
-    // 1 — Wallet amounts only; perSecond is re-derived from upgrade levels below.
+    // 0 — Restore start timestamp (write-once: once set, never overwrite with a newer value).
+    if (!this._startTimestamp) {
+      this._startTimestamp = snap.startTimestamp ?? `${Date.now()}-legacy`;
+    }
+
+    // 1 — Wallet amounts only; perSecond rates are re-derived from upgrade levels below.
     for (const [id, entry] of Object.entries(snap.wallet)) {
       this.wallet.set(id, entry.amount);
     }

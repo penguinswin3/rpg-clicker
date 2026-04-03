@@ -148,17 +148,23 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
   fmtNumber = fmtNumber;
 
   /**
-   * Format a per-second rate for display.
-   * - 0        → '--/s'
-   * - integer  → '+N/s'  (or '-N/s' for negative)
-   * - fraction → '+N.XX/s' (2 decimal places, trailing zeros stripped)
+   * Format a per-second rate for display using fmtNumber rules for large values.
+   * - 0             → '--/s'
+   * - |rate| < 1000 → '+N/s' or '+N.XX/s' (2 dp, trailing zeros stripped)
+   * - |rate| ≥ 1000 → '+1.2k/s' / '+3.4M/s' etc. via fmtNumber compact notation
    */
   fmtRate(rate: number): string {
     if (rate === 0) return '--/s';
-    const sign    = rate > 0 ? '+' : '';
-    const display = Number.isInteger(rate)
-      ? rate.toString()
-      : rate.toFixed(2).replace(/\.?0+$/, '');   // strip trailing zeros after rounding
+    const sign = rate > 0 ? '+' : '-';
+    const abs  = Math.abs(rate);
+    let display: string;
+    if (abs >= 1_000) {
+      display = fmtNumber(abs);
+    } else {
+      display = Number.isInteger(abs)
+        ? abs.toString()
+        : abs.toFixed(2).replace(/\.?0+$/, '');
+    }
     return `${sign}${display}/s`;
   }
 }

@@ -1,12 +1,19 @@
 # Version Alpha 1.1.1
 
 ## Added
+- Relic Upgrades
+- Start timestamp to save games for metadata tracking purposes
 
 ## Removed
 
 ## Changed
+- Changed the color of upgrades a little
+- 
+
 
 ## Bugfixes
+- Sidebar per seconds will use the correctly formatted number system
+- Fixed Ancient Cookbook unlock requirement not registering correctly 
 
 ----------------------------
 

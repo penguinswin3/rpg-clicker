@@ -13,7 +13,7 @@ export const VERSION = 'Alpha 1.1.1';
 
 // ── Shared Upgrade Types ─────────────────────────────────────
 
-export type UpgradeCategory = 'standard' | 'minigame';
+export type UpgradeCategory = 'standard' | 'minigame' | 'relic';
 
 /** Optional visibility gates — evaluated by the host component. */
 export interface UpgradeGates {
@@ -233,7 +233,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'hearty-meal', base: 5,  scale: 1.4 },
     ] },
   { id: 'LARGER_COOKBOOKS', characterId: 'culinarian', category: 'minigame', max: 1,
-    gates: { requiresDossier: true },
+    gates: { requiresThief: true },
     costs: [
       { currency: 'gold',        base: 100_000, scale: 1.0 },
       { currency: 'hearty-meal', base: 15,      scale: 1.0 },
@@ -313,6 +313,23 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'gold',    base: 500, scale: 1.4 },
       { currency: 'dossier', base: 50,  scale: 1.1 },
     ] },
+
+  // ── Relic upgrades (one per character) ──────────────────────────
+  { id: 'RELIC_FIGHTER',    characterId: 'fighter',    category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+  { id: 'RELIC_RANGER',     characterId: 'ranger',     category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+  { id: 'RELIC_APOTHECARY', characterId: 'apothecary', category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+  { id: 'RELIC_CULINARIAN', characterId: 'culinarian', category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+  { id: 'RELIC_THIEF',      characterId: 'thief',      category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
 ];
 
 // ── Resource Yields ───────────────────────────────────────────
