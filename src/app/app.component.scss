@@ -115,6 +115,125 @@
 
 // ---- Jack of All Trades ----
 
+// ---- Relic column (left of Jacks) ----
+.relic-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 280px;
+  min-width: 0;
+
+  .section-title {
+    color: #a700ff;
+    margin: 0 0 0.4rem;
+  }
+}
+
+.relic-scroll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  max-height: 12rem;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+
+  &::-webkit-scrollbar        { width: 4px; }
+  &::-webkit-scrollbar-track  { background: #111; }
+  &::-webkit-scrollbar-thumb  { background: #444; }
+  &::-webkit-scrollbar-thumb:hover { background: #777; }
+  scrollbar-width: thin;
+  scrollbar-color: #444 #111;
+}
+
+// Compact icon shown when a relic upgrade is maxed — sized to match
+// the jack-alloc-stack box so they sit neatly side-by-side.
+// margin-top = pool-info height (0.72rem × 1.2 line-height) + gap (0.2rem) = 1.06rem.
+// This makes the relic column the same total height as the jack column (ignoring the
+// symmetric [ALL]/[NONE] buttons), so align-items:center lines up both tops exactly.
+.relic-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid;      // color set inline
+  padding: 0.35rem 0.6rem;
+  min-height: 4.5rem;
+  min-width: 3rem;
+  margin-top: 1.06rem;
+  cursor: pointer;
+  transition: background 0.1s, filter 0.1s;
+
+  &:hover {
+    background: #111;
+    filter: brightness(1.3);
+  }
+}
+
+.relic-icon-symbol {
+  font-size: 2.2rem;
+  line-height: 1;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+// ── Relic detail popup ───────────────────────────────────────
+.relic-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.relic-popup {
+  background: #0a0a0a;
+  border: 1px solid #444;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 220px;
+  max-width: 320px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.relic-popup-symbol {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.relic-popup-name {
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.relic-popup-desc {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.relic-popup-close {
+  background: #000;
+  color: #fff;
+  border: 1px solid #555;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  margin-top: 0.3rem;
+  transition: background 0.1s, color 0.1s;
+
+  &:hover {
+    background: #fff;
+    color: #000;
+  }
+}
+
 // Outer column: pool-info stacked directly above the bordered assigner
 .jack-column {
   display: flex;
@@ -326,6 +445,16 @@
   }
 }
 
+.dev-unlock-btn {
+  color: #ffd700;
+  border-color: #806000;
+
+  &:hover {
+    background: #ffd700;
+    color: #000;
+  }
+}
+
 .hero-btn {
   position: relative;
   overflow: hidden;
@@ -501,25 +630,15 @@
   flex-direction: column;
   box-sizing: border-box;
   border: 1px solid #333;
-  border-left: 3px solid #fff;
+  border-left: 3px solid;   // color set dynamically via [style.border-left-color]
   padding: 0.6rem 0.9rem;
   margin-bottom: 0.6rem;
   min-height: 3.25rem;
   gap: 0.3rem;
 
   &:hover {
-    border-left-color: #0ff;
     background: #0a0a0a;
-  }
-}
-
-// Single-level (one-time) upgrades use gold accent to match unlock-card style
-.upgrade-card.one-time {
-  border-left-color: #ffcc00;
-
-  &:hover {
-    border-left-color: #ffe066;
-    background: #0a0900;
+    filter: brightness(1.2);
   }
 }
 
@@ -531,9 +650,6 @@
   width: 100%;
 }
 
-.cyan-text {
-  color: #0ff;
-}
 
 // Row beneath the title: description on the left, buy button on the right
 .upgrade-body {

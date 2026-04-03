@@ -5,6 +5,25 @@
 - Lore Pages that give context about the character or the world they live in. Can be unlocked by doing certain things in minigames...
 - Statistics tracking
 
+###  Relics
+- Relics are powerful buffs that make some aspect of a Jack better for a specific character. They are typically named after a magic item or something. 
+- maybe a series of relics? 
+- Basically just a few one off upgrades I want to add rn that don't really fit elsewhere
+- One for minigames and one for normal buttons? 
+
+
+#### Fighter
+
+#### Ranger
+
+#### Apothecary
+
+#### Culinarian
+
+#### Thief
+
+
+
 
 ### More characters
   - Artisan
@@ -23,7 +42,8 @@
     - Reads pages from the intel
     - Generates Mana
     - Minigame creates Spell Scrolls
-    - Spell Scrolls can be used to buff familiars? 
+    - Spell Scrolls can be used to buff familiars?
+
 
   - Chimeramancer
     - Animal parts combination mix and match synergy?
@@ -32,14 +52,13 @@
     - Card game Blackjack?
   - Merchant
     - Stock market game where you can sell your materials for gp, and buy other materials for gp
+  - Something else?
+
   - Slayer
     - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
 
 
-
-### Jacks Upgrades
-- Each character will have a (singular) Jacks upgrade that makes Jacks more effective on that character only? 
-- Should this be from the relics? 
+  
 ### Easter Eggs
 - Fairy Ring codes in the ranger minigame
 - Kobold Killing... The numbers... What do they mean? Numbers Station... s: 0–2–5–8–8
@@ -58,18 +77,20 @@
 
 
 ### Apothecary
-
+- Synaptical Potion base
+  - New "Formula" system for the apothecary minigame with different "sweet spots"
+  - Multiple, randomly placed sweet spots instead of one central one. The green zone will remain 
+- Should you be able to fail the minigam by clicking wrong too much? 
 
 ### Culinarian
 
+
 ## UI Tweaks
-- Once a xp threshold is passed, anything unlocked by that threshold should remain, and the threshold should not be tracked again in the currency menu
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
-- Hovering over or clicking on a per second should show you all fo the factors adding or subtracting to that value 
-- ? Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have?
+- Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have?
 - In game Changelog? 
-- Add an "effective price per spice" display in the character stats menu 
-- Gold and Exp can be "pinned" to the top of the currency menu 
+- Clicking "All" on the filter while already active should toggle "All" off and turn on each individual option individually. 
+- Rename Success to something else cause it doesnt always reflect success, default does sometimes as well, it should be more like 'uncommon'
 
 ## Balancing
 - Add some more one off big upgrades shortly after minigame unlocks?
@@ -77,18 +98,16 @@
   - Or some could just be more Chunky and give discrete values, like Bountiful Lands
     - Bubbling Brew adds a new randomly placed bonus area, up to 5 at max level
 - Bigger game is kinda whatever and not super interesting
+- Oh my god I never added passive generators to anyone other than the fighter lmfao its all been jacks only lmfao 
+  - Ranger should have a "Herb Propagation" and "Baited Traps"
+  - apothecary should have fermentation vats
+- min hit around where short rest currently is, first strike where it is now, short rest later
 
 ## Bug Fixes
-- 200% herb save isn't saving 2 herbs
-
-
+- Cat's Eye potion not being factored in to per seconds? 
 
 ## Code Refactors
 - extract log text to flavor file, might need to implement string replacement here idk
-  - Make sure the logs use the symbols not the names 
-  - Make it so default info logs are ignored if filtered out. Other messages should persist 
 - Fighter minigame combat log is a mess lmao 
-- Add a "Start Time" in the save file upon first navigating to the page, only on fresh saves
-- Extract monster info into the game config 
-- Try to take some of the character stats and put them somehwere else?
-- take the per seconds out of app component and put them somewhere else? 
+
+

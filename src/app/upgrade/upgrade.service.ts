@@ -57,6 +57,10 @@ export class UpgradeService {
     return this.defs.get(id)?.max ?? 0;
   }
 
+  category(id: string): UpgradeCategory | undefined {
+    return this.defs.get(id)?.category;
+  }
+
   /** Current cost for the primary (first) currency of this upgrade. */
   cost(id: string): number {
     const rt = this.runtime.get(id);

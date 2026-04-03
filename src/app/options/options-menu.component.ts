@@ -92,6 +92,8 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
       this.log.log('Paste a save string into the import box first.', 'error');
       return;
     }
+    // this.saveService.suppressNextSave();
+    this.saveService.deleteSave();
     const ok = this.saveService.importFromBase64(trimmed);
     if (ok) {
       this.importString = '';

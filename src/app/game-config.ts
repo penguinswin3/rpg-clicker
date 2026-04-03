@@ -13,7 +13,7 @@ export const VERSION = 'Alpha 1.1.1';
 
 // ── Shared Upgrade Types ─────────────────────────────────────
 
-export type UpgradeCategory = 'standard' | 'minigame';
+export type UpgradeCategory = 'standard' | 'minigame' | 'relic';
 
 /** Optional visibility gates — evaluated by the host component. */
 export interface UpgradeGates {
@@ -194,7 +194,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Ranger — minigame ────────────────────────────────────────
-  { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 5,      // each level adds +1 guaranteed prize node
+  { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 4,      // each level adds +1 guaranteed prize node
     costs: [
       { currency: 'kobold-ear',    base: 50, scale: 1.0, fromLevel: 0, untilLevel: 1 },  // level 1 only
       { currency: 'kobold-tongue', base: 50, scale: 1.0, fromLevel: 1, untilLevel: 2 },  // level 2 only
@@ -233,7 +233,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'hearty-meal', base: 5,  scale: 1.4 },
     ] },
   { id: 'LARGER_COOKBOOKS', characterId: 'culinarian', category: 'minigame', max: 1,
-    gates: { requiresDossier: true },
+    gates: { requiresThief: true },
     costs: [
       { currency: 'gold',        base: 100_000, scale: 1.0 },
       { currency: 'hearty-meal', base: 15,      scale: 1.0 },
@@ -313,6 +313,23 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'gold',    base: 500, scale: 1.4 },
       { currency: 'dossier', base: 50,  scale: 1.1 },
     ] },
+
+  // ── Relic upgrades (one per character) ──────────────────────────
+  { id: 'RELIC_FIGHTER',    characterId: 'fighter',    category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+  { id: 'RELIC_RANGER',     characterId: 'ranger',     category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+  { id: 'RELIC_APOTHECARY', characterId: 'apothecary', category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+  { id: 'RELIC_CULINARIAN', characterId: 'culinarian', category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+  { id: 'RELIC_THIEF',      characterId: 'thief',      category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
 ];
 
 // ── Resource Yields ───────────────────────────────────────────
@@ -373,7 +390,7 @@ export const FIGHTER_MG = {
   /** Extra gold min reward per kobold level above 1 */
   KOBOLD_GOLD_MIN_PER_LEVEL:  3,
   /** Extra gold max reward per kobold level above 1 */
-  KOBOLD_GOLD_MAX_PER_LEVEL:  5,
+  KOBOLD_GOLD_MAX_PER_LEVEL:  9,
   /** Extra XP reward per kobold level above 1 */
   KOBOLD_XP_PER_LEVEL:        2,
   /** Extra Kobold Ear reward per kobold level above 1 */

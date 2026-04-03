@@ -87,6 +87,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Output() dilutionEnabledChange = new EventEmitter<boolean>();
 
   xp = 0;
+  /** All-time peak XP — used for the threshold gate. */
+  highestXpEver = 0;
   activeCharacterId = 'fighter';
   readonly threshold = XP_THRESHOLDS.MINIGAME_UNLOCK;
 
@@ -114,7 +116,7 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   ];
 
   get shown(): boolean {
-    return this.xp >= this.threshold;
+    return this.highestXpEver >= this.threshold;
   }
 
   get activeMinigame(): MinigameInfo {
@@ -131,6 +133,7 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
         this.xp = Math.floor(s['xp']?.amount ?? 0);
       })
     );
+    this.sub.add(this.wallet.highestXpEver$.subscribe(v => (this.highestXpEver = v)));
     this.sub.add(
       this.charService.activeId$.subscribe(id => {
         this.activeCharacterId = id;

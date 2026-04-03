@@ -22,163 +22,75 @@ export const CURRENCY_FLAVOR = {
   'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#683a0c' },
   dossier:               { name: 'Dossier',                   symbol: '⌸', color: '#c0cedc' },
   treasure:              { name: 'Treasure',                  symbol: '⚱', color: '#989c3a' },
-  relic:                 { name: 'Relic',                     symbol: 'ᛝ', color: '#8be4e1' },
+  relic:                 { name: 'Relic',                     symbol: 'ᛝ', color: '#a700ff' },
   'kobold-fang':         { name: 'Kobold Fang',               symbol: '৲', color: '#969790' },
 } as const;
 
 // ꔮ 𐓑  ᛝ ᚕ
+// ── Upgrade Colors ────────────────────────────────────────────
+/** Shared accent colors for all upgrade cards. */
+export const UPGRADE_COLORS = {
+  /** Multi-level upgrades (standard color). */
+  standard: '#00fff8',
+  /** One-time / single-level upgrades (rare color). */
+  rare:     '#ffcc00',
+  /** Relic-category upgrades. */
+  relic:    '#a700ff',
+} as const;
+
 // ── Upgrades ──────────────────────────────────────────────────
 export const UPGRADE_FLAVOR = {
   // Fighter
-  BETTER_BOUNTIES: {
-    name: 'Better Bounties',
-    desc: '+1 gold per bounty',
-  },
-  CONTRACTED_HIRELINGS: {
-    name: 'Contracted Hirelings',
-    desc: '+1 gold/sec',
-  },
-  INSIGHTFUL_CONTRACTS: {
-    name: 'Insightful Contracts',
-    desc: '+1 XP per bounty completed',
-  },
-  HIRELINGS_HIRELINGS: {
-    name: "Hireling's Hirelings",
-    desc: 'Each hireling gets this many hirelings, also generating +1 gold/sec',
-  },
-  POTION_CHUGGING: {
-    name: 'Potion of Fortitude',
-    desc: '+1 HP per potion heal',
-  },
-  SHORT_REST: {
-    name: 'Short Rest',
-    desc: 'Auto-heal to full HP with potions after each victory at a reduced efficiency',
-  },
-  SHARPER_SWORDS: {
-    name: 'Sharper Swords',
-    desc: '+1 max hit in combat',
-  },
-  STRONGER_KOBOLDS: {
-    name: 'Stronger Kobolds',
-    desc: 'They grow...',
-  },
-  FIRST_STRIKE: {
-    name: 'First Strike',
-    desc: 'The Fighter attacks before the enemy. Let the slaughter begin!',
-  },
+  BETTER_BOUNTIES:      { name: 'Better Bounties',           desc: '+1 gold per bounty' },
+  CONTRACTED_HIRELINGS: { name: 'Contracted Hirelings',      desc: '+1 gold/sec' },
+  INSIGHTFUL_CONTRACTS: { name: 'Insightful Contracts',      desc: '+1 XP per bounty completed' },
+  HIRELINGS_HIRELINGS:  { name: "Hireling's Hirelings",      desc: 'Each hireling gets this many hirelings, also generating +1 gold/sec' },
+  POTION_CHUGGING:      { name: 'Potion of Fortitude',       desc: '+1 HP per potion heal' },
+  SHORT_REST:           { name: 'Short Rest',                desc: 'Auto-heal to full HP with potions after each victory at a reduced efficiency' },
+  SHARPER_SWORDS:       { name: 'Sharper Swords',            desc: '+1 max hit in combat' },
+  STRONGER_KOBOLDS:     { name: 'Stronger Kobolds',          desc: 'They grow...' },
+  FIRST_STRIKE:         { name: 'First Strike',              desc: 'The Fighter attacks before the enemy. Let the slaughter begin!' },
 
   // Ranger
-  MORE_HERBS: {
-    name: 'More Herbs',
-    desc: '+1% chance to double base herbs',
-  },
-  BETTER_TRACKING: {
-    name: 'Better Tracking',
-    /** Static prefix — template appends the live "(now X%)" suffix. */
-    desc: '+1% beast hunt chance',
-  },
-  BOUNTIFUL_LANDS: {
-    name: 'Bountiful Lands',
-    desc: '+1 guaranteed prize node per level (max 5)',
-  },
-  ABUNDANT_LANDS: {
-    name: 'Abundant Lands',
-    desc: 'Resource gain is multiplied by the number of successful finds',
-  },
-  FAIRY_HOSTAGE: {
-    name: 'Fairy Hostage',
-    desc: 'A pixie, if present, will call out to a friend for help...',
-  },
-  POTION_CATS_EYE: {
-    name: "Potion of Cat's Eye",
-    desc: "+1% chance to roll both herb AND beast",
-  },
-  BIGGER_GAME: {
-    name: 'Bigger Game',
-    desc: '+1 max Raw Beast Meat per hero button press',
-  },
+  MORE_HERBS:           { name: 'More Herbs',                desc: '+1% chance to double base herbs' },
+  BETTER_TRACKING:      { name: 'Better Tracking',           desc: '+1% beast hunt chance' },
+  BOUNTIFUL_LANDS:      { name: 'Bountiful Lands',           desc: '+1 guaranteed prize node per level' },
+  ABUNDANT_LANDS:       { name: 'Abundant Lands',            desc: 'Resource gain is multiplied by the number of successful finds' },
+  FAIRY_HOSTAGE:        { name: 'Fairy Hostage',             desc: 'A pixie, if present, will call out to a friend for help...' },
+  POTION_CATS_EYE:      { name: "Potion of Cat's Eye",       desc: "+1% chance to roll both herb AND beast" },
+  BIGGER_GAME:          { name: 'Bigger Game',               desc: '+1 max Raw Beast Meat per hero button press' },
 
   // Apothecary
-  POTION_TITRATION: {
-    name: 'Potion Titration',
-    desc: '+1% herb save chance on brew',
-  },
-  POTION_MARKETING: {
-    name: 'Potion Marketing',
-    desc: '+1 gold every time you brew a potion base',
-  },
-  POTION_GLIBNESS: {
-    name: 'Potion of Glibness',
-    desc: '-1% spice purchase cost per level',
-  },
-  BUBBLING_BREW: {
-    name: 'Bubbling Brew',
-    desc: 'Skilled brewing will award bonus progress',
-  },
-  BIGGER_BUBBLES: {
-    name: 'Bigger Bubbles',
-    desc: 'Increases the size of the Bubbling zone',
-  },
-  POTION_DILUTION: {
-    name: 'Potion Dilution',
-    desc: '2x concentrated potions, with a risk of failure',
-  },
-  SERIAL_DILUTION: {
-    name: 'Serial Dilution',
-    desc: '+1% dilution success chance per level',
-  },
-  PERFECT_POTIONS: {
-    name: 'Perfect Potions',
-    desc: '+1 concentrated potion per level on a flawless brew',
-  },
+  POTION_TITRATION:     { name: 'Potion Titration',          desc: '+1% herb save chance on brew' },
+  POTION_MARKETING:     { name: 'Potion Marketing',          desc: '+1 gold every time you brew a potion base' },
+  POTION_GLIBNESS:      { name: 'Potion of Glibness',        desc: '-1% spice purchase cost per level' },
+  BUBBLING_BREW:        { name: 'Bubbling Brew',             desc: 'Skilled brewing will award bonus progress' },
+  BIGGER_BUBBLES:       { name: 'Bigger Bubbles',            desc: 'Increases the size of the Bubbling zone' },
+  POTION_DILUTION:      { name: 'Potion Dilution',           desc: '2x concentrated potions, with a risk of failure' },
+  SERIAL_DILUTION:      { name: 'Serial Dilution',           desc: '+1% dilution success chance per level' },
+  PERFECT_POTIONS:      { name: 'Perfect Potions',           desc: '+1 concentrated potion per level on a flawless brew' },
 
   // Culinarian
-  WHOLESALE_SPICES: {
-    name: 'Wholesale Spices',
-    desc: '+1 spice per click, purchased at a discount!',
-  },
-  WASTE_NOT: {
-    name: 'Waste Not',
-    desc: '+1 hearty meal per unused guess on a successful recipe',
-  },
-  LARGER_COOKBOOKS: {
-    name: 'Ancient Cookbook',
-    desc: 'The first ingredient in the recipe is always revealed at the start',
-  },
+  WHOLESALE_SPICES:     { name: 'Wholesale Spices',          desc: '+1 spice per click, purchased at a discount!' },
+  WASTE_NOT:            { name: 'Waste Not',                 desc: '+1 hearty meal per unused guess on a successful recipe' },
+  LARGER_COOKBOOKS:     { name: 'Ancient Cookbook',          desc: 'The first ingredient in the recipe is always revealed at the start' },
 
   // Thief
-  METICULOUS_PLANNING: {
-    name: 'Meticulous Planning',
-    desc: '+1% thieving success chance per level',
-  },
-  PLENTIFUL_PLUNDERING: {
-    name: 'Plentiful Plundering',
-    desc: 'Each successful heist awards gold equal to dossiers collected, per level',
-  },
-  POTION_OF_STICKY_FINGERS: {
-    name: 'Potion of Sticky Fingers',
-    desc: '+1 max dossier yield per level',
-  },
-  VANISHING_POWDER: {
-    name: 'Vanishing Powder',
-    desc: '+1 max detection tolerance per level',
-  },
-  POTION_CATS_EARS: {
-    name: "Potion of Cat's Ears",
-    desc: '+3° sweet spot size per level',
-  },
-  BAG_OF_HOLDING: {
-    name: 'Bag of Holding',
-    desc: 'Increases maximum gold and treasure yield',
-  },
-  RELIC_HUNTER: {
-    name: 'Relic Hunter',
-    desc: '+1% relic drop chance per level',
-  },
-  LOCKED_IN: {
-    name: 'Locked In',
-    desc: 'Marks failed click positions on the dial with a red tick',
-  },
+  METICULOUS_PLANNING:      { name: 'Meticulous Planning',       desc: '+1% thieving success chance per level' },
+  PLENTIFUL_PLUNDERING:     { name: 'Plentiful Plundering',      desc: 'Each successful heist awards gold equal to dossiers collected, per level' },
+  POTION_OF_STICKY_FINGERS: { name: 'Potion of Sticky Fingers',  desc: '+1 max dossier yield per level' },
+  VANISHING_POWDER:         { name: 'Vanishing Powder',          desc: '+1 max detection tolerance per level' },
+  POTION_CATS_EARS:         { name: "Potion of Cat's Ears",      desc: '+3° sweet spot size per level' },
+  BAG_OF_HOLDING:           { name: 'Bag of Holding',            desc: 'Increases maximum gold and treasure yield' },
+  RELIC_HUNTER:             { name: 'Relic Hunter',              desc: '+1% relic drop chance per level' },
+  LOCKED_IN:                { name: 'Locked In',                 desc: 'Marks failed click positions on the dial with a red tick' },
+
+  // ── Relic upgrades (one per character) ──────────────────────────
+  RELIC_FIGHTER:    { name: 'Amulet of Glory',       desc: 'A powerful artifact that empowers the Fighter. (placeholder)' },
+  RELIC_RANGER:     { name: 'Magic Secateurs',    desc: 'A powerful artifact that empowers the Ranger. (placeholder)' },
+  RELIC_APOTHECARY: { name: 'Mask of the Greenman',     desc: 'A powerful artifact that empowers the Apothecary. (placeholder)' },
+  RELIC_CULINARIAN: { name: 'Charming Perfume',  desc: 'A powerful artifact that empowers the Culinarian. (placeholder)' },
+  RELIC_THIEF:      { name: 'Ring of Shadows',     desc: 'A powerful artifact that empowers the Thief. (placeholder)' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
@@ -281,7 +193,7 @@ export const CHARACTER_FLAVOR = {
   },
   THIEF: {
     name: 'Thief',
-    desc: "A Lady doesn't need to always lurk in the shadows. ",
+    desc: "A Lady doesn't need to always lurk in the shadows.",
     questBtn: 'Break & Enter',
   },
 } as const;
