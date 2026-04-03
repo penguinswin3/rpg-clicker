@@ -5,6 +5,25 @@
 - Lore Pages that give context about the character or the world they live in. Can be unlocked by doing certain things in minigames...
 - Statistics tracking
 
+###  Relics
+- Relics are powerful buffs that make some aspect of a Jack better for a specific character. They are typically named after a magic item or something. 
+- maybe a series of relics? 
+- Basically just a few one off upgrades I want to add rn that don't really fit elsewhere
+- One for minigames and one for normal buttons? 
+
+
+#### Fighter
+
+#### Ranger
+
+#### Apothecary
+
+#### Culinarian
+
+#### Thief
+
+
+
 
 ### More characters
   - Artisan
@@ -23,8 +42,7 @@
     - Reads pages from the intel
     - Generates Mana
     - Minigame creates Spell Scrolls
-    - Spell Scrolls can be used to buff familiars? 
-
+    - Spell Scrolls can be used to buff familiars?
   - Chimeramancer
     - Animal parts combination mix and match synergy?
       - kobold ear, kobold tongue, kobold hair, beast meat, bones, other things from the fighter 
@@ -58,6 +76,7 @@
 
 
 ### Culinarian
+
 
 ## UI Tweaks
 - Once a xp threshold is passed, anything unlocked by that threshold should remain, and the threshold should not be tracked again in the currency menu

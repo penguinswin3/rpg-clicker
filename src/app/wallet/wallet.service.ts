@@ -57,6 +57,11 @@ export class WalletService {
     Object.fromEntries(this.currencies.map(c => [c.id, { amount: 0, perSecond: 0 }]))
   );
 
+  /** Tracks the all-time peak XP ever reached, regardless of current XP. */
+  private readonly highestXpEverSource = new BehaviorSubject<number>(0);
+  readonly highestXpEver$ = this.highestXpEverSource.asObservable();
+  get highestXpEver(): number { return this.highestXpEverSource.getValue(); }
+
   /** Tracks currencies whose `manualUnlock` gate has been opened. */
   private readonly manualUnlocksSource = new BehaviorSubject<Set<string>>(new Set<string>());
   readonly manualUnlocks$ = this.manualUnlocksSource.asObservable();
@@ -82,6 +87,7 @@ export class WalletService {
   /** Add `amount` of `currencyId` to the wallet. */
   add(currencyId: string, amount: number): void {
     this._patch(currencyId, e => ({ ...e, amount: e.amount + amount }));
+    if (currencyId === 'xp') this._syncHighestXp();
   }
 
   /**
@@ -112,6 +118,17 @@ export class WalletService {
   /** Hard-set `currencyId` to an exact `amount` (clamped to ≥ 0). */
   set(currencyId: string, amount: number): void {
     this._patch(currencyId, e => ({ ...e, amount: Math.max(0, amount) }));
+    if (currencyId === 'xp') this._syncHighestXp();
+  }
+
+  /**
+   * Restore the all-time peak XP from a saved value.
+   * Never lowers the current tracked peak.
+   */
+  setHighestXpEver(n: number): void {
+    if (n > this.highestXpEverSource.getValue()) {
+      this.highestXpEverSource.next(n);
+    }
   }
 
   /**
@@ -143,6 +160,14 @@ export class WalletService {
     const state = this.stateSource.getValue();
     if (!state[currencyId]) return;
     this.stateSource.next({ ...state, [currencyId]: fn(state[currencyId]) });
+  }
+
+  /** Update the all-time XP peak if the current XP balance is higher. */
+  private _syncHighestXp(): void {
+    const current = this.get('xp');
+    if (current > this.highestXpEverSource.getValue()) {
+      this.highestXpEverSource.next(current);
+    }
   }
 }
 

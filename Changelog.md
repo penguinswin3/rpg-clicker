@@ -8,7 +8,7 @@
 
 ## Changed
 - Changed the color of upgrades a little
-- 
+- XP threshold unlocks will remember that they were unlocked 
 
 
 ## Bugfixes

@@ -23,6 +23,8 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
   state: WalletState = {};
   collapsed = false;
   manualUnlockIds = new Set<string>();
+  /** All-time peak XP, used for progress bar and threshold checks. */
+  highestXpEver = 0;
 
   /** Empty = show all. Keys are character IDs or the sentinel 'global'. */
   activeCharacterFilters = new Set<string>();
@@ -80,9 +82,9 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
     return this.activeCharacterFilters.size === 0;
   }
 
-  /** 0–100 percentage progress toward the next XP unlock threshold. */
+  /** 0–100 percentage progress toward the next XP unlock threshold (based on all-time peak XP). */
   get xpProgressPct(): number {
-    const xp = Math.floor(this.state['xp']?.amount ?? 0);
+    const xp = this.highestXpEver;
     const thresholds = Object.values(XP_THRESHOLDS).sort((a, b) => a - b);
 
     let prev = 0;
@@ -103,6 +105,7 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.allCurrencies = this.walletService.currencies;
     this.sub.add(this.walletService.state$.subscribe(s => (this.state = s)));
+    this.sub.add(this.walletService.highestXpEver$.subscribe(v => (this.highestXpEver = v)));
     this.sub.add(
       this.characterService.characters$.subscribe(chars => {
         this.unlockedCharacters = chars.filter(c => c.unlocked);

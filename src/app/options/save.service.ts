@@ -153,6 +153,12 @@ export interface SaveSnapshot {
    */
   startTimestamp?: string;
   timestamp: number;
+  /**
+   * All-time peak XP ever reached by this save.  Persisted separately from the
+   * wallet so XP-gated unlocks survive any decrease in current XP.
+   * Optional for backward-compat with older saves (falls back to current XP).
+   */
+  highestXpEver?: number;
   /** Only currency amounts are persisted. perSecond rates are re-derived from upgrade levels on load. */
   wallet: Record<string, { amount: number }>;
   characters: { id: string; unlocked: boolean }[];
@@ -285,6 +291,7 @@ export class SaveService {
       version: VERSION,
       startTimestamp: this._startTimestamp ?? (this._startTimestamp = Date.now().toString()),
       timestamp: Date.now(),
+      highestXpEver: this.wallet.highestXpEver,
       wallet: walletAmounts,
       characters,
       activeCharacterId,
@@ -304,6 +311,10 @@ export class SaveService {
     for (const [id, entry] of Object.entries(snap.wallet)) {
       this.wallet.set(id, entry.amount);
     }
+
+    // 1b — Restore all-time peak XP (falls back to current XP for older saves without the field).
+    const savedHighestXp = snap.highestXpEver ?? Math.floor(snap.wallet['xp']?.amount ?? 0);
+    this.wallet.setHighestXpEver(savedHighestXp);
 
     // 2 — Manual unlocks
     for (const id of snap.manualUnlocks) {

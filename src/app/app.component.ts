@@ -60,6 +60,8 @@ export class AppComponent implements OnInit, OnDestroy {
   // ── Wallet state (template bindings) ──────────────────────────
   gold                = 0;
   xp                  = 0;
+  /** All-time peak XP — used for all XP-threshold gate checks. */
+  highestXp           = 0;
   potions             = 0;
   beast               = 0;
   koboldEars          = 0;
@@ -79,7 +81,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   get minigameShown():           boolean { return this.minigameUnlocked; }
   get minigameUnlockAvailable(): boolean {
-    return this.xp >= XP_THRESHOLDS.MINIGAME_UNLOCK && !this.minigameUnlocked;
+    return this.highestXp >= XP_THRESHOLDS.MINIGAME_UNLOCK && !this.minigameUnlocked;
   }
 
   // ── Kobold level selector ──────────────────────────────────────
@@ -132,8 +134,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // ── Jack computed getters (delegated to jack-calculator) ───────
 
-  get jacksVisible():    boolean { return isJacksVisible(this.xp, this.jacksOwned); }
-  get jacksToPurchase(): number  { return getJacksToPurchase(this.xp, this.jacksOwned); }
+  get jacksVisible():    boolean { return isJacksVisible(this.highestXp, this.jacksOwned); }
+  get jacksToPurchase(): number  { return getJacksToPurchase(this.highestXp, this.jacksOwned); }
   get jacksPoolFree():   number  { return getJacksPoolFree(this.jacksOwned, this.jacksAllocations); }
 
   get jackCurrentCosts(): JackCostEntry[] {
@@ -217,7 +219,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresDossier       && !this.wallet.isCurrencyUnlocked('dossier'))   return false;
     if (gates.requiresBubblingBrew  && this.upgrades.level('BUBBLING_BREW') < 1)     return false;
     if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1)  return false;
-    if (gates.xpMin != null && this.xp < gates.xpMin) return false;
+    if (gates.xpMin != null && this.highestXp < gates.xpMin) return false;
     return true;
   }
 
@@ -287,6 +289,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.concentratedPotions = Math.floor(state['concentrated-potion']?.amount ?? 0);
       this.spice               = Math.floor(state['spice']?.amount               ?? 0);
     });
+    this.wallet.highestXpEver$.subscribe(v => (this.highestXp = v));
 
     this.charService.activeId$.subscribe(id => {
       this.activeCharacterId = id;

@@ -37,6 +37,8 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
   /** Locked characters whose XP requirement has been reached. */
   available: Character[] = [];
   xp = 0;
+  /** All-time peak XP — used for unlock gating so gains are never lost. */
+  highestXpEver = 0;
 
   readonly globalUpgradeFlavor = GLOBAL_UPGRADE_FLAVOR;
   readonly jackFlavor          = JACK_FLAVOR;
@@ -59,11 +61,12 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.sub.add(
-      combineLatest([this.charService.characters$, this.wallet.state$])
-        .subscribe(([chars, state]) => {
+      combineLatest([this.charService.characters$, this.wallet.state$, this.wallet.highestXpEver$])
+        .subscribe(([chars, state, highestXp]) => {
           this.xp = Math.floor(state['xp']?.amount ?? 0);
+          this.highestXpEver = highestXp;
           this.available = chars.filter(
-            c => !c.unlocked && this.xp >= c.xpRequirement
+            c => !c.unlocked && this.highestXpEver >= c.xpRequirement
           );
         })
     );
