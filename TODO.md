@@ -80,7 +80,7 @@
 - Synaptical Potion base
   - New "Formula" system for the apothecary minigame with different "sweet spots"
   - Multiple, randomly placed sweet spots instead of one central one. The green zone will remain 
-- Should you be able to fail the minigam by clicking wrong too much? 
+- Should you be able to fail the minigame by clicking wrong too much? 
 
 ### Culinarian
 
@@ -91,6 +91,7 @@
 - In game Changelog? 
 - Clicking "All" on the filter while already active should toggle "All" off and turn on each individual option individually. 
 - Rename Success to something else cause it doesnt always reflect success, default does sometimes as well, it should be more like 'uncommon'
+- Statistics culinarian minigame histogram or count %s 
 
 ## Balancing
 - Add some more one off big upgrades shortly after minigame unlocks?
