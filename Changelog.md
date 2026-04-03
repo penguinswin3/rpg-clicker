@@ -1,13 +1,22 @@
 # Version Alpha 1.2.0
 
 ## Added
-
+- Statistics tracing menu for all sorts of stats! 
+- Two new passive resource generation upgrades for Herbs and Meat
+- A new automatic potion making upgrade for the apothecary. It can be toggled on and off
+- A minimum hit upgrade for th fighter 
 ## Removed
 
 ## Changed
+- More Herbs and Better Tracking are stronger
+- Short Rest is a tad more expensive
+- Toggling a Vault or Activity Log filter while on ALL will select all options individually for ease of exclusion
+- Failing the apothecary minigame will now reduce the percent chance of a successful dilution
+- The dilution percent display color reflects this 
 
 ## Bugfixes
-
+- Cleaned up the missing row on the ranger character stats box 
+- Cat's Eye potion is now factored in to the per seconds 
 ----------------------------
 
 # Version Alpha 1.1.1

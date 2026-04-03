@@ -65,6 +65,17 @@ export class ActivityLogComponent implements OnInit, OnDestroy, AfterViewChecked
     this.shouldScroll = true;
   }
 
+  /** If All is already active, enable every individual filter and disable All.
+   *  Otherwise, clear individual filters to re-enable All. */
+  toggleAllFilters(): void {
+    if (this.allActive) {
+      this.logService.setActiveFilters(new Set(this.filters.map(f => f.value)));
+    } else {
+      this.logService.clearFilters();
+    }
+    this.shouldScroll = true;
+  }
+
   ngOnInit(): void {
     this.sub.add(this.logService.messages$.subscribe(msgs => {
       this.messages = msgs;

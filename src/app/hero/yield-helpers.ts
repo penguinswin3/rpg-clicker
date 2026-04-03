@@ -41,7 +41,7 @@ export function calcFighterAttackPower(sharperSwordsLevel: number): number {
 /** Current beast-find percentage (capped at RANGER_BEAST_CHANCE_CAP). */
 export function calcBeastFindChance(betterTrackingLevel: number): number {
   return clamp(
-    YIELDS.RANGER_BASE_BEAST_CHANCE + betterTrackingLevel,
+    YIELDS.RANGER_BASE_BEAST_CHANCE + betterTrackingLevel * 3,
     0,
     YIELDS.RANGER_BEAST_CHANCE_CAP,
   );
@@ -49,11 +49,13 @@ export function calcBeastFindChance(betterTrackingLevel: number): number {
 
 /**
  * Compute actual herb yield for a single forage action.
+ * Each More Herbs level adds 3% doubling chance.
  * Rolls the doubling chance and returns the final herb count.
  */
 export function computeHerbYield(moreHerbsLevel: number): number {
-  const guaranteed = Math.floor(moreHerbsLevel / 100);
-  const remainder  = moreHerbsLevel % 100;
+  const totalPct   = moreHerbsLevel * 3;
+  const guaranteed = Math.floor(totalPct / 100);
+  const remainder  = totalPct % 100;
   const extra      = rollChance(remainder) ? 1 : 0;
   return YIELDS.RANGER_BASE_HERBS * Math.pow(2, guaranteed + extra);
 }
@@ -64,8 +66,9 @@ export function computeHerbYield(moreHerbsLevel: number): number {
  * Used for per-second rate display, not for actual rolls.
  */
 export function expectedHerbPerRangerClick(moreHerbsLevel: number): number {
-  const guaranteed = Math.floor(moreHerbsLevel / 100);
-  const remainder  = moreHerbsLevel % 100;
+  const totalPct   = moreHerbsLevel * 3;
+  const guaranteed = Math.floor(totalPct / 100);
+  const remainder  = totalPct % 100;
   return YIELDS.RANGER_BASE_HERBS * Math.pow(2, guaranteed) * (1 + remainder / 100);
 }
 
@@ -76,11 +79,12 @@ export function computeMeatYield(biggerGameLevel: number): number {
 
 /** Display string for herb doubling — e.g. "3× + 25%". */
 export function herbDoublingDisplay(moreHerbsLevel: number): string {
-  const guaranteed = Math.floor(moreHerbsLevel / 100);
-  const remainder  = moreHerbsLevel % 100;
+  const totalPct   = moreHerbsLevel * 3;
+  const guaranteed = Math.floor(totalPct / 100);
+  const remainder  = totalPct % 100;
   if (guaranteed === 0) return `${remainder}%`;
-  if (remainder  === 0) return `${guaranteed}× (guaranteed)`;
-  return `${guaranteed}× + ${remainder}% again`;
+  if (remainder  === 0) return `${guaranteed}×`;
+  return `${guaranteed}× + ${remainder}%`;
 }
 
 // ── Apothecary ──────────────────────────────────────────────

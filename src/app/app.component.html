@@ -7,6 +7,7 @@
     [potionChuggingLevel]="upgrades.level('POTION_CHUGGING')"
     [strongerKoboldsLevel]="upgrades.level('STRONGER_KOBOLDS')"
     [firstStrikeLevel]="upgrades.level('FIRST_STRIKE')"
+    [slowBladeLevel]="upgrades.level('SLOW_BLADE')"
     [shortRestLevel]="upgrades.level('SHORT_REST')"
     [shortRestEnabled]="shortRestEnabled"
     (shortRestEnabledChange)="shortRestEnabled = $event"
@@ -130,10 +131,16 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           </button>
           <div class="hero-subzone">
             <button class="wholesale-toggle-btn"
-                    [style.visibility]="activeCharacterId === 'culinarian' && upgrades.level('WHOLESALE_SPICES') >= 1 ? 'visible' : 'hidden'"
+                    *ngIf="activeCharacterId === 'culinarian' && upgrades.level('WHOLESALE_SPICES') >= 1"
                     [class.wt-on]="wholesaleSpicesEnabled"
                     (click)="toggleWholesaleSpices()">
               {{ wholesaleSpicesEnabled ? '[ Wholesale Spices: ON  ]' : '[ Wholesale Spices: OFF ]' }}
+            </button>
+            <button class="wholesale-toggle-btn"
+                    *ngIf="activeCharacterId === 'apothecary' && upgrades.level('FERMENTATION_VATS') >= 1"
+                    [class.vat-on]="fermentationVatsEnabled"
+                    (click)="toggleFermentationVats()">
+              {{ fermentationVatsEnabled ? '[ Fermentation Vats: ON  ]' : '[ Fermentation Vats: OFF ]' }}
             </button>
             <div class="jack-error"
                  [style.visibility]="activeCharJackStarved ? 'visible' : 'hidden'">

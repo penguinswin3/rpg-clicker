@@ -95,12 +95,13 @@ export class AppComponent implements OnInit, OnDestroy {
   fighterCombatState: FighterCombatState | null = null;
 
   // ── UI toggles ─────────────────────────────────────────────────
-  shortRestEnabled       = false;
-  dilutionEnabled        = false;
-  hideMaxedUpgrades      = false;
-  hideMinigameUpgrades   = false;
-  blandMode              = false;
-  wholesaleSpicesEnabled = true;
+  shortRestEnabled        = false;
+  dilutionEnabled         = false;
+  hideMaxedUpgrades       = false;
+  hideMinigameUpgrades    = false;
+  blandMode               = false;
+  wholesaleSpicesEnabled  = true;
+  fermentationVatsEnabled = false;
 
   // ── Relic popup state ─────────────────────────────────────────
   /** ID of the relic upgrade whose popup is currently shown, or null. */
@@ -224,6 +225,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresBubblingBrew  && this.upgrades.level('BUBBLING_BREW') < 1)     return false;
     if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1)  return false;
     if (gates.xpMin != null && this.highestXp < gates.xpMin) return false;
+    if (gates.requiresSharperSwordsMin != null && this.upgrades.level('SHARPER_SWORDS') < gates.requiresSharperSwordsMin) return false;
     return true;
   }
 
@@ -323,6 +325,8 @@ export class AppComponent implements OnInit, OnDestroy {
     // Reactively update per-second display rates whenever any upgrade changes
     this.upgrades.changed$.subscribe(id => {
       this.updateAllPerSecond();
+      // Update SLOW_BLADE's dynamic max whenever Sharper Swords level changes
+      if (id === 'SHARPER_SWORDS') this.updateSlowBladeMax();
       // Track relic purchase milestones
       if (id.startsWith('RELIC_') && this.upgrades.level(id) >= 1) {
         const flavorName = (UPGRADE_FLAVOR as any)[id]?.name ?? id;
@@ -341,6 +345,32 @@ export class AppComponent implements OnInit, OnDestroy {
         this.statsService.trackCurrencyGain('gold', autoGold);
       }
     }, 1000);
+
+    // Passive ranger income: Baited Traps (beast) + Hovel Garden (herb) — every 5 seconds
+    setInterval(() => {
+      const beastYield = this.upgrades.level('BAITED_TRAPS');
+      if (beastYield > 0) {
+        this.wallet.add('beast', beastYield);
+        this.statsService.trackCurrencyGain('beast', beastYield);
+      }
+      const herbYield = this.upgrades.level('HOVEL_GARDEN');
+      if (herbYield > 0) {
+        this.wallet.add('herb', herbYield);
+        this.statsService.trackCurrencyGain('herb', herbYield);
+      }
+    }, 5000);
+
+    // Fermentation Vats: convert herbs → potions every 10 seconds (when enabled)
+    setInterval(() => {
+      const vatLevel = this.upgrades.level('FERMENTATION_VATS');
+      if (vatLevel > 0 && this.fermentationVatsEnabled) {
+        if (this.wallet.canAfford('herb', vatLevel)) {
+          this.wallet.remove('herb', vatLevel);
+          this.wallet.add('potion', vatLevel);
+          this.statsService.trackCurrencyGain('potion', vatLevel);
+        }
+      }
+    }, 10000);
 
     // Jack auto-clicks: each allocated Jack fires once per second
     setInterval(() => {
@@ -383,44 +413,55 @@ export class AppComponent implements OnInit, OnDestroy {
 
   getUpgradeState(): UpgradeState {
     return {
-      upgradeLevels:          this.upgrades.snapshot(),
-      selectedKoboldLevel:    this.selectedKoboldLevel,
-      minigameUnlocked:       this.minigameUnlocked,
-      jacksOwned:             this.jacksOwned,
-      jacksAllocations:       { ...this.jacksAllocations },
-      fighterCombatState:     this.fighterCombatState ?? undefined,
-      shortRestEnabled:       this.shortRestEnabled,
-      wholesaleSpicesEnabled: this.wholesaleSpicesEnabled,
-      dilutionEnabled:        this.dilutionEnabled,
+      upgradeLevels:           this.upgrades.snapshot(),
+      selectedKoboldLevel:     this.selectedKoboldLevel,
+      minigameUnlocked:        this.minigameUnlocked,
+      jacksOwned:              this.jacksOwned,
+      jacksAllocations:        { ...this.jacksAllocations },
+      fighterCombatState:      this.fighterCombatState ?? undefined,
+      shortRestEnabled:        this.shortRestEnabled,
+      wholesaleSpicesEnabled:  this.wholesaleSpicesEnabled,
+      dilutionEnabled:         this.dilutionEnabled,
+      fermentationVatsEnabled: this.fermentationVatsEnabled,
     };
   }
 
   setUpgradeState(s: UpgradeState): void {
     this.upgrades.restore(s.upgradeLevels);
+    this.updateSlowBladeMax();
     this.selectedKoboldLevel = clamp(
       s.selectedKoboldLevel ?? 1,
       1,
       this.upgrades.level('STRONGER_KOBOLDS') + 1,
     );
-    this.minigameUnlocked       = s.minigameUnlocked       ?? false;
-    this.jacksOwned             = s.jacksOwned             ?? 0;
-    this.jacksAllocations       = s.jacksAllocations ? { ...s.jacksAllocations } : {};
-    this.fighterCombatState     = s.fighterCombatState     ?? null;
-    this.shortRestEnabled       = s.shortRestEnabled       ?? false;
-    this.wholesaleSpicesEnabled = s.wholesaleSpicesEnabled ?? true;
-    this.dilutionEnabled        = s.dilutionEnabled        ?? false;
+    this.minigameUnlocked        = s.minigameUnlocked        ?? false;
+    this.jacksOwned              = s.jacksOwned              ?? 0;
+    this.jacksAllocations        = s.jacksAllocations ? { ...s.jacksAllocations } : {};
+    this.fighterCombatState      = s.fighterCombatState      ?? null;
+    this.shortRestEnabled        = s.shortRestEnabled        ?? false;
+    this.wholesaleSpicesEnabled  = s.wholesaleSpicesEnabled  ?? true;
+    this.dilutionEnabled         = s.dilutionEnabled         ?? false;
+    this.fermentationVatsEnabled = s.fermentationVatsEnabled ?? false;
     this.updateAllPerSecond();
   }
 
   // ── Per-second display rates ───────────────────────────────────
 
+  /** Keep SLOW_BLADE's effective max in sync with Sharper Swords level.
+   *  Max = (sharperSwords + 1) - 5 = sharperSwords - 4 (minimum 0). */
+  private updateSlowBladeMax(): void {
+    const sharperSwords = this.upgrades.level('SHARPER_SWORDS');
+    this.upgrades.setMaxOverride('SLOW_BLADE', Math.max(0, sharperSwords - 4));
+  }
+
   private updateAllPerSecond(): void {
     const ctx = {
-      upgrades:               this.upgrades,
-      jacksAllocations:       this.jacksAllocations,
-      jackStarved:            this.jackStarved,
-      isThiefStunned:         this.isThiefStunned,
-      wholesaleSpicesEnabled: this.wholesaleSpicesEnabled,
+      upgrades:                this.upgrades,
+      jacksAllocations:        this.jacksAllocations,
+      jackStarved:             this.jackStarved,
+      isThiefStunned:          this.isThiefStunned,
+      wholesaleSpicesEnabled:  this.wholesaleSpicesEnabled,
+      fermentationVatsEnabled: this.fermentationVatsEnabled,
     };
     const rates = calculatePerSecondRates(ctx);
     this.wallet.setPerSecond('gold',    rates.gold);
@@ -441,6 +482,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   toggleWholesaleSpices(): void {
     this.wholesaleSpicesEnabled = !this.wholesaleSpicesEnabled;
+    this.updateAllPerSecond();
+  }
+
+  toggleFermentationVats(): void {
+    this.fermentationVatsEnabled = !this.fermentationVatsEnabled;
     this.updateAllPerSecond();
   }
 

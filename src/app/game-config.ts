@@ -35,6 +35,8 @@ export interface UpgradeGates {
   readonly requiresDossier?: boolean;
   /** Minimum XP required before the card is shown. */
   readonly xpMin?: number;
+  /** Hide until Sharper Swords has at least this many levels purchased. */
+  readonly requiresSharperSwordsMin?: number;
 }
 
 export interface CostDef {
@@ -160,9 +162,17 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'SHORT_REST', characterId: 'fighter', category: 'minigame', max: 1,
     gates: { requiresCulinarian: true },
     costs: [
-      { currency: 'gold',        base: 25_000, scale: 1.0 },
+      { currency: 'gold',        base: 75_000, scale: 1.0 },
       { currency: 'kobold-ear',  base: 250,    scale: 1.0 },
-      { currency: 'hearty-meal', base: 25,     scale: 1.0 },
+      { currency: 'hearty-meal', base: 30,     scale: 1.0 },
+    ] },
+  // Dynamic max: (SHARPER_SWORDS level + 1) - 5 = SHARPER_SWORDS - 4.
+  // The actual max is enforced via UpgradeService.setMaxOverride in app.component.
+  { id: 'SLOW_BLADE', characterId: 'fighter', category: 'minigame', max: 999,
+    gates: { requiresCulinarian: true, requiresSharperSwordsMin: 10 },
+    costs: [
+      { currency: 'gold',  base: 5_000, scale: 1.4 },
+      { currency: 'spice', base: 500,   scale: 1.4 },
     ] },
   { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: KOBOLD_VARIANTS.length - 1,
     gates: { xpMin: 3000 },
@@ -180,10 +190,20 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Ranger — standard ────────────────────────────────────────
-  { id: 'MORE_HERBS',      characterId: 'ranger', category: 'standard', max: 999,
+  { id: 'MORE_HERBS',      characterId: 'ranger', category: 'standard', max: 100,
     costs: [{ currency: 'gold', base: 15, scale: 1.2 }] },
-  { id: 'BETTER_TRACKING', characterId: 'ranger', category: 'standard', max: 999,
+  { id: 'BETTER_TRACKING', characterId: 'ranger', category: 'standard', max: 15,
     costs: [{ currency: 'gold', base: 30, scale: 1.3 }] },
+  { id: 'BAITED_TRAPS',    characterId: 'ranger', category: 'standard', max: 999,
+    costs: [
+      { currency: 'gold',  base: 200, scale: 1.4 },
+      { currency: 'beast', base: 50,  scale: 1.5 },
+    ] },
+  { id: 'HOVEL_GARDEN',    characterId: 'ranger', category: 'standard', max: 999,
+    costs: [
+      { currency: 'gold', base: 150, scale: 1.4 },
+      { currency: 'herb', base: 50,  scale: 1.5 },
+    ] },
   { id: 'BIGGER_GAME',     characterId: 'ranger', category: 'standard', max: 999,    // each level +1 max Raw Beast Meat from hero button
     costs: [{ currency: 'gold', base: 480, scale: 1.75 }] },
   { id: 'POTION_CATS_EYE', characterId: 'ranger', category: 'standard', max: 100,    // 100 levels × +1% = 100% chance to roll both herb and beast
@@ -216,6 +236,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'gold', base: 20, scale: 1.2 }] },
   { id: 'POTION_MARKETING', characterId: 'apothecary', category: 'standard', max: 999,
     costs: [{ currency: 'gold', base: 50, scale: 1.07 }] },
+  { id: 'FERMENTATION_VATS', characterId: 'apothecary', category: 'standard', max: 999,
+    costs: [
+      { currency: 'gold',   base: 500,  scale: 1.4 },
+      { currency: 'herb',   base: 100,  scale: 1.5 },
+      { currency: 'potion', base: 25,   scale: 1.4 },
+    ] },
 
   // ── Culinarian — standard ────────────────────────────────────
   { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 20, // +1 spice/click, +24g cost/click per level
@@ -419,6 +445,8 @@ export const APOTH_MG = {
   BIGGER_BUBBLES_ZONE_EXPANSION_PER_LEVEL: 2,
   /** The base success chance of getting a successful potion dilution, rolled independently */
   DILUTION_BASE_CHANCE: 70,
+  /** How many percentage points each miss deducts from the dilution success chance (when dilution is active) */
+  DILUTION_MISS_PENALTY: 10,
 } as const;
 
 // ── Ranger Minigame ───────────────────────────────────────────

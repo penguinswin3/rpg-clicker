@@ -41,16 +41,17 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   @Input()  dilutionEnabled = false;
   @Output() dilutionEnabledChange = new EventEmitter<boolean>();
 
+  /** Accumulated dilution success chance penalty from misses in the current brew session. */
+  dilutionMissPenalty = 0;
+
   onDilutionChange(val: boolean): void {
-    // Update the local field immediately so [ngModel] is never stale between the
-    // user's click and the parent passing the new @Input value back down.
     this.dilutionEnabled = val;
     this.dilutionEnabledChange.emit(val);
   }
 
-  /** Current dilution success chance (50% base plus 1% per Serial Dilution level). */
+  /** Current dilution success chance (base + Serial Dilution bonus − per-miss penalty). */
   get dilutionSuccessChance(): number {
-    return Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE + this.serialDilutionLevel);
+    return Math.max(0, Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE + this.serialDilutionLevel - this.dilutionMissPenalty));
   }
 
   /** Interpolated color from yellow (50%) to green (100%). */
@@ -58,7 +59,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     const pct = (this.dilutionSuccessChance - 50) / 50; // 0 at 50%, 1 at 100%
     const clamped = Math.max(0, Math.min(1, pct));
     // Interpolate hue from 60 (yellow) to 120 (green)
-    const hue = Math.round(60 + clamped * 60);
+    const hue = Math.round( clamped * 120);
     return `hsl(${hue}, 80%, 50%)`;
   }
 
@@ -146,14 +147,15 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     if (!this.canStart) return;
     this.wallet.remove('herb',   this.herbCost);
     this.wallet.remove('potion', this.potionCost);
-    this.potionActive = true;
-    this.hadMistake   = false;
-    this.quality      = 0;
-    this.barPos       = 0;
-    this.barDir       = 1;
-    this.lastTime     = undefined;
-    this.lastMsg      = MINIGAME_MSG.APOTHECARY.IDLE;
-    this.msgClass     = 'msg-neutral';
+    this.potionActive       = true;
+    this.hadMistake         = false;
+    this.quality            = 0;
+    this.dilutionMissPenalty = 0;
+    this.barPos             = 0;
+    this.barDir             = 1;
+    this.lastTime           = undefined;
+    this.lastMsg            = MINIGAME_MSG.APOTHECARY.IDLE;
+    this.msgClass           = 'msg-neutral';
     this.log.log(`Apothecary begins brewing. (−${this.herbCost} herbs, −${this.potionCost} potion base)`);
     this.startAnimation();
   }
@@ -174,6 +176,9 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     } else {
       this.quality    = Math.max(0, this.quality - 1);
       this.hadMistake = true;
+      if (this.dilutionEnabled) {
+        this.dilutionMissPenalty += APOTH_MG.DILUTION_MISS_PENALTY;
+      }
       this.lastMsg    = MINIGAME_MSG.APOTHECARY.MISS_ZONE(this.quality, this.maxQuality);
       this.msgClass   = 'msg-bad';
     }

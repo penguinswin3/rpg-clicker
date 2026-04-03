@@ -20,11 +20,12 @@ import {
 // ── Context ─────────────────────────────────────────────────
 
 export interface PerSecondContext {
-  upgrades:               UpgradeService;
-  jacksAllocations:       Record<string, number>;
-  jackStarved:            Record<string, boolean>;
-  isThiefStunned:         boolean;
-  wholesaleSpicesEnabled: boolean;
+  upgrades:                UpgradeService;
+  jacksAllocations:        Record<string, number>;
+  jackStarved:             Record<string, boolean>;
+  isThiefStunned:          boolean;
+  wholesaleSpicesEnabled:  boolean;
+  fermentationVatsEnabled: boolean;
 }
 
 // ── Result ──────────────────────────────────────────────────
@@ -75,19 +76,32 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const avgDossierYield    = calcExpectedDossierYield(u.level('POTION_OF_STICKY_FINGERS'));
   const ppGoldPerSecond    = effectiveThiefRate * avgDossierYield * u.level('PLENTIFUL_PLUNDERING');
 
+  // ── Cat's Eye factor ──────────────────────────────────────
+  // Cat's Eye procs at catsEyeLevel% chance, granting herbs AND a beast roll
+  // instead of the normal 50/50 split.  Expected herb/beast per click scales by
+  // 0.5 × (1 + catsEyeLevel/100).
+  const catsEyeLevel   = u.level('POTION_CATS_EYE');
+  const catsEyeFactor  = 0.5 * (1 + catsEyeLevel / 100);
+
   // ── Herb rates ────────────────────────────────────────────
-  const herbProduced = rangerJacks * 0.5 * expectedHerbPerRangerClick(u.level('MORE_HERBS'));
-  const herbConsumed = apothecaryJacks * (YIELDS.APOTHECARY_BREW_HERB_COST - herbSaveChance / 100);
+  const vatLevel       = ctx.fermentationVatsEnabled ? u.level('FERMENTATION_VATS') : 0;
+  const vatHerbDrain   = vatLevel * 0.1;   // 1 herb per level per 10s
+  const vatPotionGain  = vatLevel * 0.1;   // 1 potion per level per 10s
+  const herbProduced = rangerJacks * catsEyeFactor * expectedHerbPerRangerClick(u.level('MORE_HERBS'))
+    + u.level('HOVEL_GARDEN') * 0.2;
+  const herbConsumed = apothecaryJacks * (YIELDS.APOTHECARY_BREW_HERB_COST - herbSaveChance / 100)
+    + vatHerbDrain;
 
   // ── Beast rates ───────────────────────────────────────────
   const expectedMeatYield = (u.level('BIGGER_GAME') + 2) / 2;
+  const baitedTrapsRate   = u.level('BAITED_TRAPS') * 0.2;
 
   return {
     gold:    roundTo(autoGoldPerSec + apothecaryJacks * goldPerBrew + fighterJacks * goldPerClick - culinarianJacks * culGoldCost + ppGoldPerSecond, 2),
     xp:      roundTo(fighterJacks * xpPerBounty + rangerJacks + apothecaryJacks + culinarianJacks + effectiveThiefRate, 2),
     herb:    roundTo(herbProduced - herbConsumed, 2),
-    beast:   roundTo(rangerJacks * 0.5 * (beastChance / 100) * expectedMeatYield, 2),
-    potion:  roundTo(apothecaryJacks, 2),
+    beast:   roundTo(rangerJacks * catsEyeFactor * (beastChance / 100) * expectedMeatYield + baitedTrapsRate, 2),
+    potion:  roundTo(apothecaryJacks + vatPotionGain, 2),
     spice:   roundTo(culinarianJacks * spicePerClick, 2),
     dossier: roundTo(effectiveThiefRate * avgDossierYield, 2),
   };
@@ -124,12 +138,22 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const avgDossierYield    = calcExpectedDossierYield(u.level('POTION_OF_STICKY_FINGERS'));
   const ppGoldPerSecond    = effectiveThiefRate * avgDossierYield * u.level('PLENTIFUL_PLUNDERING');
 
+  // ── Cat's Eye factor ──────────────────────────────────────
+  const catsEyeLevel2  = u.level('POTION_CATS_EYE');
+  const catsEyeFactor2 = 0.5 * (1 + catsEyeLevel2 / 100);
+
   // ── Herb rates ────────────────────────────────────────────
-  const herbProduced = rangerJacks * 0.5 * expectedHerbPerRangerClick(u.level('MORE_HERBS'));
-  const herbConsumed = apothecaryJacks * (YIELDS.APOTHECARY_BREW_HERB_COST - herbSaveChance / 100);
+  const vatLevel2     = ctx.fermentationVatsEnabled ? u.level('FERMENTATION_VATS') : 0;
+  const vatHerbDrain  = vatLevel2 * 0.1;
+  const vatPotionGain = vatLevel2 * 0.1;
+  const herbProduced = rangerJacks * catsEyeFactor2 * expectedHerbPerRangerClick(u.level('MORE_HERBS'))
+    + u.level('HOVEL_GARDEN') * 0.2;
+  const herbConsumed = apothecaryJacks * (YIELDS.APOTHECARY_BREW_HERB_COST - herbSaveChance / 100)
+    + vatHerbDrain;
 
   // ── Beast rates ───────────────────────────────────────────
   const expectedMeatYield = (u.level('BIGGER_GAME') + 2) / 2;
+  const baitedTrapsRate   = u.level('BAITED_TRAPS') * 0.2;
 
   // ── Build breakdown ───────────────────────────────────────
   const bd: PerSecondBreakdown = {};
@@ -160,11 +184,12 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   if (herbConsumed > 0)                add('herb', 'Apothecary', roundTo(-herbConsumed, 2));
 
   // Beast
-  const beastRate = roundTo(rangerJacks * 0.5 * (beastChance / 100) * expectedMeatYield, 2);
+  const beastRate = roundTo(rangerJacks * catsEyeFactor2 * (beastChance / 100) * expectedMeatYield + baitedTrapsRate, 2);
   if (beastRate !== 0)                 add('beast', 'Ranger', beastRate);
 
   // Potion
-  if (apothecaryJacks > 0)             add('potion', 'Apothecary', roundTo(apothecaryJacks, 2));
+  if (apothecaryJacks > 0)            add('potion', 'Apothecary', roundTo(apothecaryJacks, 2));
+  if (vatPotionGain > 0)              add('potion', 'Fermentation Vats', roundTo(vatPotionGain, 2));
 
   // Spice
   if (culinarianJacks > 0)             add('spice', 'Culinarian', roundTo(culinarianJacks * spicePerClick, 2));

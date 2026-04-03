@@ -68,7 +68,7 @@ function buildFighterStats(ctx: HeroStatsContext): HeroStat[] {
     { label: HERO_STATS_FLAVOR.FIGHTER.PER_CLICK,  value: `${goldPerClick}` },
     { label: HERO_STATS_FLAVOR.FIGHTER.PER_SECOND, value: `${autoGoldPerSec}` },
     ...(ctx.minigameUnlocked
-      ? [{ label: HERO_STATS_FLAVOR.FIGHTER.DAMAGE_RANGE, value: `1-${1 + u.level('SHARPER_SWORDS')}` }]
+      ? [{ label: HERO_STATS_FLAVOR.FIGHTER.DAMAGE_RANGE, value: `${1 + u.level('SLOW_BLADE')}-${1 + u.level('SHARPER_SWORDS')}` }]
       : []),
     ...(u.level('INSIGHTFUL_CONTRACTS') > 0
       ? [{ label: HERO_STATS_FLAVOR.FIGHTER.XP_PER_CLICK, value: `${xpPerBounty}` }]

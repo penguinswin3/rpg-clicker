@@ -35,6 +35,8 @@ export class UpgradeService {
   private readonly log     = inject(ActivityLogService);
   private readonly defs    = new Map<string, UpgradeDef>(UPGRADE_DEFS.map(d => [d.id, d]));
   private readonly runtime = new Map<string, UpgradeRuntime>();
+  /** Per-upgrade max overrides — used for upgrades with dynamically capped levels. */
+  private readonly maxOverrides = new Map<string, number>();
 
   /** Emits the upgrade ID whenever a level changes. */
   readonly changed$ = new Subject<string>();
@@ -54,7 +56,13 @@ export class UpgradeService {
   }
 
   maxLevel(id: string): number {
+    if (this.maxOverrides.has(id)) return this.maxOverrides.get(id)!;
     return this.defs.get(id)?.max ?? 0;
+  }
+
+  /** Override the effective max level for an upgrade (e.g. dynamically capped upgrades). */
+  setMaxOverride(id: string, value: number): void {
+    this.maxOverrides.set(id, Math.max(0, value));
   }
 
   category(id: string): UpgradeCategory | undefined {
@@ -84,8 +92,7 @@ export class UpgradeService {
   }
 
   isMaxed(id: string): boolean {
-    const def = this.defs.get(id);
-    return !def || this.level(id) >= def.max;
+    return this.level(id) >= this.maxLevel(id);
   }
 
   canAfford(id: string): boolean {
@@ -119,7 +126,7 @@ export class UpgradeService {
   buy(id: string): boolean {
     const def = this.defs.get(id);
     const rt  = this.runtime.get(id);
-    if (!def || !rt || rt.level >= def.max) return false;
+    if (!def || !rt || rt.level >= this.maxLevel(id)) return false;
 
     const activeCosts = def.costs.filter(c => this.isCostActive(c, rt.level));
 
@@ -188,9 +195,10 @@ export class UpgradeService {
     for (const def of this.defs.values()) {
       const rt = this.runtime.get(def.id);
       if (!rt) continue;
-      rt.level = def.max;
+      const effectiveMax = this.maxLevel(def.id);
+      rt.level = effectiveMax;
       for (const c of def.costs) {
-        rt.currentCosts[c.currency] = scaledCost(c.base, c.scale, def.max);
+        rt.currentCosts[c.currency] = scaledCost(c.base, c.scale, effectiveMax);
       }
       this.changed$.next(def.id);
     }
@@ -205,7 +213,7 @@ export class UpgradeService {
     for (const def of this.defs.values()) {
       const rt = this.runtime.get(def.id);
       if (!rt) continue;
-      const targetLevel = Math.floor(def.max / 2);
+      const targetLevel = Math.floor(this.maxLevel(def.id) / 2);
       rt.level = targetLevel;
       for (const c of def.costs) {
         rt.currentCosts[c.currency] = scaledCost(c.base, c.scale, targetLevel);

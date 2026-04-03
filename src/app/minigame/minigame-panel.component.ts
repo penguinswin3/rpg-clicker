@@ -37,6 +37,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() strongerKoboldsLevel = 0;
   /** First Strike level — forwarded to the fighter minigame. */
   @Input() firstStrikeLevel = 0;
+  /** Slow Blade level — forwarded to the fighter minigame. */
+  @Input() slowBladeLevel = 0;
   /** Short Rest level — forwarded to the fighter minigame. */
   @Input() shortRestLevel = 0;
   /** Whether Short Rest auto-heal is currently enabled — forwarded to the fighter minigame. */

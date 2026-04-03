@@ -19,11 +19,12 @@ export const CURRENCY_FLAVOR = {
   'kobold-tongue':       { name: 'Kobold Tongue',             symbol: 'γ',  color: '#c75050' },
   'kobold-hair':         { name: 'Kobold Hair',               symbol: 'Ҩ',  color: '#ac7c5a' },
   spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
-  'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#683a0c' },
-  dossier:               { name: 'Dossier',                   symbol: '⌸', color: '#c0cedc' },
-  treasure:              { name: 'Treasure',                  symbol: '⚱', color: '#989c3a' },
-  relic:                 { name: 'Relic',                     symbol: 'ᛝ', color: '#a700ff' },
-  'kobold-fang':         { name: 'Kobold Fang',               symbol: '৲', color: '#969790' },
+  'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨',  color: '#683a0c' },
+  dossier:               { name: 'Dossier',                   symbol: '⌸',  color: '#c0cedc' },
+  treasure:              { name: 'Treasure',                  symbol: '⚱',  color: '#989c3a' },
+  'kobold-fang':         { name: 'Kobold Fang',               symbol: '৲',  color: '#969790' },
+  relic:                 { name: 'Relic',                     symbol: 'ᛝ',  color: '#a700ff' },
+
 } as const;
 
 // ꔮ 𐓑  ᛝ ᚕ
@@ -48,12 +49,15 @@ export const UPGRADE_FLAVOR = {
   POTION_CHUGGING:      { name: 'Potion of Fortitude',       desc: '+1 HP per potion heal' },
   SHORT_REST:           { name: 'Short Rest',                desc: 'Auto-heal to full HP with potions after each victory at a reduced efficiency' },
   SHARPER_SWORDS:       { name: 'Sharper Swords',            desc: '+1 max hit in combat' },
+  SLOW_BLADE:           { name: 'The Slow Blade',            desc: '+1 minimum hit in combat' },
   STRONGER_KOBOLDS:     { name: 'Stronger Kobolds',          desc: 'They grow...' },
   FIRST_STRIKE:         { name: 'First Strike',              desc: 'The Fighter attacks before the enemy. Let the slaughter begin!' },
 
   // Ranger
-  MORE_HERBS:           { name: 'More Herbs',                desc: '+1% chance to double base herbs' },
-  BETTER_TRACKING:      { name: 'Better Tracking',           desc: '+1% beast hunt chance' },
+  MORE_HERBS:           { name: 'More Herbs',                desc: '+3% chance to double base herbs' },
+  BETTER_TRACKING:      { name: 'Better Tracking',           desc: '+3% beast hunt chance' },
+  BAITED_TRAPS:         { name: 'Baited Traps',              desc: '+1 Raw Beast Meat every 5 seconds per level' },
+  HOVEL_GARDEN:         { name: 'Hovel Garden',              desc: '+1 Herb every 5 seconds per level' },
   BOUNTIFUL_LANDS:      { name: 'Bountiful Lands',           desc: '+1 guaranteed prize node per level' },
   ABUNDANT_LANDS:       { name: 'Abundant Lands',            desc: 'Resource gain is multiplied by the number of successful finds' },
   FAIRY_HOSTAGE:        { name: 'Fairy Hostage',             desc: 'A pixie, if present, will call out to a friend for help...' },
@@ -61,8 +65,9 @@ export const UPGRADE_FLAVOR = {
   BIGGER_GAME:          { name: 'Bigger Game',               desc: '+1 max Raw Beast Meat per hero button press' },
 
   // Apothecary
-  POTION_TITRATION:     { name: 'Potion Titration',          desc: '+1% herb save chance on brew' },
-  POTION_MARKETING:     { name: 'Potion Marketing',          desc: '+1 gold every time you brew a potion base' },
+  POTION_TITRATION: { name: 'Potion Titration',           desc: '+1% chance to save herbs when brewing' },
+  POTION_MARKETING: { name: 'Potion Marketing',           desc: '+1 gold per potion brewed' },
+  FERMENTATION_VATS: { name: 'Fermentation Vats',         desc: 'Passively converts 1 herb into 1 potion base per level every 10 seconds (toggleable)' },
   POTION_GLIBNESS:      { name: 'Potion of Glibness',        desc: '-1% spice purchase cost per level' },
   BUBBLING_BREW:        { name: 'Bubbling Brew',             desc: 'Skilled brewing will award bonus progress' },
   BIGGER_BUBBLES:       { name: 'Bigger Bubbles',            desc: 'Increases the size of the Bubbling zone' },

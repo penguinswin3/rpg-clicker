@@ -80,7 +80,7 @@
       Dilution
     </label>
     <span class="dilution-info" *ngIf="dilutionEnabled" [style.color]="dilutionColor">
-      ({{ dilutionSuccessChance }}% success)
+      ({{ dilutionSuccessChance }}% success<ng-container *ngIf="dilutionMissPenalty > 0">, −{{ dilutionMissPenalty }}%</ng-container>)
     </span>
   </div>
 

@@ -561,6 +561,17 @@
       border-color: #f07b28;
     }
   }
+
+  &.vat-on {
+    color: #ba70cf;
+    border-color: #5a2d70;
+    background: #0d0014;
+
+    &:hover {
+      background: #160022;
+      border-color: #ba70cf;
+    }
+  }
 }
 
 // Shown beneath the hero button when the active character's Jacks can't complete their action.

@@ -55,6 +55,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   @Output() selectedKoboldLevelChange = new EventEmitter<number>();
   /** First Strike level — when ≥ 1, the fighter attacks before the enemy can counter on a killing blow. */
   @Input() firstStrikeLevel = 0;
+  /** Slow Blade level — each level adds +1 to the fighter's minimum hit. */
+  @Input() slowBladeLevel = 0;
   /** Previously-saved combat state to restore on init. */
   @Input() savedState: FighterCombatState | null = null;
   /** Emitted whenever combat state changes (HP, defeated, rest countdown). */
@@ -245,7 +247,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   attack(): void {
     if (this.actionsDisabled) return;
 
-    const dmg  = randInt(1, this.attackPower + 1);
+    const minHit = Math.min(1 + this.slowBladeLevel, this.attackPower + 1);
+    const dmg  = randInt(minHit, this.attackPower + 1);
     const eDmg = this.rollEnemyDamage();   // always rolled — counter fires even on a killing blow
 
     this.enemy.hp  = Math.max(0, this.enemy.hp - dmg);
@@ -493,7 +496,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
    * (the next spawn also gets a First Strike hit).
    */
   private applyFirstStrike(): void {
-    const dmg = randInt(1, this.attackPower + 1);
+    const minHit = Math.min(1 + this.slowBladeLevel, this.attackPower + 1);
+    const dmg = randInt(minHit, this.attackPower + 1);
     this.enemy.hp = Math.max(0, this.enemy.hp - dmg);
 
     if (this.enemy.hp <= 0) {

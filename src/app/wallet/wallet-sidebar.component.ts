@@ -145,6 +145,16 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
     this.walletService.setCharacterFilters(new Set());
   }
 
+  /** If All is already active, enable every individual character filter and disable All.
+   *  Otherwise, clear individual filters to re-enable All. */
+  toggleAllCharacterFilters(): void {
+    if (this.allFiltersActive) {
+      this.walletService.setCharacterFilters(new Set(this.characterFilters.map(f => f.key)));
+    } else {
+      this.walletService.setCharacterFilters(new Set());
+    }
+  }
+
   // ── Helpers ───────────────────────────────
 
   /** Safe accessor — never returns undefined. */

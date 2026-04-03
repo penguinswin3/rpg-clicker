@@ -34,6 +34,7 @@ export interface UpgradeState {
   shortRestEnabled?: boolean;
   wholesaleSpicesEnabled?: boolean;
   dilutionEnabled?: boolean;
+  fermentationVatsEnabled?: boolean;
 }
 
 // ── Legacy save migration ─────────────────────────────────────
