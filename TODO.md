@@ -81,7 +81,7 @@
 ## UI Tweaks
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
 - Hovering over or clicking on a per second should show you all fo the factors adding or subtracting to that value 
-- ? Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have?
+- Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have?
 - In game Changelog? 
 
 ## Balancing
@@ -102,5 +102,5 @@
   - Make sure the logs use the symbols not the names 
   - Make it so default info logs are ignored if filtered out. Other messages should persist 
 - Fighter minigame combat log is a mess lmao 
-- Extract monster info into the game config 
+
 

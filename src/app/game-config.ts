@@ -390,7 +390,7 @@ export const FIGHTER_MG = {
   /** Extra gold min reward per kobold level above 1 */
   KOBOLD_GOLD_MIN_PER_LEVEL:  3,
   /** Extra gold max reward per kobold level above 1 */
-  KOBOLD_GOLD_MAX_PER_LEVEL:  5,
+  KOBOLD_GOLD_MAX_PER_LEVEL:  9,
   /** Extra XP reward per kobold level above 1 */
   KOBOLD_XP_PER_LEVEL:        2,
   /** Extra Kobold Ear reward per kobold level above 1 */

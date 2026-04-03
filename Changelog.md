@@ -4,6 +4,7 @@
 - Relic Upgrades
 - Start timestamp to save games for metadata tracking purposes
 - Currency Source tooltips by 
+- Dev button secrets
 
 ## Removed
 - Dossiers/s from the thief character stats, it's only in the currency menu now 
@@ -11,7 +12,8 @@
 ## Changed
 - Changed the color of upgrades a little
 - XP threshold unlocks will remember that they were unlocked 
-
+- Kobolds drop a tad more gold 
+- If INFO level logs are filtered out, they won't be generated at all and will not display in the log, and will therefore not count against the max log memory limit
 
 ## Bugfixes
 - Sidebar per seconds will use the correctly formatted number system
