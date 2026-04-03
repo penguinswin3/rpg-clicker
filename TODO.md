@@ -79,13 +79,10 @@
 
 
 ## UI Tweaks
-- Once a xp threshold is passed, anything unlocked by that threshold should remain, and the threshold should not be tracked again in the currency menu
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
 - Hovering over or clicking on a per second should show you all fo the factors adding or subtracting to that value 
 - ? Should the "1.5k" type displays always floor so it never rounds up and misrepresents how much currency you actually have?
 - In game Changelog? 
-- Add an "effective price per spice" display in the character stats menu 
-- Gold and Exp can be "pinned" to the top of the currency menu 
 
 ## Balancing
 - Add some more one off big upgrades shortly after minigame unlocks?
@@ -93,10 +90,11 @@
   - Or some could just be more Chunky and give discrete values, like Bountiful Lands
     - Bubbling Brew adds a new randomly placed bonus area, up to 5 at max level
 - Bigger game is kinda whatever and not super interesting
+- Oh my god I never added passive generators to anyone other than the fighter lmfao its all been jacks only lmfao 
+  - Ranger should have a herb garden
+  - apothecary should have fermentation vats
 
 ## Bug Fixes
-- 200% herb save isn't saving 2 herbs
-
 
 
 ## Code Refactors
@@ -104,6 +102,5 @@
   - Make sure the logs use the symbols not the names 
   - Make it so default info logs are ignored if filtered out. Other messages should persist 
 - Fighter minigame combat log is a mess lmao 
-- Add a "Start Time" in the save file upon first navigating to the page, only on fresh saves
 - Extract monster info into the game config 
 

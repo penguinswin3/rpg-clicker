@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { WalletService, Currency, CurrencyEntry, WalletState } from './wallet.service';
+import { WalletService, Currency, CurrencyEntry, WalletState, PerSecondBreakdown } from './wallet.service';
 import { CharacterService, Character } from '../character/character.service';
 import { XP_THRESHOLDS } from '../game-config';
 import { fmtNumber } from '../utils/mathUtils';
@@ -25,6 +25,10 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
   manualUnlockIds = new Set<string>();
   /** All-time peak XP, used for progress bar and threshold checks. */
   highestXpEver = 0;
+  /** Per-currency, per-source breakdown of per-second contributions (for tooltips). */
+  breakdown: PerSecondBreakdown = {};
+  /** Currency ID currently hovered (shows tooltip). null = none. */
+  hoveredCurrencyId: string | null = null;
 
   /** Empty = show all. Keys are character IDs or the sentinel 'global'. */
   activeCharacterFilters = new Set<string>();
@@ -118,6 +122,7 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
     );
     this.sub.add(this.walletService.collapsed$.subscribe(v => (this.collapsed = v)));
     this.sub.add(this.walletService.characterFilters$.subscribe(f => (this.activeCharacterFilters = f)));
+    this.sub.add(this.walletService.perSecondBreakdown$.subscribe(b => (this.breakdown = b)));
   }
 
   ngOnDestroy(): void {
@@ -169,5 +174,44 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
         : abs.toFixed(2).replace(/\.?0+$/, '');
     }
     return `${sign}${display}/s`;
+  }
+
+  // ── Tooltip (per-second breakdown) ────────
+
+  /** Returns breakdown entries for a currency, sorted by absolute magnitude. */
+  getBreakdownEntries(currencyId: string): { source: string; rate: number; color: string }[] {
+    const sources = this.breakdown[currencyId];
+    if (!sources) return [];
+    return Object.entries(sources)
+      .filter(([, v]) => v !== 0)
+      .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+      .map(([source, rate]) => ({
+        source,
+        rate,
+        color: this.getSourceColor(source),
+      }));
+  }
+
+  /** Whether a tooltip should be shown for the given currency. */
+  hasBreakdown(currencyId: string): boolean {
+    const sources = this.breakdown[currencyId];
+    return !!sources && Object.keys(sources).length > 0;
+  }
+
+  showTooltip(currencyId: string): void {
+    this.hoveredCurrencyId = currencyId;
+  }
+
+  hideTooltip(): void {
+    this.hoveredCurrencyId = null;
+  }
+
+  /** Resolve a source label to the matching character color, or a neutral grey for "Passive". */
+  private getSourceColor(source: string): string {
+    if (source === 'Passive') return '#888';
+    const char = this.unlockedCharacters.find(
+      c => c.name.toLowerCase() === source.toLowerCase()
+    );
+    return char?.color ?? '#aaa';
   }
 }

@@ -20,10 +20,10 @@ import { fmtNumber, clamp } from './utils/mathUtils';
 import { calcAutoGoldPerSecond, calcBeastFindChance, calcCulinarianGoldCost } from './hero/yield-helpers';
 import { buildHeroStats, getQuestBtnLabel } from './hero/hero-stats';
 import { dispatchHeroClick, performJackAutoClick, HeroActionContext, JackAutoClickContext } from './hero/hero-actions';
-import { calculatePerSecondRates } from './hero/per-second-calculator';
+import { calculatePerSecondRates, calculatePerSecondBreakdown } from './hero/per-second-calculator';
 import {
   calculateJackCosts, isJacksVisible, getJacksToPurchase,
-  canAffordJackCosts, getJacksPoolFree,
+  canAffordJackCosts, getJacksPoolFree, getJacksMax,
   isActiveCharJackStarved, getJackStarvedMessage, JackCostEntry,
 } from './hero/jack-calculator';
 
@@ -387,13 +387,14 @@ export class AppComponent implements OnInit, OnDestroy {
   // ── Per-second display rates ───────────────────────────────────
 
   private updateAllPerSecond(): void {
-    const rates = calculatePerSecondRates({
+    const ctx = {
       upgrades:               this.upgrades,
       jacksAllocations:       this.jacksAllocations,
       jackStarved:            this.jackStarved,
       isThiefStunned:         this.isThiefStunned,
       wholesaleSpicesEnabled: this.wholesaleSpicesEnabled,
-    });
+    };
+    const rates = calculatePerSecondRates(ctx);
     this.wallet.setPerSecond('gold',    rates.gold);
     this.wallet.setPerSecond('xp',      rates.xp);
     this.wallet.setPerSecond('herb',    rates.herb);
@@ -401,6 +402,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.wallet.setPerSecond('potion',  rates.potion);
     this.wallet.setPerSecond('spice',   rates.spice);
     this.wallet.setPerSecond('dossier', rates.dossier);
+    this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
   }
 
   // ── Hero click actions ─────────────────────────────────────────
@@ -568,6 +570,28 @@ export class AppComponent implements OnInit, OnDestroy {
     this.saveService.deleteSave();
     document.body.classList.add('screen-shake');
     setTimeout(() => window.location.reload(), 800);
+  }
+
+  devUnlockAll(): void {
+    // Unlock all characters
+    for (const char of this.charService.getCharacters()) {
+      if (!char.unlocked) this.charService.unlock(char.id);
+    }
+
+    // Unlock all manually-gated currencies
+    for (const currency of this.wallet.currencies) {
+      if (currency.manualUnlock) this.wallet.unlockCurrency(currency.id);
+    }
+
+    // Unlock the minigame system
+    this.minigameUnlocked = true;
+
+    // Max out all jacks
+    this.jacksOwned = getJacksMax();
+
+    this.updateAllPerSecond();
+
+    this.log.log('[DEV] Everything unlocked.', 'warn');
   }
 
   // ── Private context builders ───────────────────────────────────

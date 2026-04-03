@@ -74,6 +74,22 @@ export function rollChance(percent: number): boolean {
 }
 
 /**
+ * Given a cumulative percentage chance (which may exceed 100 %),
+ * return how many "saves" succeed.
+ * Every full 100 % guarantees one save; the leftover fraction is rolled.
+ *   rollMultiChance(0)   → 0
+ *   rollMultiChance(50)  → 0 or 1
+ *   rollMultiChance(150) → 1 (guaranteed) + 0 or 1 (50 % roll) = 1 or 2
+ *   rollMultiChance(400) → 4 (guaranteed)
+ */
+export function rollMultiChance(percent: number): number {
+  if (percent <= 0) return 0;
+  const guaranteed = Math.floor(percent / 100);
+  const remainder  = percent % 100;
+  return guaranteed + (rollChance(remainder) ? 1 : 0);
+}
+
+/**
  * Convert a value/max pair to a percentage in [0, 100], clamped.
  * Returns 0 when max ≤ 0 to avoid division by zero.
  * Useful for progress bars, HP bars, quality meters, etc.

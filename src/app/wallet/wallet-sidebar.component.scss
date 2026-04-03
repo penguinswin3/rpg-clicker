@@ -194,6 +194,46 @@ $muted: #555;
   &.inactive { color: #2a2a2a; }
 }
 
+// ── Per-second breakdown tooltip ──────────
+
+.rate-hover {
+  position: relative;
+  cursor: default;
+}
+
+.rate-tooltip {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 100;
+  margin-top: 4px;
+  padding: 5px 8px;
+  background: #111;
+  border: 1px solid #333;
+  white-space: nowrap;
+  font-size: 10px;
+  pointer-events: none;
+  min-width: 120px;
+}
+
+.tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  line-height: 1.6;
+}
+
+.tooltip-source {
+  font-weight: bold;
+}
+
+.tooltip-value {
+  color: #0f0;
+  text-align: right;
+
+  &.negative { color: #ff5555; }
+}
+
 // ── Collapsed icons ───────────────────────
 
 .currency-compact-list {

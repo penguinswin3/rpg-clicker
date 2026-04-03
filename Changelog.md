@@ -3,8 +3,10 @@
 ## Added
 - Relic Upgrades
 - Start timestamp to save games for metadata tracking purposes
+- Currency Source tooltips by 
 
 ## Removed
+- Dossiers/s from the thief character stats, it's only in the currency menu now 
 
 ## Changed
 - Changed the color of upgrades a little
@@ -14,6 +16,7 @@
 ## Bugfixes
 - Sidebar per seconds will use the correctly formatted number system
 - Fixed Ancient Cookbook unlock requirement not registering correctly 
+- Having over a 100% herb save chance will allow you to save more than 1 herb, as intended
 
 ----------------------------
 

@@ -151,9 +151,6 @@ function buildThiefStats(ctx: HeroStatsContext): HeroStat[] {
   if (sf > 0) {
     stats.push({ label: HERO_STATS_FLAVOR.THIEF.DOSSIER_YIELD, value: `1 - ${1 + sf}` });
   }
-  if (thiefJacks > 0) {
-    stats.push({ label: HERO_STATS_FLAVOR.THIEF.DOSSIERS_PER_S, value: `${isExact ? '' : '~'}${expectedPerSec}` });
-  }
   if (relicUnlocked) {
     stats.push({ label: HERO_STATS_FLAVOR.THIEF.RELIC_CHANCE, value: `${relicChance}%` });
   }

@@ -12,7 +12,7 @@ import { ActivityLogService } from '../activity-log/activity-log.service';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { YIELDS } from '../game-config';
 import { CURRENCY_FLAVOR } from '../flavor-text';
-import { rollChance, randInt } from '../utils/mathUtils';
+import { rollChance, rollMultiChance, randInt } from '../utils/mathUtils';
 import {
   calcGoldPerClick, calcXpPerBounty,
   calcBeastFindChance, computeHerbYield, computeMeatYield,
@@ -133,9 +133,10 @@ function clickApothecary(ctx: HeroActionContext): void {
   ctx.wallet.add('xp', 1);
   if (goldPerBrew > 0) ctx.wallet.add('gold', goldPerBrew);
 
-  if (herbSaveChance > 0 && rollChance(herbSaveChance)) {
-    ctx.wallet.add('herb', 1);
-    ctx.log.log(`You brewed a potion and recovered a herb! (+1 XP)`, 'success');
+  const herbsSaved = rollMultiChance(herbSaveChance);
+  if (herbsSaved > 0) {
+    ctx.wallet.add('herb', herbsSaved);
+    ctx.log.log(`You brewed a potion and recovered ${herbsSaved} herb${herbsSaved > 1 ? 's' : ''}! (+1 XP)`, 'success');
   } else {
     ctx.log.log(`You brewed a potion from ${herbCost} herbs. (+1 XP)`);
   }
@@ -260,7 +261,8 @@ function jackApothecary(ctx: JackAutoClickContext): void {
   ctx.wallet.add('potion', 1);
   ctx.wallet.add('xp', 1);
   if (goldPerBrew > 0) ctx.wallet.add('gold', goldPerBrew);
-  if (herbSaveChance > 0 && rollChance(herbSaveChance)) ctx.wallet.add('herb', 1);
+  const herbsSaved = rollMultiChance(herbSaveChance);
+  if (herbsSaved > 0) ctx.wallet.add('herb', herbsSaved);
 }
 
 function jackCulinarian(ctx: JackAutoClickContext): void {

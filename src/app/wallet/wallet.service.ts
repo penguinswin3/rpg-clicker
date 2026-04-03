@@ -2,6 +2,12 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { CURRENCY_FLAVOR } from '../flavor-text';
 
+/**
+ * Per-currency breakdown of per-second contributions by source.
+ * Outer key = currency ID, inner key = source label, value = rate.
+ */
+export type PerSecondBreakdown = Record<string, Record<string, number>>;
+
 export interface Currency {
   id: string;
   name: string;
@@ -62,6 +68,11 @@ export class WalletService {
   readonly highestXpEver$ = this.highestXpEverSource.asObservable();
   get highestXpEver(): number { return this.highestXpEverSource.getValue(); }
 
+  /** Per-currency, per-source breakdown of per-second contributions (for tooltips). */
+  private readonly breakdownSource = new BehaviorSubject<PerSecondBreakdown>({});
+  readonly perSecondBreakdown$ = this.breakdownSource.asObservable();
+  get perSecondBreakdown(): PerSecondBreakdown { return this.breakdownSource.getValue(); }
+
   /** Tracks currencies whose `manualUnlock` gate has been opened. */
   private readonly manualUnlocksSource = new BehaviorSubject<Set<string>>(new Set<string>());
   readonly manualUnlocks$ = this.manualUnlocksSource.asObservable();
@@ -113,6 +124,11 @@ export class WalletService {
   /** Set the passive generation rate for `currencyId` (used for display only). */
   setPerSecond(currencyId: string, rate: number): void {
     this._patch(currencyId, e => ({ ...e, perSecond: rate }));
+  }
+
+  /** Replace the entire per-second breakdown used for tooltips. */
+  setPerSecondBreakdown(breakdown: PerSecondBreakdown): void {
+    this.breakdownSource.next(breakdown);
   }
 
   /** Hard-set `currencyId` to an exact `amount` (clamped to ≥ 0). */

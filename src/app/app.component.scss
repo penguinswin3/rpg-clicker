@@ -445,6 +445,16 @@
   }
 }
 
+.dev-unlock-btn {
+  color: #ffd700;
+  border-color: #806000;
+
+  &:hover {
+    background: #ffd700;
+    color: #000;
+  }
+}
+
 .hero-btn {
   position: relative;
   overflow: hidden;
