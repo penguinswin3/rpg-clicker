@@ -10,6 +10,7 @@
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { UpgradeService } from '../upgrade/upgrade.service';
+import { StatisticsService } from '../statistics/statistics.service';
 import { YIELDS } from '../game-config';
 import { CURRENCY_FLAVOR } from '../flavor-text';
 import { rollChance, rollMultiChance, randInt } from '../utils/mathUtils';
@@ -28,6 +29,7 @@ export interface HeroActionContext {
   wallet:                 WalletService;
   log:                    ActivityLogService;
   upgrades:               UpgradeService;
+  stats:                  StatisticsService;
   wholesaleSpicesEnabled: boolean;
   /** Current thief stun state (needed by clickThief). */
   isThiefStunned:         boolean;
@@ -43,6 +45,7 @@ export interface HeroActionContext {
 export interface JackAutoClickContext {
   wallet:                 WalletService;
   upgrades:               UpgradeService;
+  stats:                  StatisticsService;
   wholesaleSpicesEnabled: boolean;
   /** Live check — may change after a thief jack triggers a stun. */
   isThiefStunned:         () => boolean;
@@ -58,6 +61,7 @@ export interface JackAutoClickContext {
 
 /** Route a hero-button click to the correct character handler. */
 export function dispatchHeroClick(charId: string, ctx: HeroActionContext): void {
+  ctx.stats.trackManualHeroPress(charId);
   switch (charId) {
     case 'fighter':    return clickFighter(ctx);
     case 'ranger':     return clickRanger(ctx);
@@ -74,12 +78,15 @@ function clickFighter(ctx: HeroActionContext): void {
   const xpPerBounty  = calcXpPerBounty(ctx.upgrades.level('INSIGHTFUL_CONTRACTS'));
   ctx.wallet.add('gold', goldPerClick);
   ctx.wallet.add('xp',   xpPerBounty);
+  ctx.stats.trackCurrencyGain('gold', goldPerClick);
+  ctx.stats.trackCurrencyGain('xp', xpPerBounty);
   ctx.log.log(`You ventured forth and found ${goldPerClick} gold. (+${xpPerBounty} XP)`);
 }
 
 function clickRanger(ctx: HeroActionContext): void {
   const u = ctx.upgrades;
   ctx.wallet.add('xp', 1);
+  ctx.stats.trackCurrencyGain('xp', 1);
 
   const moreHerbsLevel  = u.level('MORE_HERBS');
   const biggerGameLevel = u.level('BIGGER_GAME');
@@ -91,9 +98,11 @@ function clickRanger(ctx: HeroActionContext): void {
     const herbs    = computeHerbYield(moreHerbsLevel);
     const gotBeast = rollChance(beastChance);
     ctx.wallet.add('herb', herbs);
+    ctx.stats.trackCurrencyGain('herb', herbs);
     if (gotBeast) {
       const meat = computeMeatYield(biggerGameLevel);
       ctx.wallet.add('beast', meat);
+      ctx.stats.trackCurrencyGain('beast', meat);
       ctx.log.log(`Cat's Eye! You foraged ${herbs} herb(s) AND hunted a beast! (+${meat} meat, +1 XP)`, 'success');
     } else {
       ctx.log.log(`Cat's Eye! You foraged ${herbs} herb(s), but the beast escaped. (+1 XP)`, 'success');
@@ -103,12 +112,14 @@ function clickRanger(ctx: HeroActionContext): void {
     if (targetHerb) {
       const herbs = computeHerbYield(moreHerbsLevel);
       ctx.wallet.add('herb', herbs);
+      ctx.stats.trackCurrencyGain('herb', herbs);
       ctx.log.log(`You targeted herbs and foraged ${herbs} herb(s). (+1 XP)`);
     } else {
       const gotBeast = rollChance(beastChance);
       if (gotBeast) {
         const meat = computeMeatYield(biggerGameLevel);
         ctx.wallet.add('beast', meat);
+        ctx.stats.trackCurrencyGain('beast', meat);
         ctx.log.log(`You tracked a beast and claimed its meat. (+${meat} meat, +1 XP)`);
       } else {
         ctx.log.log(`You targeted a beast but it escaped. (+1 XP)`);
@@ -131,11 +142,17 @@ function clickApothecary(ctx: HeroActionContext): void {
   ctx.wallet.remove('herb', herbCost);
   ctx.wallet.add('potion', 1);
   ctx.wallet.add('xp', 1);
-  if (goldPerBrew > 0) ctx.wallet.add('gold', goldPerBrew);
+  ctx.stats.trackCurrencyGain('potion', 1);
+  ctx.stats.trackCurrencyGain('xp', 1);
+  if (goldPerBrew > 0) {
+    ctx.wallet.add('gold', goldPerBrew);
+    ctx.stats.trackCurrencyGain('gold', goldPerBrew);
+  }
 
   const herbsSaved = rollMultiChance(herbSaveChance);
   if (herbsSaved > 0) {
     ctx.wallet.add('herb', herbsSaved);
+    ctx.stats.trackCurrencyGain('herb', herbsSaved);
     ctx.log.log(`You brewed a potion and recovered ${herbsSaved} herb${herbsSaved > 1 ? 's' : ''}! (+1 XP)`, 'success');
   } else {
     ctx.log.log(`You brewed a potion from ${herbCost} herbs. (+1 XP)`);
@@ -155,6 +172,8 @@ function clickCulinarian(ctx: HeroActionContext): void {
   ctx.wallet.remove('gold', goldCost);
   ctx.wallet.add('spice', spiceYield);
   ctx.wallet.add('xp', 1);
+  ctx.stats.trackCurrencyGain('spice', spiceYield);
+  ctx.stats.trackCurrencyGain('xp', 1);
   ctx.log.log(`You sourced exotic spices. (−${goldCost}g, +${spiceYield}${CURRENCY_FLAVOR.spice.symbol}, +1 XP)`);
 }
 
@@ -170,12 +189,17 @@ function clickThief(ctx: HeroActionContext): void {
     const dossierYield = sfLevel > 0 ? randInt(1, 1 + sfLevel) : 1;
     ctx.wallet.add('dossier', dossierYield);
     ctx.wallet.add('xp', 1);
+    ctx.stats.trackCurrencyGain('dossier', dossierYield);
+    ctx.stats.trackCurrencyGain('xp', 1);
 
     if (ppLevel > 0) {
       // NOTE: gold bonus uses an independent roll — intentional double-roll.
       const dossiers = randInt(1, 1 + sfLevel);
       const bonus = dossiers * ppLevel;
-      if (bonus > 0) ctx.wallet.add('gold', bonus);
+      if (bonus > 0) {
+        ctx.wallet.add('gold', bonus);
+        ctx.stats.trackCurrencyGain('gold', bonus);
+      }
       ctx.log.log(
         `You slipped in undetected and secured ${dossierYield === 1 ? 'a dossier' : `${dossierYield} dossiers`}. (+1 XP, +${bonus}g)`,
         'default',
@@ -196,6 +220,7 @@ function clickThief(ctx: HeroActionContext): void {
 
 /** Execute one jack auto-click for the given character. */
 export function performJackAutoClick(charId: string, ctx: JackAutoClickContext): void {
+  ctx.stats.trackJackHeroPress(charId);
   switch (charId) {
     case 'fighter':    return jackFighter(ctx);
     case 'ranger':     return jackRanger(ctx);
@@ -212,12 +237,15 @@ function jackFighter(ctx: JackAutoClickContext): void {
   const xpPerBounty  = calcXpPerBounty(ctx.upgrades.level('INSIGHTFUL_CONTRACTS'));
   ctx.wallet.add('gold', goldPerClick);
   ctx.wallet.add('xp',   xpPerBounty);
+  ctx.stats.trackCurrencyGain('gold', goldPerClick);
+  ctx.stats.trackCurrencyGain('xp', xpPerBounty);
   if (ctx.isJackStarved('fighter')) ctx.setJackStarved('fighter', false);
 }
 
 function jackRanger(ctx: JackAutoClickContext): void {
   const u = ctx.upgrades;
   ctx.wallet.add('xp', 1);
+  ctx.stats.trackCurrencyGain('xp', 1);
 
   const moreHerbsLevel  = u.level('MORE_HERBS');
   const biggerGameLevel = u.level('BIGGER_GAME');
@@ -226,13 +254,23 @@ function jackRanger(ctx: JackAutoClickContext): void {
   const catsEyeProcs    = catsEyeLevel > 0 && rollChance(catsEyeLevel);
 
   if (catsEyeProcs) {
-    ctx.wallet.add('herb', computeHerbYield(moreHerbsLevel));
-    if (rollChance(beastChance)) ctx.wallet.add('beast', computeMeatYield(biggerGameLevel));
+    const herbs = computeHerbYield(moreHerbsLevel);
+    ctx.wallet.add('herb', herbs);
+    ctx.stats.trackCurrencyGain('herb', herbs);
+    if (rollChance(beastChance)) {
+      const meat = computeMeatYield(biggerGameLevel);
+      ctx.wallet.add('beast', meat);
+      ctx.stats.trackCurrencyGain('beast', meat);
+    }
   } else {
     if (rollChance(50)) {
-      ctx.wallet.add('herb', computeHerbYield(moreHerbsLevel));
+      const herbs = computeHerbYield(moreHerbsLevel);
+      ctx.wallet.add('herb', herbs);
+      ctx.stats.trackCurrencyGain('herb', herbs);
     } else if (rollChance(beastChance)) {
-      ctx.wallet.add('beast', computeMeatYield(biggerGameLevel));
+      const meat = computeMeatYield(biggerGameLevel);
+      ctx.wallet.add('beast', meat);
+      ctx.stats.trackCurrencyGain('beast', meat);
     }
   }
   if (ctx.isJackStarved('ranger')) ctx.setJackStarved('ranger', false);
@@ -260,9 +298,17 @@ function jackApothecary(ctx: JackAutoClickContext): void {
   ctx.wallet.remove('herb', herbCost);
   ctx.wallet.add('potion', 1);
   ctx.wallet.add('xp', 1);
-  if (goldPerBrew > 0) ctx.wallet.add('gold', goldPerBrew);
+  ctx.stats.trackCurrencyGain('potion', 1);
+  ctx.stats.trackCurrencyGain('xp', 1);
+  if (goldPerBrew > 0) {
+    ctx.wallet.add('gold', goldPerBrew);
+    ctx.stats.trackCurrencyGain('gold', goldPerBrew);
+  }
   const herbsSaved = rollMultiChance(herbSaveChance);
-  if (herbsSaved > 0) ctx.wallet.add('herb', herbsSaved);
+  if (herbsSaved > 0) {
+    ctx.wallet.add('herb', herbsSaved);
+    ctx.stats.trackCurrencyGain('herb', herbsSaved);
+  }
 }
 
 function jackCulinarian(ctx: JackAutoClickContext): void {
@@ -285,6 +331,8 @@ function jackCulinarian(ctx: JackAutoClickContext): void {
   ctx.wallet.remove('gold', goldCost);
   ctx.wallet.add('spice', spiceYield);
   ctx.wallet.add('xp', 1);
+  ctx.stats.trackCurrencyGain('spice', spiceYield);
+  ctx.stats.trackCurrencyGain('xp', 1);
 }
 
 function jackThief(ctx: JackAutoClickContext): void {
@@ -301,9 +349,14 @@ function jackThief(ctx: JackAutoClickContext): void {
     const dossierToAward = randInt(1, 1 + sfLevel);
     ctx.wallet.add('dossier', dossierToAward);
     ctx.wallet.add('xp', 1);
+    ctx.stats.trackCurrencyGain('dossier', dossierToAward);
+    ctx.stats.trackCurrencyGain('xp', 1);
     if (ppLevel > 0) {
       const bonus = Math.floor(dossierToAward) * ppLevel;
-      if (bonus > 0) ctx.wallet.add('gold', bonus);
+      if (bonus > 0) {
+        ctx.wallet.add('gold', bonus);
+        ctx.stats.trackCurrencyGain('gold', bonus);
+      }
     }
   } else {
     // Stun fires once — applyThiefStun guards against extending an

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
+import { StatisticsService } from '../../statistics/statistics.service';
 import { APOTH_MG } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
 import { toPct, rollChance } from '../../utils/mathUtils';
@@ -18,6 +19,7 @@ import { toPct, rollChance } from '../../utils/mathUtils';
 export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
+  private stats  = inject(StatisticsService);
   private zone   = inject(NgZone);
   private sub    = new Subscription();
   private animFrame?: number;
@@ -235,6 +237,16 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
       if (concentrated > 0) this.wallet.add('concentrated-potion', concentrated);
       if (downgraded > 0)   this.wallet.add('potion', downgraded);
 
+      // Track stats
+      if (concentrated > 0) {
+        this.stats.trackConcentratedPotionMade(concentrated);
+        this.stats.trackCurrencyGain('concentrated-potion', concentrated);
+      }
+      if (downgraded > 0) this.stats.trackCurrencyGain('potion', downgraded);
+      for (let i = 0; i < 2; i++) {
+        this.stats.trackDilution(i < concentrated);
+      }
+
       if (!this.wallet.isCurrencyUnlocked('concentrated-potion') && concentrated > 0) {
         this.wallet.unlockCurrency('concentrated-potion');
         this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
@@ -259,6 +271,11 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
       const flawlessBonus = !this.hadMistake && this.perfectPotionsLevel > 0 ? this.perfectPotionsLevel : 0;
       if (flawlessBonus > 0) this.wallet.add('concentrated-potion', flawlessBonus);
+
+      // Track stats
+      const totalConcentrated = 1 + flawlessBonus;
+      this.stats.trackConcentratedPotionMade(totalConcentrated);
+      this.stats.trackCurrencyGain('concentrated-potion', totalConcentrated);
 
       if (!this.wallet.isCurrencyUnlocked('concentrated-potion')) {
         this.wallet.unlockCurrency('concentrated-potion');

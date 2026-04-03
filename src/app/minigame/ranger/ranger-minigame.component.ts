@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
+import { StatisticsService } from '../../statistics/statistics.service';
 import { RANGER_MG } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
 import { shuffleInPlace } from '../../utils/mathUtils';
@@ -45,6 +46,7 @@ const PRIZE_NAME: Record<PrizeType, string> = {
 export class RangerMinigameComponent implements OnInit, OnDestroy {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
+  private stats  = inject(StatisticsService);
   private sub    = new Subscription();
 
   readonly PICKS      = RANGER_MG.PICKS;
@@ -255,6 +257,13 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     if (totalMeat  > 0) this.wallet.add('beast',      totalMeat);
     if (totalHerb  > 0) this.wallet.add('herb',        totalHerb);
     if (totalPixie > 0) this.wallet.add('pixie-dust',  totalPixie);
+
+    // Track stats
+    this.stats.trackRangerHunt(successCount > 0);
+    if (totalMeat  > 0) this.stats.trackCurrencyGain('beast', totalMeat);
+    if (totalHerb  > 0) this.stats.trackCurrencyGain('herb', totalHerb);
+    if (totalPixie > 0) this.stats.trackCurrencyGain('pixie-dust', totalPixie);
+    if (this.xpGained > 0) this.stats.trackCurrencyGain('xp', this.xpGained);
 
     // Build result parts for display with colors
     this.resultParts = [];

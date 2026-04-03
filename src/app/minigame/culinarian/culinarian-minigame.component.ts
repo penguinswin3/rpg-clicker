@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
+import { StatisticsService } from '../../statistics/statistics.service';
 import { CULINARIAN_MG } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
 
@@ -24,6 +25,7 @@ export interface GuessRow {
 export class CulinarianMinigameComponent implements OnInit, OnDestroy {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
+  private stats  = inject(StatisticsService);
   private sub    = new Subscription();
 
   readonly SOLUTION_LENGTH  = CULINARIAN_MG.SOLUTION_LENGTH;
@@ -281,6 +283,10 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
 
     this.wallet.add('hearty-meal', totalReward);
 
+    // Track stats
+    this.stats.trackCulinarianResult(true, this.guessesUsed);
+    this.stats.trackCurrencyGain('hearty-meal', totalReward);
+
     if (!this.wallet.isCurrencyUnlocked('hearty-meal')) {
       this.wallet.unlockCurrency('hearty-meal');
       this.log.log(`The Culinarian perfects a Hearty Meal! New currency unlocked!`, 'rare');
@@ -299,6 +305,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
   private onLose(): void {
     this.lost = true;
     this.roundActive = false;
+    this.stats.trackCulinarianResult(false, this.guessesUsed);
     this.log.log('The Culinarian failed to find the recipe.', 'warn');
     this.lastMsg  = MINIGAME_MSG.CULINARIAN.LOSE;
     this.msgClass = 'msg-bad';

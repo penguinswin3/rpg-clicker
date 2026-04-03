@@ -1,0 +1,171 @@
+<!-- Fixed-position trigger button (next to Options) -->
+<div class="stats-btn-anchor" [style.right]="rightOffset" [style.bottom]="bottomOffset">
+  <button class="stats-trigger" (click)="open()">[ STATISTICS ]</button>
+</div>
+
+<!-- Modal backdrop + dialog -->
+<div class="stats-backdrop" *ngIf="isOpen" (click)="onBackdropClick($event)">
+  <div class="stats-modal">
+
+    <!-- Header -->
+    <div class="modal-header">
+      <span class="modal-title">╔═ STATISTICS ═╗</span>
+      <button class="modal-close" (click)="close()">[X]</button>
+    </div>
+
+    <!-- Body — two-column grid -->
+    <div class="modal-body">
+
+      <!-- No stats yet -->
+      <div class="empty-msg" *ngIf="hasNoStats">
+        No statistics recorded yet.
+      </div>
+
+      <div class="columns" *ngIf="!hasNoStats">
+
+        <!-- ═══════ LEFT COLUMN ═══════ -->
+        <div class="col">
+
+          <!-- ── Lifetime Currency Gains ── -->
+          <div class="stats-section" *ngIf="activeCurrencies.length > 0">
+            <div class="section-label">// LIFETIME CURRENCY EARNED</div>
+            <div class="stats-table">
+              <div class="stats-row" *ngFor="let id of activeCurrencies">
+                <span class="cur-symbol" [style.color]="currencyColor(id)">{{ currencySymbol(id) }}</span>
+                <span class="cur-name">{{ currencyName(id) }}</span>
+                <span class="cur-amount">{{ fmt(lifetimeAmount(id)) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Milestones ── -->
+          <div class="stats-section" *ngIf="milestoneEntries.length > 0">
+            <div class="section-label">// MILESTONES</div>
+            <div class="milestone-list">
+              <div class="milestone-row" *ngFor="let m of milestoneEntries">
+                <span class="milestone-label">{{ m.label }}</span>
+                <span class="milestone-time">{{ m.time }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /col left -->
+
+        <!-- ═══════ RIGHT COLUMN ═══════ -->
+        <div class="col">
+
+          <!-- ── Hero Button Presses (split manual / jack) ── -->
+          <div class="stats-section" *ngIf="hasAnyPresses">
+            <div class="section-label">// HERO BUTTON PRESSES</div>
+            <div class="stats-table">
+              <!-- Header row -->
+              <div class="stats-row stats-header-row">
+                <span class="cur-name"></span>
+                <span class="col-header">Manual</span>
+                <span class="col-header">Jack</span>
+              </div>
+              <div class="stats-row" *ngFor="let h of activeHeroPressChars">
+                <span class="cur-name">{{ h.name }}</span>
+                <span class="cur-amount">{{ fmt(h.manual) }}</span>
+                <span class="cur-amount">{{ fmt(h.jack) }}</span>
+              </div>
+              <div class="stats-row stats-total-row">
+                <span class="cur-name">Total</span>
+                <span class="cur-amount">{{ fmt(totalManualPresses) }}</span>
+                <span class="cur-amount">{{ fmt(totalJackPresses) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Fighter Minigame ── -->
+          <div class="stats-section" *ngIf="snap.fighterMinigame.totalKills > 0">
+            <div class="section-label">// KOBOLDS SLAIN</div>
+            <div class="stats-table">
+              <div class="stats-row" *ngFor="let k of koboldKillEntries">
+                <span class="cur-name">{{ k.name }}</span>
+                <span class="cur-amount">{{ fmt(k.count) }}</span>
+              </div>
+              <div class="stats-row stats-total-row">
+                <span class="cur-name">Total</span>
+                <span class="cur-amount">{{ fmt(snap.fighterMinigame.totalKills) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Ranger Minigame ── -->
+          <div class="stats-section" *ngIf="snap.rangerMinigame.successful + snap.rangerMinigame.unsuccessful > 0">
+            <div class="section-label">// HUNTING GROUNDS</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Successful Hunts</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.rangerMinigame.successful) }}</span>
+              </div>
+              <div class="stats-row">
+                <span class="cur-name">Unsuccessful Hunts</span>
+                <span class="cur-amount stat-bad">{{ fmt(snap.rangerMinigame.unsuccessful) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Apothecary Minigame ── -->
+          <div class="stats-section" *ngIf="snap.apothecaryMinigame.concentratedPotionsMade > 0 || snap.apothecaryMinigame.dilutionSuccesses + snap.apothecaryMinigame.dilutionFailures > 0">
+            <div class="section-label">// ALCHEMY TABLET</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Concentrated Potions</span>
+                <span class="cur-amount">{{ fmt(snap.apothecaryMinigame.concentratedPotionsMade) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.apothecaryMinigame.dilutionSuccesses + snap.apothecaryMinigame.dilutionFailures > 0">
+                <span class="cur-name">Dilution Successes</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.apothecaryMinigame.dilutionSuccesses) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.apothecaryMinigame.dilutionFailures > 0">
+                <span class="cur-name">Dilution Failures</span>
+                <span class="cur-amount stat-bad">{{ fmt(snap.apothecaryMinigame.dilutionFailures) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Culinarian Minigame ── -->
+          <div class="stats-section" *ngIf="snap.culinarianMinigame.wins + snap.culinarianMinigame.losses > 0">
+            <div class="section-label">// TEST KITCHEN</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Recipes Found</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.culinarianMinigame.wins) }}</span>
+              </div>
+              <div class="stats-row">
+                <span class="cur-name">Recipes Failed</span>
+                <span class="cur-amount stat-bad">{{ fmt(snap.culinarianMinigame.losses) }}</span>
+              </div>
+              <ng-container *ngIf="guessDist.length > 0">
+                <div class="stats-row stats-subdued" *ngFor="let g of guessDist">
+                  <span class="cur-name">&nbsp; Won in {{ g.guess }} guess{{ g.guess > 1 ? 'es' : '' }}</span>
+                  <span class="cur-amount">{{ fmt(g.count) }}</span>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+
+          <!-- ── Thief Minigame ── -->
+          <div class="stats-section" *ngIf="snap.thiefMinigame.successfulHeists + snap.thiefMinigame.failedHeists > 0">
+            <div class="section-label">// BIG HEIST</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Safes Cracked</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.thiefMinigame.successfulHeists) }}</span>
+              </div>
+              <div class="stats-row">
+                <span class="cur-name">Heists Failed</span>
+                <span class="cur-amount stat-bad">{{ fmt(snap.thiefMinigame.failedHeists) }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /col right -->
+
+      </div><!-- /columns -->
+
+    </div><!-- /modal-body -->
+  </div><!-- /stats-modal -->
+</div><!-- /stats-backdrop -->

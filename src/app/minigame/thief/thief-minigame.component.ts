@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
+import { StatisticsService } from '../../statistics/statistics.service';
 import { THIEF_MG } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
@@ -17,6 +18,7 @@ import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 export class ThiefMinigameComponent implements OnInit, OnDestroy {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
+  private stats  = inject(StatisticsService);
   private zone   = inject(NgZone);
   private sub    = new Subscription();
   private animFrame?: number;
@@ -176,6 +178,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
       this.heistWon    = true;
       this.heistActive = false;
       this.stopAnimation();
+      this.stats.trackThiefHeist(true);
       this.awardRewards();
     } else {
       // Record the failed position for Locked In
@@ -187,6 +190,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
         this.heistLost   = true;
         this.heistActive = false;
         this.stopAnimation();
+        this.stats.trackThiefHeist(false);
         this.lastMsg  = MINIGAME_MSG.THIEF.BUSTED;
         this.msgClass = 'msg-bad';
         this.log.log('Heist failed — you were detected!', 'warn');
@@ -223,6 +227,11 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     this.wallet.add('gold', gold);
     this.wallet.add('xp', xp);
 
+    // Track stats
+    this.stats.trackCurrencyGain('treasure', treasure);
+    this.stats.trackCurrencyGain('gold', gold);
+    this.stats.trackCurrencyGain('xp', xp);
+
     if (!this.wallet.isCurrencyUnlocked('treasure')) {
       this.wallet.unlockCurrency('treasure');
       this.log.log('Treasure discovered! New currency unlocked!', 'rare');
@@ -237,6 +246,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     // Relic roll
     if (rollChance(this.effectiveRelicChance)) {
       this.wallet.add('relic', THIEF_MG.RELIC_AMOUNT);
+      this.stats.trackCurrencyGain('relic', THIEF_MG.RELIC_AMOUNT);
       if (!this.wallet.isCurrencyUnlocked('relic')) {
         this.wallet.unlockCurrency('relic');
         this.log.log('A Relic has been unearthed! Incredibly rare!', 'rare');

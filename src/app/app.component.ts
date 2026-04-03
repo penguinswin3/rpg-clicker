@@ -10,7 +10,9 @@ import { CharacterUnlockComponent } from './character/character-unlock.component
 import { CharacterService } from './character/character.service';
 import { MinigamePanelComponent } from './minigame/minigame-panel.component';
 import { OptionsMenuComponent } from './options/options-menu.component';
+import { StatisticsComponent } from './statistics/statistics.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
+import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
 import { XP_THRESHOLDS, YIELDS, UNLOCK_COSTS } from './game-config';
 import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS } from './flavor-text';
@@ -39,6 +41,7 @@ import {
     CharacterUnlockComponent,
     MinigamePanelComponent,
     OptionsMenuComponent,
+    StatisticsComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -51,6 +54,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private readonly wallet      = inject(WalletService);
   private readonly charService = inject(CharacterService);
   private readonly saveService = inject(SaveService);
+  private readonly statsService = inject(StatisticsService);
   /** Exposed publicly so the template can call upgrade methods directly. */
   readonly upgrades            = inject(UpgradeService);
 
@@ -288,7 +292,16 @@ export class AppComponent implements OnInit, OnDestroy {
       this.concentratedPotions = Math.floor(state['concentrated-potion']?.amount ?? 0);
       this.spice               = Math.floor(state['spice']?.amount               ?? 0);
     });
-    this.wallet.highestXpEver$.subscribe(v => (this.highestXp = v));
+    this.wallet.highestXpEver$.subscribe(v => {
+      const prev = this.highestXp;
+      this.highestXp = v;
+      // Track XP milestone crossings
+      for (const [key, threshold] of Object.entries(XP_THRESHOLDS)) {
+        if (v >= threshold && prev < threshold) {
+          this.statsService.recordMilestone(`xp_${key}`, `XP ${threshold.toLocaleString()} (${key.replace(/_/g, ' ')})`);
+        }
+      }
+    });
 
     this.charService.activeId$.subscribe(id => {
       this.activeCharacterId = id;
@@ -299,10 +312,23 @@ export class AppComponent implements OnInit, OnDestroy {
       this.culinarianUnlocked = chars.find(c => c.id === 'culinarian')?.unlocked ?? false;
       this.thiefUnlocked      = chars.find(c => c.id === 'thief')?.unlocked      ?? false;
       this.unlockedCharacters = chars.filter(c => c.unlocked).map(c => ({ id: c.id, name: c.name, color: c.color }));
+      // Track character unlock milestones
+      for (const c of chars) {
+        if (c.unlocked && c.id !== 'fighter') {
+          this.statsService.recordMilestone(`char_${c.id}`, `${c.name} Unlocked`);
+        }
+      }
     });
 
     // Reactively update per-second display rates whenever any upgrade changes
-    this.upgrades.changed$.subscribe(() => this.updateAllPerSecond());
+    this.upgrades.changed$.subscribe(id => {
+      this.updateAllPerSecond();
+      // Track relic purchase milestones
+      if (id.startsWith('RELIC_') && this.upgrades.level(id) >= 1) {
+        const flavorName = (UPGRADE_FLAVOR as any)[id]?.name ?? id;
+        this.statsService.recordMilestone(`relic_${id}`, `Relic: ${flavorName}`);
+      }
+    });
 
     // Passive gold income (Contracted Hirelings only)
     setInterval(() => {
@@ -310,7 +336,10 @@ export class AppComponent implements OnInit, OnDestroy {
         this.upgrades.level('CONTRACTED_HIRELINGS'),
         this.upgrades.level('HIRELINGS_HIRELINGS'),
       );
-      if (autoGold > 0) this.wallet.add('gold', autoGold);
+      if (autoGold > 0) {
+        this.wallet.add('gold', autoGold);
+        this.statsService.trackCurrencyGain('gold', autoGold);
+      }
     }, 1000);
 
     // Jack auto-clicks: each allocated Jack fires once per second
@@ -524,6 +553,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.wallet.remove('beast',  beastCost);
     this.minigameUnlocked = true;
     this.log.log('★ MINIGAMES UNLOCKED! Character-specific challenges are now available.', 'rare');
+    this.statsService.recordMilestone('minigame_unlocked', 'Minigames Unlocked');
   }
 
   // ── Dev tools ──────────────────────────────────────────────────
@@ -601,6 +631,7 @@ export class AppComponent implements OnInit, OnDestroy {
       wallet:                 this.wallet,
       log:                    this.log,
       upgrades:               this.upgrades,
+      stats:                  this.statsService,
       wholesaleSpicesEnabled: this.wholesaleSpicesEnabled,
       isThiefStunned:         this.isThiefStunned,
       applyThiefStun:         () => this.applyThiefStun(),
@@ -616,6 +647,7 @@ export class AppComponent implements OnInit, OnDestroy {
     return {
       wallet:                 this.wallet,
       upgrades:               this.upgrades,
+      stats:                  this.statsService,
       wholesaleSpicesEnabled: this.wholesaleSpicesEnabled,
       isThiefStunned:         () => this.isThiefStunned,
       applyThiefStun:         () => this.applyThiefStun(),

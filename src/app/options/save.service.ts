@@ -3,6 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { CharacterService } from '../character/character.service';
 import { ActivityLogService, LogFilterType } from '../activity-log/activity-log.service';
+import { StatisticsService, StatisticsSnapshot } from '../statistics/statistics.service';
 import { UPGRADE_DEFS, VERSION } from '../game-config';
 import { UpgradesSnapshot } from '../upgrade/upgrade.service';
 import { scaledCost } from '../utils/mathUtils';
@@ -167,6 +168,8 @@ export interface SaveSnapshot {
   upgrades: UpgradeState;
   /** UI window/filter preferences — optional for backward compat with older saves. */
   uiPrefs?: UiPrefs;
+  /** Lifetime statistics — optional for backward compat with older saves. */
+  statistics?: StatisticsSnapshot;
 }
 
 const SAVE_KEY = 'rpg-clicker-save';
@@ -178,6 +181,7 @@ export class SaveService {
   private wallet      = inject(WalletService);
   private charService = inject(CharacterService);
   private log         = inject(ActivityLogService);
+  private statsService = inject(StatisticsService);
 
   // Callbacks registered by AppComponent so we can capture / restore upgrade state.
   private upgradeGetter: (() => UpgradeState) | null = null;
@@ -298,6 +302,7 @@ export class SaveService {
       manualUnlocks,
       upgrades,
       uiPrefs,
+      statistics: this.statsService.buildSnapshot(),
     };
   }
 
@@ -353,6 +358,9 @@ export class SaveService {
       this.setBlandMode(p.blandMode                       ?? false);
       this.setEnableDevTools(p.enableDevTools             ?? false);
     }
+
+    // 7 — Statistics (optional — absent in older saves, defaults to empty)
+    this.statsService.applySnapshot(snap.statistics ?? null);
   }
 
   // ── Encoding helpers ─────────────────────────────────────────

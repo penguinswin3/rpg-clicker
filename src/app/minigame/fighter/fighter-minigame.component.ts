@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
+import { StatisticsService } from '../../statistics/statistics.service';
 import { FIGHTER_MG } from '../../game-config';
 import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant, MINIGAME_MSG } from '../../flavor-text';
 import { FighterCombatState } from '../../options/save.service';
@@ -61,6 +62,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
+  private stats  = inject(StatisticsService);
   private sub    = new Subscription();
   private spawnTimer?: ReturnType<typeof setTimeout>;
   private restInterval?: ReturnType<typeof setInterval>;
@@ -397,6 +399,13 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.wallet.add('xp',         this.enemy.xpReward);
     this.wallet.add('kobold-ear', this.enemy.earReward);
 
+    // Track stats
+    const variantIdx = Math.min(this.selectedKoboldLevel - 1, KOBOLD_VARIANTS.length - 1);
+    this.stats.trackKoboldKill(KOBOLD_VARIANTS[variantIdx].name);
+    this.stats.trackCurrencyGain('gold', gold);
+    this.stats.trackCurrencyGain('xp', this.enemy.xpReward);
+    this.stats.trackCurrencyGain('kobold-ear', this.enemy.earReward);
+
     const isFirstEar = !this.wallet.isCurrencyUnlocked('kobold-ear');
     if (isFirstEar) {
       this.wallet.unlockCurrency('kobold-ear');
@@ -410,6 +419,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       if (rollChance(drop.chance)) {
         this.wallet.add(drop.currencyId, drop.amount);
         gotSecondaryDrop = true;
+        this.stats.trackCurrencyGain(drop.currencyId, drop.amount);
         const isFirstSecondary = !this.wallet.isCurrencyUnlocked(drop.currencyId);
         if (isFirstSecondary) {
           this.wallet.unlockCurrency(drop.currencyId);

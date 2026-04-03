@@ -1,0 +1,228 @@
+// ── Fixed trigger button anchor ───────────────────────
+.stats-btn-anchor {
+  position: fixed;
+  transition: right 0.15s ease, bottom 0.15s ease;
+  z-index: 500;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.stats-trigger {
+  background: #111;
+  color: #ccc;
+  border: 1px solid #555;
+  padding: 4px 12px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.78rem;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: #fff;
+    border-color: #888;
+  }
+}
+
+// ── Modal backdrop ───────────────────────────────────
+.stats-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+// ── Modal dialog ─────────────────────────────────────
+.stats-modal {
+  background: #111;
+  border: 1px solid #666;
+  width: 740px;
+  max-width: 94vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid #444;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  color: #aaa;
+  font-size: 0.88rem;
+  letter-spacing: 0.06em;
+}
+
+.modal-close {
+  background: none;
+  border: 1px solid #555;
+  color: #999;
+  font-family: inherit;
+  font-size: 0.78rem;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: #fff;
+    border-color: #aaa;
+  }
+}
+
+.modal-body {
+  padding: 12px 16px 14px;
+  overflow-y: auto;
+  color: #ccc;
+  font-size: 0.78rem;
+}
+
+.empty-msg {
+  color: #666;
+  text-align: center;
+  padding: 24px 0;
+  font-size: 0.8rem;
+}
+
+// ── Two-column grid ──────────────────────────────────
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.col {
+  min-width: 0; // allow text truncation inside grid children
+}
+
+// ── Section layout ───────────────────────────────────
+.stats-section {
+  margin-bottom: 10px;
+}
+
+.section-label {
+  color: #888;
+  font-size: 0.70rem;
+  margin-bottom: 4px;
+  letter-spacing: 0.03em;
+}
+
+// ── Table-like stat rows ─────────────────────────────
+.stats-table {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 5px;
+  background: #0d0d0d;
+  font-size: 0.74rem;
+}
+
+.stats-header-row {
+  background: transparent;
+  padding-bottom: 1px;
+  border-bottom: 1px solid #333;
+  margin-bottom: 1px;
+}
+
+.col-header {
+  flex: 0 0 60px;
+  text-align: right;
+  color: #777;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.stats-total-row {
+  border-top: 1px solid #333;
+  margin-top: 1px;
+  padding-top: 2px;
+  font-weight: bold;
+}
+
+.stats-subdued {
+  opacity: 0.75;
+}
+
+.cur-symbol {
+  flex: 0 0 16px;
+  text-align: center;
+  font-size: 0.80rem;
+}
+
+.cur-name {
+  flex: 1;
+  color: #bbb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cur-amount {
+  flex: 0 0 60px;
+  text-align: right;
+  color: #fff;
+  font-weight: bold;
+}
+
+.stat-good { color: #66cc66; }
+.stat-bad  { color: #cc6666; }
+
+// ── Milestones ───────────────────────────────────────
+.milestone-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.milestone-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 5px;
+  background: #0d0d0d;
+  font-size: 0.70rem;
+}
+
+.milestone-label {
+  color: #ddd;
+  flex: 1;
+}
+
+.milestone-time {
+  color: #888;
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
+// ── Scrollbar styling ────────────────────────────────
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+
+  &:hover { background: #555; }
+}
