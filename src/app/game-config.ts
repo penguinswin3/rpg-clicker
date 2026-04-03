@@ -194,7 +194,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Ranger — minigame ────────────────────────────────────────
-  { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 5,      // each level adds +1 guaranteed prize node
+  { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 4,      // each level adds +1 guaranteed prize node
     costs: [
       { currency: 'kobold-ear',    base: 50, scale: 1.0, fromLevel: 0, untilLevel: 1 },  // level 1 only
       { currency: 'kobold-tongue', base: 50, scale: 1.0, fromLevel: 1, untilLevel: 2 },  // level 2 only

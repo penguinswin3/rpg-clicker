@@ -316,7 +316,8 @@ export class SaveService {
     const savedHighestXp = snap.highestXpEver ?? Math.floor(snap.wallet['xp']?.amount ?? 0);
     this.wallet.setHighestXpEver(savedHighestXp);
 
-    // 2 — Manual unlocks
+    // 2 — Manual unlocks (clear existing ones first, then apply the loaded ones)
+    this.wallet.clearManualUnlocks();
     for (const id of snap.manualUnlocks) {
       this.wallet.unlockCurrency(id);
     }

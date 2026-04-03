@@ -160,6 +160,13 @@ export class WalletService {
   }
 
   /**
+   * Clear all manual unlocks. Used when importing a new save.
+   */
+  clearManualUnlocks(): void {
+    this.manualUnlocksSource.next(new Set<string>());
+  }
+
+  /**
    * Returns true if the given currency's manual-unlock gate has already been opened.
    * Use this instead of local component flags so the check survives page reloads.
    */

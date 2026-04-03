@@ -8,17 +8,18 @@
 
 ## Removed
 - Dossiers/s from the thief character stats, it's only in the currency menu now 
-
+- Best hunt % from the upgrade description. It's in the character stats box 
+- Bountiful lands mazes out at 4, the current cap for kobold parts
 ## Changed
 - Changed the color of upgrades a little
 - XP threshold unlocks will remember that they were unlocked 
 - Kobolds drop a tad more gold 
 - If INFO level logs are filtered out, they won't be generated at all and will not display in the log, and will therefore not count against the max log memory limit
-
 ## Bugfixes
 - Sidebar per seconds will use the correctly formatted number system
 - Fixed Ancient Cookbook unlock requirement not registering correctly 
 - Having over a 100% herb save chance will allow you to save more than 1 herb, as intended
+- Fixed some issues with savegames not fully resetting when loading a new game 
 
 ----------------------------
 

@@ -73,7 +73,7 @@ export const UPGRADE_FLAVOR = {
   // Culinarian
   WHOLESALE_SPICES:     { name: 'Wholesale Spices',          desc: '+1 spice per click, purchased at a discount!' },
   WASTE_NOT:            { name: 'Waste Not',                 desc: '+1 hearty meal per unused guess on a successful recipe' },
-  LARGER_COOKBOOKS:     { name: 'Ancient Cookbook',           desc: 'The first ingredient in the recipe is always revealed at the start' },
+  LARGER_COOKBOOKS:     { name: 'Ancient Cookbook',          desc: 'The first ingredient in the recipe is always revealed at the start' },
 
   // Thief
   METICULOUS_PLANNING:      { name: 'Meticulous Planning',       desc: '+1% thieving success chance per level' },
@@ -86,11 +86,11 @@ export const UPGRADE_FLAVOR = {
   LOCKED_IN:                { name: 'Locked In',                 desc: 'Marks failed click positions on the dial with a red tick' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
-  RELIC_FIGHTER:    { name: 'Relic of Valor',       desc: 'A powerful artifact that empowers the Fighter. (placeholder)' },
-  RELIC_RANGER:     { name: 'Relic of the Wild',    desc: 'A powerful artifact that empowers the Ranger. (placeholder)' },
-  RELIC_APOTHECARY: { name: 'Relic of Alchemy',     desc: 'A powerful artifact that empowers the Apothecary. (placeholder)' },
-  RELIC_CULINARIAN: { name: 'Relic of the Hearth',  desc: 'A powerful artifact that empowers the Culinarian. (placeholder)' },
-  RELIC_THIEF:      { name: 'Relic of Shadows',     desc: 'A powerful artifact that empowers the Thief. (placeholder)' },
+  RELIC_FIGHTER:    { name: 'Amulet of Glory',       desc: 'A powerful artifact that empowers the Fighter. (placeholder)' },
+  RELIC_RANGER:     { name: 'Magic Secateurs',    desc: 'A powerful artifact that empowers the Ranger. (placeholder)' },
+  RELIC_APOTHECARY: { name: 'Mask of the Greenman',     desc: 'A powerful artifact that empowers the Apothecary. (placeholder)' },
+  RELIC_CULINARIAN: { name: 'Charming Perfume',  desc: 'A powerful artifact that empowers the Culinarian. (placeholder)' },
+  RELIC_THIEF:      { name: 'Ring of Shadows',     desc: 'A powerful artifact that empowers the Thief. (placeholder)' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
