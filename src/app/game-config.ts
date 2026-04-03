@@ -9,7 +9,7 @@
 import { KOBOLD_VARIANTS } from './flavor-text';
 
 // ── Game Version ─────────────────────────────────────────────
-export const VERSION = 'Alpha 1.1.1';
+export const VERSION = 'Alpha 1.2.0';
 
 // ── Shared Upgrade Types ─────────────────────────────────────
 
