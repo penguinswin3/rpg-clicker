@@ -226,8 +226,7 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Returns a live description suffix for upgrades that show current values. */
   upgradeDescSuffix(id: string): string {
     switch (id) {
-      // case 'BETTER_TRACKING':  return ` (now ${calcBeastFindChance(this.upgrades.level('BETTER_TRACKING'))}%)`;
-      default:                 return '';
+      default: return '';
     }
   }
 
