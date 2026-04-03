@@ -54,7 +54,7 @@ export const UPGRADE_FLAVOR = {
   // Ranger
   MORE_HERBS:           { name: 'More Herbs',                desc: '+1% chance to double base herbs' },
   BETTER_TRACKING:      { name: 'Better Tracking',           desc: '+1% beast hunt chance' },
-  BOUNTIFUL_LANDS:      { name: 'Bountiful Lands',           desc: '+1 guaranteed prize node per level (max 5)' },
+  BOUNTIFUL_LANDS:      { name: 'Bountiful Lands',           desc: '+1 guaranteed prize node per level' },
   ABUNDANT_LANDS:       { name: 'Abundant Lands',            desc: 'Resource gain is multiplied by the number of successful finds' },
   FAIRY_HOSTAGE:        { name: 'Fairy Hostage',             desc: 'A pixie, if present, will call out to a friend for help...' },
   POTION_CATS_EYE:      { name: "Potion of Cat's Eye",       desc: "+1% chance to roll both herb AND beast" },
