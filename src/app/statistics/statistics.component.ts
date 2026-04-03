@@ -12,7 +12,7 @@ const SIDEBAR_EXPANDED  = 220;
 const SIDEBAR_COLLAPSED =  46;
 const SIDEBAR_GAP = 4;
 /** Options button approximate width + gap buffer */
-const OPTIONS_BTN_WIDTH = 120;
+const OPTIONS_BTN_WIDTH = 135;
 
 const LOG_EXPANDED  = 210;
 const LOG_MINIMIZED =  36;
