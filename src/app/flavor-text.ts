@@ -28,7 +28,7 @@ export const CURRENCY_FLAVOR = {
   'precious-metal':      { name: 'Precious Metal',            symbol: '🜛',  color: '#accccb' },
   gemstone:              { name: 'Gemstone',                  symbol: '💎︎',  color: '#54d6ac' },
   jewelry:               { name: 'Jewelry',                   symbol: 'Ő',  color: '#97dfc8' },
-  'synaptical-potion':   { name: 'Synaptical Potion',         symbol: '⚗',  color: '#5bc0eb' },
+  'synaptical-potion':   { name: 'Synaptical Potion Base',    symbol: '⚗',  color: '#5b67eb' },
 
 } as const;
 

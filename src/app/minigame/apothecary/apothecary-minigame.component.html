@@ -66,16 +66,36 @@
 
   <!-- ══════ IDLE hints ══════ -->
   <ng-container *ngIf="!potionActive">
-    <div class="cost-hint">
-      costs {{ herbCost }}<span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span>
-      + {{ potionCost }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
-    </div>
-    <div class="herb-warn" *ngIf="herbs < herbCost">
-      need {{ herbCost - herbs }} more <span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span>
-    </div>
-    <div class="herb-warn" *ngIf="potions < potionCost">
-      need {{ potionCost - potions }} more <span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
-    </div>
+    <!-- Synaptical mode costs -->
+    <ng-container *ngIf="synapticalEnabled; else normalCosts">
+      <div class="cost-hint">
+        costs {{ synapticalHerbCost }}<span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span>
+        + {{ synapticalConcentratedCost }}<span [style.color]="currencyFlavor['concentrated-potion'].color">{{ currencyFlavor['concentrated-potion'].symbol }}</span>
+        + {{ synapticalBrainCost }}<span [style.color]="currencyFlavor['kobold-brain'].color">{{ currencyFlavor['kobold-brain'].symbol }}</span>
+      </div>
+      <div class="herb-warn" *ngIf="herbs < synapticalHerbCost">
+        need {{ synapticalHerbCost - herbs }} more <span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span>
+      </div>
+      <div class="herb-warn" *ngIf="concentratedPotions < synapticalConcentratedCost">
+        need {{ synapticalConcentratedCost - concentratedPotions }} more <span [style.color]="currencyFlavor['concentrated-potion'].color">{{ currencyFlavor['concentrated-potion'].symbol }}</span>
+      </div>
+      <div class="herb-warn" *ngIf="koboldBrains < synapticalBrainCost">
+        need {{ synapticalBrainCost - koboldBrains }} more <span [style.color]="currencyFlavor['kobold-brain'].color">{{ currencyFlavor['kobold-brain'].symbol }}</span>
+      </div>
+    </ng-container>
+    <!-- Normal mode costs -->
+    <ng-template #normalCosts>
+      <div class="cost-hint">
+        costs {{ herbCost }}<span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span>
+        + {{ potionCost }}<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
+      </div>
+      <div class="herb-warn" *ngIf="herbs < herbCost">
+        need {{ herbCost - herbs }} more <span [style.color]="currencyFlavor['herb'].color">{{ currencyFlavor['herb'].symbol }}</span>
+      </div>
+      <div class="herb-warn" *ngIf="potions < potionCost">
+        need {{ potionCost - potions }} more <span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }}</span>
+      </div>
+    </ng-template>
   </ng-container>
 
   <!-- ── Synaptical toggle ───────────── -->
@@ -93,8 +113,8 @@
     </span>
   </div>
 
-  <!-- ── Dilution toggle (hidden in synaptical mode) ─────────────── -->
-  <div class="dilution-toggle" *ngIf="potionDilutionUnlocked && !synapticalEnabled">
+  <!-- ── Dilution toggle ─────────────────────────────────── -->
+  <div class="dilution-toggle" *ngIf="potionDilutionUnlocked">
     <label class="toggle-label">
       <input type="checkbox"
              [ngModel]="dilutionEnabled"

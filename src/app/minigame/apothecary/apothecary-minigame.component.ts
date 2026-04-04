@@ -97,17 +97,22 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   }
 
   // ── Wallet-synced ─────────────────────────
-  herbs   = 0;
-  potions = 0;
+  herbs               = 0;
+  potions             = 0;
+  concentratedPotions = 0;
+  koboldBrains        = 0;
 
   // ── Potion state ──────────────────────────
   potionActive      = false;
   hadMistake        = false;
   quality           = 0;
-  readonly maxQuality     = APOTH_MG.MAX_QUALITY;
-  readonly herbCost       = APOTH_MG.HERB_COST;
-  readonly potionCost     = APOTH_MG.POTION_COST;
-  readonly currencyFlavor = CURRENCY_FLAVOR;
+  readonly maxQuality                   = APOTH_MG.MAX_QUALITY;
+  readonly herbCost                     = APOTH_MG.HERB_COST;
+  readonly potionCost                   = APOTH_MG.POTION_COST;
+  readonly synapticalHerbCost           = APOTH_MG.SYNAPTICAL_HERB_COST;
+  readonly synapticalConcentratedCost   = APOTH_MG.SYNAPTICAL_CONCENTRATED_COST;
+  readonly synapticalBrainCost          = APOTH_MG.SYNAPTICAL_BRAIN_COST;
+  readonly currencyFlavor               = CURRENCY_FLAVOR;
 
   // ── Beat bar ──────────────────────────────
   /** Cursor position: 0 – 100 */
@@ -155,7 +160,15 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   }
 
   get canStart(): boolean {
-    return !this.potionActive && this.herbs >= this.herbCost && this.potions >= this.potionCost;
+    if (!this.potionActive) {
+      if (this.synapticalEnabled) {
+        return this.herbs >= this.synapticalHerbCost &&
+               this.concentratedPotions >= this.synapticalConcentratedCost &&
+               this.koboldBrains >= this.synapticalBrainCost;
+      }
+      return this.herbs >= this.herbCost && this.potions >= this.potionCost;
+    }
+    return false;
   }
 
   // ── Lifecycle ─────────────────────────────
@@ -163,8 +176,10 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
-        this.herbs   = Math.floor(s['herb']?.amount   ?? 0);
-        this.potions = Math.floor(s['potion']?.amount ?? 0);
+        this.herbs               = Math.floor(s['herb']?.amount                ?? 0);
+        this.potions             = Math.floor(s['potion']?.amount              ?? 0);
+        this.concentratedPotions = Math.floor(s['concentrated-potion']?.amount ?? 0);
+        this.koboldBrains        = Math.floor(s['kobold-brain']?.amount        ?? 0);
         this.cdr.markForCheck();
       })
     );
@@ -179,8 +194,18 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
   startPotion(): void {
     if (!this.canStart) return;
-    this.wallet.remove('herb',   this.herbCost);
-    this.wallet.remove('potion', this.potionCost);
+
+    let logCostStr: string;
+    if (this.synapticalEnabled) {
+      this.wallet.remove('herb',                this.synapticalHerbCost);
+      this.wallet.remove('concentrated-potion', this.synapticalConcentratedCost);
+      this.wallet.remove('kobold-brain',        this.synapticalBrainCost);
+      logCostStr = `${cur('herb', this.synapticalHerbCost, '-')}, ${cur('concentrated-potion', this.synapticalConcentratedCost, '-')}, ${cur('kobold-brain', this.synapticalBrainCost, '-')}`;
+    } else {
+      this.wallet.remove('herb',   this.herbCost);
+      this.wallet.remove('potion', this.potionCost);
+      logCostStr = `${cur('herb', this.herbCost, '-')}, ${cur('potion', this.potionCost, '-')}`;
+    }
     this.potionActive        = true;
     this.hadMistake          = false;
     this.quality             = 0;
@@ -192,19 +217,27 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.lastMsg            = MINIGAME_MSG.APOTHECARY.IDLE;
     this.msgClass           = 'msg-neutral';
 
-    // Generate Synaptic Static bonus zones when brewing in synaptical mode
+    // Generate Synaptic Static bonus zones when brewing in synaptical mode.
+    // Zones are placed in evenly-spaced segments to prevent overlaps.
     this.synapticZones = [];
     if (this.synapticalEnabled && this.synapticStaticLevel > 0) {
-      for (let i = 0; i < this.synapticStaticLevel; i++) {
-        const zoneWidth = APOTH_MG.SYNAPTIC_ZONE_WIDTH;
-        const center = 5 + Math.random() * 90; // 5-95% to keep zones roughly on the bar
+      const zoneWidth = APOTH_MG.SYNAPTIC_ZONE_WIDTH;
+      const n = this.synapticStaticLevel;
+      const segmentSize = 100 / n;
+      for (let i = 0; i < n; i++) {
+        const segStart = i * segmentSize;
+        const segEnd   = segStart + segmentSize;
+        // Pick a random center within the segment, keeping the zone fully within [0,100]
+        const centerMin = Math.max(zoneWidth / 2, segStart + zoneWidth / 2);
+        const centerMax = Math.min(100 - zoneWidth / 2, segEnd - zoneWidth / 2);
+        const center = centerMin + Math.random() * Math.max(0, centerMax - centerMin);
         const min = Math.max(0, center - zoneWidth / 2);
         const max = Math.min(100, min + zoneWidth);
         this.synapticZones.push({ min, max });
       }
     }
 
-    this.log.log(`Apothecary begins brewing. (${cur('herb', this.herbCost, '-')}, ${cur('potion', this.potionCost, '-')})`);
+    this.log.log(`Apothecary begins brewing. (${logCostStr})`);
     this.startAnimation();
   }
 
@@ -216,6 +249,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     if (this.synapticalEnabled) {
       if (this.isInSynapticZone) {
         this.quality  = Math.min(this.maxQuality, this.quality + 2);
+        this.perfectClickBonus += this.perfectPotionsLevel * 5;
         this.lastMsg  = `Synaptic surge! +2 quality (${this.quality}/${this.maxQuality})`;
         this.msgClass = 'msg-double';
         this.stats.trackPotionHit(true);
@@ -229,6 +263,9 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
       } else {
         this.quality    = Math.max(0, this.quality - 1);
         this.hadMistake = true;
+        if (this.dilutionEnabled) {
+          this.dilutionMissPenalty += APOTH_MG.DILUTION_MISS_PENALTY;
+        }
         this.lastMsg    = MINIGAME_MSG.APOTHECARY.MISS_ZONE(this.quality, this.maxQuality);
         this.msgClass   = 'msg-bad';
         this.stats.trackPotionMiss();
@@ -297,25 +334,75 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
   private onPerfectPotion(): void {
     this.stopAnimation();
-    this.potionActive      = false;
+    this.potionActive = false;
+
+    // Snapshot before zeroing — the getter depends on both fields.
+    const successChance = this.dilutionSuccessChance;
+
     this.dilutionMissPenalty = 0;
     this.perfectClickBonus   = 0;
     this.stats.trackApothecaryMinigameComplete();
 
-    // ── Synaptical mode: 1 synaptical potion, no dilution ──
+    // ── Synaptical mode ──
     if (this.synapticalEnabled) {
-      this.wallet.add('synaptical-potion', 1);
-      this.stats.trackCurrencyGain('synaptical-potion', 1);
+      if (this.potionDilutionUnlocked && this.dilutionEnabled) {
+        // Dilution in synaptical mode: roll multiple times;
+        // success → synaptical potion, failure → downgrade to regular potion.
+        const totalRolls = this.dilutionTotalRolls;
+        const failChance = 100 - successChance;
+        let synaptical = 0;
+        let downgraded = 0;
 
-      if (!this.wallet.isCurrencyUnlocked('synaptical-potion')) {
-        this.wallet.unlockCurrency('synaptical-potion');
-        this.log.log('A Synaptical Potion has been crafted! New currency unlocked!', 'rare');
+        for (let i = 0; i < totalRolls; i++) {
+          if (rollChance(failChance)) {
+            downgraded++;
+          } else {
+            synaptical++;
+          }
+        }
+
+        if (synaptical > 0) this.wallet.add('synaptical-potion', synaptical);
+        if (downgraded > 0) this.wallet.add('potion', downgraded);
+
+        if (synaptical > 0) this.stats.trackCurrencyGain('synaptical-potion', synaptical);
+        if (downgraded > 0) this.stats.trackCurrencyGain('potion', downgraded);
+        for (let i = 0; i < totalRolls; i++) {
+          this.stats.trackDilution(i < synaptical);
+        }
+
+        if (!this.wallet.isCurrencyUnlocked('synaptical-potion') && synaptical > 0) {
+          this.wallet.unlockCurrency('synaptical-potion');
+          this.log.log('A Synaptical Potion has been crafted! New currency unlocked!', 'rare');
+        }
+
+        if (synaptical === totalRolls) {
+          this.log.log(`Synaptical dilution success! (${cur('synaptical-potion', synaptical)})`, 'success');
+          this.lastMsg  = `${synaptical}/${totalRolls} SYNAPTICAL!`;
+          this.msgClass = 'msg-good';
+        } else if (synaptical > 0) {
+          this.log.log(`Synaptical dilution partial! (${cur('synaptical-potion', synaptical)}, ${cur('potion', downgraded)})`, 'success');
+          this.lastMsg  = `${synaptical}/${totalRolls} SYNAPTICAL  (${downgraded} BASE)`;
+          this.msgClass = 'msg-good';
+        } else {
+          this.log.log(`Synaptical dilution failed! (${cur('potion', downgraded)})`, 'warn');
+          this.lastMsg  = `All ${downgraded} failed — ${downgraded}x BASE`;
+          this.msgClass = 'msg-bad';
+        }
       } else {
-        this.log.log(`Synaptical Potion crafted! (${cur('synaptical-potion', 1)})`, 'success');
-      }
+        // Standard synaptical: 1 synaptical potion
+        this.wallet.add('synaptical-potion', 1);
+        this.stats.trackCurrencyGain('synaptical-potion', 1);
 
-      this.lastMsg  = 'Synaptical Potion brewed!';
-      this.msgClass = 'msg-good';
+        if (!this.wallet.isCurrencyUnlocked('synaptical-potion')) {
+          this.wallet.unlockCurrency('synaptical-potion');
+          this.log.log('A Synaptical Potion has been crafted! New currency unlocked!', 'rare');
+        } else {
+          this.log.log(`Synaptical Potion crafted! (${cur('synaptical-potion', 1)})`, 'success');
+        }
+
+        this.lastMsg  = 'Synaptical Potion brewed!';
+        this.msgClass = 'msg-good';
+      }
       return;
     }
 
@@ -323,7 +410,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     if (this.potionDilutionUnlocked && this.dilutionEnabled) {
       // Dilution: roll dilutionTotalRolls independent potions, each with a chance to downgrade
       const totalRolls = this.dilutionTotalRolls;
-      const failChance = 100 - this.dilutionSuccessChance;
+      const failChance = 100 - successChance;
       let concentrated = 0;
       let downgraded   = 0;
 

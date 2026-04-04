@@ -240,9 +240,9 @@ $green:  #44dd44;
 
 .dilution-toggle {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  gap: 2px;
   padding: 3px 0;
   border: 1px solid #222;
   background: #0a0a0a;

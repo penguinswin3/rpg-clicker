@@ -11,6 +11,8 @@
 - A New character, the Artisan! 
 - More Jacks!
 - Artisan "Faceting" minigame — pick the highest quality gem from six randomly generated stones
+- Added like 8 new upgrades across the board 
+- Added a new potion base, Synaptical
 
 ## Removed
 - Bigger Game upgrade
@@ -50,6 +52,7 @@
 - Differentiated base and waste not yield in the activity log message for the culinarian minigame
 - Fixed perfect potions upgrade not showing up 
 - General Performance improvements
+- Fix a bug with bonus potion not calculating correctly
 
 ----------------------------
 

@@ -66,23 +66,17 @@
 
 ### Fighter
 - "Clean Kills" upgrade that makes uncommon drops from the fighter minigame more likely to be dropped
-- Make enemies drop more gold. Maybe combine this with the above and make it "more loot"
 - "Advantage!" Rolls damage twice and takes the higher
 
 
 ### Ranger 
-- Buried Treasure upgrade on ranger minigame that gives a big bonus of gold
 - Once better tracing is maxed open a new upgrade (Bigger beasts? Maybe add a new level select button or something?)
 
 ### Apothecary
-- Synaptical Potion base
-  - New "Formula" system for the apothecary minigame with different "sweet spots"
-  - Multiple, randomly placed sweet spots instead of one central one. The green zone will remain 
+
 
 ### Culinarian
 - Spice reselling, but it at wholesale and then sell it individually
-
-
 
 
 
@@ -92,6 +86,7 @@
 - In game Changelog? 
 - Statistics culinarian minigame histogram or count %s 
 - Cat's Eye % should not show up in the character stats till thatr upgrade is unlocked 
+- Split the apraisals out from the faceting stats section
 
 ## Balancing
 - A "Balance Report" that shows gaps in the cost progression

@@ -128,6 +128,7 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'gemstone',           base: 50,   fromCount: 16, untilCount: 17 },  // Jack 17
       { currency: 'kobold-brain',       base: 25,   fromCount: 17, untilCount: 18 },  // Jack 18
       { currency: 'jewelry',            base: 10,   fromCount: 18, untilCount: 19 },  // Jack 19
+      { currency: 'synaptical-potion',  base: 25,   fromCount: 19, untilCount: 20 },  // Jack 19
     ],
   },
 
@@ -665,6 +666,12 @@ export const APOTH_MG = {
   DILUTION_MISS_PENALTY: 10,
   /** Width of each Synaptic Static bonus zone in percentage units. */
   SYNAPTIC_ZONE_WIDTH: 8,
+  /** Herbs consumed to begin brewing a Synaptical Potion */
+  SYNAPTICAL_HERB_COST: 100,
+  /** Concentrated Potions consumed to begin brewing a Synaptical Potion */
+  SYNAPTICAL_CONCENTRATED_COST: 1,
+  /** Kobold Brains consumed to begin brewing a Synaptical Potion */
+  SYNAPTICAL_BRAIN_COST: 1,
 } as const;
 
 // ── Ranger Minigame ───────────────────────────────────────────
@@ -788,7 +795,7 @@ export const ARTISAN_MG = {
   /** Base bonus added to the "Lucky Gem" attributes (before upgrades). */
   LUCKY_GEM_BONUS: 0.1,
   /** Additional bonus per Lucky Gems upgrade level. */
-  LUCKY_GEM_BONUS_PER_LEVEL: 0.1,
+  LUCKY_GEM_BONUS_PER_LEVEL: 0.01,
   /** Milliseconds subtracted from the appraisal timer per Faster Appraising level. */
   FASTER_APPRAISING_MS_PER_LEVEL: 1000,
   /** Minimum appraisal timer duration in ms (hard floor). */
