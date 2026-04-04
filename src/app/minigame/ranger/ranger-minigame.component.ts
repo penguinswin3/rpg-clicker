@@ -67,6 +67,8 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   @Input() fairyHostageLevel = 0;
   /** Each level = +2% chance for a treasure chest, stealing from herb & meat chance. */
   @Input() treasureChestLevel = 0;
+  /** When >= 1, unrevealed chest cells display a red X. */
+  @Input() xMarksTheSpotLevel = 0;
 
   // Wallet-synced
   beastMeat = 0;
@@ -210,6 +212,11 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   /** Returns true when Fairy Hostage is active and this cell is a hidden pixie cell. */
   hasFairyHint(i: number, cell: GridCell): boolean {
     return this.fairyHostageLevel >= 1 && !cell.revealed && this.pixieCellIndices.has(i);
+  }
+
+  /** Returns true when X Marks the Spot is active and this cell hides a treasure chest. */
+  hasXMark(cell: GridCell): boolean {
+    return this.xMarksTheSpotLevel >= 1 && !cell.revealed && cell.prize === 'chest';
   }
 
   // ── Private ───────────────────────────────

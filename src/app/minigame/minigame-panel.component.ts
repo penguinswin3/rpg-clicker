@@ -62,6 +62,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() fairyHostageLevel = 0;
   /** Treasure Chest level — forwarded to the ranger minigame. */
   @Input() treasureChestLevel = 0;
+  /** X Marks the Spot level — forwarded to the ranger minigame. */
+  @Input() xMarksTheSpotLevel = 0;
   /** Bubbling Brew level — forwarded to the apothecary minigame. */
   @Input() bubblingBrewLevel = 0;
   /** Bigger Bubbles level — forwarded to the apothecary minigame. */

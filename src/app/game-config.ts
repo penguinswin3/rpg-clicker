@@ -43,6 +43,8 @@ export interface UpgradeGates {
   readonly xpMin?: number;
   /** Hide until Sharper Swords has at least this many levels purchased. */
   readonly requiresSharperSwordsMin?: number;
+  /** Hide until the Treasure Chest upgrade has at least this many levels purchased. */
+  readonly requiresTreasureChestMin?: number;
 }
 
 export interface CostDef {
@@ -343,6 +345,13 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [
       { currency: 'treasure',  base: 50,  scale: 1.4 },
       { currency: 'gemstone',  base: 10,  scale: 1.4 },
+    ] },
+  { id: 'X_MARKS_THE_SPOT', characterId: 'ranger', category: 'minigame', max: 1,
+    gates: { requiresTreasureChestMin: 1 },
+    costs: [
+      { currency: 'synaptical-potion', base: 100, scale: 1.0 },
+      { currency: 'kobold-brain',      base: 100, scale: 1.0 },
+      { currency: 'gemstone',          base: 100, scale: 1.0 },
     ] },
 
   // ── Apothecary — standard ────────────────────────────────────
@@ -706,17 +715,17 @@ export const RANGER_MG = {
   /** Meat chance reduction per Treasure Chest upgrade level (percentage). */
   CHEST_MEAT_REDUCTION_PER_LEVEL: 1,
   /** Min gold awarded when a treasure chest is found. */
-  CHEST_GOLD_MIN: 50,
+  CHEST_GOLD_MIN: 1200,
   /** Max gold awarded when a treasure chest is found. */
-  CHEST_GOLD_MAX: 500,
+  CHEST_GOLD_MAX: 30000,
   /** Min treasure awarded when a treasure chest is found. */
-  CHEST_TREASURE_MIN: 1,
+  CHEST_TREASURE_MIN: 25,
   /** Max treasure awarded when a treasure chest is found. */
-  CHEST_TREASURE_MAX: 5,
+  CHEST_TREASURE_MAX: 100,
   /** Min gemstones awarded when a treasure chest is found. */
-  CHEST_GEM_MIN: 1,
+  CHEST_GEM_MIN: 5,
   /** Max gemstones awarded when a treasure chest is found. */
-  CHEST_GEM_MAX: 3,
+  CHEST_GEM_MAX: 40,
   /** XP awarded when a treasure chest is found. */
   CHEST_XP: 15,
 } as const;

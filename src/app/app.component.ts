@@ -237,6 +237,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresSynapticalPotions && this.upgrades.level('SYNAPTICAL_POTIONS') < 1) return false;
     if (gates.xpMin != null && this.highestXp < gates.xpMin) return false;
     if (gates.requiresSharperSwordsMin != null && this.upgrades.level('SHARPER_SWORDS') < gates.requiresSharperSwordsMin) return false;
+    if (gates.requiresTreasureChestMin != null && this.upgrades.level('TREASURE_CHEST') < gates.requiresTreasureChestMin) return false;
     return true;
   }
 

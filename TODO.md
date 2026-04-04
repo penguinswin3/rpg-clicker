@@ -16,6 +16,7 @@
 
 #### Ranger
 - The hunted beast may be a kobold, awarding a random unlocked kobold part in addition to the normal rewards. 
+- X marks the spot that shows the location of burried treasure
 
 #### Apothecary
 - Created potion bases may be upgraded to a concentrated base. When this happens, it will ignore the herb save %
