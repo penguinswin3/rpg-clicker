@@ -30,13 +30,14 @@
               [attr.y2]="60 + 50 * Math.sin((t - 90) * Math.PI / 180)"
               class="dial-tick" />
 
-        <!-- Locked In: failed click positions (red ticks) -->
+        <!-- Locked In: failed click positions (coloured ticks) -->
         <line *ngFor="let a of failedAngles"
               [attr.x1]="getFailedTickCoords(a).x1"
               [attr.y1]="getFailedTickCoords(a).y1"
               [attr.x2]="getFailedTickCoords(a).x2"
               [attr.y2]="getFailedTickCoords(a).y2"
-              class="failed-tick" />
+              class="failed-tick"
+              [style.stroke]="getFailedTickColor(a)" />
 
         <!-- Pointer -->
         <line
@@ -81,13 +82,14 @@
               [attr.y2]="60 + 50 * Math.sin((t - 90) * Math.PI / 180)"
               class="dial-tick" />
 
-        <!-- Locked In: failed click positions (red ticks, persist into result) -->
+        <!-- Locked In: failed click positions (coloured ticks, persist into result) -->
         <line *ngFor="let a of failedAngles"
               [attr.x1]="getFailedTickCoords(a).x1"
               [attr.y1]="getFailedTickCoords(a).y1"
               [attr.x2]="getFailedTickCoords(a).x2"
               [attr.y2]="getFailedTickCoords(a).y2"
-              class="failed-tick" />
+              class="failed-tick"
+              [style.stroke]="getFailedTickColor(a)" />
 
         <!-- Final pointer position -->
         <line

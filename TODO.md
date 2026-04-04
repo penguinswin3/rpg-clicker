@@ -9,8 +9,7 @@
 - Relics are powerful buffs that make some aspect of a Jack better for a specific character. They are typically named after a magic item or something. 
 - maybe a series of relics? 
 - Basically just a few one off upgrades I want to add rn that don't really fit elsewhere
-- One for minigames and one for normal buttons? 
-
+- One for minigames and one for normal buttons?
 
 #### Fighter
 
@@ -21,9 +20,6 @@
 #### Culinarian
 
 #### Thief
-
-
-
 
 ### More characters
   - Artisan
@@ -69,11 +65,13 @@
 - "Clean Kills" upgrade that makes uncommon drops from the fighter minigame more likely to be dropped
 - Make enemies drop more gold. Maybe combine this with the above and make it "more loot"
 - "Advantage!" Rolls damage twice and takes the higher
+- "Lesser Short Rest" that uses 1 potion after combat 
+- Flow State that auto clicks attack for you at a slower rate (you still need to heal)
 
 ### Ranger 
 - Buried Treasure upgrade on ranger minigame that gives a big bonus of gold
 - Dense Woodlands upgrade that gives a base +1 resource yield on herbs and meat in the ranger minigame
-
+- Once better tracing is maxed open a new upgrade (Bigger beasts? Maybe add a new level select button or something?)
 
 ### Apothecary
 - Synaptical Potion base
@@ -81,15 +79,34 @@
   - Multiple, randomly placed sweet spots instead of one central one. The green zone will remain 
 
 ### Culinarian
+- Spice reselling, but it at wholesale and then sell it individually
+
+
+
+
 
 
 ## UI Tweaks
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
 - In game Changelog? 
 - Statistics culinarian minigame histogram or count %s 
+- Cat's Eye % should not show up in the character stats till thatr upgrade is unlocked 
+- The activity log should use the currency symbol when showing a currency in the parentheses part. 
+- fermentation vats should default to on
+- New stat for the fighter minigame, times defeated 
+- unify the scroll bar style across scrollable menus (match the activity log)
+- Currencies in the stats page should be sorted like the currencies in the wallet
+- remove the additional concentrated potions from the alch minigame stats page
+- Make it concentration hits and misses
+- make it "minigames complete" rather than potion count 
+- kobold mountain lion is on two lines
 
 ## Balancing
-- Short rest might be made more expensive later 
+- Upgrades to the herb, meat, and potion generators like Hireling's Hirelings
+- A "Balance Report" that shows gaps in the cost progression
+- Another upgrade makes it +5% success chance per perfect click
+- Should additional relics be locked behind a new level of relic hunter?
+
 
 ## Bug Fixes
 

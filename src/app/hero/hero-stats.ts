@@ -96,8 +96,10 @@ function buildApothecaryStats(ctx: HeroStatsContext): HeroStat[] {
     { label: HERO_STATS_FLAVOR.APOTHECARY.GOLD_PER_BREW, value: `${calcPotionMarketingGoldPerBrew(u.level('POTION_MARKETING'))}` },
   ];
   if (u.level('POTION_DILUTION') >= 1) {
-    const successChance = Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE + u.level('SERIAL_DILUTION'));
+    const successChance = Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE);
+    const totalRolls    = 2 + u.level('SERIAL_DILUTION');
     stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.DILUTION_SUCCESS, value: `${successChance}%` });
+    stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.DILUTION_ROLLS,   value: `${totalRolls}` });
   }
   return stats;
 }

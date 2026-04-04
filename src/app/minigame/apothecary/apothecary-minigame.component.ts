@@ -31,7 +31,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   @Input() biggerBubblesLevel = 0;
   /** Set to true when the Potion Dilution upgrade has been purchased. */
   @Input() potionDilutionUnlocked = false;
-  /** Serial Dilution level — each level reduces dilution fail chance by 1%. */
+  /** Serial Dilution level — each level adds +1 additional potion roll when diluting. */
   @Input() serialDilutionLevel = 0;
   /** Perfect Potions level — awards +1 concentrated potion per level on a flawless brew (no misses). */
   @Input() perfectPotionsLevel = 0;
@@ -49,9 +49,14 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.dilutionEnabledChange.emit(val);
   }
 
-  /** Current dilution success chance (base + Serial Dilution bonus − per-miss penalty). */
+  /** Current dilution success chance (base − per-miss penalty). Serial Dilution no longer affects this. */
   get dilutionSuccessChance(): number {
-    return Math.max(0, Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE + this.serialDilutionLevel - this.dilutionMissPenalty));
+    return Math.max(0, Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE - this.dilutionMissPenalty));
+  }
+
+  /** Total number of independent potion rolls per dilution: base 2 + 1 per Serial Dilution level. */
+  get dilutionTotalRolls(): number {
+    return 2 + this.serialDilutionLevel;
   }
 
   /** Interpolated color from yellow (50%) to green (100%). */
@@ -224,14 +229,16 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   private onPerfectPotion(): void {
     this.stopAnimation();
     this.potionActive = false;
+    this.dilutionMissPenalty = 0;
 
     if (this.potionDilutionUnlocked && this.dilutionEnabled) {
-      // Dilution: always produce 2 items, but each has a chance to downgrade
+      // Dilution: roll dilutionTotalRolls independent potions, each with a chance to downgrade
+      const totalRolls = this.dilutionTotalRolls;
       const failChance = 100 - this.dilutionSuccessChance;
       let concentrated = 0;
       let downgraded   = 0;
 
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < totalRolls; i++) {
         if (rollChance(failChance)) {
           downgraded++;
         } else {
@@ -248,7 +255,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
         this.stats.trackCurrencyGain('concentrated-potion', concentrated);
       }
       if (downgraded > 0) this.stats.trackCurrencyGain('potion', downgraded);
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < totalRolls; i++) {
         this.stats.trackDilution(i < concentrated);
       }
 
@@ -257,17 +264,17 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
         this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
       }
 
-      if (concentrated === 2) {
-        this.log.log(`Dilution success! 2 Concentrated Potions crafted!`, 'success');
-        this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FULL;
+      if (concentrated === totalRolls) {
+        this.log.log(`Dilution success! ${concentrated}/${totalRolls} Concentrated Potions crafted!`, 'success');
+        this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FULL(concentrated, totalRolls);
         this.msgClass = 'msg-good';
-      } else if (concentrated === 1) {
-        this.log.log(`Dilution partial: 1 Concentrated Potion + 1 Potion Base.`, 'success');
-        this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_PARTIAL;
+      } else if (concentrated > 0) {
+        this.log.log(`Dilution partial: ${concentrated}/${totalRolls} Concentrated Potions + ${downgraded} Potion Base(s).`, 'success');
+        this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_PARTIAL(concentrated, downgraded, totalRolls);
         this.msgClass = 'msg-good';
       } else {
-        this.log.log(`Dilution failed! 2 Potion Bases produced instead.`, 'warn');
-        this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FAIL;
+        this.log.log(`Dilution failed! ${downgraded} Potion Base(s) produced instead.`, 'warn');
+        this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FAIL(downgraded);
         this.msgClass = 'msg-bad';
       }
     } else {

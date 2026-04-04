@@ -5,7 +5,10 @@
 - Two new passive resource generation upgrades for Herbs and Meat
 - A new automatic potion making upgrade for the apothecary. It can be toggled on and off
 - A minimum hit upgrade for th fighter 
+- A new upgrade to the fighter minigame that gives hints as to the sweet spot location 
+
 ## Removed
+- Bigger Game upgrade
 
 ## Changed
 - More Herbs and Better Tracking are stronger
@@ -13,10 +16,28 @@
 - Toggling a Vault or Activity Log filter while on ALL will select all options individually for ease of exclusion
 - Failing the apothecary minigame will now reduce the percent chance of a successful dilution
 - The dilution percent display color reflects this 
+- Reduced the Kobold Ear cost of the Kobold Ear Jack
+- Swapped the order of the Pixie Dust and Kobold Ear jack 
+- Renamed "Unassign" to "Recall" all jacks
+- Swapped the order of treasure and kobold fang Jack
+- Tweaked the description of Plentiful Plundering
+- Significantly more gold is awarded per unused detection in the thief minigame 
+- Relic Hunter now costs more Hearty Meals
+- Sharper Swords scales slower
+- Reworked Serial Dilution to award more concentrated potions
+- Kobolds drop more gold 
+- Waste Not hearty meal cost scales harder
+- Stronger Kobolds has a lower kobold part cost
+- Hovel Garden and Beast Traps scale a little less
+- Bubbling Brew now costs herbs 
+- Fermentation Vats cost scaling is less
 
 ## Bugfixes
 - Cleaned up the missing row on the ranger character stats box 
 - Cat's Eye potion is now factored in to the per seconds 
+- You can no longer toggle the dilution upgrade in the middle of a brew
+- Differentiated base and waste not yield in the activity log message for the culinarian minigame
+
 ----------------------------
 
 # Version Alpha 1.1.1

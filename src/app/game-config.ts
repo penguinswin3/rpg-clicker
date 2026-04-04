@@ -27,6 +27,8 @@ export interface UpgradeGates {
   readonly requiresBubblingBrew?: boolean;
   /** Hide until the Potion Dilution minigame upgrade has been purchased. */
   readonly requiresPotionDilution?: boolean;
+  /** Hide until the Locked In minigame upgrade has been purchased. */
+  readonly requiresLockedIn?: boolean;
   /** Hide until the player has received at least one Relic. */
   readonly requiresRelic?: boolean;
   /** Hide until the player has obtained at least one Kobold Fang. */
@@ -57,16 +59,19 @@ export interface UpgradeDef {
   readonly max:         number;
   readonly costs:       readonly CostDef[];
   readonly gates?:      UpgradeGates;
+  /** When explicitly set to false, the upgrade is hidden from all UI lists. Omit or set true to show normally. */
+  readonly enabled?:    boolean;
 }
 
 // ── XP Unlock Thresholds ─────────────────────────────────────
 export const XP_THRESHOLDS = {
   /** XP required before the Ranger unlock offer appears */
   RANGER_UNLOCK:     100,
-  /** XP required before the Apothecary unlock offer appears */
-  APOTHECARY_UNLOCK: 1000,
   /** XP required before the First Jack purchase appears */
-  JACKS_UNLOCK: 1500,
+  JACKS_UNLOCK: 1000,
+  /** XP required before the Apothecary unlock offer appears */
+  APOTHECARY_UNLOCK: 2000,
+
   /** XP required to unlock all character minigame screens */
   MINIGAME_UNLOCK:   4000,
   /** XP required before the Culinarian unlock offer appears */
@@ -95,16 +100,16 @@ export const JACK_RESOURCE_PROGRESSION: readonly { currency: string; base: numbe
   { currency: 'herb',                 base: 200  },
   { currency: 'beast',                base: 200  },
   { currency: 'potion',               base: 50   },
+  { currency: 'kobold-ear',           base: 25   },
   { currency: 'pixie-dust',           base: 25   },
-  { currency: 'kobold-ear',           base: 50   },
   { currency: 'concentrated-potion',  base: 10   },
   { currency: 'kobold-tongue',        base: 15   },
   { currency: 'spice',                base: 200  },
   { currency: 'hearty-meal',          base: 5    },
   { currency: 'kobold-hair',          base: 10   },
   { currency: 'dossier',              base: 150  },
-  { currency: 'treasure',             base: 150  },
   { currency: 'kobold-fang',          base: 10   },
+  { currency: 'treasure',             base: 150  },
   { currency: 'relic',                base: 1    },
 
 ];
@@ -152,7 +157,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
 
   // ── Fighter — minigame ───────────────────────────────────────
   { id: 'SHARPER_SWORDS',   characterId: 'fighter', category: 'minigame', max: 999,
-    costs: [{ currency: 'gold', base: 50, scale: 1.3 }] },
+    costs: [{ currency: 'gold', base: 50, scale: 1.15 }] },
   { id: 'POTION_CHUGGING',  characterId: 'fighter', category: 'minigame', max: 999,
     gates: { requiresApothecary: true },
     costs: [
@@ -177,10 +182,10 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: KOBOLD_VARIANTS.length - 1,
     gates: { xpMin: 3000 },
     costs: [
-      { currency: 'kobold-ear',    base: 66, scale: 2.0 },                                        // always
+      { currency: 'kobold-ear',    base: 50, scale: 2.0 },                                        // always
       { currency: 'beast',         base: 500, scale: 1.0, fromLevel: 0, untilLevel: 1 },           // tier 1 only
-      { currency: 'kobold-tongue', base: 66, scale: 1.0, fromLevel: 1, untilLevel: 2 },           // tier 2 only
-      { currency: 'kobold-hair',   base: 66, scale: 1.0, fromLevel: 2, untilLevel: 3 },           // tier 3 only
+      { currency: 'kobold-tongue', base: 50, scale: 1.0, fromLevel: 1, untilLevel: 2 },           // tier 2 only
+      { currency: 'kobold-hair',   base: 50, scale: 1.0, fromLevel: 2, untilLevel: 3 },           // tier 3 only
     ] },
   { id: 'FIRST_STRIKE', characterId: 'fighter', category: 'minigame', max: 1,
     gates: { requiresFang: true },
@@ -192,20 +197,20 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Ranger — standard ────────────────────────────────────────
   { id: 'MORE_HERBS',      characterId: 'ranger', category: 'standard', max: 100,
     costs: [{ currency: 'gold', base: 15, scale: 1.2 }] },
-  { id: 'BETTER_TRACKING', characterId: 'ranger', category: 'standard', max: 15,
+  { id: 'BETTER_TRACKING', characterId: 'ranger', category: 'standard', max: 16,
     costs: [{ currency: 'gold', base: 30, scale: 1.3 }] },
   { id: 'BAITED_TRAPS',    characterId: 'ranger', category: 'standard', max: 999,
     costs: [
-      { currency: 'gold',  base: 200, scale: 1.4 },
-      { currency: 'beast', base: 50,  scale: 1.5 },
+      { currency: 'gold',  base: 200, scale: 1.2 },
+      { currency: 'beast', base: 50,  scale: 1.3 },
     ] },
   { id: 'HOVEL_GARDEN',    characterId: 'ranger', category: 'standard', max: 999,
     costs: [
-      { currency: 'gold', base: 150, scale: 1.4 },
-      { currency: 'herb', base: 50,  scale: 1.5 },
+      { currency: 'gold', base: 150, scale: 1.2 },
+      { currency: 'herb', base: 50,  scale: 1.3 },
     ] },
   { id: 'BIGGER_GAME',     characterId: 'ranger', category: 'standard', max: 999,    // each level +1 max Raw Beast Meat from hero button
-    costs: [{ currency: 'gold', base: 480, scale: 1.75 }] },
+    costs: [{ currency: 'gold', base: 480, scale: 1.75 }], enabled: false },
   { id: 'POTION_CATS_EYE', characterId: 'ranger', category: 'standard', max: 100,    // 100 levels × +1% = 100% chance to roll both herb and beast
     gates: { requiresApothecary: true },
     costs: [
@@ -238,9 +243,9 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'gold', base: 50, scale: 1.07 }] },
   { id: 'FERMENTATION_VATS', characterId: 'apothecary', category: 'standard', max: 999,
     costs: [
-      { currency: 'gold',   base: 500,  scale: 1.4 },
-      { currency: 'herb',   base: 100,  scale: 1.5 },
-      { currency: 'potion', base: 25,   scale: 1.4 },
+      { currency: 'gold',   base: 500,  scale: 1.2 },
+      { currency: 'herb',   base: 100,  scale: 1.2 },
+      { currency: 'potion', base: 25,   scale: 1.2 },
     ] },
 
   // ── Culinarian — standard ────────────────────────────────────
@@ -256,7 +261,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'WASTE_NOT', characterId: 'culinarian', category: 'minigame', max: 5,
     costs: [
       { currency: 'spice',       base: 200, scale: 1.5 },
-      { currency: 'hearty-meal', base: 5,  scale: 1.4 },
+      { currency: 'hearty-meal', base: 5,  scale: 1.8 },
     ] },
   { id: 'LARGER_COOKBOOKS', characterId: 'culinarian', category: 'minigame', max: 1,
     gates: { requiresThief: true },
@@ -298,8 +303,9 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'RELIC_HUNTER', characterId: 'thief', category: 'minigame', max: 4,
     gates: { requiresRelic: true },
     costs: [
-      { currency: 'hearty-meal', base: 35,  scale: 2.0 },
+      { currency: 'hearty-meal', base: 50,  scale: 2.0 },
       { currency: 'dossier',     base: 500, scale: 2.0 },
+      { currency: 'treasure',    base: 500, scale: 2.0 },
     ] },
   { id: 'LOCKED_IN', characterId: 'thief', category: 'minigame', max: 1,
     costs: [
@@ -307,12 +313,19 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'dossier',  base: 250,   scale: 1.0 },
       { currency: 'treasure', base: 50,    scale: 1.0 },
     ] },
+  { id: 'FLOW_STATE', characterId: 'thief', category: 'minigame', max: 1,
+    gates: { requiresLockedIn: true },
+    costs: [
+      { currency: 'gold',     base: 50_000, scale: 1.0 },
+      { currency: 'dossier',  base: 1_500,  scale: 1.0 },
+      { currency: 'treasure', base: 250,    scale: 1.0 },
+    ] },
 
   // ── Apothecary — minigame ────────────────────────────────────
   { id: 'BUBBLING_BREW', characterId: 'apothecary', category: 'minigame', max: 1,
     costs: [
       { currency: 'gold',       base: 9000, scale: 1.0 },
-      { currency: 'kobold-ear', base: 100,  scale: 1.0 },
+      { currency: 'herb', base: 100,  scale: 1.0 },
     ] },
   { id: 'BIGGER_BUBBLES', characterId: 'apothecary', category: 'minigame', max: 6,
     gates: { requiresBubblingBrew: true },
@@ -368,7 +381,7 @@ export const YIELDS = {
   /** Base % chance the Ranger successfully brings down a beast */
   RANGER_BASE_BEAST_CHANCE:  50,
   /** Hard cap on beast-find chance regardless of Better Tracking level */
-  RANGER_BEAST_CHANCE_CAP:   95,
+  RANGER_BEAST_CHANCE_CAP:   100,
 
   /** Herbs consumed per Apothecary brew action */
   APOTHECARY_BREW_HERB_COST: 5,
@@ -414,11 +427,11 @@ export const FIGHTER_MG = {
   /** Extra enemy max damage per kobold level above 1 */
   KOBOLD_DMG_PER_LEVEL:       2,
   /** Extra gold min reward per kobold level above 1 */
-  KOBOLD_GOLD_MIN_PER_LEVEL:  3,
+  KOBOLD_GOLD_MIN_PER_LEVEL:  15,
   /** Extra gold max reward per kobold level above 1 */
-  KOBOLD_GOLD_MAX_PER_LEVEL:  9,
+  KOBOLD_GOLD_MAX_PER_LEVEL:  95,
   /** Extra XP reward per kobold level above 1 */
-  KOBOLD_XP_PER_LEVEL:        2,
+  KOBOLD_XP_PER_LEVEL:        3,
   /** Extra Kobold Ear reward per kobold level above 1 */
   KOBOLD_EAR_PER_LEVEL:       0,
 } as const;
@@ -499,7 +512,7 @@ export const THIEF_MG = {
   /** Base gold awarded on success. */
   GOLD_BASE: 50,
   /** Bonus gold per unused detection point. */
-  GOLD_PER_UNUSED: 25,
+  GOLD_PER_UNUSED: 100,
   /** Percent chance of receiving a relic on a successful heist (0–100). */
   RELIC_CHANCE: 1,
   /** Number of relics awarded when the relic roll succeeds. */

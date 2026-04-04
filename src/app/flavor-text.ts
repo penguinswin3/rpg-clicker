@@ -72,7 +72,7 @@ export const UPGRADE_FLAVOR = {
   BUBBLING_BREW:        { name: 'Bubbling Brew',             desc: 'Skilled brewing will award bonus progress' },
   BIGGER_BUBBLES:       { name: 'Bigger Bubbles',            desc: 'Increases the size of the Bubbling zone' },
   POTION_DILUTION:      { name: 'Potion Dilution',           desc: '2x concentrated potions, with a risk of failure' },
-  SERIAL_DILUTION:      { name: 'Serial Dilution',           desc: '+1% dilution success chance per level' },
+  SERIAL_DILUTION:      { name: 'Serial Dilution',           desc: '+1 additional independent potion roll per level when diluting' },
   PERFECT_POTIONS:      { name: 'Perfect Potions',           desc: '+1 concentrated potion per level on a flawless brew' },
 
   // Culinarian
@@ -82,13 +82,14 @@ export const UPGRADE_FLAVOR = {
 
   // Thief
   METICULOUS_PLANNING:      { name: 'Meticulous Planning',       desc: '+1% thieving success chance per level' },
-  PLENTIFUL_PLUNDERING:     { name: 'Plentiful Plundering',      desc: 'Each successful heist awards gold equal to dossiers collected, per level' },
+  PLENTIFUL_PLUNDERING:     { name: 'Plentiful Plundering',      desc: 'Each successful robbery awards gold equal to dossiers collected, per level' },
   POTION_OF_STICKY_FINGERS: { name: 'Potion of Sticky Fingers',  desc: '+1 max dossier yield per level' },
   VANISHING_POWDER:         { name: 'Vanishing Powder',          desc: '+1 max detection tolerance per level' },
   POTION_CATS_EARS:         { name: "Potion of Cat's Ears",      desc: '+3° sweet spot size per level' },
   BAG_OF_HOLDING:           { name: 'Bag of Holding',            desc: 'Increases maximum gold and treasure yield' },
   RELIC_HUNTER:             { name: 'Relic Hunter',              desc: '+1% relic drop chance per level' },
   LOCKED_IN:                { name: 'Locked In',                 desc: 'Marks failed click positions on the dial with a red tick' },
+  FLOW_STATE:               { name: 'Flow State',                desc: 'Dial ticks now give hints as to where the sweet spot is' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
   RELIC_FIGHTER:    { name: 'Amulet of Glory',       desc: 'A powerful artifact that empowers the Fighter. (placeholder)' },
@@ -265,7 +266,8 @@ export const HERO_STATS_FLAVOR = {
     HERBS_BREW:           'Herbs Per Brew   :',
     SAVE_CHANCE:          'Herb Save Chance :',
     GOLD_PER_BREW:        'Gold Per Brew    :',
-    DILUTION_SUCCESS:     'Dilution Success :',
+    DILUTION_SUCCESS:     'Dilution Chance  :',
+    DILUTION_ROLLS:       'Dilution Rolls   :',
   },
   CULINARIAN: {
     SPICE_PER_CLICK:  'Spice Per Click  :',
@@ -300,9 +302,9 @@ export const MINIGAME_MSG = {
     HIT_ZONE:       (q: number, max: number) => `On beat! +1 quality (${q}/${max})`,
     MISS_ZONE:      (q: number, max: number) => `Off beat! \u22121 quality (${q}/${max})`,
     PERFECT:        'Potion concentrated',
-    DILUTE_FULL:    '2x CONCENTRATED POTIONS',
-    DILUTE_PARTIAL: '1x CONCENTRATED + 1x BASE',
-    DILUTE_FAIL:    'Potion ruined!',
+    DILUTE_FULL:    (concentrated: number, total: number) => `${concentrated}/${total} CONCENTRATED!`,
+    DILUTE_PARTIAL: (concentrated: number, downgraded: number, total: number) => `${concentrated}/${total} CONCENTRATED  (${downgraded} BASE)`,
+    DILUTE_FAIL:    (downgraded: number) => `All ${downgraded} failed — ${downgraded}x BASE`,
   },
 
   RANGER: {

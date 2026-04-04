@@ -224,6 +224,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresDossier       && !this.wallet.isCurrencyUnlocked('dossier'))   return false;
     if (gates.requiresBubblingBrew  && this.upgrades.level('BUBBLING_BREW') < 1)     return false;
     if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1)  return false;
+    if (gates.requiresLockedIn      && this.upgrades.level('LOCKED_IN') < 1)         return false;
     if (gates.xpMin != null && this.highestXp < gates.xpMin) return false;
     if (gates.requiresSharperSwordsMin != null && this.upgrades.level('SHARPER_SWORDS') < gates.requiresSharperSwordsMin) return false;
     return true;

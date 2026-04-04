@@ -76,11 +76,12 @@
       <input type="checkbox"
              [ngModel]="dilutionEnabled"
              (ngModelChange)="onDilutionChange($event)"
-             [ngModelOptions]="{standalone: true}" />
+             [ngModelOptions]="{standalone: true}"
+             [disabled]="potionActive" />
       Dilution
     </label>
     <span class="dilution-info" *ngIf="dilutionEnabled" [style.color]="dilutionColor">
-      ({{ dilutionSuccessChance }}% success<ng-container *ngIf="dilutionMissPenalty > 0">, −{{ dilutionMissPenalty }}%</ng-container>)
+      ({{ dilutionTotalRolls }}x, {{ dilutionSuccessChance }}% each<ng-container *ngIf="dilutionMissPenalty > 0">, −{{ dilutionMissPenalty }}%</ng-container>)
     </span>
   </div>
 

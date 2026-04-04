@@ -291,7 +291,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
       this.wallet.unlockCurrency('hearty-meal');
       this.log.log(`The Culinarian perfects a Hearty Meal! New currency unlocked!`, 'rare');
     } else if (wasteNotBonus > 0) {
-      this.log.log(`Hearty Meal crafted! (+${this.MEAL_REWARD} +${wasteNotBonus} Waste Not bonus)`, 'success');
+      this.log.log(`Hearty Meal crafted! (+${this.MEAL_REWARD} base +${wasteNotBonus} Waste Not bonus!)`, 'success');
     } else {
       this.log.log(`Hearty Meal crafted! (+${this.MEAL_REWARD})`, 'success');
     }

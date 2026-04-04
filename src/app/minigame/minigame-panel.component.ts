@@ -79,6 +79,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() relicHunterLevel = 0;
   /** Locked In level — forwarded to the thief minigame. */
   @Input() lockedInLevel = 0;
+  /** Flow State level — forwarded to the thief minigame. */
+  @Input() flowStateLevel = 0;
   /** Previously-saved fighter combat state. */
   @Input() fighterCombatState: FighterCombatState | null = null;
   /** Emitted whenever fighter combat state changes. */

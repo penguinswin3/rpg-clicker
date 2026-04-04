@@ -104,10 +104,11 @@ export class UpgradeService {
       .every(c => this.wallet.canAfford(c.currency, rt.currentCosts[c.currency]));
   }
 
-  /** Returns upgrade IDs for a given character and category, in registry order. */
+  /** Returns upgrade IDs for a given character and category, in registry order.
+   *  Upgrades with `enabled: false` are always excluded. */
   getUpgradesFor(characterId: string, category: UpgradeCategory): string[] {
     return UPGRADE_DEFS
-      .filter(d => d.characterId === characterId && d.category === category)
+      .filter(d => d.characterId === characterId && d.category === category && d.enabled !== false)
       .map(d => d.id);
   }
 

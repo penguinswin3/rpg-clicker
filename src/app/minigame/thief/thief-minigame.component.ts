@@ -41,6 +41,8 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
   @Input() relicHunterLevel     = 0;
   /** Locked In level — when ≥1, failed click positions are shown as red ticks on the dial. */
   @Input() lockedInLevel        = 0;
+  /** Flow State level — when ≥1, failed tick colours shift from red→yellow→green based on proximity to the sweet spot. */
+  @Input() flowStateLevel        = 0;
 
   // ── Wallet-synced ─────────────────────────
   dossiers = 0;
@@ -307,6 +309,27 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
       x2: 60 + 50 * Math.cos(rad),
       y2: 60 + 50 * Math.sin(rad),
     };
+  }
+
+  /**
+   * Returns the stroke color for a failed-click tick mark.
+   * Without Flow State: always red (#f44).
+   * With Flow State: interpolates red → yellow → green on a 0–180° angular
+   * distance scale from the sweet spot center.
+   *   0°  away → hue 120 (green)
+   *   90° away → hue 60  (yellow)
+   *   180° away → hue 0  (red)
+   */
+  getFailedTickColor(angle: number): string {
+    if (this.flowStateLevel < 1) return '#f44';
+    // Compute shortest angular distance from this tick to the sweet spot center
+    let diff = Math.abs(angle - this.sweetSpotCenter) % 360;
+    if (diff > 180) diff = 360 - diff;
+    // Normalize to [0, 1]: 0 = at center, 1 = opposite side
+    const t = Math.min(diff / 180, 1);
+    // Interpolate hue: 120 (green) → 60 (yellow) → 0 (red)
+    const hue = Math.round(120 * (1 - t));
+    return `hsl(${hue}, 90%, 55%)`;
   }
 
   /** Compute the SVG arc path for the sweet-spot indicator (shown after heist ends). */
