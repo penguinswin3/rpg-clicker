@@ -27,6 +27,22 @@ export const CURRENCY_FLAVOR = {
 
 } as const;
 
+// ── Currency log helper ───────────────────────────────────────
+/**
+ * Format a currency amount for rich display in the activity log.
+ * Returns a tagged token `{{currencyId|displayText}}` that the
+ * activity-log component parses into a colored `<span>`.
+ *
+ * @param id     Currency key from CURRENCY_FLAVOR (e.g. 'gold').
+ * @param amount Numeric amount to display.
+ * @param sign   Prefix sign: '+' (default), '-', or '' (none).
+ */
+export function cur(id: string, amount: number | string, sign: '+' | '-' | '' = '+'): string {
+  const flavor = (CURRENCY_FLAVOR as Record<string, { symbol: string }>)[id];
+  const symbol = flavor?.symbol ?? '?';
+  return `{{${id}|${sign}${amount}${symbol}}}`;
+}
+
 // ꔮ 𐓑  ᛝ ᚕ
 // ── Upgrade Colors ────────────────────────────────────────────
 /** Shared accent colors for all upgrade cards. */

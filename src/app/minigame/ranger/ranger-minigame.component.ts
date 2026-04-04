@@ -5,7 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { RANGER_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 import { shuffleInPlace } from '../../utils/mathUtils';
 
 type PrizeType = 'meat' | 'herb' | 'pixie' | 'blank';
@@ -135,7 +135,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   newRound(): void {
     if (!this.canScout) return;
     this.wallet.remove('beast', this.SCOUT_COST);
-    this.log.log(`Ranger sets out to scout the area. (−${this.SCOUT_COST} Raw Beast Meat)`);
+    this.log.log(`Ranger sets out to scout the area. (${cur('beast', this.SCOUT_COST, '-')})`);
 
     // Prize cells + blank cells, all shuffled.
     // Bountiful Lands: each level adds +1 guaranteed prize node (up to all blanks converted).
@@ -227,8 +227,6 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
         if (!this.wallet.isCurrencyUnlocked('pixie-dust')) {
           this.wallet.unlockCurrency('pixie-dust');
           this.log.log('A Pixie emerged from the undergrowth! Pixie Dust unlocked!', 'rare');
-        } else {
-          this.log.log('A Pixie! +1 Pixie Dust', 'rare');
         }
         break;
 
@@ -274,19 +272,20 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     this.resultMultiplier = multiplier;
     this.resultXp = this.xpGained;
 
-    // Build log message with text for activity log
+    // Build log message with colored currency tokens
     const parts: string[] = [];
-    if (totalMeat  > 0) parts.push(`${totalMeat}× meat`);
-    if (totalHerb  > 0) parts.push(`${totalHerb}× herb`);
-    if (totalPixie > 0) parts.push(`${totalPixie}× pixie dust`);
+    if (totalMeat  > 0) parts.push(cur('beast', totalMeat));
+    if (totalHerb  > 0) parts.push(cur('herb', totalHerb));
+    if (totalPixie > 0) parts.push(cur('pixie-dust', totalPixie));
+    if (this.xpGained > 0) parts.push(cur('xp', this.xpGained));
 
-    const summary    = parts.length ? parts.join(', ') : 'nothing useful';
-    const xpStr      = this.xpGained > 0 ? ` (+${this.xpGained} XP)` : '';
     const multiplierStr = multiplier > 1 ? ` [×${multiplier} Abundant Lands]` : '';
-    const type       = this.pixieFound > 0 ? 'rare' : 'success';
+    const type: 'default' | 'success' = this.pixieFound > 0 ? 'success' : 'default';
 
-    if (this.pixieFound === 0) {
-      this.log.log(`Ranger scouted the area: found ${summary}.${xpStr}${multiplierStr}`, type);
+    if (parts.length > 0) {
+      this.log.log(`Ranger scouted the area. (${parts.join(', ')})${multiplierStr}`, type);
+    } else {
+      this.log.log(`Ranger scouted the area: found nothing useful.`);
     }
 
     this.lastMsg  = successCount === 0 ? 'Found: Nothing...' : 'Found:';

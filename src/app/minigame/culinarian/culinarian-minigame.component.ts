@@ -5,7 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { CULINARIAN_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 
 /** Feedback per slot after a guess is submitted. */
 export type PegColor = 'green' | 'yellow' | 'miss';
@@ -132,7 +132,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
 
     this.lastMsg  = MINIGAME_MSG.CULINARIAN.ROUND_START(this.MAX_GUESSES);
     this.msgClass = 'msg-neutral';
-    this.log.log(`Culinarian begins experimenting. (−${this.INGREDIENT_COST} each ingredient)`);
+    this.log.log(`Culinarian begins experimenting. (${cur('herb', this.INGREDIENT_COST, '-')}, ${cur('beast', this.INGREDIENT_COST, '-')}, ${cur('kobold-tongue', this.INGREDIENT_COST, '-')}, ${cur('spice', this.INGREDIENT_COST, '-')})`);
   }
 
   submitGuess(): void {
@@ -291,9 +291,9 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
       this.wallet.unlockCurrency('hearty-meal');
       this.log.log(`The Culinarian perfects a Hearty Meal! New currency unlocked!`, 'rare');
     } else if (wasteNotBonus > 0) {
-      this.log.log(`Hearty Meal crafted! (+${this.MEAL_REWARD} base +${wasteNotBonus} Waste Not bonus!)`, 'success');
+      this.log.log(`Hearty Meal crafted! (${cur('hearty-meal', this.MEAL_REWARD)} base ${cur('hearty-meal', wasteNotBonus)} Waste Not!)`, 'success');
     } else {
-      this.log.log(`Hearty Meal crafted! (+${this.MEAL_REWARD})`, 'success');
+      this.log.log(`Hearty Meal crafted! (${cur('hearty-meal', this.MEAL_REWARD)})`, 'success');
     }
 
     this.lastMsg  = wasteNotBonus > 0

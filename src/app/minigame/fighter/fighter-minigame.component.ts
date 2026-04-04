@@ -5,7 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { FIGHTER_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant, MINIGAME_MSG } from '../../flavor-text';
+import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant, MINIGAME_MSG, cur } from '../../flavor-text';
 import { FighterCombatState } from '../../options/save.service';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 
@@ -388,7 +388,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       potionsConsumed++;
       this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount*this.potionHealEfficiency);
     }
-    this.log.log(`Chugged ${potionsConsumed} potion(s) during a short rest.`, "default")
+    this.log.log(`Chugged some potions during a short rest. (${cur('potion', potionsConsumed, '-')})`, "default")
     this.stats.trackFighterPotionDrank(potionsConsumed);
   }
 
@@ -444,8 +444,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
             'rare'
           );
         }
-        const dropFlavor = (CURRENCY_FLAVOR as Record<string, { symbol: string }>)[drop.currencyId];
-        secondaryMsg = `, +${drop.amount}${dropFlavor?.symbol ?? '?'}`;
+        secondaryMsg = `, ${cur(drop.currencyId, drop.amount)}`;
       }
     }
 
@@ -453,12 +452,12 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     const logType = gotSecondaryDrop ? 'success' : (isFirstEar ? 'rare' : 'default');
     if (isFirstEar) {
       this.log.log(
-        `Victory! The ${this.enemy.name} drops a Kobold Ear! (+${gold}g, +${this.enemy.xpReward} XP${secondaryMsg})`,
+        `Victory! The ${this.enemy.name} drops a Kobold Ear! (${cur('gold', gold)}, ${cur('xp', this.enemy.xpReward)}, ${cur('kobold-ear', this.enemy.earReward)}${secondaryMsg})`,
         'rare'
       );
     } else {
       this.log.log(
-        `Victory! ${this.enemy.name} defeated. (+${gold}g, +${this.enemy.xpReward} XP, +${this.enemy.earReward} ear${secondaryMsg})`,
+        `Victory! ${this.enemy.name} defeated. (${cur('gold', gold)}, ${cur('xp', this.enemy.xpReward)}, ${cur('kobold-ear', this.enemy.earReward)}${secondaryMsg})`,
         logType
       );
     }

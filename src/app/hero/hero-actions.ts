@@ -12,7 +12,7 @@ import { ActivityLogService } from '../activity-log/activity-log.service';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { StatisticsService } from '../statistics/statistics.service';
 import { YIELDS } from '../game-config';
-import { CURRENCY_FLAVOR } from '../flavor-text';
+import { CURRENCY_FLAVOR, cur } from '../flavor-text';
 import { rollChance, rollMultiChance, randInt } from '../utils/mathUtils';
 import {
   calcGoldPerClick, calcXpPerBounty,
@@ -80,7 +80,7 @@ function clickFighter(ctx: HeroActionContext): void {
   ctx.wallet.add('xp',   xpPerBounty);
   ctx.stats.trackCurrencyGain('gold', goldPerClick);
   ctx.stats.trackCurrencyGain('xp', xpPerBounty);
-  ctx.log.log(`You ventured forth and found ${goldPerClick} gold. (+${xpPerBounty} XP)`);
+  ctx.log.log(`You ventured forth and found gold. (${cur('gold', goldPerClick)}, ${cur('xp', xpPerBounty)})`);
 }
 
 function clickRanger(ctx: HeroActionContext): void {
@@ -103,9 +103,9 @@ function clickRanger(ctx: HeroActionContext): void {
       const meat = computeMeatYield(biggerGameLevel);
       ctx.wallet.add('beast', meat);
       ctx.stats.trackCurrencyGain('beast', meat);
-      ctx.log.log(`Cat's Eye! You foraged ${herbs} herb(s) AND hunted a beast! (+${meat} meat, +1 XP)`, 'success');
+      ctx.log.log(`Cat's Eye! You foraged herbs AND hunted a beast! (${cur('herb', herbs)}, ${cur('beast', meat)}, ${cur('xp', 1)})`, 'success');
     } else {
-      ctx.log.log(`Cat's Eye! You foraged ${herbs} herb(s), but the beast escaped. (+1 XP)`, 'success');
+      ctx.log.log(`Cat's Eye! You foraged herbs, but the beast escaped. (${cur('herb', herbs)}, ${cur('xp', 1)})`, 'success');
     }
   } else {
     const targetHerb = rollChance(50);
@@ -113,16 +113,16 @@ function clickRanger(ctx: HeroActionContext): void {
       const herbs = computeHerbYield(moreHerbsLevel);
       ctx.wallet.add('herb', herbs);
       ctx.stats.trackCurrencyGain('herb', herbs);
-      ctx.log.log(`You targeted herbs and foraged ${herbs} herb(s). (+1 XP)`);
+      ctx.log.log(`You targeted herbs and foraged some. (${cur('herb', herbs)}, ${cur('xp', 1)})`);
     } else {
       const gotBeast = rollChance(beastChance);
       if (gotBeast) {
         const meat = computeMeatYield(biggerGameLevel);
         ctx.wallet.add('beast', meat);
         ctx.stats.trackCurrencyGain('beast', meat);
-        ctx.log.log(`You tracked a beast and claimed its meat. (+${meat} meat, +1 XP)`);
+        ctx.log.log(`You tracked a beast and claimed its meat. (${cur('beast', meat)}, ${cur('xp', 1)})`);
       } else {
-        ctx.log.log(`You targeted a beast but it escaped. (+1 XP)`);
+        ctx.log.log(`You targeted a beast but it escaped. (${cur('xp', 1)})`);
       }
     }
   }
@@ -136,7 +136,7 @@ function clickApothecary(ctx: HeroActionContext): void {
 
   if (!ctx.wallet.canAfford('herb', herbCost)) {
     const have = Math.floor(ctx.wallet.get('herb'));
-    ctx.log.log(`Not enough herbs to brew. Need ${herbCost}, have ${have}.`, 'warn');
+    ctx.log.log(`Not enough herbs to brew. Need ${cur('herb', herbCost, '')}, have ${cur('herb', have, '')}.`, 'warn');
     return;
   }
   ctx.wallet.remove('herb', herbCost);
@@ -153,9 +153,9 @@ function clickApothecary(ctx: HeroActionContext): void {
   if (herbsSaved > 0) {
     ctx.wallet.add('herb', herbsSaved);
     ctx.stats.trackCurrencyGain('herb', herbsSaved);
-    ctx.log.log(`You brewed a potion and recovered ${herbsSaved} herb${herbsSaved > 1 ? 's' : ''}! (+1 XP)`, 'success');
+    ctx.log.log(`You brewed a potion and recovered herbs! (${cur('potion', 1)}, ${cur('herb', herbsSaved)}, ${cur('xp', 1)})`, 'success');
   } else {
-    ctx.log.log(`You brewed a potion from ${herbCost} herbs. (+1 XP)`);
+    ctx.log.log(`You brewed a potion. (${cur('potion', 1)}, ${cur('xp', 1)})`);
   }
 }
 
@@ -166,7 +166,7 @@ function clickCulinarian(ctx: HeroActionContext): void {
 
   if (!ctx.wallet.canAfford('gold', goldCost)) {
     const have = Math.floor(ctx.wallet.get('gold'));
-    ctx.log.log(`Not enough gold to gather spices. Need ${goldCost}g, have ${have}g.`, 'warn');
+    ctx.log.log(`Not enough gold to gather spices. Need ${cur('gold', goldCost, '')}, have ${cur('gold', have, '')}.`, 'warn');
     return;
   }
   ctx.wallet.remove('gold', goldCost);
@@ -174,7 +174,7 @@ function clickCulinarian(ctx: HeroActionContext): void {
   ctx.wallet.add('xp', 1);
   ctx.stats.trackCurrencyGain('spice', spiceYield);
   ctx.stats.trackCurrencyGain('xp', 1);
-  ctx.log.log(`You sourced exotic spices. (−${goldCost}g, +${spiceYield}${CURRENCY_FLAVOR.spice.symbol}, +1 XP)`);
+  ctx.log.log(`You sourced exotic spices. (${cur('gold', goldCost, '-')}, ${cur('spice', spiceYield)}, ${cur('xp', 1)})`);
 }
 
 function clickThief(ctx: HeroActionContext): void {
@@ -201,12 +201,12 @@ function clickThief(ctx: HeroActionContext): void {
         ctx.stats.trackCurrencyGain('gold', bonus);
       }
       ctx.log.log(
-        `You slipped in undetected and secured ${dossierYield === 1 ? 'a dossier' : `${dossierYield} dossiers`}. (+1 XP, +${bonus}g)`,
+        `You slipped in undetected and secured some dossier. (${cur('dossier', dossierYield)}, ${cur('xp', 1)}, ${cur('gold', bonus)})`,
         'default',
       );
     } else {
       ctx.log.log(
-        `You slipped in undetected and secured ${dossierYield === 1 ? 'a dossier' : `${dossierYield} dossiers`}. (+1 XP)`,
+        `You slipped in undetected and secured some dossier. (${cur('dossier', dossierYield)}, ${cur('xp', 1)})`,
         'default',
       );
     }

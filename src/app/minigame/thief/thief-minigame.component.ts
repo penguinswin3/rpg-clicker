@@ -5,7 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { THIEF_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 
 @Component({
@@ -156,7 +156,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     this.lastMsg  = MINIGAME_MSG.THIEF.IDLE;
     this.msgClass = 'msg-neutral';
     this.lastTime = undefined;
-    this.log.log(`Heist started! (−${this.DOSSIER_COST} ${CURRENCY_FLAVOR['dossier'].symbol})`);
+    this.log.log(`Heist started! (${cur('dossier', this.DOSSIER_COST, '-')})`);
     this.startAnimation();
   }
 
@@ -258,9 +258,9 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
         symbol: CURRENCY_FLAVOR['relic'].symbol,
         color:  CURRENCY_FLAVOR['relic'].color,
       });
-      this.log.log(`Safe cracked! +${treasure} treasure, +${gold}g, +${THIEF_MG.RELIC_AMOUNT} relic! (+${xp} XP)`, 'rare');
+      this.log.log(`Safe cracked! (${cur('treasure', treasure)}, ${cur('gold', gold)}, ${cur('relic', THIEF_MG.RELIC_AMOUNT)}, ${cur('xp', xp)})`, 'rare');
     } else {
-      this.log.log(`Safe cracked! +${treasure} treasure, +${gold}g (+${xp} XP)`, 'success');
+      this.log.log(`Safe cracked! (${cur('treasure', treasure)}, ${cur('gold', gold)}, ${cur('xp', xp)})`, 'success');
     }
 
     this.lastMsg  = MINIGAME_MSG.THIEF.SUCCESS;

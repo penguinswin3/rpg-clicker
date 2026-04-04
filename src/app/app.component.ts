@@ -15,7 +15,7 @@ import { SaveService, UpgradeState, FighterCombatState } from './options/save.se
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
 import { XP_THRESHOLDS, YIELDS, UNLOCK_COSTS } from './game-config';
-import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS } from './flavor-text';
+import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
 // ── Extracted hero helpers ─────────────────────────────────────
@@ -592,7 +592,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!this.wallet.canAfford('gold',   goldCost)   ||
         !this.wallet.canAfford('potion', potionCost) ||
         !this.wallet.canAfford('beast',  beastCost)) {
-      this.log.log(`Not enough resources to unlock Minigames. Need ${goldCost}g, ${potionCost}pt, ${beastCost}Ꮻ.`, 'warn');
+      this.log.log(`Not enough resources to unlock Minigames. Need ${cur('gold', goldCost, '')}, ${cur('potion', potionCost, '')}, ${cur('beast', beastCost, '')}.`, 'warn');
       return;
     }
     this.wallet.remove('gold',   goldCost);

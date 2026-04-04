@@ -33,6 +33,7 @@
 - Fermentation Vats cost scaling is less
 - Made the minigame pannel a little wider to give a little more breathing room
 - Unified the scrollbar design to use the clean, blocky style
+- Reworked activity log currency display formatting
 
 ## Bugfixes
 - Cleaned up the missing row on the ranger character stats box 

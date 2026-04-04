@@ -10,6 +10,15 @@ import {
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ActivityLogService, LogMessage, LogFilterType } from './activity-log.service';
+import { CURRENCY_FLAVOR } from '../flavor-text';
+
+export interface LogTextSegment {
+  text: string;
+  color?: string;
+}
+
+/** Regex that matches {{currencyId|displayText}} tokens produced by cur(). */
+const CUR_TOKEN = /\{\{([\w-]+)\|([^}]+)\}\}/g;
 
 interface FilterOption {
   value: LogFilterType;
@@ -104,6 +113,32 @@ export class ActivityLogComponent implements OnInit, OnDestroy, AfterViewChecked
 
   trackById(_: number, msg: LogMessage): number {
     return msg.id;
+  }
+
+  /**
+   * Parse a log text string into segments.
+   * Plain text becomes colorless segments; `{{currencyId|display}}` tokens
+   * become segments with the currency's accent color.
+   */
+  parseLogText(text: string): LogTextSegment[] {
+    const segments: LogTextSegment[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    CUR_TOKEN.lastIndex = 0;  // reset regex state
+    while ((match = CUR_TOKEN.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        segments.push({ text: text.slice(lastIndex, match.index) });
+      }
+      const currencyId  = match[1];
+      const displayText = match[2];
+      const color = (CURRENCY_FLAVOR as Record<string, { color: string }>)[currencyId]?.color;
+      segments.push({ text: displayText, color });
+      lastIndex = CUR_TOKEN.lastIndex;
+    }
+    if (lastIndex < text.length) {
+      segments.push({ text: text.slice(lastIndex) });
+    }
+    return segments;
   }
 }
 

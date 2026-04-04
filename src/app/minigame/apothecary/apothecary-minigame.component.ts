@@ -6,7 +6,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { APOTH_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 import { toPct, rollChance } from '../../utils/mathUtils';
 
 @Component({
@@ -161,7 +161,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.lastTime           = undefined;
     this.lastMsg            = MINIGAME_MSG.APOTHECARY.IDLE;
     this.msgClass           = 'msg-neutral';
-    this.log.log(`Apothecary begins brewing. (−${this.herbCost} herbs, −${this.potionCost} potion base)`);
+    this.log.log(`Apothecary begins brewing. (${cur('herb', this.herbCost, '-')}, ${cur('potion', this.potionCost, '-')})`);
     this.startAnimation();
   }
 
@@ -266,15 +266,15 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
       }
 
       if (concentrated === totalRolls) {
-        this.log.log(`Dilution success! ${concentrated}/${totalRolls} Concentrated Potions crafted!`, 'success');
+        this.log.log(`Dilution success! (${cur('concentrated-potion', concentrated)})`, 'success');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FULL(concentrated, totalRolls);
         this.msgClass = 'msg-good';
       } else if (concentrated > 0) {
-        this.log.log(`Dilution partial: ${concentrated}/${totalRolls} Concentrated Potions + ${downgraded} Potion Base(s).`, 'success');
+        this.log.log(`Dilution partial! (${cur('concentrated-potion', concentrated)}, ${cur('potion', downgraded)})`, 'success');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_PARTIAL(concentrated, downgraded, totalRolls);
         this.msgClass = 'msg-good';
       } else {
-        this.log.log(`Dilution failed! ${downgraded} Potion Base(s) produced instead.`, 'warn');
+        this.log.log(`Dilution failed! (${cur('potion', downgraded)})`, 'warn');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FAIL(downgraded);
         this.msgClass = 'msg-bad';
       }
@@ -293,9 +293,9 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
         this.wallet.unlockCurrency('concentrated-potion');
         this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
       } else if (flawlessBonus > 0) {
-        this.log.log(`A Concentrated Potion has been crafted! Flawless brew: +${flawlessBonus} bonus!`, 'success');
+        this.log.log(`Concentrated Potion crafted! Flawless brew! (${cur('concentrated-potion', totalConcentrated)})`, 'success');
       } else {
-        this.log.log('A Concentrated Potion has been crafted!', 'success');
+        this.log.log(`Concentrated Potion crafted! (${cur('concentrated-potion', 1)})`, 'success');
       }
 
       this.lastMsg  = MINIGAME_MSG.APOTHECARY.PERFECT;
