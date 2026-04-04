@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
@@ -33,6 +33,7 @@ interface Enemy {
   imports: [CommonModule],
   templateUrl: './fighter-minigame.component.html',
   styleUrls: ['./fighter-minigame.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   /** Sword sharpness — fed in from goldPerClick on the Fighter. */
@@ -65,6 +66,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
+  private cdr    = inject(ChangeDetectorRef);
   private sub    = new Subscription();
   private spawnTimer?: ReturnType<typeof setTimeout>;
   private restInterval?: ReturnType<typeof setInterval>;
@@ -176,6 +178,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
         this.potions = Math.floor(s['potion']?.amount ?? 0);
+        this.cdr.markForCheck();
       })
     );
 
@@ -217,6 +220,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
           this.restInterval = setInterval(() => {
             this.restCountdown = Math.max(0, this.restCountdown - 1);
             this.emitState();
+            this.cdr.markForCheck();
             if (this.restCountdown <= 0) {
               clearInterval(this.restInterval);
               this.restInterval = undefined;
@@ -349,6 +353,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
         this.log.log('The Fighter fled from combat.', 'default');
         this.emitState();
       }
+      this.cdr.markForCheck();
     }, 1000);
   }
 
@@ -369,6 +374,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     this.restInterval = setInterval(() => {
       this.restCountdown = Math.max(0, this.restCountdown - 1);
       this.emitState();
+      this.cdr.markForCheck();
       if (this.restCountdown <= 0) {
         clearInterval(this.restInterval);
         this.restInterval = undefined;
@@ -490,6 +496,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       this.msgLine2     = '';
       this.msgClass     = 'msg-neutral';
       this.emitState();
+      this.cdr.markForCheck();
 
       // First Strike: free opening hit at the start of every combat encounter.
       // Only fires here (enemy spawned after a kill), never after fleeing.

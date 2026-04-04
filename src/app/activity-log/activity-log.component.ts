@@ -6,6 +6,8 @@ import {
   ViewChild,
   ElementRef,
   inject,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
@@ -31,17 +33,22 @@ interface FilterOption {
   imports: [CommonModule],
   templateUrl: './activity-log.component.html',
   styleUrl: './activity-log.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ActivityLogComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('logBody') logBody?: ElementRef<HTMLDivElement>;
 
   private logService = inject(ActivityLogService);
+  private cdr        = inject(ChangeDetectorRef);
   private sub = new Subscription();
 
   messages: LogMessage[] = [];
   minimized = false;
   activeFilters = new Set<LogFilterType>();
   private shouldScroll = false;
+
+  /** Cache of parsed log text segments keyed by message ID. */
+  private parseCache = new Map<number, LogTextSegment[]>();
 
   readonly filters: FilterOption[] = [
     { value: 'default', label: 'INFO'    },
@@ -59,9 +66,15 @@ export class ActivityLogComponent implements OnInit, OnDestroy, AfterViewChecked
     return this.allActive || this.activeFilters.has(f);
   }
 
-  get filteredMessages(): LogMessage[] {
-    if (this.allActive) return this.messages;
-    return this.messages.filter(m => this.activeFilters.has((m.type ?? 'default') as LogFilterType));
+  /** Pre-computed filtered message list — updated only when messages or filters change. */
+  filteredMessages: LogMessage[] = [];
+
+  private _refilter(): void {
+    if (this.allActive) {
+      this.filteredMessages = this.messages;
+    } else {
+      this.filteredMessages = this.messages.filter(m => this.activeFilters.has((m.type ?? 'default') as LogFilterType));
+    }
   }
 
   toggleFilter(f: LogFilterType): void {
@@ -88,10 +101,23 @@ export class ActivityLogComponent implements OnInit, OnDestroy, AfterViewChecked
   ngOnInit(): void {
     this.sub.add(this.logService.messages$.subscribe(msgs => {
       this.messages = msgs;
+      this._refilter();
+      // Trim the parse cache if it grows beyond the message buffer (keep last MAX entries)
+      if (this.parseCache.size > 600) {
+        const keep = new Set(msgs.map(m => m.id));
+        for (const key of this.parseCache.keys()) {
+          if (!keep.has(key)) this.parseCache.delete(key);
+        }
+      }
       if (!this.minimized) this.shouldScroll = true;
+      this.cdr.markForCheck();
     }));
-    this.sub.add(this.logService.minimized$.subscribe(v => (this.minimized = v)));
-    this.sub.add(this.logService.activeFilters$.subscribe(f => (this.activeFilters = f)));
+    this.sub.add(this.logService.minimized$.subscribe(v => { this.minimized = v; this.cdr.markForCheck(); }));
+    this.sub.add(this.logService.activeFilters$.subscribe(f => {
+      this.activeFilters = f;
+      this._refilter();
+      this.cdr.markForCheck();
+    }));
   }
 
   ngAfterViewChecked(): void {
@@ -116,11 +142,15 @@ export class ActivityLogComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   /**
-   * Parse a log text string into segments.
+   * Parse a log text string into segments (cached by message ID).
    * Plain text becomes colorless segments; `{{currencyId|display}}` tokens
    * become segments with the currency's accent color.
    */
-  parseLogText(text: string): LogTextSegment[] {
+  parseLogText(msg: LogMessage): LogTextSegment[] {
+    const cached = this.parseCache.get(msg.id);
+    if (cached) return cached;
+
+    const text = msg.text;
     const segments: LogTextSegment[] = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;
@@ -138,6 +168,8 @@ export class ActivityLogComponent implements OnInit, OnDestroy, AfterViewChecked
     if (lastIndex < text.length) {
       segments.push({ text: text.slice(lastIndex) });
     }
+
+    this.parseCache.set(msg.id, segments);
     return segments;
   }
 }

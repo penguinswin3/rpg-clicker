@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
@@ -14,12 +14,14 @@ import { toPct, randInt, rollChance } from '../../utils/mathUtils';
   imports: [CommonModule],
   templateUrl: './thief-minigame.component.html',
   styleUrls: ['./thief-minigame.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ThiefMinigameComponent implements OnInit, OnDestroy {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
   private zone   = inject(NgZone);
+  private cdr    = inject(ChangeDetectorRef);
   private sub    = new Subscription();
   private animFrame?: number;
   private lastTime?: number;
@@ -140,6 +142,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
         this.dossiers = Math.floor(s['dossier']?.amount ?? 0);
+        this.cdr.markForCheck();
       })
     );
   }
@@ -289,7 +292,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
       }
       this.lastTime = timestamp;
 
-      this.zone.run(() => {}); // tick Angular CD
+      this.cdr.detectChanges(); // re-render only this component
       this.animFrame = requestAnimationFrame(loop);
     };
 

@@ -121,6 +121,25 @@ export class StatisticsService {
   /** Direct access to current snapshot (no copy — read only!). */
   get current(): StatisticsSnapshot { return this.source.getValue(); }
 
+  /** Whether a microtask flush is scheduled. */
+  private _flushScheduled = false;
+  private _dirty = false;
+
+  /** Schedule a coalesced emission on the next microtask. */
+  private _scheduleFlush(): void {
+    this._dirty = true;
+    if (!this._flushScheduled) {
+      this._flushScheduled = true;
+      queueMicrotask(() => {
+        this._flushScheduled = false;
+        if (this._dirty) {
+          this._dirty = false;
+          this.source.next(this.source.getValue());
+        }
+      });
+    }
+  }
+
   // ── Currency tracking ──────────────────────────────────────
 
   /** Record currency gained. Call alongside every wallet.add(). */
@@ -128,7 +147,7 @@ export class StatisticsService {
     if (amount <= 0) return;
     const snap = this.source.getValue();
     snap.lifetimeCurrency[currencyId] = (snap.lifetimeCurrency[currencyId] ?? 0) + amount;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   // ── Milestones ─────────────────────────────────────────────
@@ -143,7 +162,7 @@ export class StatisticsService {
     const snap = this.source.getValue();
     if (snap.milestones[key]?.timestamp != null) return; // already recorded
     snap.milestones[key] = { label, timestamp: Date.now() };
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   // ── Hero button presses ────────────────────────────────────
@@ -151,13 +170,13 @@ export class StatisticsService {
   trackManualHeroPress(charId: string): void {
     const snap = this.source.getValue();
     snap.manualHeroPresses[charId] = (snap.manualHeroPresses[charId] ?? 0) + 1;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   trackJackHeroPress(charId: string): void {
     const snap = this.source.getValue();
     snap.jackHeroPresses[charId] = (snap.jackHeroPresses[charId] ?? 0) + 1;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   // ── Fighter minigame ───────────────────────────────────────
@@ -167,27 +186,27 @@ export class StatisticsService {
     snap.fighterMinigame.totalKills++;
     snap.fighterMinigame.killsByType[variantName] =
       (snap.fighterMinigame.killsByType[variantName] ?? 0) + 1;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   trackFighterPotionDrank(count: number): void {
     if (count <= 0) return;
     const snap = this.source.getValue();
     snap.fighterMinigame.potionsDrank += count;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   trackFighterDefeated(): void {
     const snap = this.source.getValue();
     snap.fighterMinigame.timesDefeated++;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   markFirstStrikeUnlocked(): void {
     const snap = this.source.getValue();
     if (snap.fighterMinigame.firstStrikeUnlocked) return;
     snap.fighterMinigame.firstStrikeUnlocked = true;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   trackFighterKillChain(chainLength: number): void {
@@ -195,7 +214,7 @@ export class StatisticsService {
     const snap = this.source.getValue();
     if (chainLength > snap.fighterMinigame.longestKillChain) {
       snap.fighterMinigame.longestKillChain = chainLength;
-      this.source.next(snap);
+      this._scheduleFlush();
     }
   }
 
@@ -205,7 +224,7 @@ export class StatisticsService {
     const snap = this.source.getValue();
     if (successful) snap.rangerMinigame.successful++;
     else            snap.rangerMinigame.unsuccessful++;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   // ── Apothecary minigame ────────────────────────────────────
@@ -214,7 +233,7 @@ export class StatisticsService {
   trackApothecaryMinigameComplete(): void {
     const snap = this.source.getValue();
     snap.apothecaryMinigame.minigamesComplete++;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   /**
@@ -225,21 +244,21 @@ export class StatisticsService {
     const snap = this.source.getValue();
     snap.apothecaryMinigame.potionHits++;
     if (perfect) snap.apothecaryMinigame.perfectHits++;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   /** Call for every click outside all target zones. */
   trackPotionMiss(): void {
     const snap = this.source.getValue();
     snap.apothecaryMinigame.potionMisses++;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   trackDilution(succeeded: boolean): void {
     const snap = this.source.getValue();
     if (succeeded) snap.apothecaryMinigame.dilutionSuccesses++;
     else           snap.apothecaryMinigame.dilutionFailures++;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   // ── Culinarian minigame ────────────────────────────────────
@@ -257,7 +276,7 @@ export class StatisticsService {
     } else {
       snap.culinarianMinigame.losses++;
     }
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   // ── Thief minigame ─────────────────────────────────────────
@@ -266,7 +285,7 @@ export class StatisticsService {
     const snap = this.source.getValue();
     if (successful) snap.thiefMinigame.successfulHeists++;
     else            snap.thiefMinigame.failedHeists++;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   // ── Artisan minigame ───────────────────────────────────────
@@ -275,7 +294,7 @@ export class StatisticsService {
     if (count <= 0) return;
     const snap = this.source.getValue();
     snap.artisanMinigame.appraisalsCompleted += count;
-    this.source.next(snap);
+    this._scheduleFlush();
   }
 
   // ── Persistence ────────────────────────────────────────────

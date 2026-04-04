@@ -60,9 +60,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // ── Readonly template refs ─────────────────────────────────────
   private readonly minigameDef = getGlobalDef('UNLOCK_MINIGAME')!;
-  get minigameCosts(): { currency: string; amount: number }[] {
-    return getActiveCosts(this.minigameDef, 0);
-  }
+  /** Pre-computed minigame costs (flat, never changes). */
+  readonly minigameCosts: { currency: string; amount: number }[] = getActiveCosts(this.minigameDef, 0);
 
   // ── Wallet state (template bindings) ──────────────────────────
   gold                = 0;
@@ -164,17 +163,12 @@ export class AppComponent implements OnInit, OnDestroy {
   get jacksToPurchase(): number  { return getJacksToPurchase(this.highestXp, this.jacksOwned); }
   get jacksPoolFree():   number  { return getJacksPoolFree(this.jacksOwned, this.jacksAllocations); }
 
-  get jackCurrentCosts(): JackCostEntry[] {
-    return calculateJackCosts(this.jacksOwned);
-  }
-
-  get canAffordJack(): boolean {
-    return canAffordJackCosts(this.jackCurrentCosts, (c, a) => this.wallet.canAfford(c, a));
-  }
-
-  get activeCharacterInfo(): { id: string; name: string; color: string } | undefined {
-    return this.unlockedCharacters.find(c => c.id === this.activeCharacterId);
-  }
+  /** Pre-computed jack costs — refreshed by _refreshDerived(). */
+  jackCurrentCosts: JackCostEntry[] = [];
+  /** Pre-computed jack affordability — refreshed by _refreshDerived(). */
+  canAffordJack = false;
+  /** Pre-computed active character info — refreshed by _refreshDerived(). */
+  activeCharacterInfo: { id: string; name: string; color: string } | undefined;
 
   get activeCharJackStarved(): boolean {
     return isActiveCharJackStarved(
@@ -199,39 +193,30 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Fighter minigame attack power. */
   get fighterAttackPower(): number { return this.upgrades.level('SHARPER_SWORDS'); }
 
-  // ── Hero display getters (delegated to hero-stats) ─────────────
+  // ── Hero display (delegated to hero-stats) ─────────────────────
 
   get questBtnLabel(): string {
     return getQuestBtnLabel(this.activeCharacterId);
   }
 
-  get heroStats(): HeroStat[] {
-    return buildHeroStats(this.activeCharacterId, {
-      upgrades:               this.upgrades,
-      wallet:                 this.wallet,
-      minigameUnlocked:       this.minigameUnlocked,
-      wholesaleSpicesEnabled: this.wholesaleSpicesEnabled,
-      jacksAllocations:       this.jacksAllocations,
-      isThiefStunned:         this.isThiefStunned,
-      relicLifetimeCount:     this.statsService.current.lifetimeCurrency['relic'] ?? 0,
-    });
-  }
+  /** Pre-computed hero stats — refreshed by _refreshDerived(). */
+  heroStats: HeroStat[] = [];
 
   // ── Upgrade display helpers ────────────────────────────────────
+
+  /** Pre-computed visible upgrade lists — refreshed by _refreshDerived(). */
+  private _visibleUpgradesCache: Record<string, string[]> = {};
+
+  /** Pre-computed relic unpurchased flag — refreshed by _refreshDerived(). */
+  anyRelicUnpurchased = false;
 
   shouldShowUpgrade(isMaxed: boolean): boolean {
     return !this.hideMaxedUpgrades || !isMaxed;
   }
 
-  /** Returns visible upgrade IDs for the active character in the given column. */
+  /** Returns visible upgrade IDs for the active character in the given column (cached). */
   getVisibleUpgrades(category: UpgradeCategory): string[] {
-    return this.upgrades.getUpgradesFor(this.activeCharacterId, category)
-      .filter(id => {
-        if (!this.isUpgradeVisible(id)) return false;
-        // Relic upgrades are always shown (they collapse to an icon when maxed).
-        if (category === 'relic') return true;
-        return this.shouldShowUpgrade(this.upgrades.isMaxed(id));
-      });
+    return this._visibleUpgradesCache[category] ?? [];
   }
 
   /** Checks gate conditions for an upgrade. */
@@ -299,11 +284,6 @@ export class AppComponent implements OnInit, OnDestroy {
   openRelicPopup(id: string): void { this.relicPopupId = id; }
   closeRelicPopup(): void          { this.relicPopupId = null; }
 
-  /** True if the active character has at least one relic upgrade not yet purchased. */
-  get anyRelicUnpurchased(): boolean {
-    return this.getVisibleUpgrades('relic').some(id => !this.upgrades.isMaxed(id));
-  }
-
   // ── Lifecycle ──────────────────────────────────────────────────
 
   constructor() {
@@ -317,6 +297,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.pixieDust           = Math.floor(state['pixie-dust']?.amount          ?? 0);
       this.concentratedPotions = Math.floor(state['concentrated-potion']?.amount ?? 0);
       this.spice               = Math.floor(state['spice']?.amount               ?? 0);
+      this._refreshDerived();
     });
     this.wallet.highestXpEver$.subscribe(v => {
       const prev = this.highestXp;
@@ -333,6 +314,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.activeCharacterId = id;
       if (id === 'thief' && this.isThiefStunned) this.refreshThiefStunAnimStyle();
       if (id === 'artisan' && this.isArtisanTimerActive) this.refreshArtisanTimerAnimStyle();
+      this._refreshDerived();
     });
     this.charService.characters$.subscribe(chars => {
       this.apothecaryUnlocked = chars.find(c => c.id === 'apothecary')?.unlocked ?? false;
@@ -347,6 +329,7 @@ export class AppComponent implements OnInit, OnDestroy {
           this.statsService.recordMilestone(`char_${c.id}`, `${c.name} Unlocked`);
         }
       }
+      this._refreshDerived();
     });
 
     // Reactively update per-second display rates whenever any upgrade changes
@@ -359,6 +342,7 @@ export class AppComponent implements OnInit, OnDestroy {
         const flavorName = (UPGRADE_FLAVOR as any)[id]?.name ?? id;
         this.statsService.recordMilestone(`relic_${id}`, `Relic: ${flavorName}`);
       }
+      this._refreshDerived();
     });
 
     // Passive gold income (Contracted Hirelings only)
@@ -424,8 +408,8 @@ export class AppComponent implements OnInit, OnDestroy {
       () => this.getUpgradeState(),
       (s) => this.setUpgradeState(s),
     );
-    this.saveService.hideMaxedUpgrades$.subscribe(v    => this.hideMaxedUpgrades    = v);
-    this.saveService.hideMinigameUpgrades$.subscribe(v => this.hideMinigameUpgrades = v);
+    this.saveService.hideMaxedUpgrades$.subscribe(v    => { this.hideMaxedUpgrades = v; this._refreshDerived(); });
+    this.saveService.hideMinigameUpgrades$.subscribe(v => { this.hideMinigameUpgrades = v; this._refreshDerived(); });
     this.saveService.blandMode$.subscribe(v            => this.blandMode            = v);
 
     // Keep --log-height in sync so sidebars shrink when the log is expanded.
@@ -516,17 +500,64 @@ export class AppComponent implements OnInit, OnDestroy {
       fermentationVatsEnabled: this.fermentationVatsEnabled,
     };
     const rates = calculatePerSecondRates(ctx);
-    this.wallet.setPerSecond('gold',            rates.gold);
-    this.wallet.setPerSecond('xp',              rates.xp);
-    this.wallet.setPerSecond('herb',            rates.herb);
-    this.wallet.setPerSecond('beast',           rates.beast);
-    this.wallet.setPerSecond('potion',          rates.potion);
-    this.wallet.setPerSecond('spice',           rates.spice);
-    this.wallet.setPerSecond('dossier',         rates.dossier);
-    this.wallet.setPerSecond('treasure',        rates.treasure);
-    this.wallet.setPerSecond('precious-metal',  rates['precious-metal']);
-    this.wallet.setPerSecond('gemstone',        rates.gemstone);
-    this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
+    this.wallet.batchUpdate(() => {
+      this.wallet.setPerSecond('gold',            rates.gold);
+      this.wallet.setPerSecond('xp',              rates.xp);
+      this.wallet.setPerSecond('herb',            rates.herb);
+      this.wallet.setPerSecond('beast',           rates.beast);
+      this.wallet.setPerSecond('potion',          rates.potion);
+      this.wallet.setPerSecond('spice',           rates.spice);
+      this.wallet.setPerSecond('dossier',         rates.dossier);
+      this.wallet.setPerSecond('treasure',        rates.treasure);
+      this.wallet.setPerSecond('precious-metal',  rates['precious-metal']);
+      this.wallet.setPerSecond('gemstone',        rates.gemstone);
+      this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
+    });
+  }
+
+  /**
+   * Recompute all cached template bindings (jack costs, hero stats,
+   * visible upgrades, etc.). Called after any state change that might
+   * affect the template.
+   */
+  private _refreshDerived(): void {
+    // Jack costs & affordability
+    this.jackCurrentCosts = calculateJackCosts(this.jacksOwned);
+    this.canAffordJack = canAffordJackCosts(this.jackCurrentCosts, (c, a) => this.wallet.canAfford(c, a));
+
+    // Active character info
+    this.activeCharacterInfo = this.unlockedCharacters.find(c => c.id === this.activeCharacterId);
+
+    // Hero stats
+    this.heroStats = buildHeroStats(this.activeCharacterId, {
+      upgrades:               this.upgrades,
+      wallet:                 this.wallet,
+      minigameUnlocked:       this.minigameUnlocked,
+      wholesaleSpicesEnabled: this.wholesaleSpicesEnabled,
+      jacksAllocations:       this.jacksAllocations,
+      isThiefStunned:         this.isThiefStunned,
+      relicLifetimeCount:     this.statsService.current.lifetimeCurrency['relic'] ?? 0,
+    });
+
+    // Visible upgrades (per category)
+    this._visibleUpgradesCache = {
+      standard: this._computeVisibleUpgrades('standard'),
+      minigame: this._computeVisibleUpgrades('minigame'),
+      relic:    this._computeVisibleUpgrades('relic'),
+    };
+
+    // Relic unpurchased flag
+    this.anyRelicUnpurchased = (this._visibleUpgradesCache['relic'] ?? []).some(id => !this.upgrades.isMaxed(id));
+  }
+
+  /** Compute visible upgrade IDs for a category (used by _refreshDerived). */
+  private _computeVisibleUpgrades(category: UpgradeCategory): string[] {
+    return this.upgrades.getUpgradesFor(this.activeCharacterId, category)
+      .filter(id => {
+        if (!this.isUpgradeVisible(id)) return false;
+        if (category === 'relic') return true;
+        return this.shouldShowUpgrade(this.upgrades.isMaxed(id));
+      });
   }
 
   /**

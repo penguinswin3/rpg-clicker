@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
@@ -24,10 +24,12 @@ interface MinigameInfo {
   imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent],
   templateUrl: './minigame-panel.component.html',
   styleUrls: ['./minigame-panel.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MinigamePanelComponent implements OnInit, OnDestroy {
   private wallet      = inject(WalletService);
   private charService = inject(CharacterService);
+  private cdr         = inject(ChangeDetectorRef);
   private sub         = new Subscription();
 
   /** Sword sharpness passed in from AppComponent (goldPerClick). */
@@ -140,12 +142,14 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
         this.xp = Math.floor(s['xp']?.amount ?? 0);
+        this.cdr.markForCheck();
       })
     );
-    this.sub.add(this.wallet.highestXpEver$.subscribe(v => (this.highestXpEver = v)));
+    this.sub.add(this.wallet.highestXpEver$.subscribe(v => { this.highestXpEver = v; this.cdr.markForCheck(); }));
     this.sub.add(
       this.charService.activeId$.subscribe(id => {
         this.activeCharacterId = id;
+        this.cdr.markForCheck();
       })
     );
   }

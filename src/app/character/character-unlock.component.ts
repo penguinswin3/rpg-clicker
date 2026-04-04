@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription, combineLatest } from 'rxjs';
 import { CharacterService, Character } from './character.service';
@@ -13,11 +13,13 @@ import { fmtNumber } from '../utils/mathUtils';
   imports: [CommonModule],
   templateUrl: './character-unlock.component.html',
   styleUrl: './character-unlock.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CharacterUnlockComponent implements OnInit, OnDestroy {
   private charService = inject(CharacterService);
   private wallet      = inject(WalletService);
   private log         = inject(ActivityLogService);
+  private cdr         = inject(ChangeDetectorRef);
   private sub         = new Subscription();
 
   // ── Global upgrade inputs ─────────────────
@@ -69,6 +71,7 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
           this.available = chars.filter(
             c => !c.unlocked && this.highestXpEver >= c.xpRequirement
           );
+          this.cdr.markForCheck();
         })
     );
   }

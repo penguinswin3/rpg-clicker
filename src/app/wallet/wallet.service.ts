@@ -181,13 +181,48 @@ export class WalletService {
 
   // ── Private ───────────────────────────────────────────────────
 
+  /** Whether the state has been mutated since the last emission. */
+  private _dirty = false;
+  /** Whether a microtask flush is already scheduled. */
+  private _flushScheduled = false;
+
+  /**
+   * Run a block of mutations and emit exactly once at the end.
+   * Use this when calling multiple add/remove/setPerSecond in a row.
+   */
+  batchUpdate(fn: () => void): void {
+    fn();
+    this._flush();
+  }
+
   private _patch(
     currencyId: string,
     fn: (entry: CurrencyEntry) => CurrencyEntry
   ): void {
     const state = this.stateSource.getValue();
     if (!state[currencyId]) return;
-    this.stateSource.next({ ...state, [currencyId]: fn(state[currencyId]) });
+    // Mutate in place — the BehaviorSubject value IS our source of truth.
+    state[currencyId] = fn(state[currencyId]);
+    this._scheduleDirtyFlush();
+  }
+
+  /** Mark state dirty and schedule a single microtask emission. */
+  private _scheduleDirtyFlush(): void {
+    this._dirty = true;
+    if (!this._flushScheduled) {
+      this._flushScheduled = true;
+      queueMicrotask(() => this._flush());
+    }
+  }
+
+  /** Emit the current state to subscribers if dirty. */
+  private _flush(): void {
+    this._flushScheduled = false;
+    if (this._dirty) {
+      this._dirty = false;
+      // Emit a new reference so subscribers that do === checks see a change.
+      this.stateSource.next({ ...this.stateSource.getValue() });
+    }
   }
 
   /** Update the all-time XP peak if the current XP balance is higher. */

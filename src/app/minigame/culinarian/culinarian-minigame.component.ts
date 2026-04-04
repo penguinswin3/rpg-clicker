@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
@@ -21,11 +21,13 @@ export interface GuessRow {
   imports: [CommonModule],
   templateUrl: './culinarian-minigame.component.html',
   styleUrls: ['./culinarian-minigame.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CulinarianMinigameComponent implements OnInit, OnDestroy {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
+  private cdr    = inject(ChangeDetectorRef);
   private sub    = new Subscription();
 
   readonly SOLUTION_LENGTH  = CULINARIAN_MG.SOLUTION_LENGTH;
@@ -92,6 +94,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
         this.beast        = Math.floor(s['beast']?.amount          ?? 0);
         this.koboldTongue = Math.floor(s['kobold-tongue']?.amount  ?? 0);
         this.spice        = Math.floor(s['spice']?.amount          ?? 0);
+        this.cdr.markForCheck();
       })
     );
   }

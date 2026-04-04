@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -15,12 +15,14 @@ import { toPct, rollChance } from '../../utils/mathUtils';
   imports: [CommonModule, FormsModule],
   templateUrl: './apothecary-minigame.component.html',
   styleUrls: ['./apothecary-minigame.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
   private zone   = inject(NgZone);
+  private cdr    = inject(ChangeDetectorRef);
   private sub    = new Subscription();
   private animFrame?: number;
   private lastTime?: number;
@@ -140,6 +142,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
       this.wallet.state$.subscribe(s => {
         this.herbs   = Math.floor(s['herb']?.amount   ?? 0);
         this.potions = Math.floor(s['potion']?.amount ?? 0);
+        this.cdr.markForCheck();
       })
     );
   }
@@ -200,12 +203,9 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   // ── Private ───────────────────────────────
 
   private startAnimation(): void {
-    // Run rAF outside Angular to avoid triggering CD every frame.
-    // barPos is written here; we use markForCheck manually if we ever need it —
-    // but the brew button click & startPotion already trigger CD at the moments
-    // that matter.  The [style.left.%] binding updates via the next CD cycle
-    // (triggered by the click event itself).  For a smooth visual cursor we
-    // intentionally re-enter the zone each frame so Angular re-renders the bar.
+    // Run rAF outside Angular so the frame loop doesn't trigger global CD.
+    // We call detectChanges() locally each frame to update only this component's
+    // template bindings (barPos, zone indicators) — cheap and stutter-free.
     const loop = (timestamp: number) => {
       if (!this.potionActive) return;
 
@@ -218,7 +218,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
       }
       this.lastTime = timestamp;
 
-      this.zone.run(() => {});           // tick Angular CD so [style.left.%] updates
+      this.cdr.detectChanges();          // re-render only this component
       this.animFrame = requestAnimationFrame(loop);
     };
 

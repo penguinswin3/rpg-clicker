@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
@@ -42,11 +42,13 @@ const PRIZE_NAME: Record<PrizeType, string> = {
   imports: [CommonModule],
   templateUrl: './ranger-minigame.component.html',
   styleUrls: ['./ranger-minigame.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RangerMinigameComponent implements OnInit, OnDestroy {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
+  private cdr    = inject(ChangeDetectorRef);
   private sub    = new Subscription();
 
   readonly PICKS      = RANGER_MG.PICKS;
@@ -96,6 +98,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
         this.beastMeat = Math.floor(s['beast']?.amount ?? 0);
+        this.cdr.markForCheck();
       })
     );
   }

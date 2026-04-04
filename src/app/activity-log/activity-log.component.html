@@ -36,7 +36,7 @@
         *ngFor="let msg of filteredMessages; trackBy: trackById"
         [ngClass]="'type-' + (msg.type ?? 'default')">
         <span class="log-time">[{{ msg.timestamp }}]</span>
-        <span class="log-text">> <ng-container *ngFor="let seg of parseLogText(msg.text)"><span *ngIf="seg.color; else plainSeg" [style.color]="seg.color">{{ seg.text }}</span><ng-template #plainSeg>{{ seg.text }}</ng-template></ng-container></span>
+        <span class="log-text">> <ng-container *ngFor="let seg of parseLogText(msg)"><span *ngIf="seg.color; else plainSeg" [style.color]="seg.color">{{ seg.text }}</span><ng-template #plainSeg>{{ seg.text }}</ng-template></ng-container></span>
       </div>
     </div>
   </ng-container>
