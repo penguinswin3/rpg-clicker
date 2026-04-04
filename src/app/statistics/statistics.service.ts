@@ -71,6 +71,10 @@ export interface ThiefMinigameStats {
 export interface ArtisanMinigameStats {
   /** Total number of appraisals completed (manual + jack). */
   appraisalsCompleted: number;
+  /** Total faceting rounds where the player correctly picked the best gem. */
+  facetingSuccesses: number;
+  /** Total faceting rounds where the player picked incorrectly. */
+  facetingFailures: number;
 }
 
 export interface StatisticsSnapshot {
@@ -109,7 +113,7 @@ function defaultSnapshot(): StatisticsSnapshot {
     apothecaryMinigame: { minigamesComplete: 0, potionHits: 0, perfectHits: 0, potionMisses: 0, dilutionSuccesses: 0, dilutionFailures: 0 },
     culinarianMinigame: { wins: 0, losses: 0, guessDist: [] },
     thiefMinigame:      { successfulHeists: 0, failedHeists: 0 },
-    artisanMinigame:    { appraisalsCompleted: 0 },
+    artisanMinigame:    { appraisalsCompleted: 0, facetingSuccesses: 0, facetingFailures: 0 },
   };
 }
 
@@ -294,6 +298,14 @@ export class StatisticsService {
     if (count <= 0) return;
     const snap = this.source.getValue();
     snap.artisanMinigame.appraisalsCompleted += count;
+    this._scheduleFlush();
+  }
+
+  /** Track a faceting minigame result. */
+  trackArtisanFaceting(success: boolean): void {
+    const snap = this.source.getValue();
+    if (success) snap.artisanMinigame.facetingSuccesses++;
+    else         snap.artisanMinigame.facetingFailures++;
     this._scheduleFlush();
   }
 

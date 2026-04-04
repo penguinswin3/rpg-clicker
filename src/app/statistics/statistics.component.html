@@ -187,12 +187,20 @@
           </div>
 
           <!-- ── Artisan Minigame ── -->
-          <div class="stats-section" *ngIf="snap.artisanMinigame.appraisalsCompleted > 0">
-            <div class="section-label">// GEM CUTTER</div>
+          <div class="stats-section" *ngIf="snap.artisanMinigame.appraisalsCompleted > 0 || snap.artisanMinigame.facetingSuccesses + snap.artisanMinigame.facetingFailures > 0">
+            <div class="section-label">// FACETING</div>
             <div class="stats-table">
-              <div class="stats-row">
+              <div class="stats-row" *ngIf="snap.artisanMinigame.appraisalsCompleted > 0">
                 <span class="cur-name">Appraisals Completed</span>
                 <span class="cur-amount">{{ fmt(snap.artisanMinigame.appraisalsCompleted) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.artisanMinigame.facetingSuccesses > 0">
+                <span class="cur-name">Correct Picks</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.artisanMinigame.facetingSuccesses) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.artisanMinigame.facetingFailures > 0">
+                <span class="cur-name">Wrong Picks</span>
+                <span class="cur-amount stat-bad">{{ fmt(snap.artisanMinigame.facetingFailures) }}</span>
               </div>
             </div>
           </div>

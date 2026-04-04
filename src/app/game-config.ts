@@ -690,3 +690,22 @@ export const CULINARIAN_MG = {
   /** Hearty Meals awarded on a correct guess. */
   MEAL_REWARD: 1,
 } as const;
+
+// ── Artisan Minigame ─────────────────────────────────────────
+export const ARTISAN_MG = {
+  /** Gemstones consumed to start a Faceting round. */
+  GEMSTONE_COST: 6,
+  /** Precious Metal consumed to start a Faceting round. */
+  METAL_COST: 16,
+  /** Number of gemstones presented to the player. */
+  GEM_COUNT: 6,
+  /** Number of gems the player may select (can be increased by upgrades later). */
+  PICKS: 1,
+  /** Jewelry awarded on a successful pick. */
+  JEWELRY_REWARD: 1,
+  /** XP awarded on a successful faceting. */
+  XP_REWARD: 5,
+  /** Adds a bonus percentage to the "Lucky Gem" Stats" **/
+  LUCKY_GEM_BONUS: 0.1
+} as const;
+

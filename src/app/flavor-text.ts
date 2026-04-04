@@ -270,8 +270,8 @@ export const MINIGAME_FLAVOR = {
     desc: 'Crack the safe before you\nare detected.',
   },
   ARTISAN: {
-    name: 'Gem Cutter',
-    desc: 'Cut and polish raw gemstones\ninto perfect jewels.',
+    name: 'Faceting',
+    desc: 'Appraise raw gemstones and\npick the finest jewel.',
   },
 } as const;
 
@@ -383,6 +383,13 @@ export const MINIGAME_MSG = {
     HIT:      'Sweet spot found!',
     BUSTED:   'DETECTED! Heist failed.',
     SUCCESS:  'Safe cracked!',
+  },
+
+  ARTISAN: {
+    IDLE:          'Select the highest quality gemstone.',
+    CORRECT:       'Correct! A fine jewel indeed.',
+    WRONG:         'Wrong — not the finest gem.',
+    ROUND_START:   (count: number) => `${count} gems presented. Choose wisely!`,
   },
 
 };

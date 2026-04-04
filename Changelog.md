@@ -10,6 +10,7 @@
 - New tier of kobold!
 - A New character, the Artisan! 
 - More Jacks!
+- Artisan "Faceting" minigame — pick the highest quality gem from six randomly generated stones
 
 ## Removed
 - Bigger Game upgrade
@@ -40,6 +41,7 @@
 - Reworked activity log currency display formatting
 - Reworked Perfect Potions to give bonus dilution success chance per perfect click
 - Reduces kobold ear scaling on Stronger Kobolds
+- Relics now cost a scaling amount of jewelry in addition to the static 1 relic 
 
 ## Bugfixes
 - Cleaned up the missing row on the ranger character stats box 

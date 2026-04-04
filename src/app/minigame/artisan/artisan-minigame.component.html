@@ -1,10 +1,99 @@
-<div class="mg-divider">+----------+</div>
+<div class="artisan-mg">
 
-<div class="mg-coming-soon">
-  <span class="cs-label">&gt;&gt; GEM CUTTER &lt;&lt;</span>
-  <span class="cs-sub">[ Under Construction ]</span>
-  <span class="cs-hint">// more content soon //</span>
+  <!-- ── Idle entry screen ─────────────── -->
+  <ng-container *ngIf="!roundStarted">
+    <div class="idle-block">
+      <div class="idle-desc">
+        Examine {{ GEM_COUNT }} gemstones and pick the finest one.<br>
+        Costs {{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
+        + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>
+      </div>
+      <button class="facet-btn" [disabled]="!canStart" (click)="startRound()">
+        [ FACET ({{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
+        + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>) ]
+      </button>
+      <div class="cost-warn" *ngIf="!canStart">
+        <span *ngIf="gemstones < GEMSTONE_COST">
+          need {{ GEMSTONE_COST - gemstones }} more <span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
+        </span>
+        <span *ngIf="preciousMetal < METAL_COST">
+          need {{ METAL_COST - preciousMetal }} more <span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>
+        </span>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── Active / finished round ──────── -->
+  <ng-container *ngIf="roundStarted">
+
+    <!-- Round status -->
+    <div class="round-status">
+      <span *ngIf="!roundOver">Select the highest quality gem</span>
+      <span class="round-done" *ngIf="roundOver">-- Round complete --</span>
+    </div>
+
+    <!-- Gem grid (2×3) -->
+    <div class="gem-grid">
+      <button
+        class="gem-cell"
+        *ngFor="let gem of gems; let i = index"
+        [class.gem-selected]="gem.selected"
+        [class.gem-best]="roundOver && isBest(i)"
+        [class.gem-wrong]="roundOver && gem.selected && !isBest(i)"
+        [class.gem-restart]="roundOver && canStart"
+        [disabled]="roundOver ? !canStart : gem.selected"
+        (click)="roundOver ? tryRestart() : selectGem(i)">
+
+        <!-- Gem icon container -->
+        <span class="gem-icon"
+              [style.font-size.px]="gemSize(gem)"
+              [style.filter]="'blur(' + gemBlur(gem) + 'px) saturate(' + gemSaturation(gem) + '%)'"
+              [style.color]="GEM_COLOR">
+          {{ GEM_SYMBOL }}
+        </span>
+
+        <!-- Clarity imperfections -->
+        <span *ngFor="let dot of gemImperfections(gem); let d = index"
+              class="imperfection"
+              [ngStyle]="imperfectionStyle(i, d)">
+        </span>
+
+        <!-- Revealed score -->
+        <span class="gem-score" *ngIf="gem.revealed"
+              [style.color]="scoreColor(gem)"
+              [class.score-best]="isBest(i)">
+          {{ scorePct(gem) }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Result message -->
+    <div class="round-msg" [ngClass]="msgClass" *ngIf="lastMsg">
+      {{ lastMsg }}
+      <ng-container *ngFor="let part of resultParts; let i = index">
+        <ng-container *ngIf="i > 0">, </ng-container>
+        {{ part.amount }}<span [style.color]="part.color">{{ part.symbol }}</span>
+      </ng-container>
+      <ng-container *ngIf="resultXp > 0"> (+{{ resultXp }}<span [style.color]="currencyFlavor['xp'].color">{{ currencyFlavor['xp'].symbol }}</span>)</ng-container>
+    </div>
+
+    <!-- Restart area -->
+    <ng-container *ngIf="roundOver">
+      <button class="facet-btn" [disabled]="!canStart" (click)="startRound()">
+        [ FACET AGAIN ({{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
+        + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>) ]
+      </button>
+      <div class="cost-warn" *ngIf="!canStart">
+        <span *ngIf="gemstones < GEMSTONE_COST">
+          need {{ GEMSTONE_COST - gemstones }} more <span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
+        </span>
+        <span *ngIf="preciousMetal < METAL_COST">
+          need {{ METAL_COST - preciousMetal }} more <span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>
+        </span>
+      </div>
+      <div class="round-restart-hint" *ngIf="canStart">-- or click any gem --</div>
+    </ng-container>
+
+  </ng-container>
+
 </div>
-
-<div class="mg-divider">+----------+</div>
-
