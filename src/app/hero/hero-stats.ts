@@ -110,9 +110,6 @@ function buildApothecaryStats(ctx: HeroStatsContext): HeroStat[] {
     const totalRolls    = 2 + u.level('SERIAL_DILUTION');
     stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.DILUTION_SUCCESS, value: `${successChance}%` });
     stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.DILUTION_ROLLS,   value: `${totalRolls}` });
-    if (u.level('PERFECT_POTIONS') > 0) {
-      stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.PERFECT_BONUS,  value: `+${u.level('PERFECT_POTIONS') * 5}% per ✦` });
-    }
   }
   return stats;
 }
