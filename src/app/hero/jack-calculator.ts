@@ -6,8 +6,7 @@
  * ════════════════════════════════════════════════════════════
  */
 
-import { JACK_GOLD_COST, JACK_RESOURCE_PROGRESSION, XP_THRESHOLDS, YIELDS } from '../game-config';
-import { scaledCost } from '../utils/mathUtils';
+import { GLOBAL_PURCHASE_DEFS, getActiveCosts, XP_THRESHOLDS, YIELDS } from '../game-config';
 import { calcArtisanTreasureCost } from './yield-helpers';
 
 // ── Types ───────────────────────────────────────────────────
@@ -17,11 +16,20 @@ export interface JackCostEntry {
   amount:   number;
 }
 
+// ── Jack def lookup ─────────────────────────────────────────
+
+const jackDef = GLOBAL_PURCHASE_DEFS.find(d => d.kind === 'jack')!;
+
 // ── Visibility & limits ─────────────────────────────────────
 
-/** Maximum jacks that can ever be hired: 1 gold-only + one per progression entry. */
+/**
+ * Maximum jacks that can ever be hired.
+ * Jack 1 requires only gold; each subsequent jack adds a secondary resource
+ * (one per fromCount-gated cost entry in the jack def).
+ */
 export function getJacksMax(): number {
-  return 1 + JACK_RESOURCE_PROGRESSION.length;
+  const secondaryCount = jackDef.costs.filter(c => c.fromCount !== undefined).length;
+  return 1 + secondaryCount;
 }
 
 /** Whether the jack panel should be visible. */
@@ -38,15 +46,7 @@ export function getJacksToPurchase(xp: number, jacksOwned: number): number {
 
 /** Active costs for the next jack hire — scaled gold + one unscaled secondary resource. */
 export function calculateJackCosts(jacksOwned: number): JackCostEntry[] {
-  const costs: JackCostEntry[] = [
-    { currency: 'gold', amount: scaledCost(JACK_GOLD_COST.base, JACK_GOLD_COST.scale, jacksOwned) },
-  ];
-  const resourceIdx = jacksOwned - 1;   // Jack 1 = gold only, Jack 2 = index 0, etc.
-  if (resourceIdx >= 0 && resourceIdx < JACK_RESOURCE_PROGRESSION.length) {
-    const res = JACK_RESOURCE_PROGRESSION[resourceIdx];
-    costs.push({ currency: res.currency, amount: res.base });
-  }
-  return costs;
+  return getActiveCosts(jackDef, jacksOwned);
 }
 
 /** Check if the player can afford a set of jack costs. */

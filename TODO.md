@@ -101,7 +101,7 @@
 
 
 ## Bug Fixes
-
+- Make sure the starved jacks warning updates the required count for the Artisan. It's hardcoded to 20 it should be 20* number of assigned jacks. 
 
 ## Code Refactors
 - Fighter minigame combat log is a mess lmao 

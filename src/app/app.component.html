@@ -200,12 +200,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
       <app-character-unlock
         [minigameUnlockAvailable]="minigameUnlockAvailable"
-        [minigameGoldCost]="minigameUnlockCosts.MINIGAME_GOLD"
-        [minigamePotionCost]="minigameUnlockCosts.MINIGAME_POTIONS"
-        [minigameBeastCost]="minigameUnlockCosts.MINIGAME_BEAST"
-        [canAffordMinigame]="gold >= minigameUnlockCosts.MINIGAME_GOLD &&
-                             potions >= minigameUnlockCosts.MINIGAME_POTIONS &&
-                             beast >= minigameUnlockCosts.MINIGAME_BEAST"
+        [minigameCosts]="minigameCosts"
         (minigameUnlock)="buyMinigameUnlock()"
         [jackHireAvailable]="jacksToPurchase > 0"
         [canAffordJack]="canAffordJack"

@@ -65,84 +65,153 @@ export interface UpgradeDef {
   readonly enabled?:    boolean;
 }
 
+// ── Global Purchase System ────────────────────────────────────
+//
+// Single source of truth for every one-time or repeatable global purchase:
+//   • 'jack'             — Jack of All Trades hire (repeatable, costs scale)
+//   • 'character-unlock' — Character unlock (one-time flat cost)
+//   • 'minigame-unlock'  — Minigame system unlock (one-time flat cost)
+//
+// Adding a new character? Add an 'UNLOCK_<ID>' entry here and update
+// character.service.ts — no other config files need to change.
+
+export type GlobalPurchaseKind = 'jack' | 'character-unlock' | 'minigame-unlock';
+
+export interface GlobalCostDef {
+  readonly currency:    string;
+  readonly base:        number;
+  /**
+   * Multiplicative scale applied per purchase count (jacksOwned for jacks).
+   * Omit or set to 1.0 for a flat cost.
+   */
+  readonly scale?:      number;
+  /** Only include this cost when the purchase count is >= fromCount (inclusive). */
+  readonly fromCount?:  number;
+  /** Only include this cost when the purchase count is <  untilCount (exclusive). */
+  readonly untilCount?: number;
+}
+
+export interface GlobalPurchaseDef {
+  readonly id:     string;
+  readonly kind:   GlobalPurchaseKind;
+  /** Minimum all-time XP before this entry becomes visible. Omit = no XP gate. */
+  readonly xpMin?: number;
+  readonly costs:  readonly GlobalCostDef[];
+}
+
+export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
+
+  // ── Jack of All Trades ────────────────────────────────────────
+  // Gold scales with each Jack owned. Every Jack beyond the first adds ONE
+  // secondary resource (fromCount/untilCount selects exactly one level each).
+  {
+    id: 'JACK', kind: 'jack', xpMin: 1000,
+    costs: [
+      { currency: 'gold',               base: 1500, scale: 1.5 },              // always (scales)
+      { currency: 'herb',               base: 200,  fromCount: 1,  untilCount: 2  },  // Jack 2
+      { currency: 'beast',              base: 200,  fromCount: 2,  untilCount: 3  },  // Jack 3
+      { currency: 'potion',             base: 50,   fromCount: 3,  untilCount: 4  },  // Jack 4
+      { currency: 'kobold-ear',         base: 25,   fromCount: 4,  untilCount: 5  },  // Jack 5
+      { currency: 'pixie-dust',         base: 25,   fromCount: 5,  untilCount: 6  },  // Jack 6
+      { currency: 'concentrated-potion',base: 10,   fromCount: 6,  untilCount: 7  },  // Jack 7
+      { currency: 'kobold-tongue',      base: 15,   fromCount: 7,  untilCount: 8  },  // Jack 8
+      { currency: 'spice',              base: 200,  fromCount: 8,  untilCount: 9  },  // Jack 9
+      { currency: 'hearty-meal',        base: 5,    fromCount: 9,  untilCount: 10 },  // Jack 10
+      { currency: 'kobold-hair',        base: 10,   fromCount: 10, untilCount: 11 },  // Jack 11
+      { currency: 'dossier',            base: 150,  fromCount: 11, untilCount: 12 },  // Jack 12
+      { currency: 'kobold-fang',        base: 10,   fromCount: 12, untilCount: 13 },  // Jack 13
+      { currency: 'treasure',           base: 150,  fromCount: 13, untilCount: 14 },  // Jack 14
+      { currency: 'relic',              base: 1,    fromCount: 14, untilCount: 15 },  // Jack 15
+      { currency: 'precious-metal',     base: 100,  fromCount: 15, untilCount: 16 },  // Jack 16
+      { currency: 'gemstone',           base: 50,   fromCount: 16, untilCount: 17 },  // Jack 17
+    ],
+  },
+
+  // ── Character unlocks ─────────────────────────────────────────
+  {
+    id: 'UNLOCK_RANGER', kind: 'character-unlock', xpMin: 100,
+    costs: [
+      { currency: 'gold', base: 250 },
+    ],
+  },
+  {
+    id: 'UNLOCK_APOTHECARY', kind: 'character-unlock', xpMin: 2000,
+    costs: [
+      { currency: 'gold', base: 1_500 },
+      { currency: 'herb', base: 250   },
+    ],
+  },
+  {
+    id: 'UNLOCK_CULINARIAN', kind: 'character-unlock', xpMin: 18_000,
+    costs: [
+      { currency: 'gold',  base: 15_000 },
+      { currency: 'beast', base: 1_500  },
+      { currency: 'herb',  base: 1_500  },
+    ],
+  },
+  {
+    id: 'UNLOCK_THIEF', kind: 'character-unlock', xpMin: 70_000,
+    costs: [
+      { currency: 'gold',        base: 50_000 },
+      { currency: 'spice',       base: 10_000 },
+      { currency: 'kobold-hair', base: 100    },
+    ],
+  },
+  {
+    id: 'UNLOCK_ARTISAN', kind: 'character-unlock', xpMin: 250_000,
+    costs: [
+      { currency: 'gold',     base: 100_000 },
+      { currency: 'dossier',  base: 10_000  },
+      { currency: 'treasure', base: 1_000   },
+    ],
+  },
+
+  // ── Global unlock ────────────────────────────────────────────
+  {
+    id: 'UNLOCK_MINIGAME', kind: 'minigame-unlock', xpMin: 4_000,
+    costs: [
+      { currency: 'gold',   base: 10_000 },
+      { currency: 'potion', base: 100    },
+      { currency: 'beast',  base: 100    },
+    ],
+  },
+
+] as const;
+
+/**
+ * Returns the active costs for a GlobalPurchaseDef at a given purchase count.
+ *   • For jacks:            count = jacksOwned
+ *   • For one-time unlocks: count = 0
+ * Costs filtered by fromCount/untilCount; scale applied to the base amount.
+ */
+export function getActiveCosts(def: GlobalPurchaseDef, count: number): { currency: string; amount: number }[] {
+  return (def.costs as readonly GlobalCostDef[])
+    .filter(c =>
+      (c.fromCount  === undefined || count >= c.fromCount)  &&
+      (c.untilCount === undefined || count <  c.untilCount)
+    )
+    .map(c => ({
+      currency: c.currency,
+      amount:   Math.round(c.base * Math.pow(c.scale ?? 1, count)),
+    }));
+}
+
+/** Look up a GlobalPurchaseDef by id. Returns undefined if not found. */
+export function getGlobalDef(id: string): GlobalPurchaseDef | undefined {
+  return GLOBAL_PURCHASE_DEFS.find(d => d.id === id);
+}
+
 // ── XP Unlock Thresholds ─────────────────────────────────────
+// Derived from GLOBAL_PURCHASE_DEFS — edit xpMin there, not here.
+// Keys are kept stable for backward-compatible save-game milestone tracking.
 export const XP_THRESHOLDS = {
-  /** XP required before the Ranger unlock offer appears */
-  RANGER_UNLOCK:     100,
-  /** XP required before the First Jack purchase appears */
-  JACKS_UNLOCK: 1000,
-  /** XP required before the Apothecary unlock offer appears */
-  APOTHECARY_UNLOCK: 2000,
-
-  /** XP required to unlock all character minigame screens */
-  MINIGAME_UNLOCK:   4000,
-  /** XP required before the Culinarian unlock offer appears */
-  CULINARIAN_UNLOCK: 18000,
-  /** XP required before the Thief unlock offer appears */
-  THIEF_UNLOCK:      70000,
-  /** XP required before the Artisan unlock offer appears */
-  ARTISAN_UNLOCK:    250000,
-} as const;
-
-// ── Jack of All Trades ────────────────────────────────────────
-/**
- * Jack hire pricing.
- * Every Jack costs scaled gold. Starting from the 2nd Jack, the hire
- * also requires an unscaled flat amount of ONE additional resource —
- * the next entry in JACK_RESOURCE_PROGRESSION (not all previous ones).
- */
-
-/** Gold cost that scales with each Jack owned. */
-export const JACK_GOLD_COST = { base: 1500, scale: 1.5 } as const;
-
-/**
- * Ordered list of secondary resources introduced with each successive Jack.
- * Jack 1 = gold only. Jack 2 = gold + first entry. Jack 3 = gold + second entry, etc.
- * Re-order, adjust, or extend this array to change when each resource appears.
- */
-export const JACK_RESOURCE_PROGRESSION: readonly { currency: string; base: number }[] = [
-  { currency: 'herb',                 base: 200  },
-  { currency: 'beast',                base: 200  },
-  { currency: 'potion',               base: 50   },
-  { currency: 'kobold-ear',           base: 25   },
-  { currency: 'pixie-dust',           base: 25   },
-  { currency: 'concentrated-potion',  base: 10   },
-  { currency: 'kobold-tongue',        base: 15   },
-  { currency: 'spice',                base: 200  },
-  { currency: 'hearty-meal',          base: 5    },
-  { currency: 'kobold-hair',          base: 10   },
-  { currency: 'dossier',              base: 150  },
-  { currency: 'kobold-fang',          base: 10   },
-  { currency: 'treasure',             base: 150  },
-  { currency: 'relic',                base: 1    },
-  { currency: 'precious-metal',      base: 100  },
-  { currency: 'gemstone',            base: 50   },
-
-];
-
-// ── Character Unlock Costs ────────────────────────────────────
-export const UNLOCK_COSTS = {
-  RANGER_GOLD:       250,
-
-  APOTHECARY_GOLD:   1500,
-  APOTHECARY_HERBS:  250,
-
-  CULINARIAN_GOLD:   15_000,
-  CULINARIAN_BEAST:   1_500,
-  CULINARIAN_HERBS:   1_500,
-
-  THIEF_GOLD:        50_000,
-  THIEF_SPICE:       10_000,
-  THIEF_KOBOLD_HAIR: 100,
-
-  ARTISAN_GOLD:      100_000,
-  ARTISAN_DOSSIER:   10_000,
-  ARTISAN_TREASURE:  1_000,
-
-  /** Minigame system unlock — available once XP >= MINIGAME_UNLOCK threshold */
-  MINIGAME_GOLD:    10000,
-  MINIGAME_POTIONS: 100,
-  MINIGAME_BEAST:   100,
+  RANGER_UNLOCK:     getGlobalDef('UNLOCK_RANGER')!.xpMin!,
+  JACKS_UNLOCK:      getGlobalDef('JACK')!.xpMin!,
+  APOTHECARY_UNLOCK: getGlobalDef('UNLOCK_APOTHECARY')!.xpMin!,
+  MINIGAME_UNLOCK:   getGlobalDef('UNLOCK_MINIGAME')!.xpMin!,
+  CULINARIAN_UNLOCK: getGlobalDef('UNLOCK_CULINARIAN')!.xpMin!,
+  THIEF_UNLOCK:      getGlobalDef('UNLOCK_THIEF')!.xpMin!,
+  ARTISAN_UNLOCK:    getGlobalDef('UNLOCK_ARTISAN')!.xpMin!,
 } as const;
 
 // ── Upgrade Definitions ──────────────────────────────────────

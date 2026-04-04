@@ -22,11 +22,12 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
 
   // ── Global upgrade inputs ─────────────────
   @Input() minigameUnlockAvailable = false;
-  @Input() minigameGoldCost   = 0;
-  @Input() minigamePotionCost = 0;
-  @Input() minigameBeastCost  = 0;
-  @Input() canAffordMinigame  = false;
-  @Output() minigameUnlock    = new EventEmitter<void>();
+  @Input() minigameCosts: { currency: string; amount: number }[] = [];
+  @Output() minigameUnlock = new EventEmitter<void>();
+
+  get canAffordMinigame(): boolean {
+    return this.minigameCosts.every(c => this.wallet.canAfford(c.currency, c.amount));
+  }
 
   // ── Jack of All Trades hire inputs ────────
   @Input() jackHireAvailable = false;

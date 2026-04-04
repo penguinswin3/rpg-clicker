@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { XP_THRESHOLDS, UNLOCK_COSTS } from '../game-config';
+import { GLOBAL_PURCHASE_DEFS, getActiveCosts } from '../game-config';
 import { CHARACTER_FLAVOR } from '../flavor-text';
 
 export interface UnlockCost {
@@ -21,6 +21,19 @@ export interface Character {
   xpRequirement: number;
 }
 
+/**
+ * Resolves unlock costs and xpRequirement for a character from GLOBAL_PURCHASE_DEFS.
+ * Looks up the entry whose id is `UNLOCK_<CHARID>` (upper-cased).
+ */
+function charUnlock(charId: string): { unlockCosts: UnlockCost[]; xpRequirement: number } {
+  const def = GLOBAL_PURCHASE_DEFS.find(d => d.id === `UNLOCK_${charId.toUpperCase()}`);
+  if (!def) return { unlockCosts: [], xpRequirement: 0 };
+  return {
+    unlockCosts:    getActiveCosts(def, 0).map(c => ({ currencyId: c.currency, amount: c.amount })),
+    xpRequirement:  def.xpMin ?? 0,
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class CharacterService {
   private readonly definitions: Character[] = [
@@ -39,8 +52,7 @@ export class CharacterService {
       color: '#2d7a2d',
       description: CHARACTER_FLAVOR.RANGER.desc,
       unlocked: false,
-      unlockCosts: [{ currencyId: 'gold', amount: UNLOCK_COSTS.RANGER_GOLD }],
-      xpRequirement: XP_THRESHOLDS.RANGER_UNLOCK,
+      ...charUnlock('ranger'),
     },
     {
       id: 'apothecary',
@@ -48,11 +60,7 @@ export class CharacterService {
       color: '#9d6ec7',
       description: CHARACTER_FLAVOR.APOTHECARY.desc,
       unlocked: false,
-      unlockCosts: [
-        { currencyId: 'gold', amount: UNLOCK_COSTS.APOTHECARY_GOLD },
-        { currencyId: 'herb', amount: UNLOCK_COSTS.APOTHECARY_HERBS },
-      ],
-      xpRequirement: XP_THRESHOLDS.APOTHECARY_UNLOCK,
+      ...charUnlock('apothecary'),
     },
     {
       id: 'culinarian',
@@ -60,12 +68,7 @@ export class CharacterService {
       color: '#c0c0c0',
       description: CHARACTER_FLAVOR.CULINARIAN.desc,
       unlocked: false,
-      unlockCosts: [
-        { currencyId: 'gold',  amount: UNLOCK_COSTS.CULINARIAN_GOLD  },
-        { currencyId: 'beast', amount: UNLOCK_COSTS.CULINARIAN_BEAST },
-        { currencyId: 'herb',  amount: UNLOCK_COSTS.CULINARIAN_HERBS },
-      ],
-      xpRequirement: XP_THRESHOLDS.CULINARIAN_UNLOCK,
+      ...charUnlock('culinarian'),
     },
     {
       id: 'thief',
@@ -73,12 +76,7 @@ export class CharacterService {
       color: '#4a9b8e',
       description: CHARACTER_FLAVOR.THIEF.desc,
       unlocked: false,
-      unlockCosts: [
-        { currencyId: 'gold',         amount: UNLOCK_COSTS.THIEF_GOLD         },
-        { currencyId: 'spice',        amount: UNLOCK_COSTS.THIEF_SPICE        },
-        { currencyId: 'kobold-hair',  amount: UNLOCK_COSTS.THIEF_KOBOLD_HAIR  },
-      ],
-      xpRequirement: XP_THRESHOLDS.THIEF_UNLOCK,
+      ...charUnlock('thief'),
     },
     {
       id: 'artisan',
@@ -86,12 +84,7 @@ export class CharacterService {
       color: '#e8c252',
       description: CHARACTER_FLAVOR.ARTISAN.desc,
       unlocked: false,
-      unlockCosts: [
-        { currencyId: 'gold',     amount: UNLOCK_COSTS.ARTISAN_GOLD     },
-        { currencyId: 'dossier',  amount: UNLOCK_COSTS.ARTISAN_DOSSIER  },
-        { currencyId: 'treasure', amount: UNLOCK_COSTS.ARTISAN_TREASURE },
-      ],
-      xpRequirement: XP_THRESHOLDS.ARTISAN_UNLOCK,
+      ...charUnlock('artisan'),
     },
   ];
 

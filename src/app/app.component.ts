@@ -14,7 +14,7 @@ import { StatisticsComponent } from './statistics/statistics.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, UNLOCK_COSTS } from './game-config';
+import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef } from './game-config';
 import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
@@ -59,7 +59,10 @@ export class AppComponent implements OnInit, OnDestroy {
   readonly upgrades            = inject(UpgradeService);
 
   // ── Readonly template refs ─────────────────────────────────────
-  readonly minigameUnlockCosts = UNLOCK_COSTS;
+  private readonly minigameDef = getGlobalDef('UNLOCK_MINIGAME')!;
+  get minigameCosts(): { currency: string; amount: number }[] {
+    return getActiveCosts(this.minigameDef, 0);
+  }
 
   // ── Wallet state (template bindings) ──────────────────────────
   gold                = 0;
@@ -748,16 +751,16 @@ export class AppComponent implements OnInit, OnDestroy {
 
   buyMinigameUnlock(): void {
     if (this.minigameUnlocked) return;
-    const { MINIGAME_GOLD: goldCost, MINIGAME_POTIONS: potionCost, MINIGAME_BEAST: beastCost } = UNLOCK_COSTS;
-    if (!this.wallet.canAfford('gold',   goldCost)   ||
-        !this.wallet.canAfford('potion', potionCost) ||
-        !this.wallet.canAfford('beast',  beastCost)) {
-      this.log.log(`Not enough resources to unlock Minigames. Need ${cur('gold', goldCost, '')}, ${cur('potion', potionCost, '')}, ${cur('beast', beastCost, '')}.`, 'warn');
+    const costs = this.minigameCosts;
+    if (!costs.every(c => this.wallet.canAfford(c.currency, c.amount))) {
+      const missing = costs
+        .filter(c => !this.wallet.canAfford(c.currency, c.amount))
+        .map(c => cur(c.currency, c.amount, ''))
+        .join(', ');
+      this.log.log(`Not enough resources to unlock Minigames. Need ${missing}.`, 'warn');
       return;
     }
-    this.wallet.remove('gold',   goldCost);
-    this.wallet.remove('potion', potionCost);
-    this.wallet.remove('beast',  beastCost);
+    for (const c of costs) this.wallet.remove(c.currency, c.amount);
     this.minigameUnlocked = true;
     this.log.log('★ MINIGAMES UNLOCKED! Character-specific challenges are now available.', 'rare');
     this.statsService.recordMilestone('minigame_unlocked', 'Minigames Unlocked');
