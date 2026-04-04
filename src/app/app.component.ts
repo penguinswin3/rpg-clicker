@@ -100,6 +100,7 @@ export class AppComponent implements OnInit, OnDestroy {
   // ── UI toggles ─────────────────────────────────────────────────
   shortRestEnabled        = false;
   dilutionEnabled         = false;
+  synapticalEnabled       = false;
   hideMaxedUpgrades       = false;
   hideMinigameUpgrades    = false;
   blandMode               = false;
@@ -233,6 +234,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresBubblingBrew  && this.upgrades.level('BUBBLING_BREW') < 1)     return false;
     if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1)  return false;
     if (gates.requiresLockedIn      && this.upgrades.level('LOCKED_IN') < 1)         return false;
+    if (gates.requiresSynapticalPotions && this.upgrades.level('SYNAPTICAL_POTIONS') < 1) return false;
     if (gates.xpMin != null && this.highestXp < gates.xpMin) return false;
     if (gates.requiresSharperSwordsMin != null && this.upgrades.level('SHARPER_SWORDS') < gates.requiresSharperSwordsMin) return false;
     return true;
@@ -444,6 +446,7 @@ export class AppComponent implements OnInit, OnDestroy {
       shortRestEnabled:        this.shortRestEnabled,
       wholesaleSpicesEnabled:  this.wholesaleSpicesEnabled,
       dilutionEnabled:         this.dilutionEnabled,
+      synapticalEnabled:       this.synapticalEnabled,
       fermentationVatsEnabled: this.fermentationVatsEnabled,
       artisanTimerUntil:       this.artisanTimerUntil,
       artisanTimerBatchSize:   this.artisanTimerBatchSize,
@@ -465,6 +468,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.shortRestEnabled        = s.shortRestEnabled        ?? false;
     this.wholesaleSpicesEnabled  = s.wholesaleSpicesEnabled  ?? true;
     this.dilutionEnabled         = s.dilutionEnabled         ?? false;
+    this.synapticalEnabled       = s.synapticalEnabled       ?? false;
     this.fermentationVatsEnabled = s.fermentationVatsEnabled ?? true;
     // Restore artisan timer — if still in the future, reschedule the completion callback
     this.artisanTimerUntil     = s.artisanTimerUntil     ?? 0;
@@ -636,7 +640,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private startArtisanTimer(batchSize: number): void {
     if (this.isArtisanTimerActive) return;
 
-    const duration = calcArtisanTimerMs();
+    const duration = calcArtisanTimerMs(this.upgrades.level('FASTER_APPRAISING'));
     this.artisanTimerUntil     = Date.now() + duration;
     this.artisanTimerBatchSize = batchSize;
     this.artisanTimerAnimStyle = {
@@ -663,11 +667,12 @@ export class AppComponent implements OnInit, OnDestroy {
     const batchSize = this.artisanTimerBatchSize;
     if (batchSize <= 0) return;
 
+    const catsPawLevel = this.upgrades.level('POTION_CATS_PAW');
     let totalGemstones = 0;
     let totalMetals    = 0;
     for (let i = 0; i < batchSize; i++) {
-      totalGemstones += calcArtisanGemstoneYield();
-      totalMetals    += calcArtisanMetalYield();
+      totalGemstones += calcArtisanGemstoneYield(catsPawLevel);
+      totalMetals    += calcArtisanMetalYield(catsPawLevel);
     }
     const xpAwarded = batchSize;
 
@@ -692,7 +697,7 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Recompute the artisan timer animation style mid-timer (e.g. when switching to the artisan tab). */
   private refreshArtisanTimerAnimStyle(): void {
     if (!this.isArtisanTimerActive) return;
-    const total   = calcArtisanTimerMs();
+    const total   = calcArtisanTimerMs(this.upgrades.level('FASTER_APPRAISING'));
     const elapsed = total - Math.max(0, this.artisanTimerUntil - Date.now());
     this.artisanTimerAnimStyle = {
       'animation-duration': `${total / 1000}s`,

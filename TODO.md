@@ -68,12 +68,10 @@
 - "Clean Kills" upgrade that makes uncommon drops from the fighter minigame more likely to be dropped
 - Make enemies drop more gold. Maybe combine this with the above and make it "more loot"
 - "Advantage!" Rolls damage twice and takes the higher
-- "Lesser Short Rest" that uses 1 potion after combat 
-- Flow State that auto clicks attack for you at a slower rate (you still need to heal)
+
 
 ### Ranger 
 - Buried Treasure upgrade on ranger minigame that gives a big bonus of gold
-- Dense Woodlands upgrade that gives a base +1 resource yield on herbs and meat in the ranger minigame
 - Once better tracing is maxed open a new upgrade (Bigger beasts? Maybe add a new level select button or something?)
 
 ### Apothecary

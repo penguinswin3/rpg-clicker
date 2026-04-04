@@ -58,6 +58,8 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   @Input() firstStrikeLevel = 0;
   /** Slow Blade level — each level adds +1 to the fighter's minimum hit. */
   @Input() slowBladeLevel = 0;
+  /** Gilded Blade level — +1% secondary drop chance and +1% gold per kill per level. */
+  @Input() gildedBladeLevel = 0;
   /** Previously-saved combat state to restore on init. */
   @Input() savedState: FighterCombatState | null = null;
   /** Emitted whenever combat state changes (HP, defeated, rest countdown). */
@@ -413,7 +415,9 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private onEnemyDefeated(enemyLastDmg: number, firstStrike: boolean = false): void {
-    const gold = randInt(this.enemy.goldMin, this.enemy.goldMax);
+    const baseGold = randInt(this.enemy.goldMin, this.enemy.goldMax);
+    const gildedBonus = this.gildedBladeLevel > 0 ? Math.floor(baseGold * this.gildedBladeLevel / 100) : 0;
+    const gold = baseGold + gildedBonus;
 
     this.wallet.add('gold',       gold);
     this.wallet.add('xp',         this.enemy.xpReward);
@@ -555,7 +559,9 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       earReward: FIGHTER_MG.KOBOLD_EAR_REWARD + extra * FIGHTER_MG.KOBOLD_EAR_PER_LEVEL,
       dmgMax:    FIGHTER_MG.ENEMY_DMG_MAX      + extra * FIGHTER_MG.KOBOLD_DMG_PER_LEVEL,
       ascii:     variant.ascii,
-      secondaryDrop: variant.secondaryDrop ? { ...variant.secondaryDrop } : null,
+      secondaryDrop: variant.secondaryDrop
+        ? { ...variant.secondaryDrop, chance: Math.min(100, variant.secondaryDrop.chance + this.gildedBladeLevel) }
+        : null,
     };
   }
 }

@@ -15,6 +15,7 @@
         [strongerKoboldsLevel]="strongerKoboldsLevel"
         [firstStrikeLevel]="firstStrikeLevel"
         [slowBladeLevel]="slowBladeLevel"
+        [gildedBladeLevel]="gildedBladeLevel"
         [shortRestLevel]="shortRestLevel"
         [shortRestEnabled]="shortRestEnabled"
         (shortRestEnabledChange)="shortRestEnabledChange.emit($event)"
@@ -35,12 +36,16 @@
         [perfectPotionsLevel]="perfectPotionsLevel"
         [dilutionEnabled]="dilutionEnabled"
         (dilutionEnabledChange)="dilutionEnabledChange.emit($event)"
+        [synapticalPotionsUnlocked]="synapticalPotionsLevel >= 1"
+        [synapticStaticLevel]="synapticStaticLevel"
+        [synapticalEnabled]="synapticalEnabled"
+        (synapticalEnabledChange)="synapticalEnabledChange.emit($event)"
       />
     </ng-container>
 
     <!-- ── Ranger: scouting grid minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'ranger'">
-      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" [fairyHostageLevel]="fairyHostageLevel" />
+      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" [fairyHostageLevel]="fairyHostageLevel" [treasureChestLevel]="treasureChestLevel" />
     </ng-container>
 
     <!-- ── Culinarian: Mastermind recipe minigame ─── -->
@@ -61,7 +66,10 @@
 
     <!-- ── Artisan: placeholder minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'artisan'">
-      <app-artisan-minigame />
+      <app-artisan-minigame
+        [luckyGemsLevel]="luckyGemsLevel"
+        [doubleDipLevel]="doubleDipLevel"
+        [standOutSelectionLevel]="standOutSelectionLevel" />
     </ng-container>
 
     <!-- ── Other characters: placeholder ── -->

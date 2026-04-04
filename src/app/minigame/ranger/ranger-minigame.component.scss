@@ -4,6 +4,7 @@ $green:  #2d7a2d;
 $meat:   #e8739a;
 $herb:   #44dd44;
 $pixie:  #ffe066;
+$chest:  #989c3a;
 
 // Make the host element a full-width block so width: 100% inside resolves
 // correctly and never depends on cell content.
@@ -113,6 +114,13 @@ $pixie:  #ffe066;
     box-shadow: inset 0 0 6px rgba(255, 224, 102, 0.15);
   }
 
+  &.prize-chest {
+    background: #121209;
+    border-color: darken($chest, 15%);
+    cursor: default;
+    box-shadow: inset 0 0 6px rgba(152, 156, 58, 0.2);
+  }
+
   &.prize-blank {
     background: #0a0a0a;
     border-color: #1a1a1a;
@@ -176,6 +184,7 @@ $pixie:  #ffe066;
   .prize-meat  & { color: $meat;  }
   .prize-herb  & { color: $herb;  }
   .prize-pixie & { color: $pixie; }
+  .prize-chest & { color: $chest; }
   .prize-blank & { color: #282828; font-size: 16px; }
   .cell-hidden & { color: #3a3a3a; font-size: 17px; }
 }
@@ -188,6 +197,7 @@ $pixie:  #ffe066;
   .prize-meat  & { color: darken($meat,  10%); }
   .prize-herb  & { color: darken($herb,  10%); }
   .prize-pixie & { color: darken($pixie, 10%); }
+  .prize-chest & { color: darken($chest, 10%); }
   .prize-blank & { color: #222; }
 }
 

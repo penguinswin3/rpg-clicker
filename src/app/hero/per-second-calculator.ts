@@ -85,12 +85,12 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const ppGoldPerSecond    = effectiveThiefRate * avgDossierYield * u.level('PLENTIFUL_PLUNDERING');
 
   // ── Artisan rates ─────────────────────────────────────────
-  const artisanTimerSec       = calcArtisanTimerMs() / 1000;
+  const artisanTimerSec       = calcArtisanTimerMs(u.level('FASTER_APPRAISING')) / 1000;
   const artisanTreasureCost   = calcArtisanTreasureCost();
   const artisanCyclesPerSec   = artisanJacks > 0 ? 1 / artisanTimerSec : 0;
   const artisanTreasurePerSec = artisanJacks * artisanTreasureCost * artisanCyclesPerSec;
-  const artisanGemstonePerSec = artisanJacks * expectedGemstonePerAppraisal() * artisanCyclesPerSec;
-  const artisanMetalPerSec    = artisanJacks * expectedMetalPerAppraisal() * artisanCyclesPerSec;
+  const artisanGemstonePerSec = artisanJacks * expectedGemstonePerAppraisal(u.level('POTION_CATS_PAW')) * artisanCyclesPerSec;
+  const artisanMetalPerSec    = artisanJacks * expectedMetalPerAppraisal(u.level('POTION_CATS_PAW')) * artisanCyclesPerSec;
   const artisanXpPerSec       = artisanJacks * artisanCyclesPerSec;
 
   // ── Cat's Eye factor ──────────────────────────────────────
@@ -227,12 +227,12 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   if (dossierRate !== 0)               add('dossier', 'Thief', dossierRate);
 
   // Artisan rates
-  const artTimerSec      = calcArtisanTimerMs() / 1000;
+  const artTimerSec      = calcArtisanTimerMs(u.level('FASTER_APPRAISING')) / 1000;
   const artTreasureCost  = calcArtisanTreasureCost();
   const artCyclesPerSec  = artisanJacks > 0 ? 1 / artTimerSec : 0;
   const artTreasureRate  = roundTo(-artisanJacks * artTreasureCost * artCyclesPerSec, 2);
-  const artGemstoneRate  = roundTo(artisanJacks * expectedGemstonePerAppraisal() * artCyclesPerSec, 2);
-  const artMetalRate     = roundTo(artisanJacks * expectedMetalPerAppraisal() * artCyclesPerSec, 2);
+  const artGemstoneRate  = roundTo(artisanJacks * expectedGemstonePerAppraisal(u.level('POTION_CATS_PAW')) * artCyclesPerSec, 2);
+  const artMetalRate     = roundTo(artisanJacks * expectedMetalPerAppraisal(u.level('POTION_CATS_PAW')) * artCyclesPerSec, 2);
   const artXpRate        = roundTo(artisanJacks * artCyclesPerSec, 2);
 
   if (artTreasureRate !== 0)  add('treasure',        'Artisan', artTreasureRate);

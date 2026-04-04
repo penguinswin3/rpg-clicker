@@ -42,6 +42,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() firstStrikeLevel = 0;
   /** Slow Blade level — forwarded to the fighter minigame. */
   @Input() slowBladeLevel = 0;
+  /** Gilded Blade level — forwarded to the fighter minigame. */
+  @Input() gildedBladeLevel = 0;
   /** Short Rest level — forwarded to the fighter minigame. */
   @Input() shortRestLevel = 0;
   /** Whether Short Rest auto-heal is currently enabled — forwarded to the fighter minigame. */
@@ -58,6 +60,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() abundantLandsLevel = 0;
   /** Fairy Hostage level — forwarded to the ranger minigame. */
   @Input() fairyHostageLevel = 0;
+  /** Treasure Chest level — forwarded to the ranger minigame. */
+  @Input() treasureChestLevel = 0;
   /** Bubbling Brew level — forwarded to the apothecary minigame. */
   @Input() bubblingBrewLevel = 0;
   /** Bigger Bubbles level — forwarded to the apothecary minigame. */
@@ -68,6 +72,14 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() serialDilutionLevel = 0;
   /** Perfect Potions level — forwarded to the apothecary minigame. */
   @Input() perfectPotionsLevel = 0;
+  /** Synaptical Potions level — forwarded to the apothecary minigame. */
+  @Input() synapticalPotionsLevel = 0;
+  /** Synaptic Static level — forwarded to the apothecary minigame. */
+  @Input() synapticStaticLevel = 0;
+  /** Whether Synaptical mode is enabled — forwarded to the apothecary minigame. */
+  @Input() synapticalEnabled = false;
+  /** Emitted when the player toggles synaptical mode inside the apothecary minigame. */
+  @Output() synapticalEnabledChange = new EventEmitter<boolean>();
   /** Waste Not level — forwarded to the culinarian minigame. */
   @Input() wasteNotLevel = 0;
   /** Larger Cookbooks level — forwarded to the culinarian minigame. */
@@ -84,6 +96,12 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() lockedInLevel = 0;
   /** Flow State level — forwarded to the thief minigame. */
   @Input() flowStateLevel = 0;
+  /** Lucky Gems level — forwarded to the artisan minigame. */
+  @Input() luckyGemsLevel = 0;
+  /** Double Dip level — forwarded to the artisan minigame. */
+  @Input() doubleDipLevel = 0;
+  /** Stand Out Selection level — forwarded to the artisan minigame. */
+  @Input() standOutSelectionLevel = 0;
   /** Previously-saved fighter combat state. */
   @Input() fighterCombatState: FighterCombatState | null = null;
   /** Emitted whenever fighter combat state changes. */

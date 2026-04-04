@@ -38,6 +38,29 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   /** Perfect Potions level — each inner-zone click adds +(level × 5)% to dilution success chance for the current brew. */
   @Input() perfectPotionsLevel = 0;
 
+  // ── Synaptical Potions ─────────────────
+  /** Set to true when the Synaptical Potions upgrade has been purchased. */
+  @Input() synapticalPotionsUnlocked = false;
+  /** Synaptic Static level — each level places one random bonus zone on the bar when brewing synaptical potions. */
+  @Input() synapticStaticLevel = 0;
+  /** Whether synaptical mode is active — owned by AppComponent, persisted across tab switches. */
+  @Input()  synapticalEnabled = false;
+  @Output() synapticalEnabledChange = new EventEmitter<boolean>();
+
+  /** Randomly placed bonus zones for Synaptic Static (percentage positions). */
+  synapticZones: { min: number; max: number }[] = [];
+
+  onSynapticalChange(val: boolean): void {
+    this.synapticalEnabled = val;
+    this.synapticalEnabledChange.emit(val);
+  }
+
+  /** Whether the cursor is inside any Synaptic Static zone. */
+  get isInSynapticZone(): boolean {
+    if (!this.synapticalEnabled || this.synapticZones.length === 0) return false;
+    return this.synapticZones.some(z => this.barPos >= z.min && this.barPos <= z.max);
+  }
+
   // ── Dilution toggle ───────────────────────
   /** Whether dilution is active — owned by AppComponent, persisted across tab switches. */
   @Input()  dilutionEnabled = false;
@@ -168,6 +191,19 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.lastTime           = undefined;
     this.lastMsg            = MINIGAME_MSG.APOTHECARY.IDLE;
     this.msgClass           = 'msg-neutral';
+
+    // Generate Synaptic Static bonus zones when brewing in synaptical mode
+    this.synapticZones = [];
+    if (this.synapticalEnabled && this.synapticStaticLevel > 0) {
+      for (let i = 0; i < this.synapticStaticLevel; i++) {
+        const zoneWidth = APOTH_MG.SYNAPTIC_ZONE_WIDTH;
+        const center = 5 + Math.random() * 90; // 5-95% to keep zones roughly on the bar
+        const min = Math.max(0, center - zoneWidth / 2);
+        const max = Math.min(100, min + zoneWidth);
+        this.synapticZones.push({ min, max });
+      }
+    }
+
     this.log.log(`Apothecary begins brewing. (${cur('herb', this.herbCost, '-')}, ${cur('potion', this.potionCost, '-')})`);
     this.startAnimation();
   }
@@ -175,28 +211,53 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   brew(): void {
     if (!this.potionActive) return;
 
-    if (this.isInInnerZone) {
-      this.quality  = Math.min(this.maxQuality, this.quality + 2);
-      this.perfectClickBonus += this.perfectPotionsLevel * 5;
-      this.lastMsg  = MINIGAME_MSG.APOTHECARY.HIT_INNER(this.quality, this.maxQuality);
-      this.msgClass = 'msg-double';
-      this.stats.trackPotionHit(true);
-      if (this.quality >= this.maxQuality) this.onPerfectPotion();
-    } else if (this.isInZone) {
-      this.quality  = Math.min(this.maxQuality, this.quality + 1);
-      this.lastMsg  = MINIGAME_MSG.APOTHECARY.HIT_ZONE(this.quality, this.maxQuality);
-      this.msgClass = 'msg-good';
-      this.stats.trackPotionHit(false);
-      if (this.quality >= this.maxQuality) this.onPerfectPotion();
-    } else {
-      this.quality    = Math.max(0, this.quality - 1);
-      this.hadMistake = true;
-      if (this.dilutionEnabled) {
-        this.dilutionMissPenalty += APOTH_MG.DILUTION_MISS_PENALTY;
+    // In synaptical mode, Bubbling Brew / Bigger Bubbles don't apply.
+    // Instead, Synaptic Static zones provide +2 quality.
+    if (this.synapticalEnabled) {
+      if (this.isInSynapticZone) {
+        this.quality  = Math.min(this.maxQuality, this.quality + 2);
+        this.lastMsg  = `Synaptic surge! +2 quality (${this.quality}/${this.maxQuality})`;
+        this.msgClass = 'msg-double';
+        this.stats.trackPotionHit(true);
+        if (this.quality >= this.maxQuality) this.onPerfectPotion();
+      } else if (this.isInZone) {
+        this.quality  = Math.min(this.maxQuality, this.quality + 1);
+        this.lastMsg  = MINIGAME_MSG.APOTHECARY.HIT_ZONE(this.quality, this.maxQuality);
+        this.msgClass = 'msg-good';
+        this.stats.trackPotionHit(false);
+        if (this.quality >= this.maxQuality) this.onPerfectPotion();
+      } else {
+        this.quality    = Math.max(0, this.quality - 1);
+        this.hadMistake = true;
+        this.lastMsg    = MINIGAME_MSG.APOTHECARY.MISS_ZONE(this.quality, this.maxQuality);
+        this.msgClass   = 'msg-bad';
+        this.stats.trackPotionMiss();
       }
-      this.lastMsg    = MINIGAME_MSG.APOTHECARY.MISS_ZONE(this.quality, this.maxQuality);
-      this.msgClass   = 'msg-bad';
-      this.stats.trackPotionMiss();
+    } else {
+      // Normal (concentrated potion) mode
+      if (this.isInInnerZone) {
+        this.quality  = Math.min(this.maxQuality, this.quality + 2);
+        this.perfectClickBonus += this.perfectPotionsLevel * 5;
+        this.lastMsg  = MINIGAME_MSG.APOTHECARY.HIT_INNER(this.quality, this.maxQuality);
+        this.msgClass = 'msg-double';
+        this.stats.trackPotionHit(true);
+        if (this.quality >= this.maxQuality) this.onPerfectPotion();
+      } else if (this.isInZone) {
+        this.quality  = Math.min(this.maxQuality, this.quality + 1);
+        this.lastMsg  = MINIGAME_MSG.APOTHECARY.HIT_ZONE(this.quality, this.maxQuality);
+        this.msgClass = 'msg-good';
+        this.stats.trackPotionHit(false);
+        if (this.quality >= this.maxQuality) this.onPerfectPotion();
+      } else {
+        this.quality    = Math.max(0, this.quality - 1);
+        this.hadMistake = true;
+        if (this.dilutionEnabled) {
+          this.dilutionMissPenalty += APOTH_MG.DILUTION_MISS_PENALTY;
+        }
+        this.lastMsg    = MINIGAME_MSG.APOTHECARY.MISS_ZONE(this.quality, this.maxQuality);
+        this.msgClass   = 'msg-bad';
+        this.stats.trackPotionMiss();
+      }
     }
   }
 
@@ -241,6 +302,24 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.perfectClickBonus   = 0;
     this.stats.trackApothecaryMinigameComplete();
 
+    // ── Synaptical mode: 1 synaptical potion, no dilution ──
+    if (this.synapticalEnabled) {
+      this.wallet.add('synaptical-potion', 1);
+      this.stats.trackCurrencyGain('synaptical-potion', 1);
+
+      if (!this.wallet.isCurrencyUnlocked('synaptical-potion')) {
+        this.wallet.unlockCurrency('synaptical-potion');
+        this.log.log('A Synaptical Potion has been crafted! New currency unlocked!', 'rare');
+      } else {
+        this.log.log(`Synaptical Potion crafted! (${cur('synaptical-potion', 1)})`, 'success');
+      }
+
+      this.lastMsg  = 'Synaptical Potion brewed!';
+      this.msgClass = 'msg-good';
+      return;
+    }
+
+    // ── Concentrated potion modes (standard and dilution) ──
     if (this.potionDilutionUnlocked && this.dilutionEnabled) {
       // Dilution: roll dilutionTotalRolls independent potions, each with a chance to downgrade
       const totalRolls = this.dilutionTotalRolls;

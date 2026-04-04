@@ -34,6 +34,7 @@ export interface UpgradeState {
   shortRestEnabled?: boolean;
   wholesaleSpicesEnabled?: boolean;
   dilutionEnabled?: boolean;
+  synapticalEnabled?: boolean;
   fermentationVatsEnabled?: boolean;
   /** Absolute timestamp (ms) when the artisan timer expires (0 = idle). */
   artisanTimerUntil?: number;

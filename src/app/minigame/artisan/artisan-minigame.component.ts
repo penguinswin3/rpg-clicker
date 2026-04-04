@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
@@ -46,10 +46,14 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
   readonly METAL_COST     = ARTISAN_MG.METAL_COST;
   readonly GEM_COUNT      = ARTISAN_MG.GEM_COUNT;
   readonly PICKS          = ARTISAN_MG.PICKS;
-  readonly LUCKY_GEM_BONUS= ARTISAN_MG.LUCKY_GEM_BONUS;
   readonly JEWELRY_REWARD = ARTISAN_MG.JEWELRY_REWARD;
   readonly GEM_SYMBOL     = CURRENCY_FLAVOR['gemstone'].symbol;
   readonly GEM_COLOR      = CURRENCY_FLAVOR['gemstone'].color;
+
+  // ── Upgrade inputs ────────────────────────
+  @Input() luckyGemsLevel = 0;
+  @Input() doubleDipLevel = 0;
+  @Input() standOutSelectionLevel = 0;
 
   // ── Wallet-synced ─────────────────────────
   gemstones = 0;
@@ -59,7 +63,7 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
   roundStarted = false;
   roundOver    = false;
   gems: Gem[]  = [];
-  picksLeft    = this.PICKS;
+  picksLeft: number = this.PICKS;
 
   // ── Result ────────────────────────────────
   lastMsg  = '';
@@ -69,6 +73,8 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
 
   /** Index of the best gem (highest score). */
   bestGemIndex = -1;
+  /** Index of the second-best gem (used by Double Dip). */
+  secondBestGemIndex = -1;
 
   get canStart(): boolean {
     return this.gemstones >= this.GEMSTONE_COST && this.preciousMetal >= this.METAL_COST;
@@ -99,6 +105,9 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
     this.wallet.remove('gemstone', this.GEMSTONE_COST);
     this.wallet.remove('precious-metal', this.METAL_COST);
 
+    // Compute effective lucky gem bonus from base + upgrade levels
+    const effectiveBonus = ARTISAN_MG.LUCKY_GEM_BONUS + this.luckyGemsLevel * ARTISAN_MG.LUCKY_GEM_BONUS_PER_LEVEL;
+
     // Generate gems with random attributes
     this.gems = [];
     const luckyGem = randInt(0, this.GEM_COUNT - 1);  // one random gem will be the "lucky" best one
@@ -108,31 +117,59 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
       let cut= 0;
       let carat = 0;
       if (i === luckyGem){
-        color = Math.min(100, Math.random()+this.LUCKY_GEM_BONUS);
-        clarity = Math.min(100, Math.random()+this.LUCKY_GEM_BONUS);
-        cut = Math.min(100, Math.random()+this.LUCKY_GEM_BONUS);
-        carat = Math.min(100, Math.random()+this.LUCKY_GEM_BONUS);
+        color = Math.min(1, Math.random()+effectiveBonus);
+        clarity = Math.min(1, Math.random()+effectiveBonus);
+        cut = Math.min(1, Math.random()+effectiveBonus);
+        carat = Math.min(1, Math.random()+effectiveBonus);
       } else {
         color = Math.random();
         clarity = Math.random();
         cut = Math.random();
         carat = Math.random();
       }
+
+      // Stand Out Selection: set random attributes of the lucky gem to max (1.0)
+      if (i === luckyGem && this.standOutSelectionLevel > 0) {
+        const attrs: ('color' | 'clarity' | 'cut' | 'carat')[] = ['color', 'clarity', 'cut', 'carat'];
+        // Shuffle and pick N attributes to max out
+        for (let s = attrs.length - 1; s > 0; s--) {
+          const r = randInt(0, s);
+          [attrs[s], attrs[r]] = [attrs[r], attrs[s]];
+        }
+        const toMax = Math.min(this.standOutSelectionLevel, attrs.length);
+        const vals: Record<string, number> = { color, clarity, cut, carat };
+        for (let m = 0; m < toMax; m++) {
+          vals[attrs[m]] = 1.0;
+        }
+        color   = vals['color'];
+        clarity = vals['clarity'];
+        cut     = vals['cut'];
+        carat   = vals['carat'];
+      }
+
       const score   = (color + clarity + cut + carat) / 4;
       this.gems.push({ color, clarity, cut, carat, score, selected: false, revealed: false });
     }
 
-    // Find best gem
+    // Find best and second-best gem
     let maxScore = -1;
+    let secondMaxScore = -1;
     this.bestGemIndex = 0;
+    this.secondBestGemIndex = -1;
     for (let i = 0; i < this.gems.length; i++) {
       if (this.gems[i].score > maxScore) {
+        secondMaxScore = maxScore;
+        this.secondBestGemIndex = this.bestGemIndex;
         maxScore = this.gems[i].score;
         this.bestGemIndex = i;
+      } else if (this.gems[i].score > secondMaxScore) {
+        secondMaxScore = this.gems[i].score;
+        this.secondBestGemIndex = i;
       }
     }
 
-    this.picksLeft    = this.PICKS;
+    // Effective picks: base + 1 if Double Dip is active
+    this.picksLeft    = this.PICKS + (this.doubleDipLevel >= 1 ? 1 : 0);
     this.roundStarted = true;
     this.roundOver    = false;
     this.lastMsg      = MINIGAME_MSG.ARTISAN.ROUND_START(this.GEM_COUNT);
@@ -149,6 +186,14 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
 
     gem.selected = true;
     this.picksLeft--;
+
+    // Double Dip: after the first pick, if the best gem hasn't been selected,
+    // cancel remaining picks and resolve immediately.
+    if (this.doubleDipLevel >= 1 && this.picksLeft > 0) {
+      if (!this.gems[this.bestGemIndex].selected) {
+        this.picksLeft = 0;
+      }
+    }
 
     // If all picks used, resolve round
     if (this.picksLeft <= 0) {
@@ -179,23 +224,60 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
         );
       }
 
-      this.wallet.add('jewelry', this.JEWELRY_REWARD);
-      this.wallet.add('xp', ARTISAN_MG.XP_REWARD);
-      this.stats.trackCurrencyGain('jewelry', this.JEWELRY_REWARD);
-      this.stats.trackCurrencyGain('xp', ARTISAN_MG.XP_REWARD);
+      let totalJewelry = this.JEWELRY_REWARD;
+      let totalXp      = ARTISAN_MG.XP_REWARD;
+
+      // Double Dip bonus: check if the 2nd-best gem was also selected
+      const picked2ndBest = this.doubleDipLevel >= 1
+        && this.secondBestGemIndex >= 0
+        && this.gems[this.secondBestGemIndex].selected;
+
+      if (picked2ndBest) {
+        totalJewelry += ARTISAN_MG.DOUBLE_DIP_JEWELRY_BONUS;
+        totalXp      += ARTISAN_MG.DOUBLE_DIP_XP_BONUS;
+      }
+
+      this.wallet.add('jewelry', totalJewelry);
+      this.wallet.add('xp', totalXp);
+      this.stats.trackCurrencyGain('jewelry', totalJewelry);
+      this.stats.trackCurrencyGain('xp', totalXp);
       this.stats.trackArtisanFaceting(true);
 
-      this.lastMsg  = MINIGAME_MSG.ARTISAN.CORRECT;
-      this.msgClass = 'msg-success';
-      this.resultParts = [
-        { amount: this.JEWELRY_REWARD, symbol: CURRENCY_FLAVOR['jewelry'].symbol, color: CURRENCY_FLAVOR['jewelry'].color },
-      ];
-      this.resultXp = ARTISAN_MG.XP_REWARD;
-
-      this.log.log(
-        `Faceting success! (${cur('jewelry', this.JEWELRY_REWARD)}, ${cur('xp', ARTISAN_MG.XP_REWARD)})`,
-        'success'
-      );
+      if (picked2ndBest) {
+        this.lastMsg  = MINIGAME_MSG.ARTISAN.DOUBLE_DIP_HIT;
+        this.msgClass = 'msg-success';
+        this.resultParts = [
+          { amount: totalJewelry, symbol: CURRENCY_FLAVOR['jewelry'].symbol, color: CURRENCY_FLAVOR['jewelry'].color },
+        ];
+        this.resultXp = totalXp;
+        this.log.log(
+          `Faceting success + Double Dip! (${cur('jewelry', totalJewelry)}, ${cur('xp', totalXp)})`,
+          'success'
+        );
+      } else if (this.doubleDipLevel >= 1) {
+        // Picked best but missed the 2nd-best
+        this.lastMsg  = MINIGAME_MSG.ARTISAN.DOUBLE_DIP_MISS;
+        this.msgClass = 'msg-success';
+        this.resultParts = [
+          { amount: totalJewelry, symbol: CURRENCY_FLAVOR['jewelry'].symbol, color: CURRENCY_FLAVOR['jewelry'].color },
+        ];
+        this.resultXp = totalXp;
+        this.log.log(
+          `Faceting success! (${cur('jewelry', totalJewelry)}, ${cur('xp', totalXp)})`,
+          'success'
+        );
+      } else {
+        this.lastMsg  = MINIGAME_MSG.ARTISAN.CORRECT;
+        this.msgClass = 'msg-success';
+        this.resultParts = [
+          { amount: totalJewelry, symbol: CURRENCY_FLAVOR['jewelry'].symbol, color: CURRENCY_FLAVOR['jewelry'].color },
+        ];
+        this.resultXp = totalXp;
+        this.log.log(
+          `Faceting success! (${cur('jewelry', totalJewelry)}, ${cur('xp', totalXp)})`,
+          'success'
+        );
+      }
     } else {
       this.stats.trackArtisanFaceting(false);
       this.lastMsg  = MINIGAME_MSG.ARTISAN.WRONG;

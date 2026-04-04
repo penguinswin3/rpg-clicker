@@ -51,6 +51,7 @@ export class WalletService {
     // ── Apothecary ───────────────────────────────────────────────────────────
     { id: 'potion',               ...CURRENCY_FLAVOR['potion'],                requiredCharacterId: 'apothecary'   },
     { id: 'concentrated-potion',  ...CURRENCY_FLAVOR['concentrated-potion'],   requiredCharacterId: 'apothecary', manualUnlock: true },
+    { id: 'synaptical-potion',    ...CURRENCY_FLAVOR['synaptical-potion'],     requiredCharacterId: 'apothecary', manualUnlock: true },
     // ── Culinarian ───────────────────────────────────────────────────────────
     { id: 'spice',                ...CURRENCY_FLAVOR['spice'],                 requiredCharacterId: 'culinarian'   },
     { id: 'hearty-meal',          ...CURRENCY_FLAVOR['hearty-meal'],           requiredCharacterId: 'culinarian', manualUnlock: true },

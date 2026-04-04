@@ -8,6 +8,7 @@
     [strongerKoboldsLevel]="upgrades.level('STRONGER_KOBOLDS')"
     [firstStrikeLevel]="upgrades.level('FIRST_STRIKE')"
     [slowBladeLevel]="upgrades.level('SLOW_BLADE')"
+    [gildedBladeLevel]="upgrades.level('GILDED_BLADE')"
     [shortRestLevel]="upgrades.level('SHORT_REST')"
     [shortRestEnabled]="shortRestEnabled"
     (shortRestEnabledChange)="shortRestEnabled = $event"
@@ -16,11 +17,16 @@
     [bountifulLandsLevel]="upgrades.level('BOUNTIFUL_LANDS')"
     [abundantLandsLevel]="upgrades.level('ABUNDANT_LANDS')"
     [fairyHostageLevel]="upgrades.level('FAIRY_HOSTAGE')"
+    [treasureChestLevel]="upgrades.level('TREASURE_CHEST')"
     [bubblingBrewLevel]="upgrades.level('BUBBLING_BREW')"
     [biggerBubblesLevel]="upgrades.level('BIGGER_BUBBLES')"
     [potionDilutionLevel]="upgrades.level('POTION_DILUTION')"
     [serialDilutionLevel]="upgrades.level('SERIAL_DILUTION')"
     [perfectPotionsLevel]="upgrades.level('PERFECT_POTIONS')"
+    [synapticalPotionsLevel]="upgrades.level('SYNAPTICAL_POTIONS')"
+    [synapticStaticLevel]="upgrades.level('SYNAPTIC_STATIC')"
+    [synapticalEnabled]="synapticalEnabled"
+    (synapticalEnabledChange)="synapticalEnabled = $event"
     [wasteNotLevel]="upgrades.level('WASTE_NOT')"
     [largerCookbooksLevel]="upgrades.level('LARGER_COOKBOOKS')"
     [vanishingPowderLevel]="upgrades.level('VANISHING_POWDER')"
@@ -32,7 +38,10 @@
     [fighterCombatState]="fighterCombatState"
     (fighterCombatStateChange)="fighterCombatState = $event"
     [dilutionEnabled]="dilutionEnabled"
-    (dilutionEnabledChange)="dilutionEnabled = $event" />
+    (dilutionEnabledChange)="dilutionEnabled = $event"
+    [luckyGemsLevel]="upgrades.level('LUCKY_GEMS')"
+    [doubleDipLevel]="upgrades.level('DOUBLE_DIP')"
+    [standOutSelectionLevel]="upgrades.level('STAND_OUT_SELECTION')" />
 
   <div class="game-wrapper">
     <div class="game-container">

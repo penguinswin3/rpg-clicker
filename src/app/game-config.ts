@@ -31,6 +31,8 @@ export interface UpgradeGates {
   readonly requiresPotionDilution?: boolean;
   /** Hide until the Locked In minigame upgrade has been purchased. */
   readonly requiresLockedIn?: boolean;
+  /** Hide until the Synaptical Potions minigame upgrade has been purchased. */
+  readonly requiresSynapticalPotions?: boolean;
   /** Hide until the player has received at least one Relic. */
   readonly requiresRelic?: boolean;
   /** Hide until the player has obtained at least one Kobold Fang. */
@@ -275,6 +277,11 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'dossier',     base: 1500, scale: 1.0 },
       { currency: 'kobold-fang', base: 33,   scale: 1.0 },
     ] },
+  { id: 'GILDED_BLADE', characterId: 'fighter', category: 'minigame', max: 33,
+    gates: { requiresArtisan: true },
+    costs: [
+      { currency: 'precious-metal', base: 10, scale: 1.3 },
+    ] },
 
   // ── Ranger — standard ────────────────────────────────────────
   { id: 'MORE_HERBS',      characterId: 'ranger', category: 'standard', max: 100,
@@ -329,6 +336,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'pixie-dust', base: 25,  scale: 1.0 },
       { currency: 'spice',      base: 600, scale: 1.0 },
       { currency: 'dossier',    base: 600, scale: 1.0 },
+    ] },
+  { id: 'TREASURE_CHEST', characterId: 'ranger', category: 'minigame', max: 10,
+    gates: { requiresArtisan: true },
+    costs: [
+      { currency: 'treasure',  base: 50,  scale: 1.4 },
+      { currency: 'gemstone',  base: 10,  scale: 1.4 },
     ] },
 
   // ── Apothecary — standard ────────────────────────────────────
@@ -432,6 +445,36 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'treasure', base: 250,    scale: 1.0 },
     ] },
 
+  // ── Artisan — standard ───────────────────────────────────────
+  { id: 'FASTER_APPRAISING', characterId: 'artisan', category: 'standard', max: 10,
+    costs: [
+      { currency: 'gold',        base: 10_000, scale: 1.5 },
+      { currency: 'hearty-meal', base: 5,      scale: 1.5 },
+    ] },
+  { id: 'POTION_CATS_PAW', characterId: 'artisan', category: 'standard', max: 999,
+    costs: [
+      { currency: 'concentrated-potion', base: 3,   scale: 1.3 },
+      { currency: 'treasure',               base: 100, scale: 1.3 },
+    ] },
+
+  // ── Artisan — minigame ───────────────────────────────────────
+  { id: 'LUCKY_GEMS', characterId: 'artisan', category: 'minigame', max: 20,
+    costs: [
+      { currency: 'gold',       base: 25_000, scale: 1.4 },
+      { currency: 'pixie-dust', base: 10,     scale: 1.3 },
+    ] },
+  { id: 'DOUBLE_DIP', characterId: 'artisan', category: 'minigame', max: 1,
+    costs: [
+      { currency: 'treasure', base: 500, scale: 1.0 },
+      { currency: 'jewelry',  base: 5,   scale: 1.0 },
+    ] },
+  // Max is 1 for now — levels 2-3 will be enabled in a future update with different currencies.
+  { id: 'STAND_OUT_SELECTION', characterId: 'artisan', category: 'minigame', max: 1,
+    costs: [
+      { currency: 'gold',         base: 50_000, scale: 1.0 },
+      { currency: 'kobold-brain', base: 50,     scale: 1.0 },
+    ] },
+
   // ── Apothecary — minigame ────────────────────────────────────
   { id: 'BUBBLING_BREW', characterId: 'apothecary', category: 'minigame', max: 1,
     costs: [
@@ -462,6 +505,19 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [
       { currency: 'gold',                base: 50000, scale: 1.0 },
       { currency: 'dossier',             base: 500,  scale: 1.0 },
+    ] },
+  { id: 'SYNAPTICAL_POTIONS', characterId: 'apothecary', category: 'minigame', max: 1,
+    gates: { requiresArtisan: true },
+    costs: [
+      { currency: 'potion',          base: 5_000, scale: 1.0 },
+      { currency: 'precious-metal',  base: 50,    scale: 1.0 },
+      { currency: 'kobold-brain',    base: 25,    scale: 1.0 },
+    ] },
+  { id: 'SYNAPTIC_STATIC', characterId: 'apothecary', category: 'minigame', max: 3,
+    gates: { requiresSynapticalPotions: true },
+    costs: [
+      { currency: 'precious-metal', base: 30,  scale: 1.5 },
+      { currency: 'kobold-brain',   base: 15,  scale: 1.5 },
     ] },
 
   // ── Relic upgrades (one per character) ──────────────────────────
@@ -607,6 +663,8 @@ export const APOTH_MG = {
   DILUTION_BASE_CHANCE: 70,
   /** How many percentage points each miss deducts from the dilution success chance (when dilution is active) */
   DILUTION_MISS_PENALTY: 10,
+  /** Width of each Synaptic Static bonus zone in percentage units. */
+  SYNAPTIC_ZONE_WIDTH: 8,
 } as const;
 
 // ── Ranger Minigame ───────────────────────────────────────────
@@ -632,6 +690,28 @@ export const RANGER_MG = {
   HERB_XP:  3,
   /** XP awarded when the player uncovers a Pixie Dust cell */
   PIXIE_XP: 9,
+
+  // ── Treasure Chest (Treasure Chest upgrade) ────────────────
+  /** Chest chance increase per Treasure Chest upgrade level (percentage, 0–100). */
+  CHEST_CHANCE_PER_LEVEL: 2,
+  /** Herb chance reduction per Treasure Chest upgrade level (percentage). */
+  CHEST_HERB_REDUCTION_PER_LEVEL: 1,
+  /** Meat chance reduction per Treasure Chest upgrade level (percentage). */
+  CHEST_MEAT_REDUCTION_PER_LEVEL: 1,
+  /** Min gold awarded when a treasure chest is found. */
+  CHEST_GOLD_MIN: 50,
+  /** Max gold awarded when a treasure chest is found. */
+  CHEST_GOLD_MAX: 500,
+  /** Min treasure awarded when a treasure chest is found. */
+  CHEST_TREASURE_MIN: 1,
+  /** Max treasure awarded when a treasure chest is found. */
+  CHEST_TREASURE_MAX: 5,
+  /** Min gemstones awarded when a treasure chest is found. */
+  CHEST_GEM_MIN: 1,
+  /** Max gemstones awarded when a treasure chest is found. */
+  CHEST_GEM_MAX: 3,
+  /** XP awarded when a treasure chest is found. */
+  CHEST_XP: 15,
 } as const;
 
 // ── Thief Minigame ────────────────────────────────────────────
@@ -705,7 +785,17 @@ export const ARTISAN_MG = {
   JEWELRY_REWARD: 1,
   /** XP awarded on a successful faceting. */
   XP_REWARD: 5,
-  /** Adds a bonus percentage to the "Lucky Gem" Stats" **/
-  LUCKY_GEM_BONUS: 0.1
+  /** Base bonus added to the "Lucky Gem" attributes (before upgrades). */
+  LUCKY_GEM_BONUS: 0.1,
+  /** Additional bonus per Lucky Gems upgrade level. */
+  LUCKY_GEM_BONUS_PER_LEVEL: 0.1,
+  /** Milliseconds subtracted from the appraisal timer per Faster Appraising level. */
+  FASTER_APPRAISING_MS_PER_LEVEL: 1000,
+  /** Minimum appraisal timer duration in ms (hard floor). */
+  FASTER_APPRAISING_MIN_MS: 1000,
+  /** Bonus jewelry awarded for a successful Double Dip (picking 2nd-best gem). */
+  DOUBLE_DIP_JEWELRY_BONUS: 1,
+  /** Bonus XP awarded for a successful Double Dip. */
+  DOUBLE_DIP_XP_BONUS: 3,
 } as const;
 

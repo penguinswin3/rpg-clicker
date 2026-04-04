@@ -8,7 +8,7 @@
 
 import { HeroStat } from '../character/character-sidebar.component';
 import { HERO_STATS_FLAVOR, CHARACTER_FLAVOR } from '../flavor-text';
-import { YIELDS, APOTH_MG, THIEF_MG } from '../game-config';
+import { YIELDS, APOTH_MG, THIEF_MG, ARTISAN_MG } from '../game-config';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { WalletService } from '../wallet/wallet.service';
 import { roundTo } from '../utils/mathUtils';
@@ -20,6 +20,7 @@ import {
   calcThiefSuccessChance, calcExpectedDossierYield,
   calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick,
   calcArtisanTreasureCost, calcArtisanTimerMs,
+  calcArtisanGemstoneMax, calcArtisanMetalMax,
 } from './yield-helpers';
 
 // ── Context required by the builder ──────────────────────────
@@ -79,6 +80,9 @@ function buildFighterStats(ctx: HeroStatsContext): HeroStat[] {
     ...(u.level('INSIGHTFUL_CONTRACTS') > 0
       ? [{ label: HERO_STATS_FLAVOR.FIGHTER.XP_PER_CLICK, value: `${xpPerBounty}` }]
       : []),
+    ...(u.level('GILDED_BLADE') > 0
+      ? [{ label: HERO_STATS_FLAVOR.FIGHTER.GILDED_BLADE, value: `+${u.level('GILDED_BLADE')}% drop / +${u.level('GILDED_BLADE')}% gold` }]
+      : []),
   ];
 }
 
@@ -99,6 +103,9 @@ function buildRangerStats(ctx: HeroStatsContext): HeroStat[] {
       : []),
     ...(u.level('HOVEL_GARDEN') > 0
       ? [{ label: HERO_STATS_FLAVOR.RANGER.GARDEN_RATE, value: `${roundTo(gardenRate, 2)}/s` }]
+      : []),
+    ...(u.level('TREASURE_CHEST') > 0
+      ? [{ label: HERO_STATS_FLAVOR.RANGER.CHEST_CHANCE, value: `${u.level('TREASURE_CHEST') * 2}%` }]
       : []),
   ];
 }
@@ -174,15 +181,27 @@ function buildThiefStats(ctx: HeroStatsContext): HeroStat[] {
   return stats;
 }
 
-function buildArtisanStats(_ctx: HeroStatsContext): HeroStat[] {
-  const treasureCost = calcArtisanTreasureCost();
-  const timerSec     = calcArtisanTimerMs() / 1000;
+function buildArtisanStats(ctx: HeroStatsContext): HeroStat[] {
+  const u = ctx.upgrades;
+  const fasterAppraisingLevel = u.level('FASTER_APPRAISING');
+  const catsPawLevel          = u.level('POTION_CATS_PAW');
+  const luckyGemsLevel        = u.level('LUCKY_GEMS');
 
-  return [
+  const treasureCost = calcArtisanTreasureCost();
+  const timerSec     = calcArtisanTimerMs(fasterAppraisingLevel) / 1000;
+  const gemMax       = calcArtisanGemstoneMax(catsPawLevel);
+  const metalMax     = calcArtisanMetalMax(catsPawLevel);
+
+  const stats: HeroStat[] = [
     { label: HERO_STATS_FLAVOR.ARTISAN.TREASURE_COST,  value: `${treasureCost}` },
     { label: HERO_STATS_FLAVOR.ARTISAN.TIMER_DURATION, value: `${timerSec}s` },
-    { label: HERO_STATS_FLAVOR.ARTISAN.GEMSTONE_RANGE, value: `${YIELDS.ARTISAN_GEMSTONE_MIN} - ${YIELDS.ARTISAN_GEMSTONE_MAX}` },
-    { label: HERO_STATS_FLAVOR.ARTISAN.METAL_RANGE,    value: `${YIELDS.ARTISAN_METAL_MIN} - ${YIELDS.ARTISAN_METAL_MAX}` },
+    { label: HERO_STATS_FLAVOR.ARTISAN.GEMSTONE_RANGE, value: `${YIELDS.ARTISAN_GEMSTONE_MIN} - ${gemMax}` },
+    { label: HERO_STATS_FLAVOR.ARTISAN.METAL_RANGE,    value: `${YIELDS.ARTISAN_METAL_MIN} - ${metalMax}` },
   ];
+  if (luckyGemsLevel > 0) {
+    const bonus = roundTo(ARTISAN_MG.LUCKY_GEM_BONUS + luckyGemsLevel * ARTISAN_MG.LUCKY_GEM_BONUS_PER_LEVEL, 1);
+    stats.push({ label: HERO_STATS_FLAVOR.ARTISAN.LUCKY_BONUS, value: `+${bonus}` });
+  }
+  return stats;
 }
 

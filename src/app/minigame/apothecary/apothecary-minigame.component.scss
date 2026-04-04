@@ -133,6 +133,17 @@ $green:  #44dd44;
   pointer-events: none;
 }
 
+// Synaptic Static bonus zone — cyan highlight
+.beat-synaptic-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(91, 192, 235, 0.25);
+  border-left: 1px solid #5bc0eb;
+  border-right: 1px solid #5bc0eb;
+  pointer-events: none;
+}
+
 .beat-cursor {
   position: absolute;
   top: 0;

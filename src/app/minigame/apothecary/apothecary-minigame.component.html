@@ -34,22 +34,30 @@
              [style.left.%]="zoneMin"
              [style.width.%]="zoneMax - zoneMin">
         </div>
-        <!-- bubbling brew inner zone -->
+        <!-- bubbling brew inner zone (hidden in synaptical mode) -->
         <div class="beat-inner-zone"
-             *ngIf="bubblingBrewUnlocked"
+             *ngIf="bubblingBrewUnlocked && !synapticalEnabled"
              [style.left.%]="innerZoneMin"
              [style.width.%]="innerZoneMax - innerZoneMin">
         </div>
+        <!-- Synaptic Static bonus zones (synaptical mode only) -->
+        <ng-container *ngIf="synapticalEnabled">
+          <div class="beat-synaptic-zone"
+               *ngFor="let zone of synapticZones"
+               [style.left.%]="zone.min"
+               [style.width.%]="zone.max - zone.min">
+          </div>
+        </ng-container>
         <!-- moving cursor -->
         <div class="beat-cursor" [style.left.%]="barPos"></div>
       </div>
       <!-- live zone indicator -->
       <div class="zone-status"
-           [class.in-inner-zone]="isInInnerZone"
-           [class.in-zone]="isInZone && !isInInnerZone"
+           [class.in-inner-zone]="synapticalEnabled ? isInSynapticZone : isInInnerZone"
+           [class.in-zone]="isInZone && !(synapticalEnabled ? isInSynapticZone : isInInnerZone)"
            [class.out-zone]="!isInZone">
-        <ng-container *ngIf="isInInnerZone">*** BUBBLING ***</ng-container>
-        <ng-container *ngIf="isInZone && !isInInnerZone">&gt;&gt;&gt; IN ZONE &lt;&lt;&lt;</ng-container>
+        <ng-container *ngIf="synapticalEnabled ? isInSynapticZone : isInInnerZone">{{ synapticalEnabled ? '*** SYNAPTIC ***' : '*** BUBBLING ***' }}</ng-container>
+        <ng-container *ngIf="isInZone && !(synapticalEnabled ? isInSynapticZone : isInInnerZone)">&gt;&gt;&gt; IN ZONE &lt;&lt;&lt;</ng-container>
         <ng-container *ngIf="!isInZone">--- OUT OF ZONE ---</ng-container>
       </div>
     </div>
@@ -70,8 +78,23 @@
     </div>
   </ng-container>
 
-  <!-- ── Dilution toggle ─────────────── -->
-  <div class="dilution-toggle" *ngIf="potionDilutionUnlocked">
+  <!-- ── Synaptical toggle ───────────── -->
+  <div class="dilution-toggle" *ngIf="synapticalPotionsUnlocked">
+    <label class="toggle-label">
+      <input type="checkbox"
+             [ngModel]="synapticalEnabled"
+             (ngModelChange)="onSynapticalChange($event)"
+             [ngModelOptions]="{standalone: true}"
+             [disabled]="potionActive" />
+      Synaptical Potion
+    </label>
+    <span class="dilution-info" *ngIf="synapticalEnabled && synapticStaticLevel > 0" style="color: #5bc0eb">
+      ({{ synapticStaticLevel }} bonus zone{{ synapticStaticLevel > 1 ? 's' : '' }})
+    </span>
+  </div>
+
+  <!-- ── Dilution toggle (hidden in synaptical mode) ─────────────── -->
+  <div class="dilution-toggle" *ngIf="potionDilutionUnlocked && !synapticalEnabled">
     <label class="toggle-label">
       <input type="checkbox"
              [ngModel]="dilutionEnabled"

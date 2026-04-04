@@ -28,6 +28,7 @@ export const CURRENCY_FLAVOR = {
   'precious-metal':      { name: 'Precious Metal',            symbol: '🜛',  color: '#accccb' },
   gemstone:              { name: 'Gemstone',                  symbol: '💎︎',  color: '#54d6ac' },
   jewelry:               { name: 'Jewelry',                   symbol: 'Ő',  color: '#97dfc8' },
+  'synaptical-potion':   { name: 'Synaptical Potion',         symbol: '⚗',  color: '#5bc0eb' },
 
 } as const;
 
@@ -72,6 +73,7 @@ export const UPGRADE_FLAVOR = {
   SLOW_BLADE:           { name: 'The Slow Blade',            desc: '+1 minimum hit in combat' },
   STRONGER_KOBOLDS:     { name: 'Stronger Kobolds',          desc: 'They grow...' },
   FIRST_STRIKE:         { name: 'First Strike',              desc: 'The Fighter attacks before the enemy. Let the slaughter begin!' },
+  GILDED_BLADE:         { name: 'Gilded Blade',              desc: '+1% secondary drop chance and +1% gold per kill per level' },
 
   // Ranger
   MORE_HERBS:           { name: 'More Herbs',                desc: '+3% chance to double base herbs' },
@@ -83,6 +85,7 @@ export const UPGRADE_FLAVOR = {
   BOUNTIFUL_LANDS:      { name: 'Bountiful Lands',           desc: '+1 guaranteed prize node per level' },
   ABUNDANT_LANDS:       { name: 'Abundant Lands',            desc: 'Resource gain is multiplied by the number of successful finds' },
   FAIRY_HOSTAGE:        { name: 'Fairy Hostage',             desc: 'A pixie, if present, will call out to a friend for help...' },
+  TREASURE_CHEST:       { name: 'Treasure Chest',            desc: '+2% chance per level to find a treasure chest while scouting' },
   POTION_CATS_EYE:      { name: "Potion of Cat's Eye",       desc: "+1% chance to roll both herb AND beast" },
   BIGGER_GAME:          { name: 'Bigger Game',               desc: '+1 max Raw Beast Meat per hero button press' },
 
@@ -96,6 +99,8 @@ export const UPGRADE_FLAVOR = {
   POTION_DILUTION:      { name: 'Potion Dilution',           desc: '2x concentrated potions, with a risk of failure' },
   SERIAL_DILUTION:      { name: 'Serial Dilution',           desc: '+1 additional independent potion roll per level when diluting' },
   PERFECT_POTIONS:      { name: 'Perfect Potions',           desc: 'Each perfect click adds +5% dilution success chance for that brew' },
+  SYNAPTICAL_POTIONS:   { name: 'Synaptical Potions',        desc: 'Unlocks a new recipe for brewing synaptical potions — a cerebral elixir' },
+  SYNAPTIC_STATIC:      { name: 'Synaptic Static',           desc: '+1 randomly placed bonus zone when brewing synaptical potions' },
 
   // Culinarian
   WHOLESALE_SPICES:     { name: 'Wholesale Spices',          desc: '+1 spice per click, purchased at a discount!' },
@@ -112,6 +117,13 @@ export const UPGRADE_FLAVOR = {
   RELIC_HUNTER:             { name: 'Relic Hunter',              desc: 'Allows the discovery of one additional relic!' },
   LOCKED_IN:                { name: 'Locked In',                 desc: 'Marks failed click positions on the dial with a red tick' },
   FLOW_STATE:               { name: 'Flow State',                desc: 'Dial ticks now give hints as to where the sweet spot is' },
+
+  // Artisan
+  FASTER_APPRAISING:        { name: 'Faster Appraising',         desc: '-1 second appraisal timer per level' },
+  POTION_CATS_PAW:          { name: "Potion of the Cat's Paw",   desc: '+1 max gemstone and precious metal yield per level' },
+  LUCKY_GEMS:               { name: 'Lucky Gems',                desc: '+10% lucky gem bonus per level' },
+  DOUBLE_DIP:               { name: 'Double Dip',                desc: 'Pick the best gem first to reveal a second pick — find the runner-up for a bonus!' },
+  STAND_OUT_SELECTION:      { name: 'Stand Out Selection',       desc: 'One attribute of the finest gemstone is set to its maximum value' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
   RELIC_FIGHTER:    { name: 'Amulet of Glory',       desc: 'A powerful artifact that empowers the Fighter. (placeholder)' },
@@ -302,6 +314,7 @@ export const HERO_STATS_FLAVOR = {
     PER_SECOND:   'Gold Per Second  :',
     XP_PER_CLICK: 'XP Per Bounty    :',
     DAMAGE_RANGE: 'Attack Damage    :',
+    GILDED_BLADE: 'Gilded Blade     :',
   },
   RANGER: {
     BEAST_CHANCE: 'Beast Success :',
@@ -310,6 +323,7 @@ export const HERO_STATS_FLAVOR = {
     MAX_MEAT:     'Max Meat      :',
     TRAP_RATE:    'Trap Beast/s  :',
     GARDEN_RATE:  'Garden Herb/s :',
+    CHEST_CHANCE: 'Chest Chance  :',
   },
   APOTHECARY: {
     HERBS_BREW:           'Herbs Per Brew   :',
@@ -339,6 +353,7 @@ export const HERO_STATS_FLAVOR = {
     TIMER_DURATION: 'Appraisal Time :',
     GEMSTONE_RANGE: 'Gemstone Yield :',
     METAL_RANGE:    'Metal Yield    :',
+    LUCKY_BONUS:    'Lucky Gem Bonus:',
   },
 } as const;
 
@@ -366,6 +381,7 @@ export const MINIGAME_MSG = {
 
   RANGER: {
     ROUND_START: (picks: number) => `Choose ${picks} boxes...`,
+    CHEST_FOUND: 'A treasure chest! Riches abound!',
   },
 
   CULINARIAN: {
@@ -390,6 +406,8 @@ export const MINIGAME_MSG = {
     CORRECT:       'Correct! A fine jewel indeed.',
     WRONG:         'Wrong — not the finest gem.',
     ROUND_START:   (count: number) => `${count} gems presented. Choose wisely!`,
+    DOUBLE_DIP_HIT:  'Double Dip! The runner-up was found too!',
+    DOUBLE_DIP_MISS: 'Fine eye for the best, but the runner-up slipped away.',
   },
 
 };

@@ -6,7 +6,7 @@
  * ════════════════════════════════════════════════════════════
  */
 
-import { YIELDS } from '../game-config';
+import { YIELDS, ARTISAN_MG } from '../game-config';
 import { clamp, rollChance, randInt } from '../utils/mathUtils';
 
 // ── Fighter ─────────────────────────────────────────────────
@@ -165,28 +165,41 @@ export function calcArtisanTreasureCost(): number {
   return YIELDS.ARTISAN_TREASURE_COST;
 }
 
-/** Duration of the artisan appraisal timer in ms (base, upgradeable later). */
-export function calcArtisanTimerMs(): number {
-  return YIELDS.ARTISAN_TIMER_MS;
+/** Duration of the artisan appraisal timer in ms, reduced by Faster Appraising. */
+export function calcArtisanTimerMs(fasterAppraisingLevel: number = 0): number {
+  return Math.max(
+    ARTISAN_MG.FASTER_APPRAISING_MIN_MS,
+    YIELDS.ARTISAN_TIMER_MS - fasterAppraisingLevel * ARTISAN_MG.FASTER_APPRAISING_MS_PER_LEVEL,
+  );
+}
+
+/** Maximum gemstone yield, increased by Potion of Cat's Paw. */
+export function calcArtisanGemstoneMax(catsPawLevel: number = 0): number {
+  return YIELDS.ARTISAN_GEMSTONE_MAX + catsPawLevel;
+}
+
+/** Maximum precious metal yield, increased by Potion of Cat's Paw. */
+export function calcArtisanMetalMax(catsPawLevel: number = 0): number {
+  return YIELDS.ARTISAN_METAL_MAX + catsPawLevel;
 }
 
 /** Roll a random gemstone yield for one appraisal. */
-export function calcArtisanGemstoneYield(): number {
-  return randInt(YIELDS.ARTISAN_GEMSTONE_MIN, YIELDS.ARTISAN_GEMSTONE_MAX);
+export function calcArtisanGemstoneYield(catsPawLevel: number = 0): number {
+  return randInt(YIELDS.ARTISAN_GEMSTONE_MIN, calcArtisanGemstoneMax(catsPawLevel));
 }
 
 /** Roll a random precious metal yield for one appraisal. */
-export function calcArtisanMetalYield(): number {
-  return randInt(YIELDS.ARTISAN_METAL_MIN, YIELDS.ARTISAN_METAL_MAX);
+export function calcArtisanMetalYield(catsPawLevel: number = 0): number {
+  return randInt(YIELDS.ARTISAN_METAL_MIN, calcArtisanMetalMax(catsPawLevel));
 }
 
 /** Expected (average) gemstone yield per appraisal — for per-second display. */
-export function expectedGemstonePerAppraisal(): number {
-  return (YIELDS.ARTISAN_GEMSTONE_MIN + YIELDS.ARTISAN_GEMSTONE_MAX) / 2;
+export function expectedGemstonePerAppraisal(catsPawLevel: number = 0): number {
+  return (YIELDS.ARTISAN_GEMSTONE_MIN + calcArtisanGemstoneMax(catsPawLevel)) / 2;
 }
 
 /** Expected (average) precious metal yield per appraisal — for per-second display. */
-export function expectedMetalPerAppraisal(): number {
-  return (YIELDS.ARTISAN_METAL_MIN + YIELDS.ARTISAN_METAL_MAX) / 2;
+export function expectedMetalPerAppraisal(catsPawLevel: number = 0): number {
+  return (YIELDS.ARTISAN_METAL_MIN + calcArtisanMetalMax(catsPawLevel)) / 2;
 }
 
