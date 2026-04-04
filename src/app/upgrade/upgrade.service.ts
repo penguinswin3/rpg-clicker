@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
-import { UPGRADE_DEFS, UpgradeDef, UpgradeCategory, UpgradeGates, CostDef } from '../game-config';
+import { UPGRADE_DEFS, UpgradeDef, UpgradeCategory, UpgradeGates, CostDef, RELIC_COSTS } from '../game-config';
 import { UPGRADE_FLAVOR, cur } from '../flavor-text';
 import { scaledCost } from '../utils/mathUtils';
 
@@ -35,6 +35,8 @@ export class UpgradeService {
   private readonly log     = inject(ActivityLogService);
   private readonly defs    = new Map<string, UpgradeDef>(UPGRADE_DEFS.map(d => [d.id, d]));
   private readonly runtime = new Map<string, UpgradeRuntime>();
+  /** Stable list of all relic upgrade IDs — used by syncRelicCosts(). */
+  private readonly relicIds: string[] = UPGRADE_DEFS.filter(d => d.category === 'relic').map(d => d.id);
   /** Per-upgrade max overrides — used for upgrades with dynamically capped levels. */
   private readonly maxOverrides = new Map<string, number>();
 
@@ -46,6 +48,32 @@ export class UpgradeService {
       const currentCosts: Record<string, number> = {};
       for (const c of def.costs) currentCosts[c.currency] = c.base;
       this.runtime.set(def.id, { level: 0, currentCosts });
+    }
+    this.syncRelicCosts();
+  }
+
+  // ── Relic cost helpers ─────────────────────────────────────────
+
+  /** How many relic upgrades (category === 'relic') have already been purchased. */
+  relicsOwned(): number {
+    return this.relicIds.filter(id => (this.runtime.get(id)?.level ?? 0) >= 1).length;
+  }
+
+  /**
+   * Recalculates the jewelry component of every un-purchased relic upgrade
+   * based on how many relic upgrades are currently owned globally.
+   * Because ALL unpurchased relics are repriced to the same value, the cost
+   * is identical regardless of the order in which the player buys them.
+   *
+   * Call this whenever relicsOwned() could change (buy, restore, bulk-set).
+   */
+  syncRelicCosts(): void {
+    const owned = this.relicsOwned();
+    const jewelryCost = Math.round(RELIC_COSTS.JEWELRY_BASE * Math.pow(RELIC_COSTS.JEWELRY_SCALE, owned));
+    for (const id of this.relicIds) {
+      const rt = this.runtime.get(id);
+      if (!rt || rt.level >= 1) continue; // already purchased — cost irrelevant
+      rt.currentCosts['jewelry'] = jewelryCost;
     }
   }
 
@@ -153,6 +181,7 @@ export class UpgradeService {
 
     const name = (UPGRADE_FLAVOR as Record<string, { name: string }>)[id]?.name ?? id;
     this.log.log(`${name} upgraded to Lv.${rt.level}.`, 'success');
+    this.syncRelicCosts();
     this.changed$.next(id);
     return true;
   }
@@ -185,6 +214,7 @@ export class UpgradeService {
       }
       this.changed$.next(def.id);
     }
+    this.syncRelicCosts();
   }
 
   /**
@@ -203,6 +233,7 @@ export class UpgradeService {
       }
       this.changed$.next(def.id);
     }
+    this.syncRelicCosts();
   }
 
   /**
@@ -221,6 +252,7 @@ export class UpgradeService {
       }
       this.changed$.next(def.id);
     }
+    this.syncRelicCosts();
   }
 
   /**
@@ -248,6 +280,9 @@ export class UpgradeService {
       }
       rt.currentCosts = restoredCosts;
     }
+    // Recompute jewelry costs for all un-purchased relic upgrades based on
+    // how many relics were restored from save.
+    this.syncRelicCosts();
   }
 
   // ── Private helpers ───────────────────────────────────────────

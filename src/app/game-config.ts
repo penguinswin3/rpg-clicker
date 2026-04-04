@@ -114,16 +114,18 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'kobold-ear',         base: 25,   fromCount: 4,  untilCount: 5  },  // Jack 5
       { currency: 'pixie-dust',         base: 25,   fromCount: 5,  untilCount: 6  },  // Jack 6
       { currency: 'concentrated-potion',base: 10,   fromCount: 6,  untilCount: 7  },  // Jack 7
-      { currency: 'kobold-tongue',      base: 15,   fromCount: 7,  untilCount: 8  },  // Jack 8
+      { currency: 'kobold-tongue',      base: 25,   fromCount: 7,  untilCount: 8  },  // Jack 8
       { currency: 'spice',              base: 200,  fromCount: 8,  untilCount: 9  },  // Jack 9
       { currency: 'hearty-meal',        base: 5,    fromCount: 9,  untilCount: 10 },  // Jack 10
-      { currency: 'kobold-hair',        base: 10,   fromCount: 10, untilCount: 11 },  // Jack 11
+      { currency: 'kobold-hair',        base: 25,   fromCount: 10, untilCount: 11 },  // Jack 11
       { currency: 'dossier',            base: 150,  fromCount: 11, untilCount: 12 },  // Jack 12
-      { currency: 'kobold-fang',        base: 10,   fromCount: 12, untilCount: 13 },  // Jack 13
+      { currency: 'kobold-fang',        base: 25,   fromCount: 12, untilCount: 13 },  // Jack 13
       { currency: 'treasure',           base: 150,  fromCount: 13, untilCount: 14 },  // Jack 14
       { currency: 'relic',              base: 1,    fromCount: 14, untilCount: 15 },  // Jack 15
       { currency: 'precious-metal',     base: 100,  fromCount: 15, untilCount: 16 },  // Jack 16
       { currency: 'gemstone',           base: 50,   fromCount: 16, untilCount: 17 },  // Jack 17
+      { currency: 'kobold-brain',       base: 25,   fromCount: 17, untilCount: 18 },  // Jack 18
+      { currency: 'jewelry',            base: 10,   fromCount: 18, untilCount: 19 },  // Jack 19
     ],
   },
 
@@ -463,25 +465,45 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Relic upgrades (one per character) ──────────────────────────
+  // Each costs exactly 1 relic + a dynamically-computed jewelry amount
+  // (see RELIC_COSTS and UpgradeService.syncRelicCosts).
+  // The jewelry base here is just the initial placeholder value.
   { id: 'RELIC_FIGHTER',    characterId: 'fighter',    category: 'relic', max: 1,
     gates: { requiresRelic: true },
-    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+    costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
+            { currency: 'jewelry', base: 10, scale: 1.0 }] },
   { id: 'RELIC_RANGER',     characterId: 'ranger',     category: 'relic', max: 1,
     gates: { requiresRelic: true },
-    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+    costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
+            { currency: 'jewelry', base: 10, scale: 1.0 }] },
   { id: 'RELIC_APOTHECARY', characterId: 'apothecary', category: 'relic', max: 1,
     gates: { requiresRelic: true },
-    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+    costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
+            { currency: 'jewelry', base: 10, scale: 1.0 }] },
   { id: 'RELIC_CULINARIAN', characterId: 'culinarian', category: 'relic', max: 1,
     gates: { requiresRelic: true },
-    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+    costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
+            { currency: 'jewelry', base: 10, scale: 1.0 }] },
   { id: 'RELIC_THIEF',      characterId: 'thief',      category: 'relic', max: 1,
     gates: { requiresRelic: true },
-    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+    costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
+            { currency: 'jewelry', base: 10, scale: 1.0 }] },
   { id: 'RELIC_ARTISAN',    characterId: 'artisan',    category: 'relic', max: 1,
     gates: { requiresRelic: true },
-    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+    costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
+            { currency: 'jewelry', base: 10, scale: 1.0 }] },
 ];
+
+// ── Relic Upgrade Costs ───────────────────────────────────────
+// Each relic upgrade costs exactly 1 relic PLUS a scaling amount of jewelry.
+// The jewelry cost depends on how many relic upgrades have been purchased
+// globally (regardless of order): jewelryCost = base × scale^(relicsOwned).
+export const RELIC_COSTS = {
+  /** Jewelry required for the first relic upgrade purchased (0 relics owned). */
+  JEWELRY_BASE:  10,
+  /** Multiplicative scale applied per relic already owned. */
+  JEWELRY_SCALE: 2.5,
+} as const;
 
 // ── Resource Yields ───────────────────────────────────────────
 export const YIELDS = {

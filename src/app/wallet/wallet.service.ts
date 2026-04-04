@@ -61,6 +61,7 @@ export class WalletService {
     // ── Artisan ───────────────────────────────────────────────────
     { id: 'precious-metal',       ...CURRENCY_FLAVOR['precious-metal'],        requiredCharacterId: 'artisan'      },
     { id: 'gemstone',             ...CURRENCY_FLAVOR['gemstone'],              requiredCharacterId: 'artisan'      },
+    { id: 'jewelry',              ...CURRENCY_FLAVOR['jewelry'],               requiredCharacterId: 'artisan',  manualUnlock: true      },
 
   ];
 

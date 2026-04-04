@@ -9,6 +9,7 @@
 - Add new scaling upgrades for herbs and raw meat to the ranger
 - New tier of kobold!
 - A New character, the Artisan! 
+- More Jacks!
 
 ## Removed
 - Bigger Game upgrade
@@ -46,6 +47,7 @@
 - You can no longer toggle the dilution upgrade in the middle of a brew
 - Differentiated base and waste not yield in the activity log message for the culinarian minigame
 - Fixed perfect potions upgrade not showing up 
+- General Performance improvements
 
 ----------------------------
 

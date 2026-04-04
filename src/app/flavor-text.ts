@@ -27,6 +27,7 @@ export const CURRENCY_FLAVOR = {
   'kobold-brain':        { name: 'Kobold Brain',              symbol: 'ↀ',  color: '#d6339d' },
   'precious-metal':      { name: 'Precious Metal',            symbol: '🜛',  color: '#accccb' },
   gemstone:              { name: 'Gemstone',                  symbol: '💎︎',  color: '#54d6ac' },
+  jewelry:               { name: 'Jewelry',                   symbol: 'Ő',  color: '#97dfc8' },
 
 } as const;
 
