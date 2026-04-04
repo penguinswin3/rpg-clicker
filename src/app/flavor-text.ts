@@ -91,7 +91,7 @@ export const UPGRADE_FLAVOR = {
   BIGGER_BUBBLES:       { name: 'Bigger Bubbles',            desc: 'Increases the size of the Bubbling zone' },
   POTION_DILUTION:      { name: 'Potion Dilution',           desc: '2x concentrated potions, with a risk of failure' },
   SERIAL_DILUTION:      { name: 'Serial Dilution',           desc: '+1 additional independent potion roll per level when diluting' },
-  PERFECT_POTIONS:      { name: 'Perfect Potions',           desc: 'Each perfect (inner zone) click adds +5% dilution success chance for that brew, per level' },
+  PERFECT_POTIONS:      { name: 'Perfect Potions',           desc: 'Each perfect click adds +5% dilution success chance for that brew' },
 
   // Culinarian
   WHOLESALE_SPICES:     { name: 'Wholesale Spices',          desc: '+1 spice per click, purchased at a discount!' },
