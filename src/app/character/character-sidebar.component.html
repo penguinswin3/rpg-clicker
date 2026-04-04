@@ -8,9 +8,9 @@
 
   <!-- ══ Expanded ════════════════════════ -->
   <div class="expanded-wrapper" *ngIf="!collapsed">
-    <div class="sidebar-content">
 
-      <!-- Hero Stats -->
+    <!-- Pinned: Hero Stats (never scrolls) -->
+    <div class="hero-stats-pinned">
       <div class="hero-stats-box">
         <div class="box-label">{{ heroStatsFlavor.BOX_TITLE }}</div>
         <div class="stat-row" *ngFor="let s of heroStats">
@@ -18,6 +18,9 @@
           <span class="stat-val" [style.color]="s.color || null">{{ s.value }}</span>
         </div>
       </div>
+    </div>
+
+    <div class="sidebar-content">
 
       <div class="rule">---[ PARTY ]---</div>
 

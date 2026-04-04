@@ -28,9 +28,6 @@
 
 
 ### More characters
-  - Artisan
-    - Odd One Out Gems
-    - uses gems from the Thief
   - Warlock
     - Connect the dots spellcasting
     - Generates Brimstone
@@ -65,6 +62,7 @@
 - Kobold Killing... The numbers... What do they mean? Numbers Station... s: 0–2–5–8–8
 
 ## Upgrade Ideas
+- Master of All - An upgrade for jacks that auto play minigames. Might be a good relic upgrade? 
 
 ### Fighter
 - "Clean Kills" upgrade that makes uncommon drops from the fighter minigame more likely to be dropped
