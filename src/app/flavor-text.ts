@@ -73,7 +73,9 @@ export const UPGRADE_FLAVOR = {
   MORE_HERBS:           { name: 'More Herbs',                desc: '+3% chance to double base herbs' },
   BETTER_TRACKING:      { name: 'Better Tracking',           desc: '+3% beast hunt chance' },
   BAITED_TRAPS:         { name: 'Baited Traps',              desc: '+1 Raw Beast Meat every 5 seconds per level' },
+  SPICED_BAIT:          { name: 'Spiced Bait',               desc: 'Each Baited Trap produces +1 raw beast meat per level of Spiced Bait' },
   HOVEL_GARDEN:         { name: 'Hovel Garden',              desc: '+1 Herb every 5 seconds per level' },
+  ORNATE_HERB_POTS:     { name: 'Ornate Herb Pots',          desc: 'Each Hovel Garden produces +1 herb per level of Ornate Herb Pots' },
   BOUNTIFUL_LANDS:      { name: 'Bountiful Lands',           desc: '+1 guaranteed prize node per level' },
   ABUNDANT_LANDS:       { name: 'Abundant Lands',            desc: 'Resource gain is multiplied by the number of successful finds' },
   FAIRY_HOSTAGE:        { name: 'Fairy Hostage',             desc: 'A pixie, if present, will call out to a friend for help...' },
@@ -89,7 +91,7 @@ export const UPGRADE_FLAVOR = {
   BIGGER_BUBBLES:       { name: 'Bigger Bubbles',            desc: 'Increases the size of the Bubbling zone' },
   POTION_DILUTION:      { name: 'Potion Dilution',           desc: '2x concentrated potions, with a risk of failure' },
   SERIAL_DILUTION:      { name: 'Serial Dilution',           desc: '+1 additional independent potion roll per level when diluting' },
-  PERFECT_POTIONS:      { name: 'Perfect Potions',           desc: '+1 concentrated potion per level on a flawless brew' },
+  PERFECT_POTIONS:      { name: 'Perfect Potions',           desc: 'Each perfect (inner zone) click adds +5% dilution success chance for that brew, per level' },
 
   // Culinarian
   WHOLESALE_SPICES:     { name: 'Wholesale Spices',          desc: '+1 spice per click, purchased at a discount!' },
@@ -277,6 +279,8 @@ export const HERO_STATS_FLAVOR = {
     HERB_DOUBLE:  'Herb Double   :',
     CATS_EYE:     "Cat's Eye     :",
     MAX_MEAT:     'Max Meat      :',
+    TRAP_RATE:    'Trap Beast/s  :',
+    GARDEN_RATE:  'Garden Herb/s :',
   },
   APOTHECARY: {
     HERBS_BREW:           'Herbs Per Brew   :',
@@ -284,6 +288,7 @@ export const HERO_STATS_FLAVOR = {
     GOLD_PER_BREW:        'Gold Per Brew    :',
     DILUTION_SUCCESS:     'Dilution Chance  :',
     DILUTION_ROLLS:       'Dilution Rolls   :',
+    PERFECT_BONUS:        'Perfect Bonus    :',
   },
   CULINARIAN: {
     SPICE_PER_CLICK:  'Spice Per Click  :',

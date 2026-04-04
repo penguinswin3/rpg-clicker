@@ -34,12 +34,15 @@
 - Made the minigame pannel a little wider to give a little more breathing room
 - Unified the scrollbar design to use the clean, blocky style
 - Reworked activity log currency display formatting
+- Add new scaling upgrades for herbs and raw mean to the ranger 
+- Reworked Perfect Potions to give bonus dilution success chance per perfect click
 
 ## Bugfixes
 - Cleaned up the missing row on the ranger character stats box 
 - Cat's Eye potion is now factored in to the per seconds 
 - You can no longer toggle the dilution upgrade in the middle of a brew
 - Differentiated base and waste not yield in the activity log message for the culinarian minigame
+- Fixed perfect potions upgrade not showing up 
 
 ----------------------------
 

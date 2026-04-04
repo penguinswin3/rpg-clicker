@@ -33,13 +33,16 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   @Input() potionDilutionUnlocked = false;
   /** Serial Dilution level — each level adds +1 additional potion roll when diluting. */
   @Input() serialDilutionLevel = 0;
-  /** Perfect Potions level — awards +1 concentrated potion per level on a flawless brew (no misses). */
+  /** Perfect Potions level — each inner-zone click adds +(level × 5)% to dilution success chance for the current brew. */
   @Input() perfectPotionsLevel = 0;
 
   // ── Dilution toggle ───────────────────────
   /** Whether dilution is active — owned by AppComponent, persisted across tab switches. */
   @Input()  dilutionEnabled = false;
   @Output() dilutionEnabledChange = new EventEmitter<boolean>();
+
+  /** Bonus dilution success % accumulated from inner-zone clicks during the current brew. */
+  perfectClickBonus = 0;
 
   /** Accumulated dilution success chance penalty from misses in the current brew session. */
   dilutionMissPenalty = 0;
@@ -49,9 +52,9 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.dilutionEnabledChange.emit(val);
   }
 
-  /** Current dilution success chance (base − per-miss penalty). Serial Dilution no longer affects this. */
+  /** Current dilution success chance (base − miss penalty + perfect click bonus). */
   get dilutionSuccessChance(): number {
-    return Math.max(0, Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE - this.dilutionMissPenalty));
+    return Math.max(0, Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE - this.dilutionMissPenalty + this.perfectClickBonus));
   }
 
   /** Total number of independent potion rolls per dilution: base 2 + 1 per Serial Dilution level. */
@@ -152,11 +155,12 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     if (!this.canStart) return;
     this.wallet.remove('herb',   this.herbCost);
     this.wallet.remove('potion', this.potionCost);
-    this.potionActive       = true;
-    this.hadMistake         = false;
-    this.quality            = 0;
+    this.potionActive        = true;
+    this.hadMistake          = false;
+    this.quality             = 0;
     this.dilutionMissPenalty = 0;
-    this.barPos             = 0;
+    this.perfectClickBonus   = 0;
+    this.barPos              = 0;
     this.barDir             = 1;
     this.lastTime           = undefined;
     this.lastMsg            = MINIGAME_MSG.APOTHECARY.IDLE;
@@ -170,6 +174,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
     if (this.isInInnerZone) {
       this.quality  = Math.min(this.maxQuality, this.quality + 2);
+      this.perfectClickBonus += this.perfectPotionsLevel * 5;
       this.lastMsg  = MINIGAME_MSG.APOTHECARY.HIT_INNER(this.quality, this.maxQuality);
       this.msgClass = 'msg-double';
       this.stats.trackPotionHit(true);
@@ -231,8 +236,9 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
   private onPerfectPotion(): void {
     this.stopAnimation();
-    this.potionActive = false;
+    this.potionActive      = false;
     this.dilutionMissPenalty = 0;
+    this.perfectClickBonus   = 0;
     this.stats.trackApothecaryMinigameComplete();
 
     if (this.potionDilutionUnlocked && this.dilutionEnabled) {
@@ -281,19 +287,11 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     } else {
       // Standard: 1 concentrated potion
       this.wallet.add('concentrated-potion', 1);
-
-      const flawlessBonus = !this.hadMistake && this.perfectPotionsLevel > 0 ? this.perfectPotionsLevel : 0;
-      if (flawlessBonus > 0) this.wallet.add('concentrated-potion', flawlessBonus);
-
-      // Track stats
-      const totalConcentrated = 1 + flawlessBonus;
-      this.stats.trackCurrencyGain('concentrated-potion', totalConcentrated);
+      this.stats.trackCurrencyGain('concentrated-potion', 1);
 
       if (!this.wallet.isCurrencyUnlocked('concentrated-potion')) {
         this.wallet.unlockCurrency('concentrated-potion');
         this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
-      } else if (flawlessBonus > 0) {
-        this.log.log(`Concentrated Potion crafted! Flawless brew! (${cur('concentrated-potion', totalConcentrated)})`, 'success');
       } else {
         this.log.log(`Concentrated Potion crafted! (${cur('concentrated-potion', 1)})`, 'success');
       }

@@ -204,10 +204,22 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'gold',  base: 200, scale: 1.2 },
       { currency: 'beast', base: 50,  scale: 1.3 },
     ] },
+  { id: 'SPICED_BAIT',     characterId: 'ranger', category: 'standard', max: 999,
+    gates: { requiresCulinarian: true },
+    costs: [
+      { currency: 'beast', base: 100, scale: 1.3 },
+      { currency: 'spice', base: 50,  scale: 1.4 },
+    ] },
   { id: 'HOVEL_GARDEN',    characterId: 'ranger', category: 'standard', max: 999,
     costs: [
       { currency: 'gold', base: 150, scale: 1.2 },
       { currency: 'herb', base: 50,  scale: 1.3 },
+    ] },
+  { id: 'ORNATE_HERB_POTS', characterId: 'ranger', category: 'standard', max: 999,
+    gates: { requiresThief: true },
+    costs: [
+      { currency: 'pixie-dust', base: 5, scale: 1.4 },
+      { currency: 'treasure',   base: 25, scale: 1.4 },
     ] },
   { id: 'BIGGER_GAME',     characterId: 'ranger', category: 'standard', max: 999,    // each level +1 max Raw Beast Meat from hero button
     costs: [{ currency: 'gold', base: 480, scale: 1.75 }], enabled: false },
@@ -346,11 +358,11 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'concentrated-potion', base: 2,    scale: 1.3 },
       { currency: 'kobold-hair',         base: 5,     scale: 1.3 },
     ] },
-  { id: 'PERFECT_POTIONS', characterId: 'apothecary', category: 'minigame', max: 100,
-    gates: { requiresDossier: true },
+  { id: 'PERFECT_POTIONS', characterId: 'apothecary', category: 'minigame', max: 1,
+    gates: { requiresPotionDilution: true, requiresThief: true },
     costs: [
-      { currency: 'gold',    base: 500, scale: 1.4 },
-      { currency: 'dossier', base: 50,  scale: 1.1 },
+      { currency: 'gold',                base: 50000, scale: 1.0 },
+      { currency: 'dossier',             base: 500,  scale: 1.0 },
     ] },
 
   // ── Relic upgrades (one per character) ──────────────────────────

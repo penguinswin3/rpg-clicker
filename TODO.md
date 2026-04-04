@@ -91,10 +91,8 @@
 - In game Changelog? 
 - Statistics culinarian minigame histogram or count %s 
 - Cat's Eye % should not show up in the character stats till thatr upgrade is unlocked 
-- The activity log should use the currency symbol when showing a currency in the parentheses part. 
 
 ## Balancing
-- Upgrades to the herb, meat, and potion generators like Hireling's Hirelings
 - A "Balance Report" that shows gaps in the cost progression
 - Another upgrade makes it +5% success chance per perfect click
 - Should additional relics be locked behind a new level of relic hunter?
@@ -104,7 +102,6 @@
 
 
 ## Code Refactors
-- extract log text to flavor file, might need to implement string replacement here idk
 - Fighter minigame combat log is a mess lmao 
 
 

@@ -18,6 +18,7 @@ import {
   calcPotionMarketingGoldPerBrew, calcHerbSaveChance,
   calcSpicePerClick, calcCulinarianGoldCost,
   calcThiefSuccessChance, calcExpectedDossierYield,
+  calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick,
 } from './yield-helpers';
 
 // ── Context required by the builder ──────────────────────────
@@ -78,12 +79,21 @@ function buildFighterStats(ctx: HeroStatsContext): HeroStat[] {
 
 function buildRangerStats(ctx: HeroStatsContext): HeroStat[] {
   const u = ctx.upgrades;
+  const trapRate   = calcBaitedTrapsBeastPerTick(u.level('BAITED_TRAPS'), u.level('SPICED_BAIT')) * 0.2;
+  const gardenRate = calcHovelGardenHerbPerTick(u.level('HOVEL_GARDEN'), u.level('ORNATE_HERB_POTS')) * 0.2;
+
   return [
     { label: HERO_STATS_FLAVOR.RANGER.BEAST_CHANCE, value: `${calcBeastFindChance(u.level('BETTER_TRACKING'))}%` },
     { label: HERO_STATS_FLAVOR.RANGER.HERB_DOUBLE,  value: herbDoublingDisplay(u.level('MORE_HERBS')) },
     { label: HERO_STATS_FLAVOR.RANGER.CATS_EYE,     value: `${u.level('POTION_CATS_EYE')}%` },
     ...(u.level('BIGGER_GAME') > 0
       ? [{ label: HERO_STATS_FLAVOR.RANGER.MAX_MEAT, value: `${u.level('BIGGER_GAME') + 1}` }]
+      : []),
+    ...(u.level('BAITED_TRAPS') > 0
+      ? [{ label: HERO_STATS_FLAVOR.RANGER.TRAP_RATE, value: `${roundTo(trapRate, 2)}/s` }]
+      : []),
+    ...(u.level('HOVEL_GARDEN') > 0
+      ? [{ label: HERO_STATS_FLAVOR.RANGER.GARDEN_RATE, value: `${roundTo(gardenRate, 2)}/s` }]
       : []),
   ];
 }
@@ -100,6 +110,9 @@ function buildApothecaryStats(ctx: HeroStatsContext): HeroStat[] {
     const totalRolls    = 2 + u.level('SERIAL_DILUTION');
     stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.DILUTION_SUCCESS, value: `${successChance}%` });
     stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.DILUTION_ROLLS,   value: `${totalRolls}` });
+    if (u.level('PERFECT_POTIONS') > 0) {
+      stats.push({ label: HERO_STATS_FLAVOR.APOTHECARY.PERFECT_BONUS,  value: `+${u.level('PERFECT_POTIONS') * 5}% per ✦` });
+    }
   }
   return stats;
 }

@@ -19,7 +19,7 @@ import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur } from './flavor-t
 import { fmtNumber, clamp } from './utils/mathUtils';
 
 // ── Extracted hero helpers ─────────────────────────────────────
-import { calcAutoGoldPerSecond, calcBeastFindChance, calcCulinarianGoldCost } from './hero/yield-helpers';
+import { calcAutoGoldPerSecond, calcBeastFindChance, calcCulinarianGoldCost, calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick } from './hero/yield-helpers';
 import { buildHeroStats, getQuestBtnLabel } from './hero/hero-stats';
 import { dispatchHeroClick, performJackAutoClick, HeroActionContext, JackAutoClickContext } from './hero/hero-actions';
 import { calculatePerSecondRates, calculatePerSecondBreakdown } from './hero/per-second-calculator';
@@ -347,14 +347,20 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     }, 1000);
 
-    // Passive ranger income: Baited Traps (beast) + Hovel Garden (herb) — every 5 seconds
+    // Passive ranger income: Baited Traps + Spiced Bait (beast) and Hovel Garden + Ornate Herb Pots (herb) — every 5 seconds
     setInterval(() => {
-      const beastYield = this.upgrades.level('BAITED_TRAPS');
+      const beastYield = calcBaitedTrapsBeastPerTick(
+        this.upgrades.level('BAITED_TRAPS'),
+        this.upgrades.level('SPICED_BAIT'),
+      );
       if (beastYield > 0) {
         this.wallet.add('beast', beastYield);
         this.statsService.trackCurrencyGain('beast', beastYield);
       }
-      const herbYield = this.upgrades.level('HOVEL_GARDEN');
+      const herbYield = calcHovelGardenHerbPerTick(
+        this.upgrades.level('HOVEL_GARDEN'),
+        this.upgrades.level('ORNATE_HERB_POTS'),
+      );
       if (herbYield > 0) {
         this.wallet.add('herb', herbYield);
         this.statsService.trackCurrencyGain('herb', herbYield);

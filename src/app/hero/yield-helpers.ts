@@ -48,6 +48,30 @@ export function calcBeastFindChance(betterTrackingLevel: number): number {
 }
 
 /**
+ * Beast yield per 5-second Baited Traps tick, combining Baited Traps and Spiced Bait.
+ * Formula: baitedTrapsLevel + (baitedTrapsLevel × spicedBaitLevel)
+ * Multiply by 0.2 to get the per-second display rate.
+ */
+export function calcBaitedTrapsBeastPerTick(
+  baitedTrapsLevel: number,
+  spicedBaitLevel: number,
+): number {
+  return baitedTrapsLevel + baitedTrapsLevel * spicedBaitLevel;
+}
+
+/**
+ * Herb yield per 5-second Hovel Garden tick, combining Hovel Garden and Ornate Herb Pots.
+ * Formula: hovelGardenLevel + (hovelGardenLevel × ornateHerbPotsLevel)
+ * Multiply by 0.2 to get the per-second display rate.
+ */
+export function calcHovelGardenHerbPerTick(
+  hovelGardenLevel: number,
+  ornateHerbPotsLevel: number,
+): number {
+  return hovelGardenLevel + hovelGardenLevel * ornateHerbPotsLevel;
+}
+
+/**
  * Compute actual herb yield for a single forage action.
  * Each More Herbs level adds 3% doubling chance.
  * Rolls the doubling chance and returns the final herb count.
