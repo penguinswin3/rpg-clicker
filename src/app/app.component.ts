@@ -101,7 +101,7 @@ export class AppComponent implements OnInit, OnDestroy {
   hideMinigameUpgrades    = false;
   blandMode               = false;
   wholesaleSpicesEnabled  = true;
-  fermentationVatsEnabled = false;
+  fermentationVatsEnabled = true;
 
   // ── Relic popup state ─────────────────────────────────────────
   /** ID of the relic upgrade whose popup is currently shown, or null. */
@@ -442,7 +442,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.shortRestEnabled        = s.shortRestEnabled        ?? false;
     this.wholesaleSpicesEnabled  = s.wholesaleSpicesEnabled  ?? true;
     this.dilutionEnabled         = s.dilutionEnabled         ?? false;
-    this.fermentationVatsEnabled = s.fermentationVatsEnabled ?? false;
+    this.fermentationVatsEnabled = s.fermentationVatsEnabled ?? true;
     this.updateAllPerSecond();
   }
 

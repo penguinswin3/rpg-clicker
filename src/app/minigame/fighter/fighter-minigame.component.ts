@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
@@ -34,7 +34,7 @@ interface Enemy {
   templateUrl: './fighter-minigame.component.html',
   styleUrls: ['./fighter-minigame.component.scss'],
 })
-export class FighterMinigameComponent implements OnInit, OnDestroy {
+export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   /** Sword sharpness — fed in from goldPerClick on the Fighter. */
   @Input() attackPower = 1;
   /** Potion Chugging upgrade level — each level adds +1 HP to potion heals. */
@@ -165,7 +165,14 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['firstStrikeLevel'] && this.firstStrikeLevel >= 1) {
+      this.stats.markFirstStrikeUnlocked();
+    }
+  }
+
   ngOnInit(): void {
+    if (this.firstStrikeLevel >= 1) this.stats.markFirstStrikeUnlocked();
     this.sub.add(
       this.wallet.state$.subscribe(s => {
         this.potions = Math.floor(s['potion']?.amount ?? 0);
@@ -280,6 +287,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     if (this.healDisabled) return;
 
     this.wallet.remove('potion', 1);
+    this.stats.trackFighterPotionDrank(1);
     const healed = Math.min(this.potionHealAmount, this.maxHp - this.fighterHp);
     this.fighterHp += healed;
 
@@ -312,6 +320,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
         clearTimeout(this.spawnTimer);
         this.spawnTimer = undefined;
       }
+      this.stats.trackFighterKillChain(this.firstStrikeChainCount);
       this.inFirstStrikeChain    = false;
       this.firstStrikeChainCount = 0;
       this.awaitingSpawn         = false;
@@ -351,6 +360,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
    * if the component is destroyed and recreated (e.g. switching characters).
    */
   private startRest(): void {
+    this.stats.trackFighterDefeated();
     this.restCountdown = this.effectiveRestSec;
     if (this.restCountdown <= 0) return;   // fully reduced — can retry instantly
 
@@ -379,6 +389,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount*this.potionHealEfficiency);
     }
     this.log.log(`Chugged ${potionsConsumed} potion(s) during a short rest.`, "default")
+    this.stats.trackFighterPotionDrank(potionsConsumed);
   }
 
   private applyEnemyDamage(dmg: number): void {
@@ -509,6 +520,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.onEnemyDefeated(0, true);
     } else {
       // Enemy survived — chain is over, normal combat resumes
+      this.stats.trackFighterKillChain(this.firstStrikeChainCount);
       this.inFirstStrikeChain    = false;
       this.firstStrikeChainCount = 0;
       this.lastMsg  = `First Strike! ${dmg} dmg!`;

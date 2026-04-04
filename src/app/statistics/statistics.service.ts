@@ -24,6 +24,14 @@ export interface FighterMinigameStats {
   totalKills: number;
   /** Kills keyed by kobold variant name (e.g. "Kobold", "Snake Kobold"). */
   killsByType: Record<string, number>;
+  /** Total potions consumed inside the fighter minigame. */
+  potionsDrank: number;
+  /** Number of times the fighter was defeated. */
+  timesDefeated: number;
+  /** True once the First Strike upgrade has been purchased. */
+  firstStrikeUnlocked: boolean;
+  /** Longest consecutive chain of First Strike kill-chain kills. */
+  longestKillChain: number;
 }
 
 export interface RangerMinigameStats {
@@ -34,8 +42,14 @@ export interface RangerMinigameStats {
 }
 
 export interface ApothecaryMinigameStats {
-  /** Total concentrated potions produced (before dilution doubling). */
-  concentratedPotionsMade: number;
+  /** Number of brews completed (standard or dilution). */
+  minigamesComplete: number;
+  /** Clicks inside any target zone (outer or inner). */
+  potionHits: number;
+  /** Clicks inside the inner Bubbling Brew zone only. */
+  perfectHits: number;
+  /** Clicks outside all target zones. */
+  potionMisses: number;
   /** Dilution rolls that succeeded (produced concentrated potion). */
   dilutionSuccesses: number;
   /** Dilution rolls that failed (downgraded to potion base). */
@@ -83,9 +97,9 @@ function defaultSnapshot(): StatisticsSnapshot {
     milestones:         {},
     manualHeroPresses:  {},
     jackHeroPresses:    {},
-    fighterMinigame:    { totalKills: 0, killsByType: {} },
+    fighterMinigame:    { totalKills: 0, killsByType: {}, potionsDrank: 0, timesDefeated: 0, firstStrikeUnlocked: false, longestKillChain: 0 },
     rangerMinigame:     { successful: 0, unsuccessful: 0 },
-    apothecaryMinigame: { concentratedPotionsMade: 0, dilutionSuccesses: 0, dilutionFailures: 0 },
+    apothecaryMinigame: { minigamesComplete: 0, potionHits: 0, perfectHits: 0, potionMisses: 0, dilutionSuccesses: 0, dilutionFailures: 0 },
     culinarianMinigame: { wins: 0, losses: 0, guessDist: [] },
     thiefMinigame:      { successfulHeists: 0, failedHeists: 0 },
   };
@@ -148,6 +162,35 @@ export class StatisticsService {
     this.source.next(snap);
   }
 
+  trackFighterPotionDrank(count: number): void {
+    if (count <= 0) return;
+    const snap = this.source.getValue();
+    snap.fighterMinigame.potionsDrank += count;
+    this.source.next(snap);
+  }
+
+  trackFighterDefeated(): void {
+    const snap = this.source.getValue();
+    snap.fighterMinigame.timesDefeated++;
+    this.source.next(snap);
+  }
+
+  markFirstStrikeUnlocked(): void {
+    const snap = this.source.getValue();
+    if (snap.fighterMinigame.firstStrikeUnlocked) return;
+    snap.fighterMinigame.firstStrikeUnlocked = true;
+    this.source.next(snap);
+  }
+
+  trackFighterKillChain(chainLength: number): void {
+    if (chainLength <= 0) return;
+    const snap = this.source.getValue();
+    if (chainLength > snap.fighterMinigame.longestKillChain) {
+      snap.fighterMinigame.longestKillChain = chainLength;
+      this.source.next(snap);
+    }
+  }
+
   // ── Ranger minigame ────────────────────────────────────────
 
   trackRangerHunt(successful: boolean): void {
@@ -159,9 +202,28 @@ export class StatisticsService {
 
   // ── Apothecary minigame ────────────────────────────────────
 
-  trackConcentratedPotionMade(count: number): void {
+  /** Call once when a brew completes (standard or dilution). */
+  trackApothecaryMinigameComplete(): void {
     const snap = this.source.getValue();
-    snap.apothecaryMinigame.concentratedPotionsMade += count;
+    snap.apothecaryMinigame.minigamesComplete++;
+    this.source.next(snap);
+  }
+
+  /**
+   * Call for every successful click inside a target zone.
+   * @param perfect true if the click was also inside the inner Bubbling Brew zone.
+   */
+  trackPotionHit(perfect: boolean): void {
+    const snap = this.source.getValue();
+    snap.apothecaryMinigame.potionHits++;
+    if (perfect) snap.apothecaryMinigame.perfectHits++;
+    this.source.next(snap);
+  }
+
+  /** Call for every click outside all target zones. */
+  trackPotionMiss(): void {
+    const snap = this.source.getValue();
+    snap.apothecaryMinigame.potionMisses++;
     this.source.next(snap);
   }
 

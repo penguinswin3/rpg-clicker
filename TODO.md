@@ -92,14 +92,6 @@
 - Statistics culinarian minigame histogram or count %s 
 - Cat's Eye % should not show up in the character stats till thatr upgrade is unlocked 
 - The activity log should use the currency symbol when showing a currency in the parentheses part. 
-- fermentation vats should default to on
-- New stat for the fighter minigame, times defeated 
-- unify the scroll bar style across scrollable menus (match the activity log)
-- Currencies in the stats page should be sorted like the currencies in the wallet
-- remove the additional concentrated potions from the alch minigame stats page
-- Make it concentration hits and misses
-- make it "minigames complete" rather than potion count 
-- kobold mountain lion is on two lines
 
 ## Balancing
 - Upgrades to the herb, meat, and potion generators like Hireling's Hirelings

@@ -31,6 +31,8 @@
 - Hovel Garden and Beast Traps scale a little less
 - Bubbling Brew now costs herbs 
 - Fermentation Vats cost scaling is less
+- Made the minigame pannel a little wider to give a little more breathing room
+- Unified the scrollbar design to use the clean, blocky style
 
 ## Bugfixes
 - Cleaned up the missing row on the ranger character stats box 

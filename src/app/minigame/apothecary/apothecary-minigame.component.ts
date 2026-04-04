@@ -172,11 +172,13 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
       this.quality  = Math.min(this.maxQuality, this.quality + 2);
       this.lastMsg  = MINIGAME_MSG.APOTHECARY.HIT_INNER(this.quality, this.maxQuality);
       this.msgClass = 'msg-double';
+      this.stats.trackPotionHit(true);
       if (this.quality >= this.maxQuality) this.onPerfectPotion();
     } else if (this.isInZone) {
       this.quality  = Math.min(this.maxQuality, this.quality + 1);
       this.lastMsg  = MINIGAME_MSG.APOTHECARY.HIT_ZONE(this.quality, this.maxQuality);
       this.msgClass = 'msg-good';
+      this.stats.trackPotionHit(false);
       if (this.quality >= this.maxQuality) this.onPerfectPotion();
     } else {
       this.quality    = Math.max(0, this.quality - 1);
@@ -186,6 +188,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
       }
       this.lastMsg    = MINIGAME_MSG.APOTHECARY.MISS_ZONE(this.quality, this.maxQuality);
       this.msgClass   = 'msg-bad';
+      this.stats.trackPotionMiss();
     }
   }
 
@@ -230,6 +233,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.stopAnimation();
     this.potionActive = false;
     this.dilutionMissPenalty = 0;
+    this.stats.trackApothecaryMinigameComplete();
 
     if (this.potionDilutionUnlocked && this.dilutionEnabled) {
       // Dilution: roll dilutionTotalRolls independent potions, each with a chance to downgrade
@@ -250,11 +254,8 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
       if (downgraded > 0)   this.wallet.add('potion', downgraded);
 
       // Track stats
-      if (concentrated > 0) {
-        this.stats.trackConcentratedPotionMade(concentrated);
-        this.stats.trackCurrencyGain('concentrated-potion', concentrated);
-      }
-      if (downgraded > 0) this.stats.trackCurrencyGain('potion', downgraded);
+      if (concentrated > 0) this.stats.trackCurrencyGain('concentrated-potion', concentrated);
+      if (downgraded > 0)   this.stats.trackCurrencyGain('potion', downgraded);
       for (let i = 0; i < totalRolls; i++) {
         this.stats.trackDilution(i < concentrated);
       }
@@ -286,7 +287,6 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
       // Track stats
       const totalConcentrated = 1 + flawlessBonus;
-      this.stats.trackConcentratedPotionMade(totalConcentrated);
       this.stats.trackCurrencyGain('concentrated-potion', totalConcentrated);
 
       if (!this.wallet.isCurrencyUnlocked('concentrated-potion')) {

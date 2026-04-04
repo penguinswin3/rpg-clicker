@@ -138,12 +138,10 @@
   overflow-y: auto;
   padding-right: 0.25rem;
 
-  &::-webkit-scrollbar        { width: 4px; }
-  &::-webkit-scrollbar-track  { background: #111; }
-  &::-webkit-scrollbar-thumb  { background: #444; }
-  &::-webkit-scrollbar-thumb:hover { background: #777; }
-  scrollbar-width: thin;
-  scrollbar-color: #444 #111;
+  &::-webkit-scrollbar        { width: 6px; }
+  &::-webkit-scrollbar-track  { background: #000; }
+  &::-webkit-scrollbar-thumb  { background: #333; }
+  &::-webkit-scrollbar-thumb:hover { background: #555; }
 }
 
 // Compact icon shown when a relic upgrade is maxed — sized to match
@@ -627,13 +625,10 @@
   padding-top: 0.4rem;
   padding-right: 0.25rem; // room for scrollbar without clipping card borders
 
-  // Terminal-style thin scrollbar
-  &::-webkit-scrollbar        { width: 4px; }
-  &::-webkit-scrollbar-track  { background: #111; }
-  &::-webkit-scrollbar-thumb  { background: #444; }
-  &::-webkit-scrollbar-thumb:hover { background: #777; }
-  scrollbar-width: thin;
-  scrollbar-color: #444 #111;
+  &::-webkit-scrollbar        { width: 6px; }
+  &::-webkit-scrollbar-track  { background: #000; }
+  &::-webkit-scrollbar-thumb  { background: #333; }
+  &::-webkit-scrollbar-thumb:hover { background: #555; }
 }
 
 .upgrade-card {

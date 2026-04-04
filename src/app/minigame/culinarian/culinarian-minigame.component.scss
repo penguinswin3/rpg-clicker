@@ -118,8 +118,8 @@ $green: #44dd44;
 }
 
 .palette-item {
-  width: 28px;
-  height: 28px;
+  width: 35px;
+  height: 35px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -142,7 +142,7 @@ $green: #44dd44;
 }
 
 .p-symbol {
-  font-size: 14px;
+  font-size: 17px;
   line-height: 1;
 }
 
@@ -155,8 +155,8 @@ $green: #44dd44;
 }
 
 .guess-slot {
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -185,14 +185,14 @@ $green: #44dd44;
 }
 
 .slot-symbol {
-  font-size: 14px;
+  font-size: 17px;
   line-height: 1;
   user-select: none;
 }
 
 .slot-empty {
   color: #333;
-  font-size: 12px;
+  font-size: 14px;
   user-select: none;
 }
 
@@ -242,13 +242,13 @@ $green: #44dd44;
   gap: 3px;
 
   .h-slot {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border: 1px solid #222;
-    font-size: 11px;
+    font-size: 14px;
   }
 }
 
@@ -276,14 +276,14 @@ $green: #44dd44;
   gap: 4px;
 
   .sol-slot {
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border: 1px solid #444;
     background: #111;
-    font-size: 13px;
+    font-size: 16px;
   }
 }
 

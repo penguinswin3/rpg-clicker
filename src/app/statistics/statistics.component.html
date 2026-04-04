@@ -78,16 +78,28 @@
           </div>
 
           <!-- ── Fighter Minigame ── -->
-          <div class="stats-section" *ngIf="snap.fighterMinigame.totalKills > 0">
+          <div class="stats-section" *ngIf="snap.fighterMinigame.totalKills > 0 || snap.fighterMinigame.timesDefeated > 0 || snap.fighterMinigame.potionsDrank > 0">
             <div class="section-label">// KOBOLDS SLAIN</div>
             <div class="stats-table">
               <div class="stats-row" *ngFor="let k of koboldKillEntries">
                 <span class="cur-name">{{ k.name }}</span>
                 <span class="cur-amount">{{ fmt(k.count) }}</span>
               </div>
-              <div class="stats-row stats-total-row">
-                <span class="cur-name">Total</span>
+              <div class="stats-row stats-total-row" *ngIf="snap.fighterMinigame.totalKills > 0">
+                <span class="cur-name">Total Kills</span>
                 <span class="cur-amount">{{ fmt(snap.fighterMinigame.totalKills) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.fighterMinigame.potionsDrank > 0">
+                <span class="cur-name">Potions Drank</span>
+                <span class="cur-amount">{{ fmt(snap.fighterMinigame.potionsDrank) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.fighterMinigame.timesDefeated > 0">
+                <span class="cur-name">Times Defeated</span>
+                <span class="cur-amount stat-bad">{{ fmt(snap.fighterMinigame.timesDefeated) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.fighterMinigame.firstStrikeUnlocked">
+                <span class="cur-name">Longest Kill Chain</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.fighterMinigame.longestKillChain) }}</span>
               </div>
             </div>
           </div>
@@ -108,12 +120,24 @@
           </div>
 
           <!-- ── Apothecary Minigame ── -->
-          <div class="stats-section" *ngIf="snap.apothecaryMinigame.concentratedPotionsMade > 0 || snap.apothecaryMinigame.dilutionSuccesses + snap.apothecaryMinigame.dilutionFailures > 0">
+          <div class="stats-section" *ngIf="snap.apothecaryMinigame.minigamesComplete > 0 || snap.apothecaryMinigame.potionHits + snap.apothecaryMinigame.potionMisses > 0">
             <div class="section-label">// ALCHEMY TABLET</div>
             <div class="stats-table">
               <div class="stats-row">
-                <span class="cur-name">Concentrated Potions</span>
-                <span class="cur-amount">{{ fmt(snap.apothecaryMinigame.concentratedPotionsMade) }}</span>
+                <span class="cur-name">Minigames Complete</span>
+                <span class="cur-amount">{{ fmt(snap.apothecaryMinigame.minigamesComplete) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.apothecaryMinigame.potionHits + snap.apothecaryMinigame.potionMisses > 0">
+                <span class="cur-name">Potion Hits</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.apothecaryMinigame.potionHits) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.apothecaryMinigame.perfectHits > 0">
+                <span class="cur-name">Perfect Hits</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.apothecaryMinigame.perfectHits) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.apothecaryMinigame.potionMisses > 0">
+                <span class="cur-name">Potion Misses</span>
+                <span class="cur-amount stat-bad">{{ fmt(snap.apothecaryMinigame.potionMisses) }}</span>
               </div>
               <div class="stats-row" *ngIf="snap.apothecaryMinigame.dilutionSuccesses + snap.apothecaryMinigame.dilutionFailures > 0">
                 <span class="cur-name">Dilution Successes</span>

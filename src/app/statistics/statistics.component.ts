@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { StatisticsService, StatisticsSnapshot } from './statistics.service';
 import { CharacterService } from '../character/character.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import { WalletService } from '../wallet/wallet.service';
 import { CURRENCY_FLAVOR, CHARACTER_FLAVOR } from '../flavor-text';
 import { fmtNumber } from '../utils/mathUtils';
 
@@ -28,6 +29,7 @@ export class StatisticsComponent implements OnInit, OnDestroy {
   private stats       = inject(StatisticsService);
   private charService = inject(CharacterService);
   private logService  = inject(ActivityLogService);
+  private wallet      = inject(WalletService);
   private sub         = new Subscription();
 
   isOpen = false;
@@ -40,7 +42,8 @@ export class StatisticsComponent implements OnInit, OnDestroy {
   readonly currencyFlavor  = CURRENCY_FLAVOR;
   readonly characterFlavor = CHARACTER_FLAVOR;
 
-  readonly currencyIds: string[] = Object.keys(CURRENCY_FLAVOR);
+  /** Currency IDs in the same order as the wallet panel. */
+  readonly currencyIds: string[] = this.wallet.currencies.map(c => c.id);
 
   readonly characterIds = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief'];
   readonly characterNames: Record<string, string> = {
@@ -177,8 +180,11 @@ export class StatisticsComponent implements OnInit, OnDestroy {
 
   get hasAnyMinigameStats(): boolean {
     return this.snap.fighterMinigame.totalKills > 0
+      || this.snap.fighterMinigame.potionsDrank > 0
+      || this.snap.fighterMinigame.timesDefeated > 0
       || (this.snap.rangerMinigame.successful + this.snap.rangerMinigame.unsuccessful) > 0
-      || this.snap.apothecaryMinigame.concentratedPotionsMade > 0
+      || this.snap.apothecaryMinigame.minigamesComplete > 0
+      || (this.snap.apothecaryMinigame.potionHits + this.snap.apothecaryMinigame.potionMisses) > 0
       || (this.snap.apothecaryMinigame.dilutionSuccesses + this.snap.apothecaryMinigame.dilutionFailures) > 0
       || (this.snap.culinarianMinigame.wins + this.snap.culinarianMinigame.losses) > 0
       || (this.snap.thiefMinigame.successfulHeists + this.snap.thiefMinigame.failedHeists) > 0;
