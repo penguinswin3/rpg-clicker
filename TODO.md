@@ -12,20 +12,25 @@
 - One for minigames and one for normal buttons?
 
 #### Fighter
+- Wealthy clients are willing to pay handsomely for special missions. Rewards bonus gold based on attack power stats and jacks assignments, stacking.
 
 #### Ranger
+- The hunted beast may be a kobold, awarding a random unlocked kobold part in addition to the normal rewards. 
 
 #### Apothecary
+- Created potion bases may be upgraded to a concentrated base. When this happens, it will ignore the herb save %
 
 #### Culinarian
+- Off the top - Some bonus spice may be acquired at no additional cost when purchasing at wholesale quantities. 
 
 #### Thief
+- Has a weighted chance to steal a random resource from any non relic unlocked currency other than a relic. 
+
 
 ### More characters
   - Artisan
     - Odd One Out Gems
     - uses gems from the Thief
-    - can provide temporary bonuses to random gathering targets?
   - Warlock
     - Connect the dots spellcasting
     - Generates Brimstone
@@ -94,7 +99,6 @@
 
 ## Balancing
 - A "Balance Report" that shows gaps in the cost progression
-- Another upgrade makes it +5% success chance per perfect click
 - Should additional relics be locked behind a new level of relic hunter?
 
 

@@ -59,8 +59,13 @@
         [flowStateLevel]="flowStateLevel" />
     </ng-container>
 
+    <!-- ── Artisan: placeholder minigame ─── -->
+    <ng-container *ngIf="activeCharacterId === 'artisan'">
+      <app-artisan-minigame />
+    </ng-container>
+
     <!-- ── Other characters: placeholder ── -->
-    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian' && activeCharacterId !== 'thief'">
+    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian' && activeCharacterId !== 'thief' && activeCharacterId !== 'artisan'">
 
       <div class="mg-divider">+----------+</div>
 

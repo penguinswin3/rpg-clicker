@@ -19,6 +19,7 @@ import {
   calcSpicePerClick, calcCulinarianGoldCost,
   calcThiefSuccessChance, calcExpectedDossierYield,
   calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick,
+  calcArtisanTreasureCost, calcArtisanTimerMs,
 } from './yield-helpers';
 
 // ── Context required by the builder ──────────────────────────
@@ -30,6 +31,8 @@ export interface HeroStatsContext {
   wholesaleSpicesEnabled: boolean;
   jacksAllocations:       Record<string, number>;
   isThiefStunned:         boolean;
+  /** Lifetime total relics ever collected — used to display the Relic Hunter cap. */
+  relicLifetimeCount:     number;
 }
 
 // ── Public API ──────────────────────────────────────────────
@@ -42,6 +45,7 @@ export function getQuestBtnLabel(charId: string): string {
     apothecary: CHARACTER_FLAVOR.APOTHECARY.questBtn,
     culinarian: CHARACTER_FLAVOR.CULINARIAN.questBtn,
     thief:      CHARACTER_FLAVOR.THIEF.questBtn,
+    artisan:    CHARACTER_FLAVOR.ARTISAN.questBtn,
   };
   return map[charId] ?? CHARACTER_FLAVOR.FIGHTER.questBtn;
 }
@@ -53,6 +57,7 @@ export function buildHeroStats(charId: string, ctx: HeroStatsContext): HeroStat[
     case 'apothecary': return buildApothecaryStats(ctx);
     case 'culinarian': return buildCulinarianStats(ctx);
     case 'thief':      return buildThiefStats(ctx);
+    case 'artisan':    return buildArtisanStats(ctx);
     default:           return buildFighterStats(ctx);
   }
 }
@@ -152,8 +157,8 @@ function buildThiefStats(ctx: HeroStatsContext): HeroStat[] {
   const goldMax      = THIEF_MG.GOLD_BASE     + THIEF_MG.GOLD_PER_UNUSED     * maxDetect + bagGoldBonus;
   const treasureMin  = THIEF_MG.TREASURE_BASE;
   const treasureMax  = THIEF_MG.TREASURE_BASE + THIEF_MG.TREASURE_PER_UNUSED * maxDetect + bagTreasureBonus;
-  const relicChance  = THIEF_MG.RELIC_CHANCE + u.level('RELIC_HUNTER') * THIEF_MG.RELIC_HUNTER_CHANCE_PER_LEVEL;
   const relicUnlocked = ctx.wallet.isCurrencyUnlocked('relic');
+  const relicCap      = 1 + u.level('RELIC_HUNTER');
 
   const stats: HeroStat[] = [
     { label: HERO_STATS_FLAVOR.THIEF.SUCCESS_CHANCE, value: `${successChance}%` },
@@ -164,8 +169,20 @@ function buildThiefStats(ctx: HeroStatsContext): HeroStat[] {
     stats.push({ label: HERO_STATS_FLAVOR.THIEF.DOSSIER_YIELD, value: `1 - ${1 + sf}` });
   }
   if (relicUnlocked) {
-    stats.push({ label: HERO_STATS_FLAVOR.THIEF.RELIC_CHANCE, value: `${relicChance}%` });
+    stats.push({ label: HERO_STATS_FLAVOR.THIEF.RELIC_CAP,    value: `${ctx.relicLifetimeCount} / ${relicCap}` });
   }
   return stats;
+}
+
+function buildArtisanStats(_ctx: HeroStatsContext): HeroStat[] {
+  const treasureCost = calcArtisanTreasureCost();
+  const timerSec     = calcArtisanTimerMs() / 1000;
+
+  return [
+    { label: HERO_STATS_FLAVOR.ARTISAN.TREASURE_COST,  value: `${treasureCost}` },
+    { label: HERO_STATS_FLAVOR.ARTISAN.TIMER_DURATION, value: `${timerSec}s` },
+    { label: HERO_STATS_FLAVOR.ARTISAN.GEMSTONE_RANGE, value: `${YIELDS.ARTISAN_GEMSTONE_MIN} - ${YIELDS.ARTISAN_GEMSTONE_MAX}` },
+    { label: HERO_STATS_FLAVOR.ARTISAN.METAL_RANGE,    value: `${YIELDS.ARTISAN_METAL_MIN} - ${YIELDS.ARTISAN_METAL_MAX}` },
+  ];
 }
 

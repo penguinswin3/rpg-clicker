@@ -127,7 +127,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
         <div class="hero-area">
           <button class="hero-btn" [disabled]="isHeroDisabled" (click)="clickHero()">
-            <div class="stun-fill-bar" *ngIf="isHeroDisabled" [ngStyle]="thiefStunAnimStyle"></div>
+            <div class="stun-fill-bar" *ngIf="activeCharacterId === 'thief' && isThiefStunned" [ngStyle]="thiefStunAnimStyle"></div>
+            <div class="stun-fill-bar" *ngIf="activeCharacterId === 'artisan' && isArtisanTimerActive" [ngStyle]="artisanTimerAnimStyle"></div>
             <span class="hero-btn-label">[ >>> {{ questBtnLabel }} <<< ]</span>
           </button>
           <div class="hero-subzone">

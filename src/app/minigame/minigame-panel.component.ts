@@ -8,6 +8,7 @@ import { ApothecaryMinigameComponent } from './apothecary/apothecary-minigame.co
 import { RangerMinigameComponent } from './ranger/ranger-minigame.component';
 import { CulinarianMinigameComponent } from './culinarian/culinarian-minigame.component';
 import { ThiefMinigameComponent } from './thief/thief-minigame.component';
+import { ArtisanMinigameComponent } from './artisan/artisan-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
 import { FighterCombatState } from '../options/save.service';
@@ -20,7 +21,7 @@ interface MinigameInfo {
 @Component({
   selector: 'app-minigame-panel',
   standalone: true,
-  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent],
+  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent],
   templateUrl: './minigame-panel.component.html',
   styleUrls: ['./minigame-panel.component.scss'],
 })
@@ -116,6 +117,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     {
       characterId: 'thief',
       title: MINIGAME_FLAVOR.THIEF.name,
+    },
+    {
+      characterId: 'artisan',
+      title: MINIGAME_FLAVOR.ARTISAN.name,
     },
   ];
 

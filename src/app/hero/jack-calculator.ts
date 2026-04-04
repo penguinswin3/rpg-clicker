@@ -8,6 +8,7 @@
 
 import { JACK_GOLD_COST, JACK_RESOURCE_PROGRESSION, XP_THRESHOLDS, YIELDS } from '../game-config';
 import { scaledCost } from '../utils/mathUtils';
+import { calcArtisanTreasureCost } from './yield-helpers';
 
 // ── Types ───────────────────────────────────────────────────
 
@@ -74,11 +75,16 @@ export function getJacksPoolFree(jacksOwned: number, allocations: Record<string,
 export function isActiveCharJackStarved(
   charId: string,
   isThiefStunned: boolean,
+  isArtisanTimerActive: boolean,
   allocations: Record<string, number>,
   jackStarved: Record<string, boolean>,
 ): boolean {
   if (charId === 'thief') {
     return isThiefStunned && (allocations['thief'] ?? 0) > 0;
+  }
+  if (charId === 'artisan') {
+    // Artisan is "starved" when the timer is idle and the starved flag is set (not enough treasure)
+    return !isArtisanTimerActive && (allocations['artisan'] ?? 0) > 0 && !!jackStarved['artisan'];
   }
   return (allocations[charId] ?? 0) > 0 && !!jackStarved[charId];
 }
@@ -100,6 +106,11 @@ export function getJackStarvedMessage(
   if (charId === 'culinarian') {
     const have = Math.floor(walletGet('gold'));
     return `⚠ Jack idle — need ${culinarianGoldCost} gold (have ${have})`;
+  }
+  if (charId === 'artisan') {
+    const need = calcArtisanTreasureCost();
+    const have = Math.floor(walletGet('treasure'));
+    return `⚠ Jack idle — need ${need} treasure (have ${have})`;
   }
   return '⚠ Jack idle — insufficient resources';
 }

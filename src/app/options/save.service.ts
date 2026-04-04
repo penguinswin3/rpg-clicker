@@ -35,6 +35,10 @@ export interface UpgradeState {
   wholesaleSpicesEnabled?: boolean;
   dilutionEnabled?: boolean;
   fermentationVatsEnabled?: boolean;
+  /** Absolute timestamp (ms) when the artisan timer expires (0 = idle). */
+  artisanTimerUntil?: number;
+  /** How many appraisals (manual 1 + jacks N) are batched in the current timer. */
+  artisanTimerBatchSize?: number;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

@@ -16,6 +16,8 @@ import {
   calcCulinarianGoldCost, calcThiefSuccessChance,
   calcExpectedDossierYield, expectedHerbPerRangerClick,
   calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick,
+  calcArtisanTreasureCost, calcArtisanTimerMs,
+  expectedGemstonePerAppraisal, expectedMetalPerAppraisal,
 } from './yield-helpers';
 
 // ── Context ─────────────────────────────────────────────────
@@ -25,6 +27,7 @@ export interface PerSecondContext {
   jacksAllocations:        Record<string, number>;
   jackStarved:             Record<string, boolean>;
   isThiefStunned:          boolean;
+  isArtisanTimerActive:    boolean;
   wholesaleSpicesEnabled:  boolean;
   fermentationVatsEnabled: boolean;
 }
@@ -32,13 +35,16 @@ export interface PerSecondContext {
 // ── Result ──────────────────────────────────────────────────
 
 export interface PerSecondRates {
-  gold:    number;
-  xp:      number;
-  herb:    number;
-  beast:   number;
-  potion:  number;
-  spice:   number;
-  dossier: number;
+  gold:              number;
+  xp:                number;
+  herb:              number;
+  beast:             number;
+  potion:            number;
+  spice:             number;
+  dossier:           number;
+  treasure:          number;
+  'precious-metal':  number;
+  gemstone:          number;
 }
 
 /**
@@ -60,6 +66,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const apothecaryJacks = ctx.jackStarved['apothecary'] ? 0 : (ctx.jacksAllocations['apothecary'] ?? 0);
   const culinarianJacks = ctx.jackStarved['culinarian'] ? 0 : (ctx.jacksAllocations['culinarian'] ?? 0);
   const thiefJacks      = ctx.jacksAllocations['thief'] ?? 0;
+  const artisanJacks    = ctx.jackStarved['artisan'] ? 0 : (ctx.jacksAllocations['artisan'] ?? 0);
 
   // ── Derived values ────────────────────────────────────────
   const goldPerClick    = calcGoldPerClick(u.level('BETTER_BOUNTIES'));
@@ -76,6 +83,15 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const effectiveThiefRate = ctx.isThiefStunned ? 0 : thiefJacks * thiefSuccessRate;
   const avgDossierYield    = calcExpectedDossierYield(u.level('POTION_OF_STICKY_FINGERS'));
   const ppGoldPerSecond    = effectiveThiefRate * avgDossierYield * u.level('PLENTIFUL_PLUNDERING');
+
+  // ── Artisan rates ─────────────────────────────────────────
+  const artisanTimerSec       = calcArtisanTimerMs() / 1000;
+  const artisanTreasureCost   = calcArtisanTreasureCost();
+  const artisanCyclesPerSec   = artisanJacks > 0 ? 1 / artisanTimerSec : 0;
+  const artisanTreasurePerSec = artisanJacks * artisanTreasureCost * artisanCyclesPerSec;
+  const artisanGemstonePerSec = artisanJacks * expectedGemstonePerAppraisal() * artisanCyclesPerSec;
+  const artisanMetalPerSec    = artisanJacks * expectedMetalPerAppraisal() * artisanCyclesPerSec;
+  const artisanXpPerSec       = artisanJacks * artisanCyclesPerSec;
 
   // ── Cat's Eye factor ──────────────────────────────────────
   // Cat's Eye procs at catsEyeLevel% chance, granting herbs AND a beast roll
@@ -100,12 +116,15 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
 
   return {
     gold:    roundTo(autoGoldPerSec + apothecaryJacks * goldPerBrew + fighterJacks * goldPerClick - culinarianJacks * culGoldCost + ppGoldPerSecond, 2),
-    xp:      roundTo(fighterJacks * xpPerBounty + rangerJacks + apothecaryJacks + culinarianJacks + effectiveThiefRate, 2),
+    xp:      roundTo(fighterJacks * xpPerBounty + rangerJacks + apothecaryJacks + culinarianJacks + effectiveThiefRate + artisanXpPerSec, 2),
     herb:    roundTo(herbProduced - herbConsumed, 2),
     beast:   roundTo(rangerJacks * catsEyeFactor * (beastChance / 100) * expectedMeatYield + baitedTrapsRate, 2),
     potion:  roundTo(apothecaryJacks + vatPotionGain, 2),
     spice:   roundTo(culinarianJacks * spicePerClick, 2),
     dossier: roundTo(effectiveThiefRate * avgDossierYield, 2),
+    treasure:         roundTo(-artisanTreasurePerSec, 2),
+    'precious-metal': roundTo(artisanMetalPerSec, 2),
+    gemstone:         roundTo(artisanGemstonePerSec, 2),
   };
 }
 
@@ -123,6 +142,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const apothecaryJacks = ctx.jackStarved['apothecary'] ? 0 : (ctx.jacksAllocations['apothecary'] ?? 0);
   const culinarianJacks = ctx.jackStarved['culinarian'] ? 0 : (ctx.jacksAllocations['culinarian'] ?? 0);
   const thiefJacks      = ctx.jacksAllocations['thief'] ?? 0;
+  const artisanJacks    = ctx.jackStarved['artisan'] ? 0 : (ctx.jacksAllocations['artisan'] ?? 0);
 
   // ── Derived values ────────────────────────────────────────
   const goldPerClick    = calcGoldPerClick(u.level('BETTER_BOUNTIES'));
@@ -205,6 +225,20 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   // Dossier
   const dossierRate = roundTo(effectiveThiefRate * avgDossierYield, 2);
   if (dossierRate !== 0)               add('dossier', 'Thief', dossierRate);
+
+  // Artisan rates
+  const artTimerSec      = calcArtisanTimerMs() / 1000;
+  const artTreasureCost  = calcArtisanTreasureCost();
+  const artCyclesPerSec  = artisanJacks > 0 ? 1 / artTimerSec : 0;
+  const artTreasureRate  = roundTo(-artisanJacks * artTreasureCost * artCyclesPerSec, 2);
+  const artGemstoneRate  = roundTo(artisanJacks * expectedGemstonePerAppraisal() * artCyclesPerSec, 2);
+  const artMetalRate     = roundTo(artisanJacks * expectedMetalPerAppraisal() * artCyclesPerSec, 2);
+  const artXpRate        = roundTo(artisanJacks * artCyclesPerSec, 2);
+
+  if (artTreasureRate !== 0)  add('treasure',        'Artisan', artTreasureRate);
+  if (artGemstoneRate !== 0)  add('gemstone',        'Artisan', artGemstoneRate);
+  if (artMetalRate !== 0)     add('precious-metal',  'Artisan', artMetalRate);
+  if (artXpRate !== 0)        add('xp',              'Artisan', artXpRate);
 
   return bd;
 }

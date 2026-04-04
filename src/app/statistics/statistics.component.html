@@ -186,6 +186,17 @@
             </div>
           </div>
 
+          <!-- ── Artisan Minigame ── -->
+          <div class="stats-section" *ngIf="snap.artisanMinigame.appraisalsCompleted > 0">
+            <div class="section-label">// GEM CUTTER</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Appraisals Completed</span>
+                <span class="cur-amount">{{ fmt(snap.artisanMinigame.appraisalsCompleted) }}</span>
+              </div>
+            </div>
+          </div>
+
         </div><!-- /col right -->
 
       </div><!-- /columns -->

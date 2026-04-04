@@ -6,6 +6,9 @@
 - A new automatic potion making upgrade for the apothecary. It can be toggled on and off
 - A minimum hit upgrade for th fighter 
 - A new upgrade to the fighter minigame that gives hints as to the sweet spot location 
+- Add new scaling upgrades for herbs and raw meat to the ranger
+- New tier of kobold!
+- A New character, the Artisan! 
 
 ## Removed
 - Bigger Game upgrade
@@ -19,7 +22,7 @@
 - Reduced the Kobold Ear cost of the Kobold Ear Jack
 - Swapped the order of the Pixie Dust and Kobold Ear jack 
 - Renamed "Unassign" to "Recall" all jacks
-- Swapped the order of treasure and kobold fang Jack
+- Swapped the order of treasure and kobold 
 - Tweaked the description of Plentiful Plundering
 - Significantly more gold is awarded per unused detection in the thief minigame 
 - Relic Hunter now costs more Hearty Meals
@@ -31,11 +34,11 @@
 - Hovel Garden and Beast Traps scale a little less
 - Bubbling Brew now costs herbs 
 - Fermentation Vats cost scaling is less
-- Made the minigame pannel a little wider to give a little more breathing room
+- Made the minigame panel a little wider to give a little more breathing room
 - Unified the scrollbar design to use the clean, blocky style
 - Reworked activity log currency display formatting
-- Add new scaling upgrades for herbs and raw mean to the ranger 
 - Reworked Perfect Potions to give bonus dilution success chance per perfect click
+- Reduces kobold ear scaling on Stronger Kobolds
 
 ## Bugfixes
 - Cleaned up the missing row on the ranger character stats box 

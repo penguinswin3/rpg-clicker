@@ -94,9 +94,19 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     return this.bagOfHoldingLevel * THIEF_MG.BAG_OF_HOLDING_GOLD_YIELD_PER_LEVEL;
   }
 
-  /** Effective relic drop chance (%): base + 1% per Relic Hunter level. */
+  /** Relic drop chance — always 1% regardless of Relic Hunter level (that controls the cap, not the rate). */
   get effectiveRelicChance(): number {
-    return THIEF_MG.RELIC_CHANCE + this.relicHunterLevel * THIEF_MG.RELIC_HUNTER_CHANCE_PER_LEVEL;
+    return THIEF_MG.RELIC_CHANCE;
+  }
+
+  /** Maximum lifetime relics that can ever be found: base 1 + 1 per Relic Hunter level. */
+  get relicCap(): number {
+    return 1 + this.relicHunterLevel;
+  }
+
+  /** True when the player has already found the maximum number of lifetime relics. */
+  get relicCapReached(): boolean {
+    return (this.stats.current.lifetimeCurrency['relic'] ?? 0) >= this.relicCap;
   }
 
   // ── Other computed ────────────────────────
@@ -245,8 +255,8 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     ];
     this.resultXp = xp;
 
-    // Relic roll
-    if (rollChance(this.effectiveRelicChance)) {
+    // Relic roll — only if the lifetime cap hasn't been reached
+    if (!this.relicCapReached && rollChance(this.effectiveRelicChance)) {
       this.wallet.add('relic', THIEF_MG.RELIC_AMOUNT);
       this.stats.trackCurrencyGain('relic', THIEF_MG.RELIC_AMOUNT);
       if (!this.wallet.isCurrencyUnlocked('relic')) {

@@ -41,6 +41,7 @@ export class WalletService {
     { id: 'kobold-tongue',        ...CURRENCY_FLAVOR['kobold-tongue'],         requiredCharacterId: 'fighter',   manualUnlock: true },
     { id: 'kobold-hair',          ...CURRENCY_FLAVOR['kobold-hair'],           requiredCharacterId: 'fighter',   manualUnlock: true },
     { id: 'kobold-fang',          ...CURRENCY_FLAVOR['kobold-fang'],           requiredCharacterId: 'fighter',   manualUnlock: true },
+    { id: 'kobold-brain',         ...CURRENCY_FLAVOR['kobold-brain'],          requiredCharacterId: 'fighter',   manualUnlock: true },
 
     // ── Ranger ───────────────────────────────────────────────────────────────
     { id: 'herb',                 ...CURRENCY_FLAVOR['herb'],                  requiredCharacterId: 'ranger'       },
@@ -53,10 +54,14 @@ export class WalletService {
     // ── Culinarian ───────────────────────────────────────────────────────────
     { id: 'spice',                ...CURRENCY_FLAVOR['spice'],                 requiredCharacterId: 'culinarian'   },
     { id: 'hearty-meal',          ...CURRENCY_FLAVOR['hearty-meal'],           requiredCharacterId: 'culinarian', manualUnlock: true },
-    // ── Thief ─────────────────────────────────────────────────────────────────
+    // ── Thief ─────────────────────────────────────────────────────
     { id: 'dossier',              ...CURRENCY_FLAVOR['dossier'],               requiredCharacterId: 'thief'        },
     { id: 'treasure',             ...CURRENCY_FLAVOR['treasure'],              requiredCharacterId: 'thief',     manualUnlock: true },
     { id: 'relic',                ...CURRENCY_FLAVOR['relic'],                 requiredCharacterId: 'thief',     manualUnlock: true },
+    // ── Artisan ───────────────────────────────────────────────────
+    { id: 'precious-metal',       ...CURRENCY_FLAVOR['precious-metal'],        requiredCharacterId: 'artisan'      },
+    { id: 'gemstone',             ...CURRENCY_FLAVOR['gemstone'],              requiredCharacterId: 'artisan'      },
+
   ];
 
   private readonly stateSource = new BehaviorSubject<WalletState>(

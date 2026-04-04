@@ -158,3 +158,35 @@ export function calcExpectedDossierYield(stickyFingersLevel: number): number {
   return stickyFingersLevel > 0 ? 1 + stickyFingersLevel / 2 : 1;
 }
 
+// ── Artisan ─────────────────────────────────────────────────
+
+/** Treasure cost per artisan appraisal (base, upgradeable later). */
+export function calcArtisanTreasureCost(): number {
+  return YIELDS.ARTISAN_TREASURE_COST;
+}
+
+/** Duration of the artisan appraisal timer in ms (base, upgradeable later). */
+export function calcArtisanTimerMs(): number {
+  return YIELDS.ARTISAN_TIMER_MS;
+}
+
+/** Roll a random gemstone yield for one appraisal. */
+export function calcArtisanGemstoneYield(): number {
+  return randInt(YIELDS.ARTISAN_GEMSTONE_MIN, YIELDS.ARTISAN_GEMSTONE_MAX);
+}
+
+/** Roll a random precious metal yield for one appraisal. */
+export function calcArtisanMetalYield(): number {
+  return randInt(YIELDS.ARTISAN_METAL_MIN, YIELDS.ARTISAN_METAL_MAX);
+}
+
+/** Expected (average) gemstone yield per appraisal — for per-second display. */
+export function expectedGemstonePerAppraisal(): number {
+  return (YIELDS.ARTISAN_GEMSTONE_MIN + YIELDS.ARTISAN_GEMSTONE_MAX) / 2;
+}
+
+/** Expected (average) precious metal yield per appraisal — for per-second display. */
+export function expectedMetalPerAppraisal(): number {
+  return (YIELDS.ARTISAN_METAL_MIN + YIELDS.ARTISAN_METAL_MAX) / 2;
+}
+

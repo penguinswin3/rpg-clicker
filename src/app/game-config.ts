@@ -23,6 +23,8 @@ export interface UpgradeGates {
   readonly requiresCulinarian?: boolean;
   /** Hide until the Thief character is unlocked. */
   readonly requiresThief?: boolean;
+  /** Hide until the Artisan character is unlocked. */
+  readonly requiresArtisan?: boolean;
   /** Hide until the Bubbling Brew minigame upgrade has been purchased. */
   readonly requiresBubblingBrew?: boolean;
   /** Hide until the Potion Dilution minigame upgrade has been purchased. */
@@ -78,6 +80,8 @@ export const XP_THRESHOLDS = {
   CULINARIAN_UNLOCK: 18000,
   /** XP required before the Thief unlock offer appears */
   THIEF_UNLOCK:      70000,
+  /** XP required before the Artisan unlock offer appears */
+  ARTISAN_UNLOCK:    250000,
 } as const;
 
 // ── Jack of All Trades ────────────────────────────────────────
@@ -111,6 +115,8 @@ export const JACK_RESOURCE_PROGRESSION: readonly { currency: string; base: numbe
   { currency: 'kobold-fang',          base: 10   },
   { currency: 'treasure',             base: 150  },
   { currency: 'relic',                base: 1    },
+  { currency: 'precious-metal',      base: 100  },
+  { currency: 'gemstone',            base: 50   },
 
 ];
 
@@ -128,6 +134,10 @@ export const UNLOCK_COSTS = {
   THIEF_GOLD:        50_000,
   THIEF_SPICE:       10_000,
   THIEF_KOBOLD_HAIR: 100,
+
+  ARTISAN_GOLD:      100_000,
+  ARTISAN_DOSSIER:   10_000,
+  ARTISAN_TREASURE:  1_000,
 
   /** Minigame system unlock — available once XP >= MINIGAME_UNLOCK threshold */
   MINIGAME_GOLD:    10000,
@@ -182,10 +192,11 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: KOBOLD_VARIANTS.length - 1,
     gates: { xpMin: 3000 },
     costs: [
-      { currency: 'kobold-ear',    base: 50, scale: 2.0 },                                        // always
+      { currency: 'kobold-ear',    base: 50, scale: 1.8 },                                        // always
       { currency: 'beast',         base: 500, scale: 1.0, fromLevel: 0, untilLevel: 1 },           // tier 1 only
       { currency: 'kobold-tongue', base: 50, scale: 1.0, fromLevel: 1, untilLevel: 2 },           // tier 2 only
       { currency: 'kobold-hair',   base: 50, scale: 1.0, fromLevel: 2, untilLevel: 3 },           // tier 3 only
+      { currency: 'kobold-fang',   base: 50, scale: 1.0, fromLevel: 3, untilLevel: 4 },           // tier 4 only
     ] },
   { id: 'FIRST_STRIKE', characterId: 'fighter', category: 'minigame', max: 1,
     gates: { requiresFang: true },
@@ -236,7 +247,8 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'kobold-ear',    base: 50, scale: 1.0, fromLevel: 0, untilLevel: 1 },  // level 1 only
       { currency: 'kobold-tongue', base: 50, scale: 1.0, fromLevel: 1, untilLevel: 2 },  // level 2 only
       { currency: 'kobold-hair',   base: 50, scale: 1.0, fromLevel: 2, untilLevel: 3 },  // level 3 only
-      { currency: 'kobold-fang',   base: 50, scale: 1.0, fromLevel: 3 },
+      { currency: 'kobold-fang',   base: 50, scale: 1.0, fromLevel: 3, untilLevel: 4 },  // level 4 only
+      { currency: 'kobold-brain',  base: 50, scale: 1.0, fromLevel: 4, untilLevel: 5 },  // level 4 only
     ] },
   { id: 'ABUNDANT_LANDS',  characterId: 'ranger', category: 'minigame', max: 1,      // binary unlock
     costs: [{ currency: 'pixie-dust', base: 5, scale: 1.0 }] },
@@ -312,12 +324,28 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'gold',     base: 20_000, scale: 1.2 },
       { currency: 'treasure', base: 20,     scale: 1.25 },
     ] },
-  { id: 'RELIC_HUNTER', characterId: 'thief', category: 'minigame', max: 4,
+  { id: 'RELIC_HUNTER', characterId: 'thief', category: 'minigame', max: 99,
     gates: { requiresRelic: true },
     costs: [
-      { currency: 'hearty-meal', base: 50,  scale: 2.0 },
-      { currency: 'dossier',     base: 500, scale: 2.0 },
-      { currency: 'treasure',    base: 500, scale: 2.0 },
+      // Always: dossier scales steeply with each level
+      { currency: 'dossier',             base: 1000,  scale: 1.6 },
+      // Level 1 only: Fighter
+      { currency: 'kobold-ear',          base: 200,  scale: 1.0, fromLevel: 0, untilLevel: 1 },
+      { currency: 'kobold-tongue',       base: 200,  scale: 1.0, fromLevel: 0, untilLevel: 1 },
+      { currency: 'kobold-hair',         base: 200,  scale: 1.0, fromLevel: 0, untilLevel: 1 },
+      { currency: 'kobold-fang',         base: 200,  scale: 1.0, fromLevel: 0, untilLevel: 1 },
+      // Level 2 only: Ranger
+      { currency: 'herb',                base: 10000, scale: 1.0, fromLevel: 1, untilLevel: 2 },
+      { currency: 'beast',               base: 10000, scale: 1.0, fromLevel: 1, untilLevel: 2 },
+      { currency: 'pixie-dust',          base: 500,   scale: 1.0, fromLevel: 1, untilLevel: 2 },
+      // Level 3 only: Apothecary
+      { currency: 'potion',              base: 10000, scale: 1.0, fromLevel: 2, untilLevel: 3 },
+      { currency: 'concentrated-potion', base: 500,   scale: 1.0, fromLevel: 2, untilLevel: 3 },
+      // Level 4 only: Culinarian
+      { currency: 'spice',               base: 50000, scale: 1.0, fromLevel: 3, untilLevel: 4 },
+      { currency: 'hearty-meal',         base: 500,   scale: 1.0, fromLevel: 3, untilLevel: 4 },
+      // Level 5 only: Thief - Dossier excluded cause thats coming from the base scaling
+      { currency: 'treasure',            base: 2000,  scale: 1.0, fromLevel: 4 },
     ] },
   { id: 'LOCKED_IN', characterId: 'thief', category: 'minigame', max: 1,
     costs: [
@@ -381,6 +409,9 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'RELIC_THIEF',      characterId: 'thief',      category: 'relic', max: 1,
     gates: { requiresRelic: true },
     costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
+  { id: 'RELIC_ARTISAN',    characterId: 'artisan',    category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic', base: 1, scale: 1.0 }] },
 ];
 
 // ── Resource Yields ───────────────────────────────────────────
@@ -405,6 +436,19 @@ export const YIELDS = {
   THIEF_BASE_SUCCESS_CHANCE: 50,
   /** Duration in ms the Thief is stunned on a failed break-in */
   THIEF_STUN_DURATION_MS: 3_000,
+
+  /** Treasure consumed per Artisan appraisal action */
+  ARTISAN_TREASURE_COST: 20,
+  /** Duration in ms of the Artisan's appraisal timer */
+  ARTISAN_TIMER_MS: 20_000,
+  /** Minimum gemstones awarded per appraisal */
+  ARTISAN_GEMSTONE_MIN: 1,
+  /** Maximum gemstones awarded per appraisal */
+  ARTISAN_GEMSTONE_MAX: 3,
+  /** Minimum precious metals awarded per appraisal */
+  ARTISAN_METAL_MIN: 2,
+  /** Maximum precious metals awarded per appraisal */
+  ARTISAN_METAL_MAX: 5,
 
 } as const;
 
@@ -540,8 +584,6 @@ export const THIEF_MG = {
   /** Extra base gold AND treasure yield per Bag of Holding level */
   BAG_OF_HOLDING_GOLD_YIELD_PER_LEVEL: 10,
   BAG_OF_HOLDING_TREASURE_YIELD_PER_LEVEL: 1,
-  /** Extra relic drop % per Relic Hunter level */
-  RELIC_HUNTER_CHANCE_PER_LEVEL: 1,
 } as const;
 
 // ── Culinarian Minigame ──────────────────────────────────────

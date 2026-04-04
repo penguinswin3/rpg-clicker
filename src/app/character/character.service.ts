@@ -80,6 +80,19 @@ export class CharacterService {
       ],
       xpRequirement: XP_THRESHOLDS.THIEF_UNLOCK,
     },
+    {
+      id: 'artisan',
+      name: CHARACTER_FLAVOR.ARTISAN.name,
+      color: '#e8c252',
+      description: CHARACTER_FLAVOR.ARTISAN.desc,
+      unlocked: false,
+      unlockCosts: [
+        { currencyId: 'gold',     amount: UNLOCK_COSTS.ARTISAN_GOLD     },
+        { currencyId: 'dossier',  amount: UNLOCK_COSTS.ARTISAN_DOSSIER  },
+        { currencyId: 'treasure', amount: UNLOCK_COSTS.ARTISAN_TREASURE },
+      ],
+      xpRequirement: XP_THRESHOLDS.ARTISAN_UNLOCK,
+    },
   ];
 
   private readonly charactersSource = new BehaviorSubject<Character[]>(

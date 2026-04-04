@@ -20,6 +20,7 @@ import {
   calcHerbSaveChance, calcPotionMarketingGoldPerBrew,
   calcSpicePerClick, calcCulinarianGoldCost,
   calcThiefSuccessChance,
+  calcArtisanTreasureCost,
 } from './yield-helpers';
 
 // ── Contexts ────────────────────────────────────────────────
@@ -35,6 +36,10 @@ export interface HeroActionContext {
   isThiefStunned:         boolean;
   /** Callback to apply stun on a failed thief break-in. */
   applyThiefStun:         () => void;
+  /** Whether the Artisan's appraisal timer is currently active. */
+  isArtisanTimerActive:   boolean;
+  /** Start the Artisan appraisal timer (batchSize = 1 for manual click). */
+  startArtisanTimer:      (batchSize: number) => void;
 }
 
 /**
@@ -55,6 +60,10 @@ export interface JackAutoClickContext {
   setJackStarved:         (charId: string, starved: boolean) => void;
   /** Called when starvation state changes so per-second rates refresh. */
   onPerSecondUpdate:      () => void;
+  /** Live check — true while the artisan timer is running. */
+  isArtisanTimerActive:   () => boolean;
+  /** Start the artisan shared timer with the given batch size (= jackCount). */
+  startArtisanTimer:      (batchSize: number) => void;
 }
 
 // ── Hero click dispatch ─────────────────────────────────────
@@ -68,6 +77,7 @@ export function dispatchHeroClick(charId: string, ctx: HeroActionContext): void 
     case 'apothecary': return clickApothecary(ctx);
     case 'culinarian': return clickCulinarian(ctx);
     case 'thief':      return clickThief(ctx);
+    case 'artisan':    return clickArtisan(ctx);
   }
 }
 
@@ -216,6 +226,20 @@ function clickThief(ctx: HeroActionContext): void {
   }
 }
 
+function clickArtisan(ctx: HeroActionContext): void {
+  if (ctx.isArtisanTimerActive) return;
+
+  const treasureCost = calcArtisanTreasureCost();
+  if (!ctx.wallet.canAfford('treasure', treasureCost)) {
+    const have = Math.floor(ctx.wallet.get('treasure'));
+    ctx.log.log(`Not enough treasure to appraise. Need ${cur('treasure', treasureCost, '')}, have ${cur('treasure', have, '')}.`, 'warn');
+    return;
+  }
+  ctx.wallet.remove('treasure', treasureCost);
+  ctx.startArtisanTimer(1);
+  ctx.log.log(`Appraisal started... (${cur('treasure', treasureCost, '-')})`);
+}
+
 // ── Jack auto-click dispatch ────────────────────────────────
 
 /** Execute one jack auto-click for the given character. */
@@ -227,6 +251,8 @@ export function performJackAutoClick(charId: string, ctx: JackAutoClickContext):
     case 'apothecary': return jackApothecary(ctx);
     case 'culinarian': return jackCulinarian(ctx);
     case 'thief':      return jackThief(ctx);
+    // Artisan jacks are handled as a batch in app.component (shared timer).
+    case 'artisan':    return;
   }
 }
 

@@ -24,6 +24,9 @@ export const CURRENCY_FLAVOR = {
   treasure:              { name: 'Treasure',                  symbol: '⚱',  color: '#989c3a' },
   'kobold-fang':         { name: 'Kobold Fang',               symbol: '৲',  color: '#969790' },
   relic:                 { name: 'Relic',                     symbol: 'ᛝ',  color: '#a700ff' },
+  'kobold-brain':        { name: 'Kobold Brain',              symbol: 'ↀ',  color: '#d6339d' },
+  'precious-metal':      { name: 'Precious Metal',            symbol: '🜛',  color: '#accccb' },
+  gemstone:              { name: 'Gemstone',                  symbol: '💎︎',  color: '#54d6ac' },
 
 } as const;
 
@@ -105,7 +108,7 @@ export const UPGRADE_FLAVOR = {
   VANISHING_POWDER:         { name: 'Vanishing Powder',          desc: '+1 max detection tolerance per level' },
   POTION_CATS_EARS:         { name: "Potion of Cat's Ears",      desc: '+3° sweet spot size per level' },
   BAG_OF_HOLDING:           { name: 'Bag of Holding',            desc: 'Increases maximum gold and treasure yield' },
-  RELIC_HUNTER:             { name: 'Relic Hunter',              desc: '+1% relic drop chance per level' },
+  RELIC_HUNTER:             { name: 'Relic Hunter',              desc: 'Allows the discovery of one additional relic!' },
   LOCKED_IN:                { name: 'Locked In',                 desc: 'Marks failed click positions on the dial with a red tick' },
   FLOW_STATE:               { name: 'Flow State',                desc: 'Dial ticks now give hints as to where the sweet spot is' },
 
@@ -115,6 +118,7 @@ export const UPGRADE_FLAVOR = {
   RELIC_APOTHECARY: { name: 'Mask of the Greenman',     desc: 'A powerful artifact that empowers the Apothecary. (placeholder)' },
   RELIC_CULINARIAN: { name: 'Charming Perfume',  desc: 'A powerful artifact that empowers the Culinarian. (placeholder)' },
   RELIC_THIEF:      { name: 'Ring of Shadows',     desc: 'A powerful artifact that empowers the Thief. (placeholder)' },
+  RELIC_ARTISAN:    { name: "Jeweler's Loupe",    desc: 'A powerful artifact that empowers the Artisan. (placeholder)' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
@@ -191,6 +195,21 @@ export const KOBOLD_VARIANTS: readonly KoboldVariant[] = [
       chance: 33,
     },
   },
+  // Level 5 — Kobold Sorcerer
+  {
+    name: 'Kobold Sorcerer',
+    ascii:
+      '     *       \n' +
+      '    / \\  o   \n' +
+      '  <(^u^)>|   \n' +
+      '   /||-- |   \n' +
+      '   d  b  |   ',
+    secondaryDrop: {
+      currencyId: 'kobold-brain',
+      amount: 1,
+      chance: 33,
+    },
+  },
 ];
 
 // ── Characters ────────────────────────────────────────────────
@@ -220,6 +239,11 @@ export const CHARACTER_FLAVOR = {
     desc: "A Lady doesn't need to always lurk in the shadows.",
     questBtn: 'Break & Enter',
   },
+  ARTISAN: {
+    name: 'Artisan',
+    desc: 'A meticulous craftsman who sees value where others see junk. Give him any trinket and he will find the gems within.',
+    questBtn: 'Appraisal',
+  },
 } as const;
 
 // ── Minigames ─────────────────────────────────────────────────
@@ -243,6 +267,10 @@ export const MINIGAME_FLAVOR = {
   THIEF: {
     name: 'Big Heist',
     desc: 'Crack the safe before you\nare detected.',
+  },
+  ARTISAN: {
+    name: 'Gem Cutter',
+    desc: 'Cut and polish raw gemstones\ninto perfect jewels.',
   },
 } as const;
 
@@ -303,6 +331,13 @@ export const HERO_STATS_FLAVOR = {
     GOLD_RANGE:     'Gold Yield     :',
     TREASURE_RANGE: 'Treasure Yield :',
     RELIC_CHANCE:   'Relic Chance   :',
+    RELIC_CAP:      'Relics Found   :',
+  },
+  ARTISAN: {
+    TREASURE_COST:  'Treasure Cost  :',
+    TIMER_DURATION: 'Appraisal Time :',
+    GEMSTONE_RANGE: 'Gemstone Yield :',
+    METAL_RANGE:    'Metal Yield    :',
   },
 } as const;
 

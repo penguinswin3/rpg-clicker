@@ -68,6 +68,11 @@ export interface ThiefMinigameStats {
   failedHeists: number;
 }
 
+export interface ArtisanMinigameStats {
+  /** Total number of appraisals completed (manual + jack). */
+  appraisalsCompleted: number;
+}
+
 export interface StatisticsSnapshot {
   /** Lifetime totals of currency gained (only additions, never subtractions). */
   lifetimeCurrency: Record<string, number>;
@@ -89,6 +94,8 @@ export interface StatisticsSnapshot {
   culinarianMinigame: CulinarianMinigameStats;
   /** Thief minigame heist stats. */
   thiefMinigame: ThiefMinigameStats;
+  /** Artisan minigame appraisal stats. */
+  artisanMinigame: ArtisanMinigameStats;
 }
 
 function defaultSnapshot(): StatisticsSnapshot {
@@ -102,6 +109,7 @@ function defaultSnapshot(): StatisticsSnapshot {
     apothecaryMinigame: { minigamesComplete: 0, potionHits: 0, perfectHits: 0, potionMisses: 0, dilutionSuccesses: 0, dilutionFailures: 0 },
     culinarianMinigame: { wins: 0, losses: 0, guessDist: [] },
     thiefMinigame:      { successfulHeists: 0, failedHeists: 0 },
+    artisanMinigame:    { appraisalsCompleted: 0 },
   };
 }
 
@@ -261,6 +269,15 @@ export class StatisticsService {
     this.source.next(snap);
   }
 
+  // ── Artisan minigame ───────────────────────────────────────
+
+  trackArtisanAppraisal(count: number = 1): void {
+    if (count <= 0) return;
+    const snap = this.source.getValue();
+    snap.artisanMinigame.appraisalsCompleted += count;
+    this.source.next(snap);
+  }
+
   // ── Persistence ────────────────────────────────────────────
 
   buildSnapshot(): StatisticsSnapshot {
@@ -288,6 +305,7 @@ export class StatisticsService {
       apothecaryMinigame: { ...defaultSnapshot().apothecaryMinigame, ...snap.apothecaryMinigame },
       culinarianMinigame: { ...defaultSnapshot().culinarianMinigame, ...snap.culinarianMinigame },
       thiefMinigame:      { ...defaultSnapshot().thiefMinigame,      ...snap.thiefMinigame },
+      artisanMinigame:    { ...defaultSnapshot().artisanMinigame,    ...snap.artisanMinigame },
     };
     // Remove deprecated field from live snapshot
     delete merged.heroButtonPresses;
