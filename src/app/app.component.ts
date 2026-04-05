@@ -14,7 +14,7 @@ import { StatisticsComponent } from './statistics/statistics.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef } from './game-config';
+import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR } from './game-config';
 import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
@@ -167,6 +167,14 @@ export class AppComponent implements OnInit, OnDestroy {
   jacksAllocations: Record<string, number> = {};
   jackStarved:      Record<string, boolean> = {};
 
+  // ── Familiar state ─────────────────────────────────────────────
+  /**
+   * Absolute timestamps (ms since epoch) at which each familiar timer expires.
+   * Keys are jack allocation keys (character IDs or compound like 'necromancer-defile').
+   * A key with 0 or absent = inactive.
+   */
+  familiarTimers: Record<string, number> = {};
+
   // ── Jack computed getters (delegated to jack-calculator) ───────
 
   get jacksVisible():    boolean { return isJacksVisible(this.highestXp, this.jacksOwned); }
@@ -247,12 +255,14 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresNecromancer   && !this.necromancerUnlocked)                     return false;
     if (gates.requiresRelic         && !this.wallet.isCurrencyUnlocked('relic'))     return false;
     if (gates.requiresFang          && !this.wallet.isCurrencyUnlocked('kobold-fang')) return false;
+    if (gates.requiresFeather       && !this.wallet.isCurrencyUnlocked('kobold-feather')) return false;
     if (gates.requiresDossier       && !this.wallet.isCurrencyUnlocked('dossier'))   return false;
     if (gates.requiresBubblingBrew  && this.upgrades.level('BUBBLING_BREW') < 1)     return false;
     if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1)  return false;
     if (gates.requiresLockedIn      && this.upgrades.level('LOCKED_IN') < 1)         return false;
     if (gates.requiresSynapticalPotions && this.upgrades.level('SYNAPTICAL_POTIONS') < 1) return false;
     if (gates.requiresDoubleDip     && this.upgrades.level('DOUBLE_DIP') < 1)        return false;
+    if (gates.requiresFindFamiliar  && this.upgrades.level('FIND_FAMILIAR') < 1)     return false;
     if (gates.xpMin != null && this.highestXp < gates.xpMin) return false;
     if (gates.requiresSharperSwordsMin != null && this.upgrades.level('SHARPER_SWORDS') < gates.requiresSharperSwordsMin) return false;
     if (gates.requiresTreasureChestMin != null && this.upgrades.level('TREASURE_CHEST') < gates.requiresTreasureChestMin) return false;
@@ -427,6 +437,36 @@ export class AppComponent implements OnInit, OnDestroy {
         }
         for (let i = 0; i < effective; i++) performJackAutoClick(charId, ctx);
       }
+
+      // Familiar auto-clicks: each active familiar fires JACKS_PER_FAMILIAR additional clicks
+      if (this.familiarUnlocked) {
+        const now = Date.now();
+        let anyExpired = false;
+        for (const [key, expiry] of Object.entries(this.familiarTimers)) {
+          if (expiry <= now) {
+            // Timer just expired — mark for cleanup
+            anyExpired = true;
+            continue;
+          }
+          const baseId = key.startsWith('necromancer') ? 'necromancer' : key;
+          const relicMult = this.upgrades.level(`RELIC_${baseId.toUpperCase()}`) >= 1 ? 2 : 1;
+          const clicks = FAMILIAR.JACKS_PER_FAMILIAR * relicMult;
+          if (key === 'artisan') {
+            this.handleArtisanJackBatch(clicks);
+          } else {
+            for (let i = 0; i < clicks; i++) performJackAutoClick(key, ctx);
+          }
+        }
+        // Prune expired timers and recalc rates
+        if (anyExpired) {
+          const cleaned: Record<string, number> = {};
+          for (const [k, v] of Object.entries(this.familiarTimers)) {
+            if (v > now) cleaned[k] = v;
+          }
+          this.familiarTimers = cleaned;
+          this.updateAllPerSecond();
+        }
+      }
     }, 1000);
   }
 
@@ -477,6 +517,7 @@ export class AppComponent implements OnInit, OnDestroy {
       artisanTimerBatchSize:   this.artisanTimerBatchSize,
       necromancerActiveButton:     this.necromancerActiveButton,
       necromancerClicksRemaining:  this.necromancerClicksRemaining,
+      familiarTimers:              { ...this.familiarTimers },
     };
   }
 
@@ -500,6 +541,14 @@ export class AppComponent implements OnInit, OnDestroy {
     // Restore necromancer state
     this.necromancerActiveButton     = s.necromancerActiveButton     ?? 'defile';
     this.necromancerClicksRemaining  = s.necromancerClicksRemaining  ?? 10;
+    // Restore familiar timers — prune any that have expired while the game was closed
+    const now = Date.now();
+    const rawTimers = s.familiarTimers ?? {};
+    const restoredTimers: Record<string, number> = {};
+    for (const [k, v] of Object.entries(rawTimers)) {
+      if (v > now) restoredTimers[k] = v;
+    }
+    this.familiarTimers = restoredTimers;
     // Restore artisan timer — if still in the future, reschedule the completion callback
     this.artisanTimerUntil     = s.artisanTimerUntil     ?? 0;
     this.artisanTimerBatchSize = s.artisanTimerBatchSize  ?? 0;
@@ -542,6 +591,7 @@ export class AppComponent implements OnInit, OnDestroy {
         necromancer:this.upgrades.level('RELIC_NECROMANCER'),
       },
       necromancerActiveButton: this.necromancerActiveButton,
+      familiarTimers: this.familiarTimers,
     };
     const rates = calculatePerSecondRates(ctx);
     this.wallet.batchUpdate(() => {
@@ -555,6 +605,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.setPerSecond('treasure',        rates.treasure);
       this.wallet.setPerSecond('precious-metal',  rates['precious-metal']);
       this.wallet.setPerSecond('gemstone',        rates.gemstone);
+      this.wallet.setPerSecond('jewelry',         rates.jewelry);
       this.wallet.setPerSecond('bone',            rates.bone);
       this.wallet.setPerSecond('brimstone',       rates.brimstone);
       this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
@@ -809,7 +860,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   /** Get the label for a specific necromancer button. */
-  get necromancerDefileLabel(): string { return CHARACTER_FLAVOR.NECROMANCER.questBtnDefile; }
+  get necromancerDefileLabel(): string { return CHARACTER_FLAVOR.NECROMANCER.questBtnExhume; }
   get necromancerWardLabel(): string { return CHARACTER_FLAVOR.NECROMANCER.questBtnWard; }
 
   // ── Jack actions ───────────────────────────────────────────────
@@ -861,6 +912,121 @@ export class AppComponent implements OnInit, OnDestroy {
   unassignAllJacks(): void {
     this.jacksAllocations = {};
     this.updateAllPerSecond();
+  }
+
+  // ── Familiar actions ───────────────────────────────────────────
+
+  /** Whether the Find Familiar upgrade is purchased. */
+  get familiarUnlocked(): boolean {
+    return this.upgrades.level('FIND_FAMILIAR') >= 1;
+  }
+
+  /**
+   * Effective seconds added per Soul Stone fed to a familiar.
+   * Base (FAMILIAR.TIME_PER_STONE_SEC) + Concentrated Souls bonus per level.
+   */
+  get familiarTimePerStoneSec(): number {
+    return FAMILIAR.TIME_PER_STONE_SEC
+      + this.upgrades.level('CONCENTRATED_SOULS') * FAMILIAR.CONCENTRATED_SOULS_BONUS_SEC;
+  }
+
+  /**
+   * Effective maximum familiar time in seconds.
+   * Base (FAMILIAR.MAX_TIME_SEC) + Vault of Souls bonus per level.
+   */
+  get familiarMaxTimeSec(): number {
+    return FAMILIAR.MAX_TIME_SEC
+      + this.upgrades.level('VAULT_OF_SOULS') * FAMILIAR.VAULT_OF_SOULS_BONUS_SEC;
+  }
+
+  /**
+   * Returns the jack allocation keys that should show a familiar box.
+   * This is every key that would appear if the character is the active one.
+   * For necromancer it's 'necromancer-defile' and 'necromancer-ward'.
+   */
+  get familiarKeys(): string[] {
+    if (!this.activeCharacterInfo) return [];
+    const charId = this.activeCharacterInfo.id;
+    if (charId === 'necromancer') return ['necromancer-defile', 'necromancer-ward'];
+    return [charId];
+  }
+
+  /** Friendly label for a familiar key. */
+  familiarLabel(key: string): string {
+    if (key === 'necromancer-defile') return 'Exhume';
+    if (key === 'necromancer-ward')   return 'Ward';
+    return 'Familiar';
+  }
+
+  /** Whether the familiar timer for a given key is currently active. */
+  isFamiliarActive(key: string): boolean {
+    return (this.familiarTimers[key] ?? 0) > Date.now();
+  }
+
+  /** Remaining familiar seconds for a given key. */
+  getFamiliarRemainingSec(key: string): number {
+    return Math.max(0, Math.ceil(((this.familiarTimers[key] ?? 0) - Date.now()) / 1000));
+  }
+
+  /** Remaining familiar time as a percentage of current max cap (for progress bar). */
+  getFamiliarPct(key: string): number {
+    const remaining = this.getFamiliarRemainingSec(key);
+    return Math.min(100, Math.round((remaining / this.familiarMaxTimeSec) * 100));
+  }
+
+  /** Format remaining time as M:SS. */
+  formatFamiliarTime(key: string): string {
+    const sec = this.getFamiliarRemainingSec(key);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  /** Feed a single soul stone to a familiar, adding familiarTimePerStoneSec. */
+  feedFamiliar(key: string): void {
+    if (!this.familiarUnlocked) return;
+    if (!this.wallet.canAfford('soul-stone', 1)) return;
+
+    const now    = Date.now();
+    const curEnd = Math.max(now, this.familiarTimers[key] ?? 0);
+    const maxEnd = now + this.familiarMaxTimeSec * 1000;
+    if (curEnd >= maxEnd) return; // already at max
+
+    this.wallet.remove('soul-stone', 1);
+    const newEnd = Math.min(curEnd + this.familiarTimePerStoneSec * 1000, maxEnd);
+    this.familiarTimers = { ...this.familiarTimers, [key]: newEnd };
+    this.updateAllPerSecond();
+  }
+
+  /** Feed as many soul stones as needed (and affordable) to fill the familiar to max. */
+  feedFamiliarMax(key: string): void {
+    if (!this.familiarUnlocked) return;
+
+    const now    = Date.now();
+    const curEnd = Math.max(now, this.familiarTimers[key] ?? 0);
+    const maxEnd = now + this.familiarMaxTimeSec * 1000;
+    if (curEnd >= maxEnd) return; // already at max
+
+    const msNeeded      = maxEnd - curEnd;
+    const stonesNeeded  = Math.ceil(msNeeded / (this.familiarTimePerStoneSec * 1000));
+    const stonesHave    = Math.floor(this.wallet.get('soul-stone'));
+    const stonesToSpend = Math.min(stonesNeeded, stonesHave);
+    if (stonesToSpend <= 0) return;
+
+    this.wallet.remove('soul-stone', stonesToSpend);
+    const newEnd = Math.min(curEnd + stonesToSpend * this.familiarTimePerStoneSec * 1000, maxEnd);
+    this.familiarTimers = { ...this.familiarTimers, [key]: newEnd };
+    this.updateAllPerSecond();
+  }
+
+  /** Whether the familiar for this key can accept more time (not full and has soul stones). */
+  canFeedFamiliar(key: string): boolean {
+    if (!this.familiarUnlocked) return false;
+    if (!this.wallet.canAfford('soul-stone', 1)) return false;
+    const now    = Date.now();
+    const curEnd = Math.max(now, this.familiarTimers[key] ?? 0);
+    const maxEnd = now + this.familiarMaxTimeSec * 1000;
+    return curEnd < maxEnd;
   }
 
   // ── Minigame unlock ────────────────────────────────────────────

@@ -77,6 +77,15 @@ export interface ArtisanMinigameStats {
   facetingFailures: number;
 }
 
+export interface NecromancerMinigameStats {
+  /** Total rituals completed. */
+  ritualsCompleted: number;
+  /** Total perfect-path rituals (100% efficiency). */
+  perfectRituals: number;
+  /** Sum of all efficiency scores (used to compute average). */
+  totalEfficiency: number;
+}
+
 export interface StatisticsSnapshot {
   /** Lifetime totals of currency gained (only additions, never subtractions). */
   lifetimeCurrency: Record<string, number>;
@@ -100,6 +109,8 @@ export interface StatisticsSnapshot {
   thiefMinigame: ThiefMinigameStats;
   /** Artisan minigame appraisal stats. */
   artisanMinigame: ArtisanMinigameStats;
+  /** Necromancer minigame ritual stats. */
+  necromancerMinigame: NecromancerMinigameStats;
 }
 
 function defaultSnapshot(): StatisticsSnapshot {
@@ -114,6 +125,7 @@ function defaultSnapshot(): StatisticsSnapshot {
     culinarianMinigame: { wins: 0, losses: 0, guessDist: [] },
     thiefMinigame:      { successfulHeists: 0, failedHeists: 0 },
     artisanMinigame:    { appraisalsCompleted: 0, facetingSuccesses: 0, facetingFailures: 0 },
+    necromancerMinigame:{ ritualsCompleted: 0, perfectRituals: 0, totalEfficiency: 0 },
   };
 }
 
@@ -309,6 +321,17 @@ export class StatisticsService {
     this._scheduleFlush();
   }
 
+  // ── Necromancer minigame ───────────────────────────────────
+
+  /** Track a completed Well of Souls ritual. */
+  trackNecromancerRitual(efficiencyPct: number): void {
+    const snap = this.source.getValue();
+    snap.necromancerMinigame.ritualsCompleted++;
+    snap.necromancerMinigame.totalEfficiency += efficiencyPct;
+    if (efficiencyPct >= 100) snap.necromancerMinigame.perfectRituals++;
+    this._scheduleFlush();
+  }
+
   // ── Persistence ────────────────────────────────────────────
 
   buildSnapshot(): StatisticsSnapshot {
@@ -337,6 +360,7 @@ export class StatisticsService {
       culinarianMinigame: { ...defaultSnapshot().culinarianMinigame, ...snap.culinarianMinigame },
       thiefMinigame:      { ...defaultSnapshot().thiefMinigame,      ...snap.thiefMinigame },
       artisanMinigame:    { ...defaultSnapshot().artisanMinigame,    ...snap.artisanMinigame },
+      necromancerMinigame:{ ...defaultSnapshot().necromancerMinigame,...snap.necromancerMinigame },
     };
     // Remove deprecated field from live snapshot
     delete merged.heroButtonPresses;

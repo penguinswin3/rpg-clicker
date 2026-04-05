@@ -205,6 +205,25 @@
             </div>
           </div>
 
+          <!-- ── Necromancer Minigame ── -->
+          <div class="stats-section" *ngIf="snap.necromancerMinigame.ritualsCompleted > 0">
+            <div class="section-label">// WELL OF SOULS</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Rituals Completed</span>
+                <span class="cur-amount">{{ fmt(snap.necromancerMinigame.ritualsCompleted) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.necromancerMinigame.perfectRituals > 0">
+                <span class="cur-name">Perfect Rituals</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.necromancerMinigame.perfectRituals) }}</span>
+              </div>
+              <div class="stats-row" *ngIf="snap.necromancerMinigame.ritualsCompleted > 0">
+                <span class="cur-name">Avg Efficiency</span>
+                <span class="cur-amount">{{ (snap.necromancerMinigame.totalEfficiency / snap.necromancerMinigame.ritualsCompleted).toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
+
         </div><!-- /col right -->
 
       </div><!-- /columns -->

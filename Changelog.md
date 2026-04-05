@@ -12,9 +12,11 @@
 - A New Character, the Necromancer!
 - More Jacks!
 - Artisan "Faceting" minigame — pick the highest quality gem from six randomly generated stones
-- Added like 8 new upgrades across the board 
+- Necromancer "Well of Souls" minigame, allows for the creation of Soul Stones, which can be used to provide temporary jacks!
+- Added a ton of new upgrades across the board 
 - Added a new potion base, Synaptical
-- New Fighter minigame upgrade: Potion of Mind Reading — each level gives a 10% chance to roll attack damage twice and take the higher result
+- New Fighter minigame upgrade: Potion of Foresight — each level gives a 10% chance to roll attack damage twice and take the higher result
+- Added a new Familiar system
 
 ## Removed
 - Bigger Game upgrade

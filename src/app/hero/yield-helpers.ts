@@ -227,9 +227,9 @@ export function expectedMetalPerAppraisalJack(catsPawLevel: number = 0, hasRelic
 
 // ── Necromancer ─────────────────────────────────────────────
 
-/** Bones yielded per Defile click. */
-export function calcNecromancerBoneYield(): number {
-  return YIELDS.NECROMANCER_BONE_PER_CLICK;
+/** Bones yielded per Defile click (max, based on Speak With Dead level). */
+export function calcNecromancerBoneYield(speakWithDeadLevel: number = 0): number {
+  return YIELDS.NECROMANCER_BONE_PER_CLICK + speakWithDeadLevel;
 }
 
 /** XP cost per Ward click, reduced by Dark Pact (min 1). */
@@ -237,9 +237,14 @@ export function calcNecromancerWardXpCost(darkPactLevel: number): number {
   return Math.max(1, YIELDS.NECROMANCER_WARD_XP_COST - darkPactLevel * 2);
 }
 
-/** Brimstone yielded per Ward click. */
-export function calcNecromancerBrimstoneYield(): number {
-  return YIELDS.NECROMANCER_BRIMSTONE_PER_WARD;
+/** Brimstone yielded per Ward click (max, based on Fortified Chalk level). */
+export function calcNecromancerBrimstoneYield(fortifiedChalkLevel: number = 0): number {
+  return YIELDS.NECROMANCER_BRIMSTONE_PER_WARD + fortifiedChalkLevel;
+}
+
+/** Percent chance to find bonus loot from Grave Looting during Defile (0–100). */
+export function calcGraveLootingChance(graveLootingLevel: number): number {
+  return graveLootingLevel * YIELDS.GRAVE_LOOTING_CHANCE_PER_LEVEL;
 }
 
 /** Minimum clicks before the active necromancer button switches. */

@@ -23,7 +23,7 @@ import {
   calcArtisanGemstoneMax, calcArtisanMetalMax,
   calcNecromancerBoneYield, calcNecromancerWardXpCost,
   calcNecromancerBrimstoneYield, calcNecromancerSwitchMin,
-  calcNecromancerSwitchMax,
+  calcNecromancerSwitchMax, calcGraveLootingChance,
 } from './yield-helpers';
 
 // ── Context required by the builder ──────────────────────────
@@ -54,7 +54,7 @@ export function getQuestBtnLabel(charId: string): string {
     culinarian: CHARACTER_FLAVOR.CULINARIAN.questBtn,
     thief:      CHARACTER_FLAVOR.THIEF.questBtn,
     artisan:    CHARACTER_FLAVOR.ARTISAN.questBtn,
-    necromancer: CHARACTER_FLAVOR.NECROMANCER.questBtnDefile,
+    necromancer: CHARACTER_FLAVOR.NECROMANCER.questBtnExhume,
   };
   return map[charId] ?? CHARACTER_FLAVOR.FIGHTER.questBtn;
 }
@@ -225,16 +225,28 @@ function buildArtisanStats(ctx: HeroStatsContext): HeroStat[] {
 
 function buildNecromancerStats(ctx: HeroStatsContext): HeroStat[] {
   const u = ctx.upgrades;
-  const extendedRitualLevel = u.level('EXTENDED_RITUAL');
-  const darkPactLevel       = u.level('DARK_PACT');
+  const extendedRitualLevel  = u.level('EXTENDED_RITUAL');
+  const darkPactLevel        = u.level('DARK_PACT');
+  const speakWithDeadLevel   = u.level('SPEAK_WITH_DEAD');
+  const fortifiedChalkLevel  = u.level('FORTIFIED_CHALK');
+  const graveLootingLevel    = u.level('GRAVE_LOOTING');
   const activeLabel         = ctx.necromancerActiveButton === 'defile' ? 'Defile' : 'Ward';
   const switchMin           = calcNecromancerSwitchMin(extendedRitualLevel);
   const switchMax           = calcNecromancerSwitchMax(extendedRitualLevel);
+  const boneMax             = calcNecromancerBoneYield(speakWithDeadLevel);
+  const brimstoneMax        = calcNecromancerBrimstoneYield(fortifiedChalkLevel);
+  const graveLootChance     = calcGraveLootingChance(graveLootingLevel);
 
-  return [
-    { label: HERO_STATS_FLAVOR.NECROMANCER.BONE_PER_CLICK,  value: `${calcNecromancerBoneYield()}` },
-    { label: HERO_STATS_FLAVOR.NECROMANCER.BRIMSTONE_PER_W, value: `${calcNecromancerBrimstoneYield()}` },
+  const stats: HeroStat[] = [
+    { label: HERO_STATS_FLAVOR.NECROMANCER.BONE_PER_CLICK,  value: boneMax === 1 ? '1' : `1 - ${boneMax}` },
+    { label: HERO_STATS_FLAVOR.NECROMANCER.BRIMSTONE_PER_W, value: brimstoneMax === 1 ? '1' : `1 - ${brimstoneMax}` },
     { label: HERO_STATS_FLAVOR.NECROMANCER.WARD_XP_COST,    value: `${calcNecromancerWardXpCost(darkPactLevel)}` },
     { label: HERO_STATS_FLAVOR.NECROMANCER.SWITCH_RANGE,    value: `${switchMin} - ${switchMax}` },
   ];
+
+  if (graveLootingLevel > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.NECROMANCER.GRAVE_LOOT_CHANCE, value: `${graveLootChance}%` });
+  }
+
+  return stats;
 }

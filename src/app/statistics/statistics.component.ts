@@ -45,7 +45,7 @@ export class StatisticsComponent implements OnInit, OnDestroy {
   /** Currency IDs in the same order as the wallet panel. */
   readonly currencyIds: string[] = this.wallet.currencies.map(c => c.id);
 
-  readonly characterIds = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief', 'artisan'];
+  readonly characterIds = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief', 'artisan', 'necromancer'];
   readonly characterNames: Record<string, string> = {
     fighter: CHARACTER_FLAVOR.FIGHTER.name,
     ranger: CHARACTER_FLAVOR.RANGER.name,
@@ -53,6 +53,7 @@ export class StatisticsComponent implements OnInit, OnDestroy {
     culinarian: CHARACTER_FLAVOR.CULINARIAN.name,
     thief: CHARACTER_FLAVOR.THIEF.name,
     artisan: CHARACTER_FLAVOR.ARTISAN.name,
+    necromancer: CHARACTER_FLAVOR.NECROMANCER.name,
   };
 
   ngOnInit(): void {
@@ -189,7 +190,8 @@ export class StatisticsComponent implements OnInit, OnDestroy {
       || (this.snap.apothecaryMinigame.dilutionSuccesses + this.snap.apothecaryMinigame.dilutionFailures) > 0
       || (this.snap.culinarianMinigame.wins + this.snap.culinarianMinigame.losses) > 0
       || (this.snap.thiefMinigame.successfulHeists + this.snap.thiefMinigame.failedHeists) > 0
-      || this.snap.artisanMinigame.appraisalsCompleted > 0;
+      || this.snap.artisanMinigame.appraisalsCompleted > 0
+      || this.snap.necromancerMinigame.ritualsCompleted > 0;
   }
 
   get hasNoStats(): boolean {

@@ -32,6 +32,7 @@ export const CURRENCY_FLAVOR = {
   'kobold-feather':      { name: 'Kobold Feathers',           symbol: 'ϡ',  color: '#c5b3aa' },
   'bone':                { name: 'Bones',                     symbol: '🕱',  color: '#d7d8e6' },
   'brimstone':           { name: 'Brimstone',                 symbol: '🜏',  color: '#ffbd2b' },
+  'soul-stone':          { name: 'Soul Stone',                symbol: '◈',  color: '#8f4fff' },
 
 } as const;
 
@@ -77,7 +78,8 @@ export const UPGRADE_FLAVOR = {
   STRONGER_KOBOLDS:     { name: 'Stronger Kobolds',          desc: 'They grow...' },
   FIRST_STRIKE:         { name: 'First Strike',              desc: 'The Fighter attacks before the enemy. Let the slaughter begin!' },
   GILDED_BLADE:         { name: 'Gilded Blade',              desc: '+1% secondary drop chance and +1% gold per kill per level' },
-  POTION_MIND_READING:  { name: 'Potion of Mind Reading',    desc: '+10% chance per level to roll attack damage twice and take the higher result' },
+  POTION_FORESIGHT:  { name: 'Potion of Foresight',          desc: '+10% chance per level to roll attack damage twice and take the higher result' },
+  CATS_SWIFTNESS:    { name: "Potion of Cat's Swiftness",    desc: '-5% kobold respawn delay per level (up to -50% at max)' },
 
   // Ranger
   MORE_HERBS:           { name: 'More Herbs',                desc: '+3% chance to double base herbs' },
@@ -111,6 +113,7 @@ export const UPGRADE_FLAVOR = {
   WHOLESALE_SPICES:     { name: 'Wholesale Spices',          desc: '+1 spice per click, purchased at a discount!' },
   WASTE_NOT:            { name: 'Waste Not',                 desc: '+1 hearty meal per unused guess on a successful recipe' },
   LARGER_COOKBOOKS:     { name: 'Ancient Cookbook',          desc: 'The first ingredient in the recipe is always revealed at the start' },
+  COOKBOOK_ANNOTATIONS: { name: 'Cookbook Annotations',      desc: 'Each round begins with a free guess of one of every ingredient in order (Herb → Meat → Tongue → Spice)' },
 
   // Thief
   METICULOUS_PLANNING:      { name: 'Meticulous Planning',       desc: '+1% thieving success chance per level' },
@@ -136,6 +139,14 @@ export const UPGRADE_FLAVOR = {
   EXTENDED_RITUAL:          { name: 'Extended Ritual',           desc: '+2 clicks before switching abilities per level' },
   DARK_PACT:                { name: 'Dark Pact',                 desc: '-2 XP cost per Ward click per level (min 1)' },
   AUGURY:                   { name: 'Augury',                    desc: 'Reveals how many clicks remain before the active ability switches' },
+  SPEAK_WITH_DEAD:          { name: 'Potion of Speak With Dead', desc: '+1 max bone yield per Defile per level' },
+  FORTIFIED_CHALK:          { name: 'Fortified Chalk',           desc: '+1 max brimstone yield per Ward per level' },
+  GRAVE_LOOTING:            { name: 'Grave Looting',             desc: '+5% chance per level to find bonus loot (Gold, Gems, or Jewelry) while exhuming' },
+  PERFECT_TRANSMUTATION:    { name: 'Perfect Transmutation',     desc: '+2 Soul Stones per level when completing a ritual with 100% path efficiency' },
+  DEMONIC_KNOWLEDGE:        { name: 'Demonic Knowledge',         desc: 'Reveals a random hint line from the optimal path at the start of each ritual' },
+  FIND_FAMILIAR:            { name: 'Find Familiar',             desc: 'Summon a spectral familiar for each hero button. Feed it Soul Stones for temporary +1 jack power' },
+  CONCENTRATED_SOULS:       { name: 'Concentrated Souls',        desc: 'Each Soul Stone fed to a familiar grants an additional +15s of familiar time per level' },
+  VAULT_OF_SOULS:           { name: 'Vault of Souls',            desc: 'Increases the maximum familiar time cap by 5 minutes per level' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
   RELIC_FIGHTER:    { name: 'Crown of Hireling Command',          desc: 'Jacks also generate hireling gold — each Jack earns your full passive gold/sec as a bonus' },
@@ -289,7 +300,7 @@ export const CHARACTER_FLAVOR = {
   NECROMANCER: {
     name: 'Necromancer',
     desc: 'A scholar of the forbidden arts. He commands the boundary between life and death, cycling between desecration and warding.',
-    questBtnDefile: 'Defile',
+    questBtnExhume: 'Exhume',
     questBtnWard: 'Ward',
   },
 } as const;
@@ -319,6 +330,10 @@ export const MINIGAME_FLAVOR = {
   ARTISAN: {
     name: 'Faceting',
     desc: 'Appraise raw gemstones and\npick the finest jewel.',
+  },
+  NECROMANCER: {
+    name: 'Well of Souls',
+    desc: 'Draw the binding circle.\nShortest path wins.',
   },
 } as const;
 
@@ -398,6 +413,7 @@ export const HERO_STATS_FLAVOR = {
     BRIMSTONE_PER_W:  'Brimstone Per Ward :',
     WARD_XP_COST:     'Ward XP Cost   :',
     SWITCH_RANGE:     'Switch Range   :',
+    GRAVE_LOOT_CHANCE:'Grave Loot     :',
   },
 } as const;
 
@@ -453,6 +469,13 @@ export const MINIGAME_MSG = {
     DOUBLE_DIP_HIT:  'Double Dip! The runner-up was found too!',
     DOUBLE_DIP_MISS: 'Fine eye for the best, but the runner-up slipped away.',
     CLOSE_ENOUGH_WIN: 'Close enough! The runner-up gem will do.',
+  },
+
+  NECROMANCER: {
+    IDLE:         'Connect the nodes to complete the binding circle.',
+    ROUND_START:  (nodes: number) => `${nodes} soul anchors placed. Draw the shortest path. Do not repeat yourself.`,
+    COMPLETE:     (pct: number) => `Path efficiency: ${pct}%`,
+    PERFECT:      'Perfect binding! The spirits are yours!',
   },
 
 };

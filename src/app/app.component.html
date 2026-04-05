@@ -10,6 +10,7 @@
     [slowBladeLevel]="upgrades.level('SLOW_BLADE')"
     [gildedBladeLevel]="upgrades.level('GILDED_BLADE')"
     [mindReadingLevel]="upgrades.level('POTION_MIND_READING')"
+    [catSwiftnessLevel]="upgrades.level('CATS_SWIFTNESS')"
     [shortRestLevel]="upgrades.level('SHORT_REST')"
     [shortRestEnabled]="shortRestEnabled"
     (shortRestEnabledChange)="shortRestEnabled = $event"
@@ -31,6 +32,7 @@
     (synapticalEnabledChange)="synapticalEnabled = $event"
     [wasteNotLevel]="upgrades.level('WASTE_NOT')"
     [largerCookbooksLevel]="upgrades.level('LARGER_COOKBOOKS')"
+    [cookbookAnnotationsLevel]="upgrades.level('COOKBOOK_ANNOTATIONS')"
     [vanishingPowderLevel]="upgrades.level('VANISHING_POWDER')"
     [potionCatEarsLevel]="upgrades.level('POTION_CATS_EARS')"
     [bagOfHoldingLevel]="upgrades.level('BAG_OF_HOLDING')"
@@ -162,6 +164,29 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     [disabled]="getJackCount(activeCharacterInfo.id) <= 0"
                     (click)="deallocateAllJacks(activeCharacterInfo.id)">[NONE]</button>
           </ng-template>
+        </div>
+
+        <!-- ══ Familiar column — soul-stone-fuelled temp jacks ══ -->
+        <div class="familiar-column" *ngIf="familiarUnlocked && jacksVisible && activeCharacterInfo">
+          <ng-container *ngFor="let fk of familiarKeys">
+            <div class="familiar-box">
+              <div class="familiar-label">{{ familiarLabel(fk) }}</div>
+              <div class="familiar-bar-track">
+                <div class="familiar-bar-fill" [style.width.%]="getFamiliarPct(fk)"></div>
+              </div>
+              <div class="familiar-time" [class.familiar-active]="isFamiliarActive(fk)">
+                {{ formatFamiliarTime(fk) }}
+              </div>
+              <div class="familiar-btn-row">
+                <button class="familiar-btn" [disabled]="!canFeedFamiliar(fk)" (click)="feedFamiliar(fk)">
+                  +1<span class="familiar-cost-sym" style="color: #8f4fff;">◈</span>
+                </button>
+                <button class="familiar-btn" [disabled]="!canFeedFamiliar(fk)" (click)="feedFamiliarMax(fk)">
+                  MAX
+                </button>
+              </div>
+            </div>
+          </ng-container>
         </div>
 
         <div class="hero-area">

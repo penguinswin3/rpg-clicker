@@ -41,6 +41,8 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
   @Input() wasteNotLevel = 0;
   /** Level of the Larger Cookbooks upgrade — reveals the first ingredient at round start. */
   @Input() largerCookbooksLevel = 0;
+  /** Level of the Cookbook Annotations upgrade — auto-submits one-of-each guess at round start. */
+  @Input() cookbookAnnotationsLevel = 0;
 
   // ── Wallet-synced ─────────────────────────
   herb         = 0;
@@ -126,6 +128,23 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
     this.lost  = false;
     this.roundActive = true;
     this.dragIngredient = null;
+
+    // Cookbook Annotations: auto-submit one-of-each guess before the player begins.
+    // The annotation is always [herb, beast, kobold-tongue, spice] — one of every
+    // ingredient in INGREDIENTS order — and counts as one used guess.
+    if (this.cookbookAnnotationsLevel >= 1) {
+      const annotationGuess = [...this.INGREDIENTS] as string[]; // one of each, in order
+      const annotationPegs  = this.evaluate(annotationGuess);
+      this.guessHistory.push({ ingredients: annotationGuess, pegs: annotationPegs });
+      this.guessesUsed++;
+      // Check for the (very unlikely) case that the annotation is a perfect match
+      if (annotationPegs.every(p => p === 'green')) {
+        this.onWin();
+        this.log.log('Cookbook Annotations: the annotated guess was a perfect match!', 'success');
+        this.cdr.markForCheck();
+        return;
+      }
+    }
 
     // Larger Cookbooks: reveal and lock the first ingredient
     if (this.largerCookbooksLevel >= 1) {

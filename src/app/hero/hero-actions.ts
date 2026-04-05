@@ -23,7 +23,7 @@ import {
   calcArtisanTreasureCost,
   calcAutoGoldPerSecond,
   calcNecromancerBoneYield, calcNecromancerWardXpCost,
-  calcNecromancerBrimstoneYield,
+  calcNecromancerBrimstoneYield, calcGraveLootingChance,
 } from './yield-helpers';
 
 // ── Contexts ────────────────────────────────────────────────
@@ -264,22 +264,48 @@ function clickNecromancer(ctx: HeroActionContext): void {
 }
 
 function clickNecromancerDefile(ctx: HeroActionContext): void {
-  const boneYield = calcNecromancerBoneYield();
+  const u = ctx.upgrades;
+  const boneYield = randInt(1, calcNecromancerBoneYield(u.level('SPEAK_WITH_DEAD')));
   ctx.wallet.add('bone', boneYield);
   ctx.wallet.add('xp', 1);
   ctx.stats.trackCurrencyGain('bone', boneYield);
   ctx.stats.trackCurrencyGain('xp', 1);
-  ctx.log.log(`You defiled the earth and unearthed bones. (${cur('bone', boneYield)}, ${cur('xp', 1)})`);
+
+  // Grave Looting: chance to find bonus loot (Gold, Gems, or Jewelry)
+  const graveLootChance = calcGraveLootingChance(u.level('GRAVE_LOOTING'));
+  if (graveLootChance > 0 && rollChance(graveLootChance)) {
+    const roll = Math.random();
+    if (roll < YIELDS.GRAVE_LOOTING_GOLD_WEIGHT) {
+      const gold = YIELDS.GRAVE_LOOTING_GOLD_AMOUNT;
+      ctx.wallet.add('gold', gold);
+      ctx.stats.trackCurrencyGain('gold', gold);
+      ctx.log.log(`You defiled the earth and unearthed bones — and found buried gold! (${cur('bone', boneYield)}, ${cur('gold', gold)}, ${cur('xp', 1)})`, 'success');
+    } else if (roll < YIELDS.GRAVE_LOOTING_GOLD_WEIGHT + YIELDS.GRAVE_LOOTING_GEM_WEIGHT) {
+      const gems = YIELDS.GRAVE_LOOTING_GEM_AMOUNT;
+      ctx.wallet.add('gemstone', gems);
+      ctx.stats.trackCurrencyGain('gemstone', gems);
+      ctx.log.log(`You defiled the earth and unearthed bones — adorned with gemstones! (${cur('bone', boneYield)}, ${cur('gemstone', gems)}, ${cur('xp', 1)})`, 'success');
+    } else {
+      const jewelry = YIELDS.GRAVE_LOOTING_JEWELRY_AMOUNT;
+      ctx.wallet.add('jewelry', jewelry);
+      ctx.stats.trackCurrencyGain('jewelry', jewelry);
+      ctx.log.log(`You defiled the earth and unearthed bones — and uncovered jewelry! (${cur('bone', boneYield)}, ${cur('jewelry', jewelry)}, ${cur('xp', 1)})`, 'success');
+    }
+  } else {
+    ctx.log.log(`You defiled the earth and unearthed bones. (${cur('bone', boneYield)}, ${cur('xp', 1)})`);
+  }
 }
 
 function clickNecromancerWard(ctx: HeroActionContext): void {
-  const xpCost = calcNecromancerWardXpCost(ctx.upgrades.level('DARK_PACT'));
+  const u = ctx.upgrades;
+  const xpCost = calcNecromancerWardXpCost(u.level('DARK_PACT'));
   if (!ctx.wallet.canAfford('xp', xpCost)) {
     const have = Math.floor(ctx.wallet.get('xp'));
     ctx.log.log(`Not enough XP to ward. Need ${cur('xp', xpCost, '')}, have ${cur('xp', have, '')}.`, 'warn');
     return;
   }
-  const brimstoneYield = calcNecromancerBrimstoneYield();
+  const brimstoneMax   = calcNecromancerBrimstoneYield(u.level('FORTIFIED_CHALK'));
+  const brimstoneYield = randInt(1, brimstoneMax);
   ctx.wallet.remove('xp', xpCost);
   ctx.wallet.add('brimstone', brimstoneYield);
   ctx.stats.trackCurrencyGain('brimstone', brimstoneYield);
@@ -482,11 +508,32 @@ function jackNecromancerDefile(ctx: JackAutoClickContext): void {
   // With relic: always fire.
   if (!hasRelic && ctx.necromancerActiveButton() !== 'defile') return;
 
-  const boneYield = calcNecromancerBoneYield() * (hasRelic ? 2 : 1);
+  const u = ctx.upgrades;
+  const boneMax   = calcNecromancerBoneYield(u.level('SPEAK_WITH_DEAD'));
+  const boneYield = randInt(1, boneMax) * (hasRelic ? 2 : 1);
   ctx.wallet.add('bone', boneYield);
   ctx.wallet.add('xp', 1);
   ctx.stats.trackCurrencyGain('bone', boneYield);
   ctx.stats.trackCurrencyGain('xp', 1);
+
+  // Grave Looting: chance for bonus loot
+  const graveLootChance = calcGraveLootingChance(u.level('GRAVE_LOOTING'));
+  if (graveLootChance > 0 && rollChance(graveLootChance)) {
+    const roll = Math.random();
+    if (roll < YIELDS.GRAVE_LOOTING_GOLD_WEIGHT) {
+      const gold = YIELDS.GRAVE_LOOTING_GOLD_AMOUNT;
+      ctx.wallet.add('gold', gold);
+      ctx.stats.trackCurrencyGain('gold', gold);
+    } else if (roll < YIELDS.GRAVE_LOOTING_GOLD_WEIGHT + YIELDS.GRAVE_LOOTING_GEM_WEIGHT) {
+      const gems = YIELDS.GRAVE_LOOTING_GEM_AMOUNT;
+      ctx.wallet.add('gemstone', gems);
+      ctx.stats.trackCurrencyGain('gemstone', gems);
+    } else {
+      const jewelry = YIELDS.GRAVE_LOOTING_JEWELRY_AMOUNT;
+      ctx.wallet.add('jewelry', jewelry);
+      ctx.stats.trackCurrencyGain('jewelry', jewelry);
+    }
+  }
 
   if (ctx.isJackStarved('necromancer-defile')) ctx.setJackStarved('necromancer-defile', false);
 
@@ -513,7 +560,8 @@ function jackNecromancerWard(ctx: JackAutoClickContext): void {
     ctx.onPerSecondUpdate();
   }
 
-  const brimstoneYield = calcNecromancerBrimstoneYield() * (hasRelic ? 2 : 1);
+  const brimstoneMax   = calcNecromancerBrimstoneYield(ctx.upgrades.level('FORTIFIED_CHALK'));
+  const brimstoneYield = randInt(1, brimstoneMax) * (hasRelic ? 2 : 1);
   ctx.wallet.remove('xp', xpCost);
   ctx.wallet.add('brimstone', brimstoneYield);
   ctx.stats.trackCurrencyGain('brimstone', brimstoneYield);

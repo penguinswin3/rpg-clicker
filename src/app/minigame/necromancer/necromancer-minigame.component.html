@@ -1,0 +1,214 @@
+<div class="necro-mg">
+
+  <!-- ══ Idle entry screen ═══════════════════ -->
+  <ng-container *ngIf="!ritualActive && !ritualDone">
+    <div class="idle-block">
+      <div class="idle-desc">
+        Draw the shortest binding circle through all soul anchors.
+      </div>
+
+      <div class="cost-list">
+        <span class="cost-item" *ngFor="let c of costs">
+          {{ c.amount }}<span [style.color]="currencyFlavor[c.id].color">{{ currencyFlavor[c.id].symbol }}</span>
+        </span>
+      </div>
+
+      <button class="ritual-btn" [disabled]="!canStart" (click)="startRitual()">
+        [ BEGIN RITUAL ]
+      </button>
+
+      <div class="cost-warn" *ngIf="!canStart">
+        Insufficient resources
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ══ Active ritual ═══════════════════════ -->
+  <ng-container *ngIf="ritualActive && !ritualDone">
+
+    <!-- Spell circle SVG -->
+    <div class="circle-container">
+      <svg [attr.viewBox]="'0 0 ' + VB + ' ' + VB" class="circle-svg">
+
+        <defs>
+          <!-- Wave + glow filter for path lines -->
+          <filter id="path-fx" x="-40%" y="-40%" width="180%" height="180%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.018 0.055"
+                          numOctaves="2" seed="7" result="noise">
+              <animate attributeName="seed" values="7;80;7" dur="6s" repeatCount="indefinite"/>
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5"
+                               xChannelSelector="R" yChannelSelector="G" result="wavy"/>
+            <feGaussianBlur in="wavy" stdDeviation="1.6" result="glow"/>
+            <feMerge>
+              <feMergeNode in="glow"/>
+              <feMergeNode in="wavy"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- Outer ritual ring -->
+        <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="cfg.CIRCLE_RADIUS" class="ritual-ring" />
+
+        <!-- Center gemstone -->
+        <text [attr.x]="CX" [attr.y]="CY + 1" class="center-gem"
+              [style.fill]="currencyFlavor['gemstone'].color">
+          {{ currencyFlavor['gemstone'].symbol }}
+        </text>
+
+        <!-- Demonic Knowledge hint lines (faint optimal-path edges shown before drawing) -->
+        <line *ngFor="let seg of hintLines"
+              [attr.x1]="seg.x1" [attr.y1]="seg.y1"
+              [attr.x2]="seg.x2" [attr.y2]="seg.y2"
+              class="path-hint" />
+
+        <!-- Player path lines (brimstone-colored, wavy-glowing) -->
+        <g filter="url(#path-fx)">
+          <line *ngFor="let seg of pathLines"
+                [attr.x1]="seg.x1" [attr.y1]="seg.y1"
+                [attr.x2]="seg.x2" [attr.y2]="seg.y2"
+                class="path-line" />
+        </g>
+
+        <!-- Nodes -->
+        <g *ngFor="let node of nodes; let i = index"
+           class="node-group"
+           [class.node-selected]="node.selected"
+           [class.node-closing]="isClosingTarget(i)"
+           [class.node-disabled]="!isNodeSelectable(i)"
+           (click)="selectNode(i)"
+           [style.cursor]="isNodeSelectable(i) ? 'pointer' : 'not-allowed'">
+
+          <!-- Node background circle -->
+          <circle [attr.cx]="node.pos.x" [attr.cy]="node.pos.y" r="7"
+                  class="node-bg"
+                  [class.selected]="node.selected"
+                  [class.closing-target]="isClosingTarget(i)"
+                  [class.disabled]="!isNodeSelectable(i)" />
+
+          <!-- Node symbol -->
+          <text [attr.x]="node.pos.x" [attr.y]="node.pos.y + 1"
+                class="node-symbol"
+                [style.fill]="node.color">
+            {{ node.symbol }}
+          </text>
+
+          <!-- Order label (small number above node) -->
+          <text *ngIf="node.order > 0"
+                [attr.x]="node.pos.x"
+                [attr.y]="node.pos.y - 9"
+                class="node-order">
+            {{ node.order }}
+          </text>
+        </g>
+
+      </svg>
+    </div>
+
+    <!-- Status message -->
+    <div class="ritual-msg" [ngClass]="msgClass">{{ lastMsg }}</div>
+
+    <!-- Progress: N of TOTAL selected -->
+    <div class="progress-row">
+      <span class="prog-label">Anchors:</span>
+      <span class="prog-count">{{ selectedPath.length }} / {{ nodes.length }}</span>
+      <span class="prog-hint" *ngIf="selectedPath.length === nodes.length"> &larr; Return to start!</span>
+    </div>
+
+  </ng-container>
+
+  <!-- ══ Ritual result ═══════════════════════ -->
+  <ng-container *ngIf="ritualDone">
+
+    <!-- Show the completed path -->
+    <div class="circle-container" (click)="tryAgain()">
+      <svg [attr.viewBox]="'0 0 ' + VB + ' ' + VB" class="circle-svg">
+
+        <defs>
+          <filter id="path-fx-done" x="-40%" y="-40%" width="180%" height="180%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.018 0.055"
+                          numOctaves="2" seed="7" result="noise">
+              <animate attributeName="seed" values="7;80;7" dur="6s" repeatCount="indefinite"/>
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5"
+                               xChannelSelector="R" yChannelSelector="G" result="wavy"/>
+            <feGaussianBlur in="wavy" stdDeviation="1.6" result="glow"/>
+            <feMerge>
+              <feMergeNode in="glow"/>
+              <feMergeNode in="wavy"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="cfg.CIRCLE_RADIUS" class="ritual-ring" />
+
+        <!-- Center gemstone -->
+        <text [attr.x]="CX" [attr.y]="CY + 1" class="center-gem"
+              [style.fill]="currencyFlavor['gemstone'].color">
+          {{ currencyFlavor['gemstone'].symbol }}
+        </text>
+
+        <!-- Optimal path overlay (shown when efficiency < 100%) -->
+        <line *ngFor="let seg of optimalPathLines"
+              [attr.x1]="seg.x1" [attr.y1]="seg.y1"
+              [attr.x2]="seg.x2" [attr.y2]="seg.y2"
+              class="path-optimal" />
+
+        <!-- Completed player path lines (brimstone-colored, wavy-glowing) -->
+        <g filter="url(#path-fx-done)">
+          <line *ngFor="let seg of pathLines"
+                [attr.x1]="seg.x1" [attr.y1]="seg.y1"
+                [attr.x2]="seg.x2" [attr.y2]="seg.y2"
+                class="path-line path-done" />
+        </g>
+
+        <!-- Nodes -->
+        <g *ngFor="let node of nodes; let i = index" class="node-group node-selected">
+          <circle [attr.cx]="node.pos.x" [attr.cy]="node.pos.y" r="7" class="node-bg selected" />
+          <text [attr.x]="node.pos.x" [attr.y]="node.pos.y + 1"
+                class="node-symbol" [style.fill]="node.color">
+            {{ node.symbol }}
+          </text>
+          <text *ngIf="node.order > 0"
+                [attr.x]="node.pos.x" [attr.y]="node.pos.y - 9"
+                class="node-order">
+            {{ node.order }}
+          </text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Efficiency bar -->
+    <div class="efficiency-block">
+      <div class="eff-label">PATH EFFICIENCY</div>
+      <div class="eff-bar-track">
+        <div class="eff-bar-fill" [style.width.%]="efficiencyPct"
+             [style.background]="efficiencyColor"></div>
+      </div>
+      <div class="eff-pct" [style.color]="efficiencyColor">{{ efficiencyPct }}%</div>
+    </div>
+
+    <!-- Reward summary -->
+    <div class="result-msg" [ngClass]="msgClass">{{ lastMsg }}</div>
+    <div class="result-rewards" *ngIf="soulStonesAwarded > 0">
+      <span class="reward-label">Yield: </span>
+      {{ soulStonesAwarded }}<span [style.color]="currencyFlavor['soul-stone'].color">{{ currencyFlavor['soul-stone'].symbol }}</span>,
+      {{ xpAwarded }}<span [style.color]="currencyFlavor['xp'].color">{{ currencyFlavor['xp'].symbol }}</span>
+    </div>
+    <div class="result-rewards result-zero" *ngIf="soulStonesAwarded === 0">
+      <span class="reward-label">Yield: </span>
+      0<span [style.color]="currencyFlavor['soul-stone'].color">{{ currencyFlavor['soul-stone'].symbol }}</span>
+      — path too inefficient
+    </div>
+
+    <!-- Try again -->
+    <button class="ritual-btn" [disabled]="!canStart" (click)="startRitual()">
+      [ RITUAL AGAIN ]
+    </button>
+    <div class="cost-warn" *ngIf="!canStart">
+      Insufficient resources
+    </div>
+  </ng-container>
+
+</div>
+

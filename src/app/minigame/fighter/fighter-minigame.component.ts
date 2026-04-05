@@ -62,6 +62,8 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   @Input() gildedBladeLevel = 0;
   /** Potion of Mind Reading level — each level adds 10% chance to roll attack damage twice and take higher. */
   @Input() mindReadingLevel = 0;
+  /** Potion of Cat's Swiftness level — each level reduces the kobold respawn delay by 5%. */
+  @Input() catSwiftnessLevel = 0;
   /** Previously-saved combat state to restore on init. */
   @Input() savedState: FighterCombatState | null = null;
   /** Emitted whenever combat state changes (HP, defeated, rest countdown). */
@@ -106,6 +108,11 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   /** Effective rest duration after applying any upgrade reductions. */
   get effectiveRestSec(): number {
     return Math.max(0, Math.floor(FIGHTER_MG.RECOVERY_TIME_MS / 1000) - this.recoveryReductionSec);
+  }
+
+  /** Effective spawn delay after applying Cat's Swiftness reduction (5% per level, min 1 ms). */
+  get effectiveSpawnDelayMs(): number {
+    return Math.max(1, Math.round(FIGHTER_MG.SPAWN_DELAY_MS * (1 - this.catSwiftnessLevel * 0.05)));
   }
 
   // ── Enemy ─────────────────────────────────
@@ -525,7 +532,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       if (this.firstStrikeLevel >= 1) {
         this.applyFirstStrike();
       }
-    }, FIGHTER_MG.SPAWN_DELAY_MS);
+    }, this.effectiveSpawnDelayMs);
   }
 
   /**

@@ -44,6 +44,8 @@ export interface UpgradeState {
   necromancerActiveButton?: 'defile' | 'ward';
   /** How many clicks remain before the necromancer button switches. */
   necromancerClicksRemaining?: number;
+  /** Familiar absolute-expiry timestamps (ms) per jack allocation key. */
+  familiarTimers?: Record<string, number>;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

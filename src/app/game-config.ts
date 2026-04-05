@@ -37,10 +37,14 @@ export interface UpgradeGates {
   readonly requiresSynapticalPotions?: boolean;
   /** Hide until the Double Dip minigame upgrade has been purchased. */
   readonly requiresDoubleDip?: boolean;
+  /** Hide until the Find Familiar minigame upgrade has been purchased. */
+  readonly requiresFindFamiliar?: boolean;
   /** Hide until the player has received at least one Relic. */
   readonly requiresRelic?: boolean;
   /** Hide until the player has obtained at least one Kobold Fang. */
   readonly requiresFang?: boolean;
+  /** Hide until the player has obtained at least one Kobold Feather. */
+  readonly requiresFeather?: boolean;
   /** Hide until the player has obtained at least one Dossier. */
   readonly requiresDossier?: boolean;
   /** Minimum XP required before the card is shown. */
@@ -138,6 +142,8 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'kobold-feather',     base: 25,   fromCount: 20, untilCount: 21 },  // Jack 21
       { currency: 'bone',               base: 25,   fromCount: 21, untilCount: 22 },  // Jack 22
       { currency: 'brimstone',          base: 25,   fromCount: 22, untilCount: 23 },  // Jack 23
+      { currency: 'xp',                 base: 50000,   fromCount: 23, untilCount: 24 },  // Jack 24
+      { currency: 'soul-stone',         base: 250,   fromCount: 24, untilCount: 25 },  // Jack 25
     ],
   },
 
@@ -308,6 +314,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'synaptical-potion', base: 2,  scale: 1.5 },
       { currency: 'kobold-brain',      base: 10, scale: 1.4 },
     ] },
+  { id: 'CATS_SWIFTNESS', characterId: 'fighter', category: 'minigame', max: 10,
+    gates: { requiresFeather: true },
+    costs: [
+      { currency: 'concentrated-potion', base: 5,  scale: 1.6 },
+      { currency: 'kobold-feather',      base: 8,  scale: 1.6 },
+    ] },
 
   // ── Ranger — standard ────────────────────────────────────────
   { id: 'MORE_HERBS',      characterId: 'ranger', category: 'standard', max: 100,
@@ -411,6 +423,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'hearty-meal', base: 15,      scale: 1.0 },
       { currency: 'dossier',     base: 2_500,   scale: 1.0 },
     ] },
+  { id: 'COOKBOOK_ANNOTATIONS', characterId: 'culinarian', category: 'minigame', max: 1,
+    gates: { requiresCulinarian: true },
+    costs: [
+      { currency: 'dossier',         base: 100_000, scale: 1.0 },
+      { currency: 'kobold-feather',  base: 50,      scale: 1.0 },
+    ] },
 
   // ── Thief — standard ─────────────────────────────────────────
   { id: 'METICULOUS_PLANNING', characterId: 'thief', category: 'standard', max: 50,
@@ -454,6 +472,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'bone',                base: 15000,  scale: 1.0, fromLevel: 6, untilLevel: 7 },
       { currency: 'brimstone',           base: 15000,  scale: 1.0, fromLevel: 6, untilLevel: 7 },
       { currency: 'soul-stone',          base: 500,    scale: 1.0, fromLevel: 6, untilLevel: 7 },
+      { currency: 'xp',                  base: 50000,  scale: 1.0, fromLevel: 6, untilLevel: 7 },
     ] },
 
   // ── Thief — minigame ─────────────────────────────────────────
@@ -530,18 +549,71 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Necromancer — standard ──────────────────────────────────────
   { id: 'EXTENDED_RITUAL', characterId: 'necromancer', category: 'standard', max: 25,
     costs: [
-      { currency: 'bone',      base: 10, scale: 1.3 },
-      { currency: 'brimstone', base: 5,  scale: 1.3 },
+      { currency: 'bone',      base: 12, scale: 1.3 },
+      { currency: 'brimstone', base: 8,  scale: 1.3 },
     ] },
   { id: 'DARK_PACT', characterId: 'necromancer', category: 'standard', max: 12,
     costs: [
-      { currency: 'gold',      base: 50_000, scale: 1.4 },
-      { currency: 'brimstone', base: 10,     scale: 1.4 },
+      { currency: 'xp',        base: 100,    scale: 2 },
+      { currency: 'brimstone', base: 100,     scale: 1.6 },
     ] },
   { id: 'AUGURY', characterId: 'necromancer', category: 'standard', max: 1,
     costs: [
-      { currency: 'bone',      base: 50, scale: 1.0 },
-      { currency: 'brimstone', base: 25, scale: 1.0 },
+      { currency: 'kobold-brain',      base: 50, scale: 1.0 },
+      { currency: 'brimstone',         base: 50, scale: 1.0 },
+    ] },
+  { id: 'SPEAK_WITH_DEAD', characterId: 'necromancer', category: 'standard', max: 20,
+    costs: [
+      { currency: 'synaptical-potion', base: 5,  scale: 1.4  },
+      { currency: 'bone',              base: 50, scale: 1.35 },
+    ] },
+  { id: 'FORTIFIED_CHALK', characterId: 'necromancer', category: 'standard', max: 20,
+    costs: [
+      { currency: 'brimstone',  base: 20, scale: 1.35 },
+      { currency: 'pixie-dust', base: 10, scale: 1.35 },
+    ] },
+  { id: 'GRAVE_LOOTING', characterId: 'necromancer', category: 'standard', max: 5,
+    costs: [
+      { currency: 'dossier',     base: 500, scale: 1.5 },
+      { currency: 'hearty-meal', base: 25,  scale: 1.5 },
+    ] },
+
+  // ── Necromancer — minigame ────────────────────────────────────
+  { id: 'PERFECT_TRANSMUTATION', characterId: 'necromancer', category: 'minigame', max: 10,
+    gates: { requiresNecromancer: true },
+    costs: [
+      { currency: 'gemstone',   base: 20, scale: 1.8 },
+      { currency: 'brimstone',  base: 25, scale: 1.8 },
+      { currency: 'soul-stone', base: 20, scale: 1.8 },
+    ] },
+  { id: 'DEMONIC_KNOWLEDGE', characterId: 'necromancer', category: 'minigame', max: 2,
+    gates: { requiresNecromancer: true, requiresSynapticalPotions: true },
+    costs: [
+      { currency: 'soul-stone',        base: 75,  scale: 3.0 },
+      { currency: 'synaptical-potion', base: 10,   scale: 2.0 },
+      { currency: 'xp',                base: 500, scale: 2.0 },
+    ] },
+  { id: 'FIND_FAMILIAR', characterId: 'necromancer', category: 'minigame', max: 1,
+    gates: { requiresNecromancer: true },
+    costs: [
+      { currency: 'soul-stone', base: 50,    scale: 1.0 },
+      { currency: 'bone',       base: 200,   scale: 1.0 },
+      { currency: 'brimstone',  base: 200,   scale: 1.0 },
+      { currency: 'xp',         base: 1_000, scale: 1.0 },
+    ] },
+  { id: 'CONCENTRATED_SOULS', characterId: 'necromancer', category: 'minigame', max: 10,
+    gates: { requiresFindFamiliar: true },
+    costs: [
+      { currency: 'xp',         base: 200,  scale: 1.5 },
+      { currency: 'soul-stone', base: 5,    scale: 1.5 },
+      { currency: 'brimstone',  base: 30,   scale: 1.5 },
+    ] },
+  { id: 'VAULT_OF_SOULS', characterId: 'necromancer', category: 'minigame', max: 15,
+    gates: { requiresFindFamiliar: true },
+    costs: [
+      { currency: 'precious-metal', base: 5,   scale: 1.4 },
+      { currency: 'brimstone',      base: 75,  scale: 1.4 },
+      { currency: 'soul-stone',     base: 20,  scale: 1.4 },
     ] },
 
   // ── Apothecary — minigame ────────────────────────────────────
@@ -671,16 +743,32 @@ export const YIELDS = {
   ARTISAN_METAL_MAX: 5,
 
   // ── Necromancer ─────────────────────────────────────────────
-  /** Bones awarded per Defile click */
+  /** Bones awarded per Defile click (base, before Speak With Dead) */
   NECROMANCER_BONE_PER_CLICK: 1,
   /** XP consumed per Ward click (base, reduced by Dark Pact) */
   NECROMANCER_WARD_XP_COST: 25,
-  /** Brimstone awarded per Ward click */
+  /** Brimstone awarded per Ward click (base, before Fortified Chalk) */
   NECROMANCER_BRIMSTONE_PER_WARD: 1,
   /** Minimum clicks before the active button switches (base, increased by Extended Ritual) */
   NECROMANCER_SWITCH_MIN: 5,
   /** Maximum clicks before the active button switches (base, increased by Extended Ritual) */
   NECROMANCER_SWITCH_MAX: 15,
+
+  // Grave Looting — loot chance and distribution during Defile
+  /** Base % chance per Grave Looting level to find bonus loot during Defile */
+  GRAVE_LOOTING_CHANCE_PER_LEVEL: 5,
+  /** Probability (0–1) that bonus loot is Gold */
+  GRAVE_LOOTING_GOLD_WEIGHT:     0.50,
+  /** Probability (0–1) that bonus loot is Gemstones */
+  GRAVE_LOOTING_GEM_WEIGHT:      0.30,
+  /** Probability (0–1) that bonus loot is Jewelry */
+  GRAVE_LOOTING_JEWELRY_WEIGHT:  0.20,
+  /** Amount of Gold awarded when Grave Looting triggers */
+  GRAVE_LOOTING_GOLD_AMOUNT:     50,
+  /** Amount of Gemstones awarded when Grave Looting triggers */
+  GRAVE_LOOTING_GEM_AMOUNT:      1,
+  /** Amount of Jewelry awarded when Grave Looting triggers */
+  GRAVE_LOOTING_JEWELRY_AMOUNT:  1,
 
 } as const;
 
@@ -895,5 +983,41 @@ export const ARTISAN_MG = {
   GOOD_ENOUGH_THRESHOLD: 0.75,
   /** Bonus jewelry per qualifying gem when Good Enough is active. */
   GOOD_ENOUGH_JEWELRY_PER_GEM: 1,
+} as const;
+
+// ── Necromancer Minigame ─────────────────────────────────────
+export const NECROMANCER_MG = {
+  /** Gemstones consumed to start a ritual. */
+  GEMSTONE_COST: 10,
+  /** Bones consumed to start a ritual. */
+  BONE_COST: 25,
+  /** Brimstone consumed to start a ritual. */
+  BRIMSTONE_COST: 25,
+  /** Raw Beast Meat consumed to start a ritual. */
+  BEAST_COST: 100,
+  /** XP consumed to start a ritual. */
+  XP_COST: 50,
+  /** Number of resource nodes placed around the spell circle. */
+  NODE_COUNT: 7,
+  /** Radius of the node circle (percentage of the SVG viewBox half-width). */
+  CIRCLE_RADIUS: 38,
+  /** Base Soul Stone reward for a perfect path. */
+  BASE_REWARD: 10,
+  /** XP awarded per completed ritual. */
+  XP_REWARD: 10,
+} as const;
+
+// ── Familiar (Find Familiar upgrade) ─────────────────────────
+export const FAMILIAR = {
+  /** Seconds of familiar time granted per Soul Stone spent (base). */
+  TIME_PER_STONE_SEC: 30,
+  /** Additional seconds per Soul Stone granted per level of Concentrated Souls. */
+  CONCENTRATED_SOULS_BONUS_SEC: 15,
+  /** Maximum accumulated familiar time in seconds (base = 10 minutes). */
+  MAX_TIME_SEC: 600,
+  /** Additional seconds of max cap granted per level of Vault of Souls (5 minutes). */
+  VAULT_OF_SOULS_BONUS_SEC: 300,
+  /** Effective jack count added by each active familiar. */
+  JACKS_PER_FAMILIAR: 1,
 } as const;
 

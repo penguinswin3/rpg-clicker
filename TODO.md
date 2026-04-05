@@ -5,13 +5,7 @@
 - Lore Pages that give context about the character or the world they live in. Can be unlocked by doing certain things in minigames...
 
 ### More characters
-  - Necromancer
-    - Connect the dots spellcasting
-    - Generates Brimstone
-    - Minigame creates Soul Stones
-      - It consumes XP!
-    - Enables the fighter to harvest bones from the monsters (that have them lol)
-    - Soul Stones can be used to conjure temporary Jacks? familiars?
+
   - Mage
     - Memory matching / Simon Says
     - Reads pages from the intel
@@ -58,13 +52,16 @@
 ### Artisan 
 
 ### Necromancer
-
-
+- Conjure Familiar -minigame  costs bones, meat, and exp . Temporary jacks effectively. Locked behind an XP milestone. 
+  - Make soul stones that can be consumed to add temporary jacks 
 ## UI Tweaks
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
 - In game Changelog?
 - Cat's Eye % should not show up in the character stats till thatr upgrade is unlocked
 - Make the sparkle for the pixie dust show up faster 
+- Change the per second hover over to say Exhume instead of defile 
+- unify ranger fermentation vats into passives in the per seconds 
+- Fighter minigame shuld not have a horizontal scroll bar everything should fit in the minigame window width 
 
 ## Statistics
 - Split the appraisals out from the faceting stats section

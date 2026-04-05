@@ -9,6 +9,7 @@ import { RangerMinigameComponent } from './ranger/ranger-minigame.component';
 import { CulinarianMinigameComponent } from './culinarian/culinarian-minigame.component';
 import { ThiefMinigameComponent } from './thief/thief-minigame.component';
 import { ArtisanMinigameComponent } from './artisan/artisan-minigame.component';
+import { NecromancerMinigameComponent } from './necromancer/necromancer-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
 import { FighterCombatState } from '../options/save.service';
@@ -21,7 +22,7 @@ interface MinigameInfo {
 @Component({
   selector: 'app-minigame-panel',
   standalone: true,
-  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent],
+  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent, NecromancerMinigameComponent],
   templateUrl: './minigame-panel.component.html',
   styleUrls: ['./minigame-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +47,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() gildedBladeLevel = 0;
   /** Potion of Mind Reading level — forwarded to the fighter minigame. */
   @Input() mindReadingLevel = 0;
+  /** Potion of Cat's Swiftness level — forwarded to the fighter minigame. */
+  @Input() catSwiftnessLevel = 0;
   /** Short Rest level — forwarded to the fighter minigame. */
   @Input() shortRestLevel = 0;
   /** Whether Short Rest auto-heal is currently enabled — forwarded to the fighter minigame. */
@@ -88,6 +91,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() wasteNotLevel = 0;
   /** Larger Cookbooks level — forwarded to the culinarian minigame. */
   @Input() largerCookbooksLevel = 0;
+  /** Cookbook Annotations level — forwarded to the culinarian minigame. */
+  @Input() cookbookAnnotationsLevel = 0;
   /** Vanishing Powder level — forwarded to the thief minigame. */
   @Input() vanishingPowderLevel = 0;
   /** Potion of Cat's Ears level — forwarded to the thief minigame. */
@@ -149,6 +154,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     {
       characterId: 'artisan',
       title: MINIGAME_FLAVOR.ARTISAN.name,
+    },
+    {
+      characterId: 'necromancer',
+      title: MINIGAME_FLAVOR.NECROMANCER.name,
     },
   ];
 

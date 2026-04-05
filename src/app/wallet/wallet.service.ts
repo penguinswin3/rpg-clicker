@@ -67,6 +67,7 @@ export class WalletService {
     // ── Necromancer ───────────────────────────────────────────────────
     { id: 'bone',                ...CURRENCY_FLAVOR['bone'],                   requiredCharacterId: 'necromancer'   },
     { id: 'brimstone',           ...CURRENCY_FLAVOR['brimstone'],              requiredCharacterId: 'necromancer'   },
+    { id: 'soul-stone',          ...CURRENCY_FLAVOR['soul-stone'],             requiredCharacterId: 'necromancer', manualUnlock: true },
 
   ];
 
