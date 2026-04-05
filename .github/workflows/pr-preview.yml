@@ -79,8 +79,15 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Fetch and switch to the gh-pages branch.
-          git fetch origin gh-pages
-          git checkout gh-pages
+          # If the branch doesn't exist yet, create it as an empty orphan branch.
+          if git fetch origin gh-pages; then
+            git checkout gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf .
+            git commit --allow-empty -m "Initialize gh-pages branch [skip ci]"
+            git push origin gh-pages
+          fi
 
           # Replace the previous preview for this PR (if any) with the new build.
           rm -rf "${PREVIEW_DIR}"
@@ -146,12 +153,24 @@ jobs:
     if: github.event.action == 'closed'
 
     steps:
+      - name: Check whether gh-pages branch exists
+        id: check-branch
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "gh-pages branch does not exist – nothing to clean up."
+          fi
+
       - name: Checkout gh-pages branch
+        if: steps.check-branch.outputs.exists == 'true'
         uses: actions/checkout@v4
         with:
           ref: gh-pages
 
       - name: Remove preview directory
+        if: steps.check-branch.outputs.exists == 'true'
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
