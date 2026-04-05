@@ -82,6 +82,16 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     return Math.max(0, Math.min(100, APOTH_MG.DILUTION_BASE_CHANCE - this.dilutionMissPenalty + this.perfectClickBonus));
   }
 
+  /**
+   * Net modifier to dilution success chance relative to the base.
+   * Positive = bonus is outweighing the miss penalty.
+   * Negative = miss penalty is outweighing the bonus.
+   * Zero = no change from base (nothing shown in UI).
+   */
+  get dilutionNetModifier(): number {
+    return this.perfectClickBonus - this.dilutionMissPenalty;
+  }
+
   /** Total number of independent potion rolls per dilution: base 2 + 1 per Serial Dilution level. */
   get dilutionTotalRolls(): number {
     return 2 + this.serialDilutionLevel;

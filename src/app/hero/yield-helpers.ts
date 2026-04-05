@@ -225,3 +225,34 @@ export function expectedMetalPerAppraisalJack(catsPawLevel: number = 0, hasRelic
   return hasRelic ? calcArtisanMetalMax(catsPawLevel) : (YIELDS.ARTISAN_METAL_MIN + calcArtisanMetalMax(catsPawLevel)) / 2;
 }
 
+// ── Necromancer ─────────────────────────────────────────────
+
+/** Bones yielded per Defile click. */
+export function calcNecromancerBoneYield(): number {
+  return YIELDS.NECROMANCER_BONE_PER_CLICK;
+}
+
+/** XP cost per Ward click, reduced by Dark Pact (min 1). */
+export function calcNecromancerWardXpCost(darkPactLevel: number): number {
+  return Math.max(1, YIELDS.NECROMANCER_WARD_XP_COST - darkPactLevel * 2);
+}
+
+/** Brimstone yielded per Ward click. */
+export function calcNecromancerBrimstoneYield(): number {
+  return YIELDS.NECROMANCER_BRIMSTONE_PER_WARD;
+}
+
+/** Minimum clicks before the active necromancer button switches. */
+export function calcNecromancerSwitchMin(extendedRitualLevel: number): number {
+  return YIELDS.NECROMANCER_SWITCH_MIN + extendedRitualLevel * 2;
+}
+
+/** Maximum clicks before the active necromancer button switches. */
+export function calcNecromancerSwitchMax(extendedRitualLevel: number): number {
+  return YIELDS.NECROMANCER_SWITCH_MAX + extendedRitualLevel * 2;
+}
+
+/** Roll a random switch-click threshold for the necromancer. */
+export function rollNecromancerSwitchClicks(extendedRitualLevel: number): number {
+  return randInt(calcNecromancerSwitchMin(extendedRitualLevel), calcNecromancerSwitchMax(extendedRitualLevel));
+}

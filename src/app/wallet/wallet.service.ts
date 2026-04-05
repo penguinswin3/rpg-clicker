@@ -42,6 +42,7 @@ export class WalletService {
     { id: 'kobold-hair',          ...CURRENCY_FLAVOR['kobold-hair'],           requiredCharacterId: 'fighter',   manualUnlock: true },
     { id: 'kobold-fang',          ...CURRENCY_FLAVOR['kobold-fang'],           requiredCharacterId: 'fighter',   manualUnlock: true },
     { id: 'kobold-brain',         ...CURRENCY_FLAVOR['kobold-brain'],          requiredCharacterId: 'fighter',   manualUnlock: true },
+    { id: 'kobold-feather',       ...CURRENCY_FLAVOR['kobold-feather'],        requiredCharacterId: 'fighter',   manualUnlock: true },
 
     // ── Ranger ───────────────────────────────────────────────────────────────
     { id: 'herb',                 ...CURRENCY_FLAVOR['herb'],                  requiredCharacterId: 'ranger'       },
@@ -63,6 +64,9 @@ export class WalletService {
     { id: 'precious-metal',       ...CURRENCY_FLAVOR['precious-metal'],        requiredCharacterId: 'artisan'      },
     { id: 'gemstone',             ...CURRENCY_FLAVOR['gemstone'],              requiredCharacterId: 'artisan'      },
     { id: 'jewelry',              ...CURRENCY_FLAVOR['jewelry'],               requiredCharacterId: 'artisan',  manualUnlock: true      },
+    // ── Necromancer ───────────────────────────────────────────────────
+    { id: 'bone',                ...CURRENCY_FLAVOR['bone'],                   requiredCharacterId: 'necromancer'   },
+    { id: 'brimstone',           ...CURRENCY_FLAVOR['brimstone'],              requiredCharacterId: 'necromancer'   },
 
   ];
 

@@ -5,7 +5,7 @@
 - Lore Pages that give context about the character or the world they live in. Can be unlocked by doing certain things in minigames...
 
 ### More characters
-  - Warlock
+  - Necromancer
     - Connect the dots spellcasting
     - Generates Brimstone
     - Minigame creates Soul Stones
@@ -57,6 +57,8 @@
 
 ### Artisan 
 
+### Necromancer
+
 
 ## UI Tweaks
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
@@ -73,8 +75,6 @@
 
 
 ## Bug Fixes
-- Make sure the starved jacks warning updates the required count for the Artisan. It's hardcoded to 20 it should be 20* number of assigned jacks. 
-- Positive % bonuses from the apothecary minigame should counteract the negative % display on the ui  
 
 ## Code Refactors
 - Fighter minigame combat log is a mess lmao 

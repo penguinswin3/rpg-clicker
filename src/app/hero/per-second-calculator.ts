@@ -19,6 +19,8 @@ import {
   calcArtisanTreasureCost, calcArtisanTimerMs,
   expectedGemstonePerAppraisal, expectedMetalPerAppraisal,
   expectedGemstonePerAppraisalJack, expectedMetalPerAppraisalJack,
+  calcNecromancerBoneYield, calcNecromancerWardXpCost,
+  calcNecromancerBrimstoneYield,
 } from './yield-helpers';
 
 // ── Context ─────────────────────────────────────────────────
@@ -33,6 +35,8 @@ export interface PerSecondContext {
   fermentationVatsEnabled: boolean;
   /** Relic levels per character (0 = not owned). Keys are character IDs. */
   relicLevels:             Record<string, number>;
+  /** Which necromancer button is currently active ('defile' or 'ward'). */
+  necromancerActiveButton: 'defile' | 'ward';
 }
 
 // ── Result ──────────────────────────────────────────────────
@@ -48,6 +52,8 @@ export interface PerSecondRates {
   treasure:          number;
   'precious-metal':  number;
   gemstone:          number;
+  bone:              number;
+  brimstone:         number;
 }
 
 /**
@@ -148,9 +154,25 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   // ── Culinarian relic: double spice yield ──────────────────
   const culSpiceMultiplier = hasCulinarianRelic ? 2 : 1;
 
+  // ── Necromancer rates ──────────────────────────────────────
+  const hasNecromancerRelic = (rl['necromancer'] ?? 0) >= 1;
+  // With relic: both jack types always produce regardless of active button.
+  // Without relic: only the active button's jacks produce.
+  const rawDefileJacks = ctx.jacksAllocations['necromancer-defile'] ?? 0;
+  const rawWardJacks   = ctx.jackStarved['necromancer-ward'] ? 0 : (ctx.jacksAllocations['necromancer-ward'] ?? 0);
+  const defileJacks = hasNecromancerRelic ? rawDefileJacks
+    : (ctx.necromancerActiveButton === 'defile' ? rawDefileJacks : 0);
+  const wardJacks   = hasNecromancerRelic ? rawWardJacks
+    : (ctx.necromancerActiveButton === 'ward'   ? rawWardJacks   : 0);
+  // Relic: double effectiveness (×2 yield) instead of +1.
+  const bonePerSec      = defileJacks * calcNecromancerBoneYield() * (hasNecromancerRelic ? 2 : 1);
+  const brimstonePerSec = wardJacks   * calcNecromancerBrimstoneYield() * (hasNecromancerRelic ? 2 : 1);
+  const wardXpDrain     = wardJacks * calcNecromancerWardXpCost(u.level('DARK_PACT'));
+  const necroXpGain     = defileJacks; // defile gives 1 xp per click
+
   return {
     gold:    roundTo(autoGoldPerSec + fighterRelicGold + apothecaryJacks * goldPerBrew + fighterJacks * goldPerClick - culinarianJacks * culGoldCost + ppGoldPerSecond, 2),
-    xp:      roundTo(fighterJacks * xpPerBounty + rangerJacks + apothecaryJacks + culinarianJacks + effectiveThiefRate + artisanXpPerSec, 2),
+    xp:      roundTo(fighterJacks * xpPerBounty + rangerJacks + apothecaryJacks + culinarianJacks + effectiveThiefRate + artisanXpPerSec + necroXpGain - wardXpDrain, 2),
     herb:    roundTo(herbProduced - herbConsumed, 2),
     beast:   roundTo(rangerJacks * catsEyeFactor * (beastChance / 100) * (expectedMeatYield + rangerBeastBonus) + baitedTrapsRate, 2),
     potion:  roundTo(apothecaryJacks * potionPerBrew + vatPotionGain, 2),
@@ -159,6 +181,8 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
     treasure:         roundTo(thiefTreasurePerSec - artisanTreasurePerSec, 2),
     'precious-metal': roundTo(artisanMetalPerSec, 2),
     gemstone:         roundTo(artisanGemstonePerSec, 2),
+    bone:             roundTo(bonePerSec, 2),
+    brimstone:        roundTo(brimstonePerSec, 2),
   };
 }
 
@@ -297,6 +321,26 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   if (artGemstoneRate !== 0)  add('gemstone',        'Artisan', artGemstoneRate);
   if (artMetalRate !== 0)     add('precious-metal',  'Artisan', artMetalRate);
   if (artXpRate !== 0)        add('xp',              'Artisan', artXpRate);
+
+  // Necromancer
+  const hasNecromancerRelic2 = (rl['necromancer'] ?? 0) >= 1;
+  // With relic: both jack types always produce regardless of active button.
+  const rawDefileJacks2 = ctx.jacksAllocations['necromancer-defile'] ?? 0;
+  const rawWardJacks2   = ctx.jackStarved['necromancer-ward'] ? 0 : (ctx.jacksAllocations['necromancer-ward'] ?? 0);
+  const defileJacks2 = hasNecromancerRelic2 ? rawDefileJacks2
+    : (ctx.necromancerActiveButton === 'defile' ? rawDefileJacks2 : 0);
+  const wardJacks2   = hasNecromancerRelic2 ? rawWardJacks2
+    : (ctx.necromancerActiveButton === 'ward'   ? rawWardJacks2   : 0);
+
+  const boneRate2    = roundTo(defileJacks2 * calcNecromancerBoneYield() * (hasNecromancerRelic2 ? 2 : 1), 2);
+  const brimRate2    = roundTo(wardJacks2   * calcNecromancerBrimstoneYield() * (hasNecromancerRelic2 ? 2 : 1), 2);
+  const wardXpDrain2 = roundTo(wardJacks2   * calcNecromancerWardXpCost(u.level('DARK_PACT')), 2);
+  const necroXpGain2 = roundTo(defileJacks2, 2);
+
+  if (boneRate2 !== 0)    add('bone',      'Necromancer', boneRate2);
+  if (brimRate2 !== 0)    add('brimstone', 'Necromancer', brimRate2);
+  if (necroXpGain2 !== 0) add('xp',        'Necromancer (Defile)', necroXpGain2);
+  if (wardXpDrain2 !== 0) add('xp',        'Necromancer (Ward)',  -wardXpDrain2);
 
   return bd;
 }

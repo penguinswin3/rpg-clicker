@@ -518,6 +518,35 @@
   align-items: center;
 }
 
+// ── Necromancer dual-button layout ──────────────────────────
+.necro-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.necro-btn {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+}
+
+.necro-clicks-remaining {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.72rem;
+  color: #777;
+  margin-top: 0.3rem;
+  text-align: center;
+}
+
+// Label above each necromancer jack stack
+.jack-alloc-label {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.65rem;
+  color: #999;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 0.25rem;
+}
+
 // Floats below the hero button without affecting layout flow or centering.
 // Children use visibility (not *ngIf) so this div is always the same size.
 .hero-subzone {

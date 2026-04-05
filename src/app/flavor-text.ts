@@ -29,6 +29,9 @@ export const CURRENCY_FLAVOR = {
   gemstone:              { name: 'Gemstone',                  symbol: '💎︎',  color: '#54d6ac' },
   jewelry:               { name: 'Jewelry',                   symbol: 'Ő',  color: '#97dfc8' },
   'synaptical-potion':   { name: 'Synaptical Potion Base',    symbol: '⚗',  color: '#5b67eb' },
+  'kobold-feather':      { name: 'Kobold Feathers',           symbol: 'ϡ',  color: '#c5b3aa' },
+  'bone':                { name: 'Bones',                     symbol: '🕱',  color: '#d7d8e6' },
+  'brimstone':           { name: 'Brimstone',                 symbol: '🜏',  color: '#ffbd2b' },
 
 } as const;
 
@@ -129,6 +132,11 @@ export const UPGRADE_FLAVOR = {
   CLOSE_ENOUGH:             { name: 'Close Enough',              desc: 'Selecting the runner-up gem also counts as a successful pick' },
   STAND_OUT_SELECTION:      { name: 'Stand Out Selection',       desc: 'One attribute of the finest gemstone is set to its maximum value' },
 
+  // Necromancer
+  EXTENDED_RITUAL:          { name: 'Extended Ritual',           desc: '+2 clicks before switching abilities per level' },
+  DARK_PACT:                { name: 'Dark Pact',                 desc: '-2 XP cost per Ward click per level (min 1)' },
+  AUGURY:                   { name: 'Augury',                    desc: 'Reveals how many clicks remain before the active ability switches' },
+
   // ── Relic upgrades (one per character) ──────────────────────────
   RELIC_FIGHTER:    { name: 'Crown of Hireling Command',          desc: 'Jacks also generate hireling gold — each Jack earns your full passive gold/sec as a bonus' },
   RELIC_RANGER:     { name: 'Belt of the Woodlands',              desc: 'Each assigned Jack adds +1 to the base herb yield (before doubling) and +1 bonus beast meat per hunt' },
@@ -136,6 +144,7 @@ export const UPGRADE_FLAVOR = {
   RELIC_CULINARIAN: { name: 'Clasp of Exquisite Taste',          desc: 'Jacks double their effective spice yield per purchase at no additional cost' },
   RELIC_THIEF:      { name: 'Ring of Shadows',                    desc: 'Jacks double their dossier yield range and steal 2 bonus treasure per successful action' },
   RELIC_ARTISAN:    { name: 'Masterwork Monocle of Perfection',   desc: 'Jacks always salvage maximum metal and double the minimum gemstone yield' },
+  RELIC_NECROMANCER:{ name: 'Jeweled Hand of the Night',         desc: 'Defile and Ward Jacks each act regardless of which button is active, and produce double the yield' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
@@ -227,6 +236,22 @@ export const KOBOLD_VARIANTS: readonly KoboldVariant[] = [
       chance: 33,
     },
   },
+  // Level 6 — Winged Kobold
+  {
+    name: 'Winged Kobold',
+    ascii:
+      '        _\\|     ___     |/_    \n' +
+      '      _-  \\_   <\'-\'>   _/  -_ \n' +
+      '      -_    `-\'(   )`-\'    _-   \n' +
+      '       `=.__.=-(   )-=.__.=\'    \n' +
+      '               |/-\\|                 \n' +
+      '               Y   Y       ',
+    secondaryDrop: {
+      currencyId: 'kobold-feather',
+      amount: 1,
+      chance: 33,
+    },
+  },
 ];
 
 // ── Characters ────────────────────────────────────────────────
@@ -260,6 +285,12 @@ export const CHARACTER_FLAVOR = {
     name: 'Artisan',
     desc: 'A meticulous craftsman who sees value where others see junk. Give him any trinket and he will find the gems within.',
     questBtn: 'Appraisal',
+  },
+  NECROMANCER: {
+    name: 'Necromancer',
+    desc: 'A scholar of the forbidden arts. He commands the boundary between life and death, cycling between desecration and warding.',
+    questBtnDefile: 'Defile',
+    questBtnWard: 'Ward',
   },
 } as const;
 
@@ -359,6 +390,14 @@ export const HERO_STATS_FLAVOR = {
     GEMSTONE_RANGE: 'Gemstone Yield :',
     METAL_RANGE:    'Metal Yield    :',
     LUCKY_BONUS:    'Lucky Gem Bonus:',
+  },
+  NECROMANCER: {
+    ACTIVE_BUTTON:    'Active Ability :',
+    CLICKS_LEFT:      'Clicks Left    :',
+    BONE_PER_CLICK:   'Bone Per Click :',
+    BRIMSTONE_PER_W:  'Brimstone Per Ward :',
+    WARD_XP_COST:     'Ward XP Cost   :',
+    SWITCH_RANGE:     'Switch Range   :',
   },
 } as const;
 

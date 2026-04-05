@@ -40,6 +40,10 @@ export interface UpgradeState {
   artisanTimerUntil?: number;
   /** How many appraisals (manual 1 + jacks N) are batched in the current timer. */
   artisanTimerBatchSize?: number;
+  /** Which necromancer button is currently active ('defile' or 'ward'). */
+  necromancerActiveButton?: 'defile' | 'ward';
+  /** How many clicks remain before the necromancer button switches. */
+  necromancerClicksRemaining?: number;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

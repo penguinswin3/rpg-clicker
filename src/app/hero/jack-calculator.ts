@@ -7,7 +7,7 @@
  */
 
 import { GLOBAL_PURCHASE_DEFS, getActiveCosts, XP_THRESHOLDS, YIELDS } from '../game-config';
-import { calcArtisanTreasureCost } from './yield-helpers';
+import { calcArtisanTreasureCost, calcNecromancerWardXpCost } from './yield-helpers';
 
 // ── Types ───────────────────────────────────────────────────
 
@@ -86,6 +86,10 @@ export function isActiveCharJackStarved(
     // Artisan is "starved" when the timer is idle and the starved flag is set (not enough treasure)
     return !isArtisanTimerActive && (allocations['artisan'] ?? 0) > 0 && !!jackStarved['artisan'];
   }
+  if (charId === 'necromancer') {
+    // Necromancer ward jacks starve when they can't afford XP
+    return (allocations['necromancer-ward'] ?? 0) > 0 && !!jackStarved['necromancer-ward'];
+  }
   return (allocations[charId] ?? 0) > 0 && !!jackStarved[charId];
 }
 
@@ -95,6 +99,8 @@ export function getJackStarvedMessage(
   culinarianGoldCost: number,
   walletGet: (currencyId: string) => number,
   apothecaryRelicLevel: number = 0,
+  artisanJacks: number = 1,
+  darkPactLevel: number = 0,
 ): string {
   if (charId === 'thief') {
     return `⚠ Jack idle — Stunned!`;
@@ -109,9 +115,15 @@ export function getJackStarvedMessage(
     return `⚠ Jack idle — need ${culinarianGoldCost} gold (have ${have})`;
   }
   if (charId === 'artisan') {
-    const need = calcArtisanTreasureCost();
+    const needPerAction = calcArtisanTreasureCost();
+    const need = needPerAction * Math.max(1, artisanJacks);
     const have = Math.floor(walletGet('treasure'));
     return `⚠ Jack idle — need ${need} treasure (have ${have})`;
+  }
+  if (charId === 'necromancer') {
+    const need = calcNecromancerWardXpCost(darkPactLevel);
+    const have = Math.floor(walletGet('xp'));
+    return `⚠ Ward Jack idle — need ${need} XP (have ${have})`;
   }
   return '⚠ Jack idle — insufficient resources';
 }

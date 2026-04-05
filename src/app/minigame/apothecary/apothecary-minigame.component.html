@@ -124,7 +124,7 @@
       Dilution
     </label>
     <span class="dilution-info" *ngIf="dilutionEnabled" [style.color]="dilutionColor">
-      ({{ dilutionTotalRolls }}x, {{ dilutionSuccessChance }}% each<ng-container *ngIf="dilutionMissPenalty > 0">, −{{ dilutionMissPenalty }}%</ng-container>)
+      ({{ dilutionTotalRolls }}x, {{ dilutionSuccessChance }}% each<ng-container *ngIf="dilutionNetModifier !== 0">, {{ dilutionNetModifier > 0 ? '+' : '−' }}{{ dilutionNetModifier > 0 ? dilutionNetModifier : -dilutionNetModifier }}%</ng-container>)
     </span>
   </div>
 

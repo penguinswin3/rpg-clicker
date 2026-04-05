@@ -21,6 +21,9 @@ import {
   calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick,
   calcArtisanTreasureCost, calcArtisanTimerMs,
   calcArtisanGemstoneMax, calcArtisanMetalMax,
+  calcNecromancerBoneYield, calcNecromancerWardXpCost,
+  calcNecromancerBrimstoneYield, calcNecromancerSwitchMin,
+  calcNecromancerSwitchMax,
 } from './yield-helpers';
 
 // ── Context required by the builder ──────────────────────────
@@ -34,6 +37,10 @@ export interface HeroStatsContext {
   isThiefStunned:         boolean;
   /** Lifetime total relics ever collected — used to display the Relic Hunter cap. */
   relicLifetimeCount:     number;
+  /** Which necromancer button is currently active. */
+  necromancerActiveButton: 'defile' | 'ward';
+  /** How many clicks remain before the necromancer button switches. */
+  necromancerClicksRemaining: number;
 }
 
 // ── Public API ──────────────────────────────────────────────
@@ -47,6 +54,7 @@ export function getQuestBtnLabel(charId: string): string {
     culinarian: CHARACTER_FLAVOR.CULINARIAN.questBtn,
     thief:      CHARACTER_FLAVOR.THIEF.questBtn,
     artisan:    CHARACTER_FLAVOR.ARTISAN.questBtn,
+    necromancer: CHARACTER_FLAVOR.NECROMANCER.questBtnDefile,
   };
   return map[charId] ?? CHARACTER_FLAVOR.FIGHTER.questBtn;
 }
@@ -54,12 +62,13 @@ export function getQuestBtnLabel(charId: string): string {
 /** Build the HeroStat[] array for the given character. */
 export function buildHeroStats(charId: string, ctx: HeroStatsContext): HeroStat[] {
   switch (charId) {
-    case 'ranger':     return buildRangerStats(ctx);
-    case 'apothecary': return buildApothecaryStats(ctx);
-    case 'culinarian': return buildCulinarianStats(ctx);
-    case 'thief':      return buildThiefStats(ctx);
-    case 'artisan':    return buildArtisanStats(ctx);
-    default:           return buildFighterStats(ctx);
+    case 'ranger':      return buildRangerStats(ctx);
+    case 'apothecary':  return buildApothecaryStats(ctx);
+    case 'culinarian':  return buildCulinarianStats(ctx);
+    case 'thief':       return buildThiefStats(ctx);
+    case 'artisan':     return buildArtisanStats(ctx);
+    case 'necromancer': return buildNecromancerStats(ctx);
+    default:            return buildFighterStats(ctx);
   }
 }
 
@@ -214,3 +223,18 @@ function buildArtisanStats(ctx: HeroStatsContext): HeroStat[] {
   return stats;
 }
 
+function buildNecromancerStats(ctx: HeroStatsContext): HeroStat[] {
+  const u = ctx.upgrades;
+  const extendedRitualLevel = u.level('EXTENDED_RITUAL');
+  const darkPactLevel       = u.level('DARK_PACT');
+  const activeLabel         = ctx.necromancerActiveButton === 'defile' ? 'Defile' : 'Ward';
+  const switchMin           = calcNecromancerSwitchMin(extendedRitualLevel);
+  const switchMax           = calcNecromancerSwitchMax(extendedRitualLevel);
+
+  return [
+    { label: HERO_STATS_FLAVOR.NECROMANCER.BONE_PER_CLICK,  value: `${calcNecromancerBoneYield()}` },
+    { label: HERO_STATS_FLAVOR.NECROMANCER.BRIMSTONE_PER_W, value: `${calcNecromancerBrimstoneYield()}` },
+    { label: HERO_STATS_FLAVOR.NECROMANCER.WARD_XP_COST,    value: `${calcNecromancerWardXpCost(darkPactLevel)}` },
+    { label: HERO_STATS_FLAVOR.NECROMANCER.SWITCH_RANGE,    value: `${switchMin} - ${switchMax}` },
+  ];
+}

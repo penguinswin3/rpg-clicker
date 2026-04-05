@@ -27,6 +27,10 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   @Output() unassignAllJacks = new EventEmitter<void>();
 
   getJackCount(charId: string): number {
+    if (charId === 'necromancer') {
+      return (this.jacksAllocations['necromancer-defile'] ?? 0)
+           + (this.jacksAllocations['necromancer-ward'] ?? 0);
+    }
     return this.jacksAllocations[charId] ?? 0;
   }
 

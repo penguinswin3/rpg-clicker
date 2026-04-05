@@ -25,6 +25,8 @@ export interface UpgradeGates {
   readonly requiresThief?: boolean;
   /** Hide until the Artisan character is unlocked. */
   readonly requiresArtisan?: boolean;
+  /** Hide until the Necromancer character is unlocked. */
+  readonly requiresNecromancer?: boolean;
   /** Hide until the Bubbling Brew minigame upgrade has been purchased. */
   readonly requiresBubblingBrew?: boolean;
   /** Hide until the Potion Dilution minigame upgrade has been purchased. */
@@ -132,7 +134,10 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'gemstone',           base: 50,   fromCount: 16, untilCount: 17 },  // Jack 17
       { currency: 'kobold-brain',       base: 25,   fromCount: 17, untilCount: 18 },  // Jack 18
       { currency: 'jewelry',            base: 10,   fromCount: 18, untilCount: 19 },  // Jack 19
-      { currency: 'synaptical-potion',  base: 25,   fromCount: 19, untilCount: 20 },  // Jack 19
+      { currency: 'synaptical-potion',  base: 25,   fromCount: 19, untilCount: 20 },  // Jack 20
+      { currency: 'kobold-feather',     base: 25,   fromCount: 20, untilCount: 21 },  // Jack 21
+      { currency: 'bone',               base: 25,   fromCount: 21, untilCount: 22 },  // Jack 22
+      { currency: 'brimstone',          base: 25,   fromCount: 22, untilCount: 23 },  // Jack 23
     ],
   },
 
@@ -172,6 +177,14 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'gold',     base: 100_000 },
       { currency: 'dossier',  base: 10_000  },
       { currency: 'treasure', base: 1_000   },
+    ],
+  },
+  {
+    id: 'UNLOCK_NECROMANCER', kind: 'character-unlock', xpMin: 500_000,
+    costs: [
+      { currency: 'gold',           base: 400_000 },
+      { currency: 'precious-metal', base: 2000     },
+      { currency: 'gemstone',       base: 1250     },
     ],
   },
 
@@ -221,6 +234,7 @@ export const XP_THRESHOLDS = {
   CULINARIAN_UNLOCK: getGlobalDef('UNLOCK_CULINARIAN')!.xpMin!,
   THIEF_UNLOCK:      getGlobalDef('UNLOCK_THIEF')!.xpMin!,
   ARTISAN_UNLOCK:    getGlobalDef('UNLOCK_ARTISAN')!.xpMin!,
+  NECROMANCER_UNLOCK:getGlobalDef('UNLOCK_NECROMANCER')!.xpMin!,
 } as const;
 
 // ── Upgrade Definitions ──────────────────────────────────────
@@ -275,6 +289,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'kobold-tongue', base: 50, scale: 1.0, fromLevel: 1, untilLevel: 2 },           // tier 2 only
       { currency: 'kobold-hair',   base: 50, scale: 1.0, fromLevel: 2, untilLevel: 3 },           // tier 3 only
       { currency: 'kobold-fang',   base: 50, scale: 1.0, fromLevel: 3, untilLevel: 4 },           // tier 4 only
+      { currency: 'kobold-brain',  base: 50, scale: 1.0, fromLevel: 4, untilLevel: 5 },           // tier 5 only (Winged Kobold)
     ] },
   { id: 'FIRST_STRIKE', characterId: 'fighter', category: 'minigame', max: 1,
     gates: { requiresFang: true },
@@ -430,7 +445,15 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'spice',               base: 50000, scale: 1.0, fromLevel: 3, untilLevel: 4 },
       { currency: 'hearty-meal',         base: 500,   scale: 1.0, fromLevel: 3, untilLevel: 4 },
       // Level 5 only: Thief - Dossier excluded cause thats coming from the base scaling
-      { currency: 'treasure',            base: 2000,  scale: 1.0, fromLevel: 4 },
+      { currency: 'treasure',            base: 2000,  scale: 1.0, fromLevel: 4, untilLevel: 5 },
+      // Level 6 only: Artisan -
+      { currency: 'precious-metal',      base: 2500,  scale: 1.0, fromLevel: 5, untilLevel: 6 },
+      { currency: 'gemstone',            base: 2500,  scale: 1.0, fromLevel: 5, untilLevel: 6 },
+      { currency: 'jewelry',             base: 250,   scale: 1.0, fromLevel: 5, untilLevel: 6 },
+      // Level 7 only: Necromancer
+      { currency: 'bone',                base: 15000,  scale: 1.0, fromLevel: 6, untilLevel: 7 },
+      { currency: 'brimstone',           base: 15000,  scale: 1.0, fromLevel: 6, untilLevel: 7 },
+      { currency: 'soul-stone',          base: 500,    scale: 1.0, fromLevel: 6, untilLevel: 7 },
     ] },
 
   // ── Thief — minigame ─────────────────────────────────────────
@@ -502,6 +525,23 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [
       { currency: 'gold',         base: 50_000, scale: 1.0 },
       { currency: 'kobold-brain', base: 50,     scale: 1.0 },
+    ] },
+
+  // ── Necromancer — standard ──────────────────────────────────────
+  { id: 'EXTENDED_RITUAL', characterId: 'necromancer', category: 'standard', max: 25,
+    costs: [
+      { currency: 'bone',      base: 10, scale: 1.3 },
+      { currency: 'brimstone', base: 5,  scale: 1.3 },
+    ] },
+  { id: 'DARK_PACT', characterId: 'necromancer', category: 'standard', max: 12,
+    costs: [
+      { currency: 'gold',      base: 50_000, scale: 1.4 },
+      { currency: 'brimstone', base: 10,     scale: 1.4 },
+    ] },
+  { id: 'AUGURY', characterId: 'necromancer', category: 'standard', max: 1,
+    costs: [
+      { currency: 'bone',      base: 50, scale: 1.0 },
+      { currency: 'brimstone', base: 25, scale: 1.0 },
     ] },
 
   // ── Apothecary — minigame ────────────────────────────────────
@@ -577,6 +617,10 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     gates: { requiresRelic: true },
     costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
             { currency: 'jewelry', base: 10, scale: 1.0 }] },
+  { id: 'RELIC_NECROMANCER', characterId: 'necromancer', category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
+            { currency: 'jewelry', base: 10, scale: 1.0 }] },
 ];
 
 // ── Relic Upgrade Costs ───────────────────────────────────────
@@ -625,6 +669,18 @@ export const YIELDS = {
   ARTISAN_METAL_MIN: 2,
   /** Maximum precious metals awarded per appraisal */
   ARTISAN_METAL_MAX: 5,
+
+  // ── Necromancer ─────────────────────────────────────────────
+  /** Bones awarded per Defile click */
+  NECROMANCER_BONE_PER_CLICK: 1,
+  /** XP consumed per Ward click (base, reduced by Dark Pact) */
+  NECROMANCER_WARD_XP_COST: 25,
+  /** Brimstone awarded per Ward click */
+  NECROMANCER_BRIMSTONE_PER_WARD: 1,
+  /** Minimum clicks before the active button switches (base, increased by Extended Ritual) */
+  NECROMANCER_SWITCH_MIN: 5,
+  /** Maximum clicks before the active button switches (base, increased by Extended Ritual) */
+  NECROMANCER_SWITCH_MAX: 15,
 
 } as const;
 

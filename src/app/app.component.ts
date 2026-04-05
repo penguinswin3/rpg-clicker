@@ -15,11 +15,11 @@ import { SaveService, UpgradeState, FighterCombatState } from './options/save.se
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
 import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef } from './game-config';
-import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur } from './flavor-text';
+import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
 // ── Extracted hero helpers ─────────────────────────────────────
-import { calcAutoGoldPerSecond, calcBeastFindChance, calcCulinarianGoldCost, calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick, calcArtisanTreasureCost, calcArtisanTimerMs, calcArtisanGemstoneYield, calcArtisanMetalYield, calcArtisanGemstoneYieldJack, calcArtisanMetalYieldJack } from './hero/yield-helpers';
+import { calcAutoGoldPerSecond, calcBeastFindChance, calcCulinarianGoldCost, calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick, calcArtisanTreasureCost, calcArtisanTimerMs, calcArtisanGemstoneYield, calcArtisanMetalYield, calcArtisanGemstoneYieldJack, calcArtisanMetalYieldJack, rollNecromancerSwitchClicks } from './hero/yield-helpers';
 import { buildHeroStats, getQuestBtnLabel } from './hero/hero-stats';
 import { dispatchHeroClick, performJackAutoClick, HeroActionContext, JackAutoClickContext } from './hero/hero-actions';
 import { calculatePerSecondRates, calculatePerSecondBreakdown } from './hero/per-second-calculator';
@@ -81,7 +81,14 @@ export class AppComponent implements OnInit, OnDestroy {
   culinarianUnlocked = false;
   thiefUnlocked      = false;
   artisanUnlocked    = false;
+  necromancerUnlocked = false;
   unlockedCharacters: { id: string; name: string; color: string }[] = [];
+
+  // ── Necromancer state ────────────────────────────────────────────
+  /** Which necromancer ability is currently enabled. */
+  necromancerActiveButton: 'defile' | 'ward' = 'defile';
+  /** How many clicks remain before the active ability switches. */
+  necromancerClicksRemaining = 10;
 
   // ── Minigame state ─────────────────────────────────────────────
   minigameUnlocked = false;
@@ -186,7 +193,14 @@ export class AppComponent implements OnInit, OnDestroy {
       this.upgrades.level('WHOLESALE_SPICES'),
       this.upgrades.level('POTION_GLIBNESS'),
     );
-    return getJackStarvedMessage(this.activeCharacterId, culGoldCost, id => this.wallet.get(id), this.upgrades.level('RELIC_APOTHECARY'));
+    return getJackStarvedMessage(
+      this.activeCharacterId,
+      culGoldCost,
+      id => this.wallet.get(id),
+      this.upgrades.level('RELIC_APOTHECARY'),
+      this.getJackCount('artisan'),
+      this.upgrades.level('DARK_PACT'),
+    );
   }
 
   getJackCount(charId: string): number { return this.jacksAllocations[charId] ?? 0; }
@@ -230,6 +244,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresCulinarian    && !this.culinarianUnlocked)                     return false;
     if (gates.requiresThief         && !this.thiefUnlocked)                          return false;
     if (gates.requiresArtisan       && !this.artisanUnlocked)                        return false;
+    if (gates.requiresNecromancer   && !this.necromancerUnlocked)                     return false;
     if (gates.requiresRelic         && !this.wallet.isCurrencyUnlocked('relic'))     return false;
     if (gates.requiresFang          && !this.wallet.isCurrencyUnlocked('kobold-fang')) return false;
     if (gates.requiresDossier       && !this.wallet.isCurrencyUnlocked('dossier'))   return false;
@@ -327,6 +342,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.culinarianUnlocked = chars.find(c => c.id === 'culinarian')?.unlocked ?? false;
       this.thiefUnlocked      = chars.find(c => c.id === 'thief')?.unlocked      ?? false;
       this.artisanUnlocked    = chars.find(c => c.id === 'artisan')?.unlocked    ?? false;
+      this.necromancerUnlocked = chars.find(c => c.id === 'necromancer')?.unlocked ?? false;
       this.unlockedCharacters = chars.filter(c => c.unlocked).map(c => ({ id: c.id, name: c.name, color: c.color }));
       this.updateRelicHunterMax(chars);
       // Track character unlock milestones
@@ -400,7 +416,9 @@ export class AppComponent implements OnInit, OnDestroy {
     setInterval(() => {
       const ctx = this.buildJackAutoClickCtx();
       for (const [charId, count] of Object.entries(this.jacksAllocations)) {
-        const relicMult = this.upgrades.level(`RELIC_${charId.toUpperCase()}`) >= 1 ? 2 : 1;
+        // Normalize compound keys (e.g. 'necromancer-defile' → 'necromancer') for relic lookup
+        const baseCharId = charId.startsWith('necromancer') ? 'necromancer' : charId;
+        const relicMult = this.upgrades.level(`RELIC_${baseCharId.toUpperCase()}`) >= 1 ? 2 : 1;
         const effective = count * relicMult;
         if (charId === 'artisan') {
           // Artisan jacks share a single timer — handle as a batch
@@ -457,6 +475,8 @@ export class AppComponent implements OnInit, OnDestroy {
       fermentationVatsEnabled: this.fermentationVatsEnabled,
       artisanTimerUntil:       this.artisanTimerUntil,
       artisanTimerBatchSize:   this.artisanTimerBatchSize,
+      necromancerActiveButton:     this.necromancerActiveButton,
+      necromancerClicksRemaining:  this.necromancerClicksRemaining,
     };
   }
 
@@ -477,6 +497,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.dilutionEnabled         = s.dilutionEnabled         ?? false;
     this.synapticalEnabled       = s.synapticalEnabled       ?? false;
     this.fermentationVatsEnabled = s.fermentationVatsEnabled ?? true;
+    // Restore necromancer state
+    this.necromancerActiveButton     = s.necromancerActiveButton     ?? 'defile';
+    this.necromancerClicksRemaining  = s.necromancerClicksRemaining  ?? 10;
     // Restore artisan timer — if still in the future, reschedule the completion callback
     this.artisanTimerUntil     = s.artisanTimerUntil     ?? 0;
     this.artisanTimerBatchSize = s.artisanTimerBatchSize  ?? 0;
@@ -516,7 +539,9 @@ export class AppComponent implements OnInit, OnDestroy {
         culinarian: this.upgrades.level('RELIC_CULINARIAN'),
         thief:      this.upgrades.level('RELIC_THIEF'),
         artisan:    this.upgrades.level('RELIC_ARTISAN'),
+        necromancer:this.upgrades.level('RELIC_NECROMANCER'),
       },
+      necromancerActiveButton: this.necromancerActiveButton,
     };
     const rates = calculatePerSecondRates(ctx);
     this.wallet.batchUpdate(() => {
@@ -530,6 +555,8 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.setPerSecond('treasure',        rates.treasure);
       this.wallet.setPerSecond('precious-metal',  rates['precious-metal']);
       this.wallet.setPerSecond('gemstone',        rates.gemstone);
+      this.wallet.setPerSecond('bone',            rates.bone);
+      this.wallet.setPerSecond('brimstone',       rates.brimstone);
       this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
     });
   }
@@ -556,6 +583,8 @@ export class AppComponent implements OnInit, OnDestroy {
       jacksAllocations:       this.jacksAllocations,
       isThiefStunned:         this.isThiefStunned,
       relicLifetimeCount:     this.statsService.current.lifetimeCurrency['relic'] ?? 0,
+      necromancerActiveButton:     this.necromancerActiveButton,
+      necromancerClicksRemaining:  this.necromancerClicksRemaining,
     });
 
     // Visible upgrades (per category)
@@ -592,6 +621,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
   clickHero(): void {
     dispatchHeroClick(this.activeCharacterId, this.buildHeroActionCtx());
+    if (this.activeCharacterId === 'necromancer') {
+      this._refreshDerived();
+      this.updateAllPerSecond();
+    }
   }
 
   toggleWholesaleSpices(): void {
@@ -751,6 +784,34 @@ export class AppComponent implements OnInit, OnDestroy {
     this.startArtisanTimer(jackCount, true);
   }
 
+  // ── Necromancer button switching ──────────────────────────────
+
+  /**
+   * Decrement the necromancer click counter. If it reaches 0,
+   * switch the active button and roll a new threshold.
+   * Returns true if the button was switched.
+   */
+  private necromancerDecrementClick(): boolean {
+    this.necromancerClicksRemaining--;
+    if (this.necromancerClicksRemaining <= 0) {
+      this.switchNecromancerButton();
+      return true;
+    }
+    return false;
+  }
+
+  /** Switch the active necromancer button and roll a new click threshold. */
+  private switchNecromancerButton(): void {
+    this.necromancerActiveButton = this.necromancerActiveButton === 'defile' ? 'ward' : 'defile';
+    this.necromancerClicksRemaining = rollNecromancerSwitchClicks(this.upgrades.level('EXTENDED_RITUAL'));
+    this.updateAllPerSecond();
+    this._refreshDerived();
+  }
+
+  /** Get the label for a specific necromancer button. */
+  get necromancerDefileLabel(): string { return CHARACTER_FLAVOR.NECROMANCER.questBtnDefile; }
+  get necromancerWardLabel(): string { return CHARACTER_FLAVOR.NECROMANCER.questBtnWard; }
+
   // ── Jack actions ───────────────────────────────────────────────
 
   buyJack(): void {
@@ -902,6 +963,8 @@ export class AppComponent implements OnInit, OnDestroy {
       applyThiefStun:         () => this.applyThiefStun(),
       isArtisanTimerActive:   this.isArtisanTimerActive,
       startArtisanTimer:      (batchSize) => this.startArtisanTimer(batchSize),
+      necromancerActiveButton: this.necromancerActiveButton,
+      necromancerDecrementClick: () => this.necromancerDecrementClick(),
     };
   }
 
@@ -926,6 +989,8 @@ export class AppComponent implements OnInit, OnDestroy {
       isArtisanTimerActive:   () => this.isArtisanTimerActive,
       startArtisanTimer:      (batchSize) => this.startArtisanTimer(batchSize),
       relicLevel:             (charId) => this.upgrades.level(`RELIC_${charId.toUpperCase()}`),
+      necromancerActiveButton: () => this.necromancerActiveButton,
+      necromancerDecrementClick: () => this.necromancerDecrementClick(),
     };
   }
 }

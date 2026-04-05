@@ -7,8 +7,9 @@
 - A minimum hit upgrade for th fighter 
 - A new upgrade to the fighter minigame that gives hints as to the sweet spot location 
 - Add new scaling upgrades for herbs and raw meat to the ranger
-- New tier of kobold!
+- Two new tiers of kobold!
 - A New character, the Artisan! 
+- A New Character, the Necromancer!
 - More Jacks!
 - Artisan "Faceting" minigame — pick the highest quality gem from six randomly generated stones
 - Added like 8 new upgrades across the board 

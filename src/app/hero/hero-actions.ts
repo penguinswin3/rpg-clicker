@@ -22,6 +22,8 @@ import {
   calcThiefSuccessChance,
   calcArtisanTreasureCost,
   calcAutoGoldPerSecond,
+  calcNecromancerBoneYield, calcNecromancerWardXpCost,
+  calcNecromancerBrimstoneYield,
 } from './yield-helpers';
 
 // ── Contexts ────────────────────────────────────────────────
@@ -41,6 +43,10 @@ export interface HeroActionContext {
   isArtisanTimerActive:   boolean;
   /** Start the Artisan appraisal timer (batchSize = 1 for manual click). */
   startArtisanTimer:      (batchSize: number) => void;
+  /** Which necromancer button is currently active ('defile' or 'ward'). */
+  necromancerActiveButton: 'defile' | 'ward';
+  /** Callback to decrement necromancer clicks and switch if needed. Returns true if button switched. */
+  necromancerDecrementClick: () => boolean;
 }
 
 /**
@@ -67,6 +73,10 @@ export interface JackAutoClickContext {
   startArtisanTimer:      (batchSize: number) => void;
   /** Returns the level of a character's relic upgrade (0 = not owned). */
   relicLevel:             (charId: string) => number;
+  /** Live check — which necromancer button is currently active. */
+  necromancerActiveButton: () => 'defile' | 'ward';
+  /** Decrement necromancer clicks remaining and switch if needed. Returns true if button switched. */
+  necromancerDecrementClick: () => boolean;
 }
 
 // ── Hero click dispatch ─────────────────────────────────────
@@ -81,6 +91,7 @@ export function dispatchHeroClick(charId: string, ctx: HeroActionContext): void 
     case 'culinarian': return clickCulinarian(ctx);
     case 'thief':      return clickThief(ctx);
     case 'artisan':    return clickArtisan(ctx);
+    case 'necromancer': return clickNecromancer(ctx);
   }
 }
 
@@ -243,19 +254,53 @@ function clickArtisan(ctx: HeroActionContext): void {
   ctx.log.log(`Appraisal started... (${cur('treasure', treasureCost, '-')})`);
 }
 
+function clickNecromancer(ctx: HeroActionContext): void {
+  if (ctx.necromancerActiveButton === 'defile') {
+    clickNecromancerDefile(ctx);
+  } else {
+    clickNecromancerWard(ctx);
+  }
+  ctx.necromancerDecrementClick();
+}
+
+function clickNecromancerDefile(ctx: HeroActionContext): void {
+  const boneYield = calcNecromancerBoneYield();
+  ctx.wallet.add('bone', boneYield);
+  ctx.wallet.add('xp', 1);
+  ctx.stats.trackCurrencyGain('bone', boneYield);
+  ctx.stats.trackCurrencyGain('xp', 1);
+  ctx.log.log(`You defiled the earth and unearthed bones. (${cur('bone', boneYield)}, ${cur('xp', 1)})`);
+}
+
+function clickNecromancerWard(ctx: HeroActionContext): void {
+  const xpCost = calcNecromancerWardXpCost(ctx.upgrades.level('DARK_PACT'));
+  if (!ctx.wallet.canAfford('xp', xpCost)) {
+    const have = Math.floor(ctx.wallet.get('xp'));
+    ctx.log.log(`Not enough XP to ward. Need ${cur('xp', xpCost, '')}, have ${cur('xp', have, '')}.`, 'warn');
+    return;
+  }
+  const brimstoneYield = calcNecromancerBrimstoneYield();
+  ctx.wallet.remove('xp', xpCost);
+  ctx.wallet.add('brimstone', brimstoneYield);
+  ctx.stats.trackCurrencyGain('brimstone', brimstoneYield);
+  ctx.log.log(`You warded the veil and conjured brimstone. (${cur('xp', xpCost, '-')}, ${cur('brimstone', brimstoneYield)})`);
+}
+
 // ── Jack auto-click dispatch ────────────────────────────────
 
 /** Execute one jack auto-click for the given character. */
 export function performJackAutoClick(charId: string, ctx: JackAutoClickContext): void {
   ctx.stats.trackJackHeroPress(charId);
   switch (charId) {
-    case 'fighter':    return jackFighter(ctx);
-    case 'ranger':     return jackRanger(ctx);
-    case 'apothecary': return jackApothecary(ctx);
-    case 'culinarian': return jackCulinarian(ctx);
-    case 'thief':      return jackThief(ctx);
+    case 'fighter':            return jackFighter(ctx);
+    case 'ranger':             return jackRanger(ctx);
+    case 'apothecary':         return jackApothecary(ctx);
+    case 'culinarian':         return jackCulinarian(ctx);
+    case 'thief':              return jackThief(ctx);
     // Artisan jacks are handled as a batch in app.component (shared timer).
-    case 'artisan':    return;
+    case 'artisan':            return;
+    case 'necromancer-defile': return jackNecromancerDefile(ctx);
+    case 'necromancer-ward':   return jackNecromancerWard(ctx);
   }
 }
 
@@ -431,3 +476,48 @@ function jackThief(ctx: JackAutoClickContext): void {
   }
 }
 
+function jackNecromancerDefile(ctx: JackAutoClickContext): void {
+  const hasRelic = ctx.relicLevel('necromancer') >= 1;
+  // Without relic: only fire when defile is the active button.
+  // With relic: always fire.
+  if (!hasRelic && ctx.necromancerActiveButton() !== 'defile') return;
+
+  const boneYield = calcNecromancerBoneYield() * (hasRelic ? 2 : 1);
+  ctx.wallet.add('bone', boneYield);
+  ctx.wallet.add('xp', 1);
+  ctx.stats.trackCurrencyGain('bone', boneYield);
+  ctx.stats.trackCurrencyGain('xp', 1);
+
+  if (ctx.isJackStarved('necromancer-defile')) ctx.setJackStarved('necromancer-defile', false);
+
+  // Only count toward the switch when defile is the active button.
+  if (ctx.necromancerActiveButton() === 'defile') ctx.necromancerDecrementClick();
+}
+
+function jackNecromancerWard(ctx: JackAutoClickContext): void {
+  const hasRelic = ctx.relicLevel('necromancer') >= 1;
+  // Without relic: only fire when ward is the active button.
+  // With relic: always fire.
+  if (!hasRelic && ctx.necromancerActiveButton() !== 'ward') return;
+
+  const xpCost = calcNecromancerWardXpCost(ctx.upgrades.level('DARK_PACT'));
+  if (!ctx.wallet.canAfford('xp', xpCost)) {
+    if (!ctx.isJackStarved('necromancer-ward')) {
+      ctx.setJackStarved('necromancer-ward', true);
+      ctx.onPerSecondUpdate();
+    }
+    return;
+  }
+  if (ctx.isJackStarved('necromancer-ward')) {
+    ctx.setJackStarved('necromancer-ward', false);
+    ctx.onPerSecondUpdate();
+  }
+
+  const brimstoneYield = calcNecromancerBrimstoneYield() * (hasRelic ? 2 : 1);
+  ctx.wallet.remove('xp', xpCost);
+  ctx.wallet.add('brimstone', brimstoneYield);
+  ctx.stats.trackCurrencyGain('brimstone', brimstoneYield);
+
+  // Only count toward the switch when ward is the active button.
+  if (ctx.necromancerActiveButton() === 'ward') ctx.necromancerDecrementClick();
+}
