@@ -4,14 +4,14 @@
 - Statistics tracing menu for all sorts of stats! 
 - Two new passive resource generation upgrades for Herbs and Meat
 - A new automatic potion making upgrade for the apothecary. It can be toggled on and off
-- A minimum hit upgrade for th fighter 
+- A minimum hit upgrade for the fighter 
 - A new upgrade to the fighter minigame that gives hints as to the sweet spot location 
 - Add new scaling upgrades for herbs and raw meat to the ranger
 - Two new tiers of kobold!
 - A New character, the Artisan! 
 - A New Character, the Necromancer!
 - More Jacks!
-- Artisan "Faceting" minigame — pick the highest quality gem from six randomly generated stones
+- Artisan "Faceting" minigame, pick the highest quality gem from six randomly generated stones
 - Necromancer "Well of Souls" minigame, allows for the creation of Soul Stones, which can be used to provide temporary jacks!
 - Added a ton of new upgrades across the board 
 - Added a new potion base, Synaptical

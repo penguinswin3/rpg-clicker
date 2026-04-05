@@ -136,6 +136,8 @@ $font: 'Courier New', Courier, monospace;
   margin: 0 auto;
   text-align: left;
   white-space: pre;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 // ── HP bars ───────────────────────────────

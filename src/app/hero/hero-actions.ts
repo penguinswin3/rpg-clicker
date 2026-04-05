@@ -316,7 +316,9 @@ function clickNecromancerWard(ctx: HeroActionContext): void {
 
 /** Execute one jack auto-click for the given character. */
 export function performJackAutoClick(charId: string, ctx: JackAutoClickContext): void {
-  ctx.stats.trackJackHeroPress(charId);
+  // Normalize necromancer sub-keys to 'necromancer' for stats tracking
+  const statsCharId = charId.startsWith('necromancer') ? 'necromancer' : charId;
+  ctx.stats.trackJackHeroPress(statsCharId);
   switch (charId) {
     case 'fighter':            return jackFighter(ctx);
     case 'ranger':             return jackRanger(ctx);

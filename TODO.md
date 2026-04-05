@@ -12,8 +12,6 @@
     - Generates Mana
     - Minigame creates Spell Scrolls
     - Spell Scrolls can be used to buff familiars?
-
-
   - Chimeramancer
     - Animal parts combination mix and match synergy?
       - kobold ear, kobold tongue, kobold hair, beast meat, bones, other things from the fighter 
@@ -25,7 +23,6 @@
 
   - Slayer
     - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
-
 
   
 ### Easter Eggs
@@ -52,16 +49,11 @@
 ### Artisan 
 
 ### Necromancer
-- Conjure Familiar -minigame  costs bones, meat, and exp . Temporary jacks effectively. Locked behind an XP milestone. 
-  - Make soul stones that can be consumed to add temporary jacks 
+
 ## UI Tweaks
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
 - In game Changelog?
-- Cat's Eye % should not show up in the character stats till thatr upgrade is unlocked
-- Make the sparkle for the pixie dust show up faster 
-- Change the per second hover over to say Exhume instead of defile 
-- unify ranger fermentation vats into passives in the per seconds 
-- Fighter minigame shuld not have a horizontal scroll bar everything should fit in the minigame window width 
+- Make the sparkle for the pixie dust show up faster
 
 ## Statistics
 - Split the appraisals out from the faceting stats section

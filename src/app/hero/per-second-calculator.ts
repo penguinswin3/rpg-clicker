@@ -341,7 +341,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   if (hovelGardenRate2 !== 0) add('herb', 'Passive', roundTo(hovelGardenRate2, 2));
   if (aJacks > 0) add('herb', 'Apothecary', roundTo(-aJacks * herbCostPerJack, 2));
   if (aFam   > 0) add('herb', 'Familiar (Apothecary)', roundTo(-aFam * herbCostPerJack, 2));
-  if (vatHerbDrain > 0) add('herb', 'Fermentation Vats', roundTo(-vatHerbDrain, 2));
+  if (vatHerbDrain > 0) add('herb', 'Passive', roundTo(-vatHerbDrain, 2));
 
   // ── Beast ─────────────────────────────────────────────────
   const rJackBeast = roundTo(rJacks * beastPerRanger, 2);
@@ -353,7 +353,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   // ── Potion ────────────────────────────────────────────────
   if (aJacks > 0) add('potion', 'Apothecary', roundTo(aJacks * potionPerBrew, 2));
   if (aFam   > 0) add('potion', 'Familiar (Apothecary)', roundTo(aFam * potionPerBrew, 2));
-  if (vatPotionGain > 0) add('potion', 'Fermentation Vats', roundTo(vatPotionGain, 2));
+  if (vatPotionGain > 0) add('potion', 'Passive', roundTo(vatPotionGain, 2));
 
   // ── Spice ─────────────────────────────────────────────────
   if (cJacks > 0) add('spice', 'Culinarian', roundTo(cJacks * spicePerClick * culSpiceMultiplier, 2));

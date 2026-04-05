@@ -106,7 +106,9 @@ function buildRangerStats(ctx: HeroStatsContext): HeroStat[] {
   return [
     { label: HERO_STATS_FLAVOR.RANGER.BEAST_CHANCE, value: `${calcBeastFindChance(u.level('BETTER_TRACKING'))}%` },
     { label: HERO_STATS_FLAVOR.RANGER.HERB_DOUBLE,  value: herbDoublingDisplay(u.level('MORE_HERBS')) },
-    { label: HERO_STATS_FLAVOR.RANGER.CATS_EYE,     value: `${u.level('POTION_CATS_EYE')}%` },
+    ...(u.level('POTION_CATS_EYE') > 0
+      ? [{ label: HERO_STATS_FLAVOR.RANGER.CATS_EYE, value: `${u.level('POTION_CATS_EYE')}%` }]
+      : []),
     ...(u.level('BIGGER_GAME') > 0
       ? [{ label: HERO_STATS_FLAVOR.RANGER.MAX_MEAT, value: `${u.level('BIGGER_GAME') + 1}` }]
       : []),
