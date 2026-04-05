@@ -85,17 +85,25 @@ jobs:
           else
             git checkout --orphan gh-pages
             git rm -rf .
-            git commit --allow-empty -m "Initialize gh-pages branch [skip ci]"
+            # .nojekyll tells GitHub Pages not to run Jekyll so that Angular's
+            # hashed asset filenames are served as-is without being filtered out.
+            touch .nojekyll
+            git add .nojekyll
+            git commit -m "Initialize gh-pages branch [skip ci]"
             git push origin gh-pages
           fi
+
+          # Ensure .nojekyll is always present (prevents Jekyll from mangling
+          # Angular's hashed asset filenames on branch-based Pages sites).
+          touch .nojekyll
 
           # Replace the previous preview for this PR (if any) with the new build.
           rm -rf "${PREVIEW_DIR}"
           mkdir -p "${PREVIEW_DIR}"
           cp -r /tmp/preview-build/. "${PREVIEW_DIR}/"
 
-          # Commit and push only when there are actual changes.
-          git add "${PREVIEW_DIR}"
+          # Stage everything that changed, including .nojekyll if it was missing.
+          git add .nojekyll "${PREVIEW_DIR}"
           if git diff --cached --quiet; then
             echo "No changes to commit – preview is already up to date."
           else

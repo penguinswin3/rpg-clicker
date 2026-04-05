@@ -1,16 +1,81 @@
+# Production deployment – runs on every push to master.
+#
+# Builds the Angular app and pushes the output to the gh-pages branch.
+# Using the gh-pages branch (instead of the GitHub Pages Actions artifact)
+# lets PR previews live side-by-side under pr-preview/pr-<N>/ without
+# interfering with the production site at the repo root.
+#
+# One-time manual step (first run only):
+#   Settings → Pages → Source → "Deploy from a branch" → gh-pages / root
+# The workflow will also attempt this change automatically via the API.
+
 on:
   push:
     branches:
-      - "master" # change to the branch you wish to deploy from
+      - "master"
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write  # needed to push to gh-pages branch
+  pages: write     # needed to update Pages source via API
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - id: build-publish
-        uses: bitovi/github-actions-angular-to-github-pages@v1.0.0
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular app
+        run: npx ng build --base-href /rpg-clicker/
+
+      # Deploy production output to the root of the gh-pages branch.
+      # keep_files: true preserves any pr-preview/ subdirectories already
+      # pushed there by the PR preview workflow.
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist/rpg-clicker/browser
+          keep_files: true
+
+      # Switch GitHub Pages source to the gh-pages branch so the content
+      # pushed above is actually served.  This is idempotent – it is safe
+      # to re-run on every deploy.
+      - name: Configure GitHub Pages source (gh-pages branch)
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            try {
+              await github.request('PUT /repos/{owner}/{repo}/pages', {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                source: { branch: 'gh-pages', path: '/' },
+                headers: { 'X-GitHub-Api-Version': '2022-11-28' },
+              });
+              core.info('GitHub Pages source set to gh-pages branch');
+            } catch (updateErr) {
+              // Pages may not be enabled yet – try creating the site first.
+              try {
+                await github.request('POST /repos/{owner}/{repo}/pages', {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  source: { branch: 'gh-pages', path: '/' },
+                  headers: { 'X-GitHub-Api-Version': '2022-11-28' },
+                });
+                core.info('GitHub Pages site created using gh-pages branch');
+              } catch (createErr) {
+                core.warning(
+                  'Could not configure Pages automatically: ' + createErr.message + '\n' +
+                  'Please go to Settings → Pages and set Source to ' +
+                  '"Deploy from a branch" → gh-pages / root'
+                );
+              }
+            }
