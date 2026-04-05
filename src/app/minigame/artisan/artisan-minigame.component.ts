@@ -54,6 +54,8 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
   @Input() luckyGemsLevel = 0;
   @Input() doubleDipLevel = 0;
   @Input() standOutSelectionLevel = 0;
+  @Input() goodEnoughLevel = 0;
+  @Input() closeEnoughLevel = 0;
 
   // ── Wallet-synced ─────────────────────────
   gemstones = 0;
@@ -75,6 +77,24 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
   bestGemIndex = -1;
   /** Index of the second-best gem (used by Double Dip). */
   secondBestGemIndex = -1;
+  /**
+   * Set to the gem index when Double Dip confirms the first pick is correct.
+   * Shows a green outline + score on that gem while awaiting the second pick.
+   * Reset to -1 at round start and after the round ends.
+   */
+  doubleDipConfirmedIndex = -1;
+  /**
+   * Set to the 2nd-best gem index when Close Enough is the winning condition.
+   * Used to highlight the Close Enough pick distinctly after the round ends.
+   * Reset to -1 at round start.
+   */
+  closeEnoughPickIndex = -1;
+  /**
+   * Set to the 2nd-best gem index when Double Dip succeeds (both best and 2nd-best selected).
+   * Used to show a green highlight on the 2nd pick after the round ends.
+   * Reset to -1 at round start.
+   */
+  doubleDipSecondPickIndex = -1;
 
   get canStart(): boolean {
     return this.gemstones >= this.GEMSTONE_COST && this.preciousMetal >= this.METAL_COST;
@@ -169,7 +189,10 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
     }
 
     // Effective picks: base + 1 if Double Dip is active
-    this.picksLeft    = this.PICKS + (this.doubleDipLevel >= 1 ? 1 : 0);
+    this.picksLeft                = this.PICKS + (this.doubleDipLevel >= 1 ? 1 : 0);
+    this.doubleDipConfirmedIndex  = -1;
+    this.doubleDipSecondPickIndex = -1;
+    this.closeEnoughPickIndex     = -1;
     this.roundStarted = true;
     this.roundOver    = false;
     this.lastMsg      = MINIGAME_MSG.ARTISAN.ROUND_START(this.GEM_COUNT);
@@ -187,10 +210,27 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
     gem.selected = true;
     this.picksLeft--;
 
-    // Double Dip: after the first pick, if the best gem hasn't been selected,
-    // cancel remaining picks and resolve immediately.
+    // Double Dip: after the first pick examine what was selected and decide how to proceed.
+    //   • Best gem found      → green confirmation, player gets a second pick (Double Dip).
+    //   • Runner-up found
+    //     + Close Enough active → amber confirmation, player gets a second pick to try for the best.
+    //   • Wrong pick           → cancel remaining picks, resolve as failure.
     if (this.doubleDipLevel >= 1 && this.picksLeft > 0) {
-      if (!this.gems[this.bestGemIndex].selected) {
+      const pickedActualBest = this.gems[this.bestGemIndex].selected;
+      const pickedRunnerUp   = this.closeEnoughLevel >= 1
+        && this.secondBestGemIndex >= 0
+        && this.gems[this.secondBestGemIndex].selected
+        && !pickedActualBest;
+
+      if (pickedActualBest) {
+        // Found the best gem — show green confirmation, await second pick
+        this.doubleDipConfirmedIndex = index;
+      } else if (pickedRunnerUp) {
+        // Close Enough: found the runner-up — show amber confirmation, await second pick
+        this.closeEnoughPickIndex = index;
+        // Do NOT cancel picksLeft; player may still find the best gem
+      } else {
+        // Wrong pick — end the round immediately
         this.picksLeft = 0;
       }
     }
@@ -211,10 +251,15 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
       g.revealed = true;
     }
 
-    // Check if the player selected the best gem
+    // Win conditions
     const pickedBest = this.gems[this.bestGemIndex].selected;
+    const pickedCloseEnough = this.closeEnoughLevel >= 1
+      && this.secondBestGemIndex >= 0
+      && this.gems[this.secondBestGemIndex].selected
+      && !pickedBest;  // Close Enough only fires when the strict best wasn't found
+    const won = pickedBest || pickedCloseEnough;
 
-    if (pickedBest) {
+    if (won) {
       // Award jewelry — unlock it on first acquisition
       if (!this.wallet.isCurrencyUnlocked('jewelry')) {
         this.wallet.unlockCurrency('jewelry');
@@ -227,12 +272,24 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
       let totalJewelry = this.JEWELRY_REWARD;
       let totalXp      = ARTISAN_MG.XP_REWARD;
 
-      // Double Dip bonus: check if the 2nd-best gem was also selected
-      const picked2ndBest = this.doubleDipLevel >= 1
+      // Good Enough bonus: +1 jewelry per gem above the quality threshold
+      if (this.goodEnoughLevel >= 1) {
+        const gemsAboveThreshold = this.gems.filter(g => g.score >= ARTISAN_MG.GOOD_ENOUGH_THRESHOLD).length;
+        totalJewelry += gemsAboveThreshold * ARTISAN_MG.GOOD_ENOUGH_JEWELRY_PER_GEM;
+      }
+
+      // Double Dip bonus: requires having picked the ACTUAL best gem AND the 2nd-best gem
+      const picked2ndBest = pickedBest
+        && this.doubleDipLevel >= 1
         && this.secondBestGemIndex >= 0
         && this.gems[this.secondBestGemIndex].selected;
 
       if (picked2ndBest) {
+        // Normal Double Dip (best first, runner-up second) → green runner-up highlight.
+        // Reverse order (Close Enough runner-up first, best second) → amber already set; keep it.
+        if (this.closeEnoughPickIndex === -1) {
+          this.doubleDipSecondPickIndex = this.secondBestGemIndex;
+        }
         totalJewelry += ARTISAN_MG.DOUBLE_DIP_JEWELRY_BONUS;
         totalXp      += ARTISAN_MG.DOUBLE_DIP_XP_BONUS;
       }
@@ -243,36 +300,34 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
       this.stats.trackCurrencyGain('xp', totalXp);
       this.stats.trackArtisanFaceting(true);
 
-      if (picked2ndBest) {
-        this.lastMsg  = MINIGAME_MSG.ARTISAN.DOUBLE_DIP_HIT;
-        this.msgClass = 'msg-success';
-        this.resultParts = [
-          { amount: totalJewelry, symbol: CURRENCY_FLAVOR['jewelry'].symbol, color: CURRENCY_FLAVOR['jewelry'].color },
-        ];
-        this.resultXp = totalXp;
+      this.resultParts = [
+        { amount: totalJewelry, symbol: CURRENCY_FLAVOR['jewelry'].symbol, color: CURRENCY_FLAVOR['jewelry'].color },
+      ];
+      this.resultXp = totalXp;
+      this.msgClass = 'msg-success';
+
+      if (pickedCloseEnough) {
+        this.closeEnoughPickIndex = this.secondBestGemIndex;
+        this.lastMsg = MINIGAME_MSG.ARTISAN.CLOSE_ENOUGH_WIN;
+        this.log.log(
+          `Faceting success (Close Enough)! (${cur('jewelry', totalJewelry)}, ${cur('xp', totalXp)})`,
+          'success'
+        );
+      } else if (picked2ndBest) {
+        this.lastMsg = MINIGAME_MSG.ARTISAN.DOUBLE_DIP_HIT;
         this.log.log(
           `Faceting success + Double Dip! (${cur('jewelry', totalJewelry)}, ${cur('xp', totalXp)})`,
           'success'
         );
       } else if (this.doubleDipLevel >= 1) {
         // Picked best but missed the 2nd-best
-        this.lastMsg  = MINIGAME_MSG.ARTISAN.DOUBLE_DIP_MISS;
-        this.msgClass = 'msg-success';
-        this.resultParts = [
-          { amount: totalJewelry, symbol: CURRENCY_FLAVOR['jewelry'].symbol, color: CURRENCY_FLAVOR['jewelry'].color },
-        ];
-        this.resultXp = totalXp;
+        this.lastMsg = MINIGAME_MSG.ARTISAN.DOUBLE_DIP_MISS;
         this.log.log(
           `Faceting success! (${cur('jewelry', totalJewelry)}, ${cur('xp', totalXp)})`,
           'success'
         );
       } else {
-        this.lastMsg  = MINIGAME_MSG.ARTISAN.CORRECT;
-        this.msgClass = 'msg-success';
-        this.resultParts = [
-          { amount: totalJewelry, symbol: CURRENCY_FLAVOR['jewelry'].symbol, color: CURRENCY_FLAVOR['jewelry'].color },
-        ];
-        this.resultXp = totalXp;
+        this.lastMsg = MINIGAME_MSG.ARTISAN.CORRECT;
         this.log.log(
           `Faceting success! (${cur('jewelry', totalJewelry)}, ${cur('xp', totalXp)})`,
           'success'
@@ -307,7 +362,7 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
 
   /** Blur in px; ranges from ~3 (cut=0) to 0 (cut=1). */
   gemBlur(gem: Gem): number {
-    return (1 - gem.cut) * 3;
+    return (1 - gem.cut) * 2;
   }
 
   /** Saturation percent; 0 = fully desaturated, 100 = full colour. */

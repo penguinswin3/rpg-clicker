@@ -44,6 +44,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() slowBladeLevel = 0;
   /** Gilded Blade level — forwarded to the fighter minigame. */
   @Input() gildedBladeLevel = 0;
+  /** Potion of Mind Reading level — forwarded to the fighter minigame. */
+  @Input() mindReadingLevel = 0;
   /** Short Rest level — forwarded to the fighter minigame. */
   @Input() shortRestLevel = 0;
   /** Whether Short Rest auto-heal is currently enabled — forwarded to the fighter minigame. */
@@ -104,6 +106,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() doubleDipLevel = 0;
   /** Stand Out Selection level — forwarded to the artisan minigame. */
   @Input() standOutSelectionLevel = 0;
+  /** Good Enough level — forwarded to the artisan minigame. */
+  @Input() goodEnoughLevel = 0;
+  /** Close Enough level — forwarded to the artisan minigame. */
+  @Input() closeEnoughLevel = 0;
   /** Previously-saved fighter combat state. */
   @Input() fighterCombatState: FighterCombatState | null = null;
   /** Emitted whenever fighter combat state changes. */

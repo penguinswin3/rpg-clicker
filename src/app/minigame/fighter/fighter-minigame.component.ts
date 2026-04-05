@@ -60,6 +60,8 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   @Input() slowBladeLevel = 0;
   /** Gilded Blade level — +1% secondary drop chance and +1% gold per kill per level. */
   @Input() gildedBladeLevel = 0;
+  /** Potion of Mind Reading level — each level adds 10% chance to roll attack damage twice and take higher. */
+  @Input() mindReadingLevel = 0;
   /** Previously-saved combat state to restore on init. */
   @Input() savedState: FighterCombatState | null = null;
   /** Emitted whenever combat state changes (HP, defeated, rest countdown). */
@@ -260,8 +262,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   attack(): void {
     if (this.actionsDisabled) return;
 
-    const minHit = Math.min(1 + this.slowBladeLevel, this.attackPower + 1);
-    const dmg  = randInt(minHit, this.attackPower + 1);
+    const dmg  = this.rollPlayerDamage();
     const eDmg = this.rollEnemyDamage();   // always rolled — counter fires even on a killing blow
 
     this.enemy.hp  = Math.max(0, this.enemy.hp - dmg);
@@ -388,6 +389,20 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     return Math.max(0, randInt(1, this.enemy.dmgMax) - this.defense);
   }
 
+  /**
+   * Roll player attack damage, applying Mind Reading advantage when it procs:
+   * each level adds a 10% chance to roll twice and take the higher result.
+   */
+  private rollPlayerDamage(): number {
+    const minHit = Math.min(1 + this.slowBladeLevel, this.attackPower + 1);
+    const roll1  = randInt(minHit, this.attackPower + 1);
+    if (this.mindReadingLevel > 0 && rollChance(this.mindReadingLevel * 10)) {
+      const roll2 = randInt(minHit, this.attackPower + 1);
+      return Math.max(roll1, roll2);
+    }
+    return roll1;
+  }
+
   /** Consume potions one at a time until HP is full or potions run out. */
   private autoHealToFull(): void {
     let potionsConsumed = 0;
@@ -396,8 +411,11 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       potionsConsumed++;
       this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount*this.potionHealEfficiency);
     }
-    this.log.log(`Chugged some potions during a short rest. (${cur('potion', potionsConsumed, '-')})`, "default")
-    this.stats.trackFighterPotionDrank(potionsConsumed);
+    if (potionsConsumed > 0) {
+      this.log.log(`Chugged some potions during a short rest. (${cur('potion', potionsConsumed, '-')})`, "default")
+      this.stats.trackFighterPotionDrank(potionsConsumed);
+    }
+
   }
 
   private applyEnemyDamage(dmg: number): void {
@@ -517,8 +535,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
    * (the next spawn also gets a First Strike hit).
    */
   private applyFirstStrike(): void {
-    const minHit = Math.min(1 + this.slowBladeLevel, this.attackPower + 1);
-    const dmg = randInt(minHit, this.attackPower + 1);
+    const dmg = this.rollPlayerDamage();
     this.enemy.hp = Math.max(0, this.enemy.hp - dmg);
 
     if (this.enemy.hp <= 0) {

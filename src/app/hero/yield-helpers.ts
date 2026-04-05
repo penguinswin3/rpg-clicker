@@ -188,9 +188,20 @@ export function calcArtisanGemstoneYield(catsPawLevel: number = 0): number {
   return randInt(YIELDS.ARTISAN_GEMSTONE_MIN, calcArtisanGemstoneMax(catsPawLevel));
 }
 
+/** Roll a gemstone yield for a jack appraisal with optional relic bonus (doubled minimum). */
+export function calcArtisanGemstoneYieldJack(catsPawLevel: number = 0, hasRelic: boolean = false): number {
+  const min = hasRelic ? YIELDS.ARTISAN_GEMSTONE_MIN * 2 : YIELDS.ARTISAN_GEMSTONE_MIN;
+  return randInt(min, Math.max(min, calcArtisanGemstoneMax(catsPawLevel)));
+}
+
 /** Roll a random precious metal yield for one appraisal. */
 export function calcArtisanMetalYield(catsPawLevel: number = 0): number {
   return randInt(YIELDS.ARTISAN_METAL_MIN, calcArtisanMetalMax(catsPawLevel));
+}
+
+/** Metal yield for a jack appraisal with optional relic bonus (always max). */
+export function calcArtisanMetalYieldJack(catsPawLevel: number = 0, hasRelic: boolean = false): number {
+  return hasRelic ? calcArtisanMetalMax(catsPawLevel) : randInt(YIELDS.ARTISAN_METAL_MIN, calcArtisanMetalMax(catsPawLevel));
 }
 
 /** Expected (average) gemstone yield per appraisal — for per-second display. */
@@ -198,8 +209,19 @@ export function expectedGemstonePerAppraisal(catsPawLevel: number = 0): number {
   return (YIELDS.ARTISAN_GEMSTONE_MIN + calcArtisanGemstoneMax(catsPawLevel)) / 2;
 }
 
+/** Expected (average) gemstone yield per jack appraisal with optional relic bonus. */
+export function expectedGemstonePerAppraisalJack(catsPawLevel: number = 0, hasRelic: boolean = false): number {
+  const min = hasRelic ? YIELDS.ARTISAN_GEMSTONE_MIN * 2 : YIELDS.ARTISAN_GEMSTONE_MIN;
+  return (min + Math.max(min, calcArtisanGemstoneMax(catsPawLevel))) / 2;
+}
+
 /** Expected (average) precious metal yield per appraisal — for per-second display. */
 export function expectedMetalPerAppraisal(catsPawLevel: number = 0): number {
   return (YIELDS.ARTISAN_METAL_MIN + calcArtisanMetalMax(catsPawLevel)) / 2;
+}
+
+/** Expected (average) precious metal yield per jack appraisal with optional relic bonus. */
+export function expectedMetalPerAppraisalJack(catsPawLevel: number = 0, hasRelic: boolean = false): number {
+  return hasRelic ? calcArtisanMetalMax(catsPawLevel) : (YIELDS.ARTISAN_METAL_MIN + calcArtisanMetalMax(catsPawLevel)) / 2;
 }
 

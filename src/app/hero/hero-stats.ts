@@ -81,7 +81,10 @@ function buildFighterStats(ctx: HeroStatsContext): HeroStat[] {
       ? [{ label: HERO_STATS_FLAVOR.FIGHTER.XP_PER_CLICK, value: `${xpPerBounty}` }]
       : []),
     ...(u.level('GILDED_BLADE') > 0
-      ? [{ label: HERO_STATS_FLAVOR.FIGHTER.GILDED_BLADE, value: `+${u.level('GILDED_BLADE')}% drop / +${u.level('GILDED_BLADE')}% gold` }]
+      ? [{ label: HERO_STATS_FLAVOR.FIGHTER.GILDED_BLADE, value: `+${u.level('GILDED_BLADE')}% ` }]
+      : []),
+    ...(u.level('POTION_MIND_READING') > 0
+      ? [{ label: HERO_STATS_FLAVOR.FIGHTER.MIND_READING, value: `${u.level('POTION_MIND_READING') * 10}%` }]
       : []),
   ];
 }
@@ -187,13 +190,19 @@ function buildArtisanStats(ctx: HeroStatsContext): HeroStat[] {
   const catsPawLevel          = u.level('POTION_CATS_PAW');
   const luckyGemsLevel        = u.level('LUCKY_GEMS');
 
-  const treasureCost = calcArtisanTreasureCost();
+  const treasureCostPerAppraisal = calcArtisanTreasureCost();
+  const artisanJacks = ctx.jacksAllocations['artisan'] ?? 0;
+  // Total treasure cost for one manual click or for each jack batch
+  const treasureCostDisplay = artisanJacks > 0
+    ? `${treasureCostPerAppraisal} (${treasureCostPerAppraisal * artisanJacks} per jack batch)`
+    : `${treasureCostPerAppraisal}`;
+
   const timerSec     = calcArtisanTimerMs(fasterAppraisingLevel) / 1000;
   const gemMax       = calcArtisanGemstoneMax(catsPawLevel);
   const metalMax     = calcArtisanMetalMax(catsPawLevel);
 
   const stats: HeroStat[] = [
-    { label: HERO_STATS_FLAVOR.ARTISAN.TREASURE_COST,  value: `${treasureCost}` },
+    { label: HERO_STATS_FLAVOR.ARTISAN.TREASURE_COST,  value: treasureCostDisplay },
     { label: HERO_STATS_FLAVOR.ARTISAN.TIMER_DURATION, value: `${timerSec}s` },
     { label: HERO_STATS_FLAVOR.ARTISAN.GEMSTONE_RANGE, value: `${YIELDS.ARTISAN_GEMSTONE_MIN} - ${gemMax}` },
     { label: HERO_STATS_FLAVOR.ARTISAN.METAL_RANGE,    value: `${YIELDS.ARTISAN_METAL_MIN} - ${metalMax}` },

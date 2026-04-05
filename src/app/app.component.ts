@@ -19,7 +19,7 @@ import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur } from './flavor-t
 import { fmtNumber, clamp } from './utils/mathUtils';
 
 // ── Extracted hero helpers ─────────────────────────────────────
-import { calcAutoGoldPerSecond, calcBeastFindChance, calcCulinarianGoldCost, calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick, calcArtisanTreasureCost, calcArtisanTimerMs, calcArtisanGemstoneYield, calcArtisanMetalYield } from './hero/yield-helpers';
+import { calcAutoGoldPerSecond, calcBeastFindChance, calcCulinarianGoldCost, calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick, calcArtisanTreasureCost, calcArtisanTimerMs, calcArtisanGemstoneYield, calcArtisanMetalYield, calcArtisanGemstoneYieldJack, calcArtisanMetalYieldJack } from './hero/yield-helpers';
 import { buildHeroStats, getQuestBtnLabel } from './hero/hero-stats';
 import { dispatchHeroClick, performJackAutoClick, HeroActionContext, JackAutoClickContext } from './hero/hero-actions';
 import { calculatePerSecondRates, calculatePerSecondBreakdown } from './hero/per-second-calculator';
@@ -143,6 +143,8 @@ export class AppComponent implements OnInit, OnDestroy {
   artisanTimerUntil = 0;
   /** How many appraisals are batched in the current timer (1 for manual, N for jacks). */
   artisanTimerBatchSize = 0;
+  /** Whether the current artisan timer is from a jack batch (relic only applies to jacks). */
+  private artisanTimerIsJackBatch = false;
   /** Handle for the post-timer updateAllPerSecond timeout. */
   private artisanTimerTimeoutId: ReturnType<typeof setTimeout> | null = null;
   /**
@@ -184,7 +186,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.upgrades.level('WHOLESALE_SPICES'),
       this.upgrades.level('POTION_GLIBNESS'),
     );
-    return getJackStarvedMessage(this.activeCharacterId, culGoldCost, id => this.wallet.get(id));
+    return getJackStarvedMessage(this.activeCharacterId, culGoldCost, id => this.wallet.get(id), this.upgrades.level('RELIC_APOTHECARY'));
   }
 
   getJackCount(charId: string): number { return this.jacksAllocations[charId] ?? 0; }
@@ -235,6 +237,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresPotionDilution && this.upgrades.level('POTION_DILUTION') < 1)  return false;
     if (gates.requiresLockedIn      && this.upgrades.level('LOCKED_IN') < 1)         return false;
     if (gates.requiresSynapticalPotions && this.upgrades.level('SYNAPTICAL_POTIONS') < 1) return false;
+    if (gates.requiresDoubleDip     && this.upgrades.level('DOUBLE_DIP') < 1)        return false;
     if (gates.xpMin != null && this.highestXp < gates.xpMin) return false;
     if (gates.requiresSharperSwordsMin != null && this.upgrades.level('SHARPER_SWORDS') < gates.requiresSharperSwordsMin) return false;
     if (gates.requiresTreasureChestMin != null && this.upgrades.level('TREASURE_CHEST') < gates.requiresTreasureChestMin) return false;
@@ -272,7 +275,7 @@ export class AppComponent implements OnInit, OnDestroy {
    * Everything else → standard color.
    */
   getUpgradeColor(id: string): string {
-    if (this.upgrades.category(id) === 'relic') return UPGRADE_COLORS.relic;
+    if (this.upgrades.category(id) === 'relic' || id === 'RELIC_HUNTER') return UPGRADE_COLORS.relic;
     if (this.upgrades.maxLevel(id) === 1 || this.upgrades.isMaxed(id)) return UPGRADE_COLORS.rare;
     return UPGRADE_COLORS.standard;
   }
@@ -393,15 +396,18 @@ export class AppComponent implements OnInit, OnDestroy {
     }, 10000);
 
     // Jack auto-clicks: each allocated Jack fires once per second
+    // Relic doubling: when a character's relic is active, each jack counts as two.
     setInterval(() => {
       const ctx = this.buildJackAutoClickCtx();
       for (const [charId, count] of Object.entries(this.jacksAllocations)) {
+        const relicMult = this.upgrades.level(`RELIC_${charId.toUpperCase()}`) >= 1 ? 2 : 1;
+        const effective = count * relicMult;
         if (charId === 'artisan') {
           // Artisan jacks share a single timer — handle as a batch
-          if (count > 0) this.handleArtisanJackBatch(count);
+          if (effective > 0) this.handleArtisanJackBatch(effective);
           continue;
         }
-        for (let i = 0; i < count; i++) performJackAutoClick(charId, ctx);
+        for (let i = 0; i < effective; i++) performJackAutoClick(charId, ctx);
       }
     }, 1000);
   }
@@ -503,6 +509,14 @@ export class AppComponent implements OnInit, OnDestroy {
       isArtisanTimerActive:    this.isArtisanTimerActive,
       wholesaleSpicesEnabled:  this.wholesaleSpicesEnabled,
       fermentationVatsEnabled: this.fermentationVatsEnabled,
+      relicLevels: {
+        fighter:    this.upgrades.level('RELIC_FIGHTER'),
+        ranger:     this.upgrades.level('RELIC_RANGER'),
+        apothecary: this.upgrades.level('RELIC_APOTHECARY'),
+        culinarian: this.upgrades.level('RELIC_CULINARIAN'),
+        thief:      this.upgrades.level('RELIC_THIEF'),
+        artisan:    this.upgrades.level('RELIC_ARTISAN'),
+      },
     };
     const rates = calculatePerSecondRates(ctx);
     this.wallet.batchUpdate(() => {
@@ -638,12 +652,13 @@ export class AppComponent implements OnInit, OnDestroy {
    * Start the artisan appraisal timer.
    * @param batchSize 1 for a manual click; jackCount for a jack batch.
    */
-  private startArtisanTimer(batchSize: number): void {
+  private startArtisanTimer(batchSize: number, isJack: boolean = false): void {
     if (this.isArtisanTimerActive) return;
 
     const duration = calcArtisanTimerMs(this.upgrades.level('FASTER_APPRAISING'));
-    this.artisanTimerUntil     = Date.now() + duration;
-    this.artisanTimerBatchSize = batchSize;
+    this.artisanTimerUntil       = Date.now() + duration;
+    this.artisanTimerBatchSize   = batchSize;
+    this.artisanTimerIsJackBatch = isJack;
     this.artisanTimerAnimStyle = {
       'animation-duration': `${duration / 1000}s`,
       'animation-delay':    '0s',
@@ -669,11 +684,13 @@ export class AppComponent implements OnInit, OnDestroy {
     if (batchSize <= 0) return;
 
     const catsPawLevel = this.upgrades.level('POTION_CATS_PAW');
+    const isJack       = this.artisanTimerIsJackBatch;
+    const hasRelic     = isJack && this.upgrades.level('RELIC_ARTISAN') >= 1;
     let totalGemstones = 0;
     let totalMetals    = 0;
     for (let i = 0; i < batchSize; i++) {
-      totalGemstones += calcArtisanGemstoneYield(catsPawLevel);
-      totalMetals    += calcArtisanMetalYield(catsPawLevel);
+      totalGemstones += hasRelic ? calcArtisanGemstoneYieldJack(catsPawLevel, true) : calcArtisanGemstoneYield(catsPawLevel);
+      totalMetals    += hasRelic ? calcArtisanMetalYieldJack(catsPawLevel, true) : calcArtisanMetalYield(catsPawLevel);
     }
     const xpAwarded = batchSize;
 
@@ -691,7 +708,8 @@ export class AppComponent implements OnInit, OnDestroy {
     );
 
     // Reset timer state
-    this.artisanTimerBatchSize = 0;
+    this.artisanTimerBatchSize   = 0;
+    this.artisanTimerIsJackBatch = false;
     this.updateAllPerSecond();
   }
 
@@ -730,7 +748,7 @@ export class AppComponent implements OnInit, OnDestroy {
     for (let i = 0; i < jackCount; i++) {
       this.statsService.trackJackHeroPress('artisan');
     }
-    this.startArtisanTimer(jackCount);
+    this.startArtisanTimer(jackCount, true);
   }
 
   // ── Jack actions ───────────────────────────────────────────────
@@ -907,6 +925,7 @@ export class AppComponent implements OnInit, OnDestroy {
       onPerSecondUpdate:      () => this.updateAllPerSecond(),
       isArtisanTimerActive:   () => this.isArtisanTimerActive,
       startArtisanTimer:      (batchSize) => this.startArtisanTimer(batchSize),
+      relicLevel:             (charId) => this.upgrades.level(`RELIC_${charId.toUpperCase()}`),
     };
   }
 }

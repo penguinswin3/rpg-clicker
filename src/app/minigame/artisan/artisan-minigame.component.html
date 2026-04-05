@@ -37,9 +37,11 @@
       <button
         class="gem-cell"
         *ngFor="let gem of gems; let i = index"
-        [class.gem-selected]="gem.selected"
+        [class.gem-selected]="gem.selected && doubleDipConfirmedIndex !== i && doubleDipSecondPickIndex !== i && closeEnoughPickIndex !== i"
+        [class.gem-first-pick]="(doubleDipConfirmedIndex === i && !roundOver) || (roundOver && doubleDipSecondPickIndex === i)"
+        [class.gem-close-enough]="closeEnoughPickIndex === i"
         [class.gem-best]="roundOver && isBest(i)"
-        [class.gem-wrong]="roundOver && gem.selected && !isBest(i)"
+        [class.gem-wrong]="roundOver && gem.selected && !isBest(i) && i !== doubleDipSecondPickIndex && i !== closeEnoughPickIndex"
         [class.gem-restart]="roundOver && canStart"
         [disabled]="roundOver ? !canStart : gem.selected"
         (click)="roundOver ? tryRestart() : selectGem(i)">
@@ -59,9 +61,10 @@
         </span>
 
         <!-- Revealed score -->
-        <span class="gem-score" *ngIf="gem.revealed"
+        <span class="gem-score" *ngIf="gem.revealed || doubleDipConfirmedIndex === i"
               [style.color]="scoreColor(gem)"
-              [class.score-best]="isBest(i)">
+              [class.score-best]="isBest(i)"
+              [class.score-confirmed]="doubleDipConfirmedIndex === i && !gem.revealed">
           {{ scorePct(gem) }}
         </span>
       </button>

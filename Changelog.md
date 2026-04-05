@@ -13,6 +13,7 @@
 - Artisan "Faceting" minigame — pick the highest quality gem from six randomly generated stones
 - Added like 8 new upgrades across the board 
 - Added a new potion base, Synaptical
+- New Fighter minigame upgrade: Potion of Mind Reading — each level gives a 10% chance to roll attack damage twice and take the higher result
 
 ## Removed
 - Bigger Game upgrade
@@ -44,6 +45,7 @@
 - Reworked Perfect Potions to give bonus dilution success chance per perfect click
 - Reduces kobold ear scaling on Stronger Kobolds
 - Relics now cost a scaling amount of jewelry in addition to the static 1 relic 
+- Increased the Wholesale cap 
 
 ## Bugfixes
 - Cleaned up the missing row on the ranger character stats box 

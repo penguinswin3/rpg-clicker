@@ -9,6 +9,7 @@
     [firstStrikeLevel]="upgrades.level('FIRST_STRIKE')"
     [slowBladeLevel]="upgrades.level('SLOW_BLADE')"
     [gildedBladeLevel]="upgrades.level('GILDED_BLADE')"
+    [mindReadingLevel]="upgrades.level('POTION_MIND_READING')"
     [shortRestLevel]="upgrades.level('SHORT_REST')"
     [shortRestEnabled]="shortRestEnabled"
     (shortRestEnabledChange)="shortRestEnabled = $event"
@@ -42,7 +43,9 @@
     (dilutionEnabledChange)="dilutionEnabled = $event"
     [luckyGemsLevel]="upgrades.level('LUCKY_GEMS')"
     [doubleDipLevel]="upgrades.level('DOUBLE_DIP')"
-    [standOutSelectionLevel]="upgrades.level('STAND_OUT_SELECTION')" />
+    [standOutSelectionLevel]="upgrades.level('STAND_OUT_SELECTION')"
+    [goodEnoughLevel]="upgrades.level('GOOD_ENOUGH')"
+    [closeEnoughLevel]="upgrades.level('CLOSE_ENOUGH')" />
 
   <div class="game-wrapper">
     <div class="game-container">

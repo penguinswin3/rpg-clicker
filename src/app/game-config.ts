@@ -33,6 +33,8 @@ export interface UpgradeGates {
   readonly requiresLockedIn?: boolean;
   /** Hide until the Synaptical Potions minigame upgrade has been purchased. */
   readonly requiresSynapticalPotions?: boolean;
+  /** Hide until the Double Dip minigame upgrade has been purchased. */
+  readonly requiresDoubleDip?: boolean;
   /** Hide until the player has received at least one Relic. */
   readonly requiresRelic?: boolean;
   /** Hide until the player has obtained at least one Kobold Fang. */
@@ -285,6 +287,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [
       { currency: 'precious-metal', base: 10, scale: 1.3 },
     ] },
+  { id: 'POTION_MIND_READING', characterId: 'fighter', category: 'minigame', max: 10,
+    gates: { requiresSynapticalPotions: true },
+    costs: [
+      { currency: 'synaptical-potion', base: 2,  scale: 1.5 },
+      { currency: 'kobold-brain',      base: 10, scale: 1.4 },
+    ] },
 
   // ── Ranger — standard ────────────────────────────────────────
   { id: 'MORE_HERBS',      characterId: 'ranger', category: 'standard', max: 100,
@@ -367,7 +375,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Culinarian — standard ────────────────────────────────────
-  { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 20, // +1 spice/click, +24g cost/click per level
+  { id: 'WHOLESALE_SPICES', characterId: 'culinarian', category: 'standard', max: 30, // +1 spice/click, +24g cost/click per level
     costs: [{ currency: 'gold', base: 200, scale: 1.3 }] },
   { id: 'POTION_GLIBNESS',  characterId: 'culinarian', category: 'standard', max: 85,   // 85 × -1% spice purchase cost
     costs: [
@@ -401,24 +409,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'concentrated-potion', base: 2, scale: 1.3 },
       { currency: 'kobold-hair',         base: 5, scale: 1.2 },
     ] },
-
-  // ── Thief — minigame ─────────────────────────────────────────
-  { id: 'VANISHING_POWDER', characterId: 'thief', category: 'minigame', max: 5,
-    costs: [
-      { currency: 'gold',       base: 85000, scale: 1.3  },
-      { currency: 'pixie-dust', base: 100,  scale: 1.3  },
-    ] },
-  { id: 'POTION_CATS_EARS', characterId: 'thief', category: 'minigame', max: 20,
-    costs: [
-      { currency: 'concentrated-potion', base: 2,  scale: 1.3  },
-      { currency: 'kobold-ear',          base: 25, scale: 1.3 },
-    ] },
-  { id: 'BAG_OF_HOLDING', characterId: 'thief', category: 'minigame', max: 50,
-    costs: [
-      { currency: 'gold',     base: 20_000, scale: 1.2 },
-      { currency: 'treasure', base: 20,     scale: 1.25 },
-    ] },
-  { id: 'RELIC_HUNTER', characterId: 'thief', category: 'minigame', max: 99,
+  { id: 'RELIC_HUNTER', characterId: 'thief', category: 'standard', max: 99,
     gates: { requiresRelic: true },
     costs: [
       // Always: dossier scales steeply with each level
@@ -440,6 +431,23 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'hearty-meal',         base: 500,   scale: 1.0, fromLevel: 3, untilLevel: 4 },
       // Level 5 only: Thief - Dossier excluded cause thats coming from the base scaling
       { currency: 'treasure',            base: 2000,  scale: 1.0, fromLevel: 4 },
+    ] },
+
+  // ── Thief — minigame ─────────────────────────────────────────
+  { id: 'VANISHING_POWDER', characterId: 'thief', category: 'minigame', max: 5,
+    costs: [
+      { currency: 'gold',       base: 85000, scale: 1.3  },
+      { currency: 'pixie-dust', base: 100,  scale: 1.3  },
+    ] },
+  { id: 'POTION_CATS_EARS', characterId: 'thief', category: 'minigame', max: 20,
+    costs: [
+      { currency: 'concentrated-potion', base: 2,  scale: 1.3  },
+      { currency: 'kobold-ear',          base: 25, scale: 1.3 },
+    ] },
+  { id: 'BAG_OF_HOLDING', characterId: 'thief', category: 'minigame', max: 50,
+    costs: [
+      { currency: 'gold',     base: 20_000, scale: 1.2 },
+      { currency: 'treasure', base: 20,     scale: 1.25 },
     ] },
   { id: 'LOCKED_IN', characterId: 'thief', category: 'minigame', max: 1,
     costs: [
@@ -477,6 +485,17 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [
       { currency: 'treasure', base: 500, scale: 1.0 },
       { currency: 'jewelry',  base: 5,   scale: 1.0 },
+    ] },
+  { id: 'GOOD_ENOUGH', characterId: 'artisan', category: 'minigame', max: 1,
+    costs: [
+      { currency: 'gold',  base: 75_000, scale: 1.0 },
+      { currency: 'spice', base: 3_000,  scale: 1.0 },
+    ] },
+  { id: 'CLOSE_ENOUGH', characterId: 'artisan', category: 'minigame', max: 1,
+    gates: { requiresDoubleDip: true },
+    costs: [
+      { currency: 'gold',           base: 150_000, scale: 1.0 },
+      { currency: 'precious-metal', base: 500,     scale: 1.0 },
     ] },
   // Max is 1 for now — levels 2-3 will be enabled in a future update with different currencies.
   { id: 'STAND_OUT_SELECTION', characterId: 'artisan', category: 'minigame', max: 1,
@@ -634,6 +653,9 @@ export const FIGHTER_MG = {
   /** Base long-rest lockout in ms after the Fighter is defeated (future upgrades reduce this) */
   RECOVERY_TIME_MS:  60_000,
 
+  /** Chance per level (0–1) to roll player attack damage twice and take the higher. */
+  MIND_READING_CHANCE_PER_LEVEL: 0.10,
+
   // ── Kobold level scaling (applied per level above 1) ──────
   /** Extra HP per kobold level above 1 */
   KOBOLD_HP_PER_LEVEL:       20,
@@ -709,11 +731,11 @@ export const RANGER_MG = {
 
   // ── Treasure Chest (Treasure Chest upgrade) ────────────────
   /** Chest chance increase per Treasure Chest upgrade level (percentage, 0–100). */
-  CHEST_CHANCE_PER_LEVEL: 2,
+  CHEST_CHANCE_PER_LEVEL: 0.5,
   /** Herb chance reduction per Treasure Chest upgrade level (percentage). */
-  CHEST_HERB_REDUCTION_PER_LEVEL: 1,
+  CHEST_HERB_REDUCTION_PER_LEVEL: 0.25,
   /** Meat chance reduction per Treasure Chest upgrade level (percentage). */
-  CHEST_MEAT_REDUCTION_PER_LEVEL: 1,
+  CHEST_MEAT_REDUCTION_PER_LEVEL: 0.25,
   /** Min gold awarded when a treasure chest is found. */
   CHEST_GOLD_MIN: 1200,
   /** Max gold awarded when a treasure chest is found. */
@@ -813,5 +835,9 @@ export const ARTISAN_MG = {
   DOUBLE_DIP_JEWELRY_BONUS: 1,
   /** Bonus XP awarded for a successful Double Dip. */
   DOUBLE_DIP_XP_BONUS: 3,
+  /** Minimum gem score (0–1) qualifying for the Good Enough bonus jewelry. */
+  GOOD_ENOUGH_THRESHOLD: 0.75,
+  /** Bonus jewelry per qualifying gem when Good Enough is active. */
+  GOOD_ENOUGH_JEWELRY_PER_GEM: 1,
 } as const;
 

@@ -129,6 +129,20 @@ $bg:     #000;
     background: #111;
   }
 
+  // Double Dip: first pick confirmed as the best gem — awaiting second pick
+  &.gem-first-pick {
+    border-color: #44dd44;
+    background: #061206;
+    box-shadow: 0 0 8px rgba(68, 221, 68, 0.4);
+  }
+
+  // Close Enough: player picked the runner-up gem and won via Close Enough upgrade
+  &.gem-close-enough {
+    border-color: #ddaa44;
+    background: #141006;
+    box-shadow: 0 0 6px rgba(221, 170, 68, 0.35);
+  }
+
   // Revealed as the best gem
   &.gem-best {
     border-color: $accent;
@@ -175,6 +189,10 @@ $bg:     #000;
 
   &.score-best {
     color: $accent;
+    font-weight: bold;
+  }
+
+  &.score-confirmed {
     font-weight: bold;
   }
 }

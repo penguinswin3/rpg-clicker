@@ -74,6 +74,7 @@ export const UPGRADE_FLAVOR = {
   STRONGER_KOBOLDS:     { name: 'Stronger Kobolds',          desc: 'They grow...' },
   FIRST_STRIKE:         { name: 'First Strike',              desc: 'The Fighter attacks before the enemy. Let the slaughter begin!' },
   GILDED_BLADE:         { name: 'Gilded Blade',              desc: '+1% secondary drop chance and +1% gold per kill per level' },
+  POTION_MIND_READING:  { name: 'Potion of Mind Reading',    desc: '+10% chance per level to roll attack damage twice and take the higher result' },
 
   // Ranger
   MORE_HERBS:           { name: 'More Herbs',                desc: '+3% chance to double base herbs' },
@@ -124,15 +125,17 @@ export const UPGRADE_FLAVOR = {
   POTION_CATS_PAW:          { name: "Potion of the Cat's Paw",   desc: '+1 max gemstone and precious metal yield per level' },
   LUCKY_GEMS:               { name: 'Lucky Gems',                desc: '+10% lucky gem bonus per level' },
   DOUBLE_DIP:               { name: 'Double Dip',                desc: 'Pick the best gem first to reveal a second pick — find the runner-up for a bonus!' },
+  GOOD_ENOUGH:              { name: 'Good Enough',               desc: '+1 jewelry for each gem in the round with a quality above 75%' },
+  CLOSE_ENOUGH:             { name: 'Close Enough',              desc: 'Selecting the runner-up gem also counts as a successful pick' },
   STAND_OUT_SELECTION:      { name: 'Stand Out Selection',       desc: 'One attribute of the finest gemstone is set to its maximum value' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
-  RELIC_FIGHTER:    { name: 'Amulet of Glory',       desc: 'A powerful artifact that empowers the Fighter. (placeholder)' },
-  RELIC_RANGER:     { name: 'Magic Secateurs',    desc: 'A powerful artifact that empowers the Ranger. (placeholder)' },
-  RELIC_APOTHECARY: { name: 'Mask of the Greenman',     desc: 'A powerful artifact that empowers the Apothecary. (placeholder)' },
-  RELIC_CULINARIAN: { name: 'Charming Perfume',  desc: 'A powerful artifact that empowers the Culinarian. (placeholder)' },
-  RELIC_THIEF:      { name: 'Ring of Shadows',     desc: 'A powerful artifact that empowers the Thief. (placeholder)' },
-  RELIC_ARTISAN:    { name: "Jeweler's Loupe",    desc: 'A powerful artifact that empowers the Artisan. (placeholder)' },
+  RELIC_FIGHTER:    { name: 'Crown of Hireling Command',          desc: 'Jacks also generate hireling gold — each Jack earns your full passive gold/sec as a bonus' },
+  RELIC_RANGER:     { name: 'Belt of the Woodlands',              desc: 'Each assigned Jack adds +1 to the base herb yield (before doubling) and +1 bonus beast meat per hunt' },
+  RELIC_APOTHECARY: { name: 'Monocle of Perfect Theurgy',        desc: 'Jacks consume 1 fewer herb per brew (min 0) and automatically dilute each brew into 2 potions' },
+  RELIC_CULINARIAN: { name: 'Clasp of Exquisite Taste',          desc: 'Jacks double their effective spice yield per purchase at no additional cost' },
+  RELIC_THIEF:      { name: 'Ring of Shadows',                    desc: 'Jacks double their dossier yield range and steal 2 bonus treasure per successful action' },
+  RELIC_ARTISAN:    { name: 'Masterwork Monocle of Perfection',   desc: 'Jacks always salvage maximum metal and double the minimum gemstone yield' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
@@ -315,7 +318,8 @@ export const HERO_STATS_FLAVOR = {
     PER_SECOND:   'Gold Per Second  :',
     XP_PER_CLICK: 'XP Per Bounty    :',
     DAMAGE_RANGE: 'Attack Damage    :',
-    GILDED_BLADE: 'Gilded Blade     :',
+    GILDED_BLADE: 'Secondary Chance      :',
+    MIND_READING: 'Advantage Chance :',
   },
   RANGER: {
     BEAST_CHANCE: 'Beast Success :',
@@ -409,6 +413,7 @@ export const MINIGAME_MSG = {
     ROUND_START:   (count: number) => `${count} gems presented. Choose wisely!`,
     DOUBLE_DIP_HIT:  'Double Dip! The runner-up was found too!',
     DOUBLE_DIP_MISS: 'Fine eye for the best, but the runner-up slipped away.',
+    CLOSE_ENOUGH_WIN: 'Close enough! The runner-up gem will do.',
   },
 
 };

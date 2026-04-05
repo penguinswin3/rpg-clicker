@@ -94,12 +94,13 @@ export function getJackStarvedMessage(
   charId: string,
   culinarianGoldCost: number,
   walletGet: (currencyId: string) => number,
+  apothecaryRelicLevel: number = 0,
 ): string {
   if (charId === 'thief') {
     return `⚠ Jack idle — Stunned!`;
   }
   if (charId === 'apothecary') {
-    const need = YIELDS.APOTHECARY_BREW_HERB_COST;
+    const need = Math.max(0, YIELDS.APOTHECARY_BREW_HERB_COST - (apothecaryRelicLevel >= 1 ? 1 : 0));
     const have = Math.floor(walletGet('herb'));
     return `⚠ Jack idle — need ${need} herbs (have ${have})`;
   }

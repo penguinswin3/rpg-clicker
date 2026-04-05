@@ -21,6 +21,7 @@ import {
   calcSpicePerClick, calcCulinarianGoldCost,
   calcThiefSuccessChance,
   calcArtisanTreasureCost,
+  calcAutoGoldPerSecond,
 } from './yield-helpers';
 
 // ── Contexts ────────────────────────────────────────────────
@@ -64,6 +65,8 @@ export interface JackAutoClickContext {
   isArtisanTimerActive:   () => boolean;
   /** Start the artisan shared timer with the given batch size (= jackCount). */
   startArtisanTimer:      (batchSize: number) => void;
+  /** Returns the level of a character's relic upgrade (0 = not owned). */
+  relicLevel:             (charId: string) => number;
 }
 
 // ── Hero click dispatch ─────────────────────────────────────
@@ -265,6 +268,19 @@ function jackFighter(ctx: JackAutoClickContext): void {
   ctx.wallet.add('xp',   xpPerBounty);
   ctx.stats.trackCurrencyGain('gold', goldPerClick);
   ctx.stats.trackCurrencyGain('xp', xpPerBounty);
+
+  // Relic: Crown of Hireling Command — each jack also generates hireling gold
+  if (ctx.relicLevel('fighter') >= 1) {
+    const hirelingGold = calcAutoGoldPerSecond(
+      ctx.upgrades.level('CONTRACTED_HIRELINGS'),
+      ctx.upgrades.level('HIRELINGS_HIRELINGS'),
+    );
+    if (hirelingGold > 0) {
+      ctx.wallet.add('gold', hirelingGold);
+      ctx.stats.trackCurrencyGain('gold', hirelingGold);
+    }
+  }
+
   if (ctx.isJackStarved('fighter')) ctx.setJackStarved('fighter', false);
 }
 
@@ -278,23 +294,28 @@ function jackRanger(ctx: JackAutoClickContext): void {
   const beastChance     = calcBeastFindChance(u.level('BETTER_TRACKING'));
   const catsEyeLevel    = u.level('POTION_CATS_EYE');
   const catsEyeProcs    = catsEyeLevel > 0 && rollChance(catsEyeLevel);
+  const hasRangerRelic  = ctx.relicLevel('ranger') >= 1;
+
+  // Relic: Belt of the Woodlands — +1 base herb (before doubling), +1 beast per hunt
+  const herbBonusBase  = hasRangerRelic ? 1 : 0;
+  const beastBonusMeat = hasRangerRelic ? 1 : 0;
 
   if (catsEyeProcs) {
-    const herbs = computeHerbYield(moreHerbsLevel);
+    const herbs = computeHerbYield(moreHerbsLevel) + herbBonusBase;
     ctx.wallet.add('herb', herbs);
     ctx.stats.trackCurrencyGain('herb', herbs);
     if (rollChance(beastChance)) {
-      const meat = computeMeatYield(biggerGameLevel);
+      const meat = computeMeatYield(biggerGameLevel) + beastBonusMeat;
       ctx.wallet.add('beast', meat);
       ctx.stats.trackCurrencyGain('beast', meat);
     }
   } else {
     if (rollChance(50)) {
-      const herbs = computeHerbYield(moreHerbsLevel);
+      const herbs = computeHerbYield(moreHerbsLevel) + herbBonusBase;
       ctx.wallet.add('herb', herbs);
       ctx.stats.trackCurrencyGain('herb', herbs);
     } else if (rollChance(beastChance)) {
-      const meat = computeMeatYield(biggerGameLevel);
+      const meat = computeMeatYield(biggerGameLevel) + beastBonusMeat;
       ctx.wallet.add('beast', meat);
       ctx.stats.trackCurrencyGain('beast', meat);
     }
@@ -304,9 +325,10 @@ function jackRanger(ctx: JackAutoClickContext): void {
 
 function jackApothecary(ctx: JackAutoClickContext): void {
   const u = ctx.upgrades;
-  const herbCost = YIELDS.APOTHECARY_BREW_HERB_COST;
+  const hasRelic = ctx.relicLevel('apothecary') >= 1;
+  const herbCost = Math.max(0, YIELDS.APOTHECARY_BREW_HERB_COST - (hasRelic ? 1 : 0));
 
-  if (!ctx.wallet.canAfford('herb', herbCost)) {
+  if (herbCost > 0 && !ctx.wallet.canAfford('herb', herbCost)) {
     if (!ctx.isJackStarved('apothecary')) {
       ctx.setJackStarved('apothecary', true);
       ctx.onPerSecondUpdate();
@@ -321,10 +343,13 @@ function jackApothecary(ctx: JackAutoClickContext): void {
   const herbSaveChance = calcHerbSaveChance(u.level('POTION_TITRATION'));
   const goldPerBrew    = calcPotionMarketingGoldPerBrew(u.level('POTION_MARKETING'));
 
-  ctx.wallet.remove('herb', herbCost);
-  ctx.wallet.add('potion', 1);
+  if (herbCost > 0) ctx.wallet.remove('herb', herbCost);
+
+  // Relic: Monocle of Perfect Theurgy — auto-dilute into 2 potions
+  const potionYield = hasRelic ? 2 : 1;
+  ctx.wallet.add('potion', potionYield);
   ctx.wallet.add('xp', 1);
-  ctx.stats.trackCurrencyGain('potion', 1);
+  ctx.stats.trackCurrencyGain('potion', potionYield);
   ctx.stats.trackCurrencyGain('xp', 1);
   if (goldPerBrew > 0) {
     ctx.wallet.add('gold', goldPerBrew);
@@ -353,7 +378,9 @@ function jackCulinarian(ctx: JackAutoClickContext): void {
     ctx.onPerSecondUpdate();
   }
 
-  const spiceYield = calcSpicePerClick(ctx.wholesaleSpicesEnabled, u.level('WHOLESALE_SPICES'));
+  const baseSpice  = calcSpicePerClick(ctx.wholesaleSpicesEnabled, u.level('WHOLESALE_SPICES'));
+  // Relic: Clasp of Exquisite Taste — double effective spice at no extra cost
+  const spiceYield = ctx.relicLevel('culinarian') >= 1 ? baseSpice * 2 : baseSpice;
   ctx.wallet.remove('gold', goldCost);
   ctx.wallet.add('spice', spiceYield);
   ctx.wallet.add('xp', 1);
@@ -370,13 +397,25 @@ function jackThief(ctx: JackAutoClickContext): void {
   const successChance = calcThiefSuccessChance(u.level('METICULOUS_PLANNING'));
   const sfLevel = u.level('POTION_OF_STICKY_FINGERS');
   const ppLevel = u.level('PLENTIFUL_PLUNDERING');
+  const hasRelic = ctx.relicLevel('thief') >= 1;
 
   if (rollChance(successChance)) {
-    const dossierToAward = randInt(1, 1 + sfLevel);
+    // Base dossier range: [1, 1 + sfLevel]
+    // Relic: Ring of Shadows — double both min and max
+    const dossierMin = hasRelic ? 2 : 1;
+    const dossierMax = hasRelic ? 2 * (1 + sfLevel) : 1 + sfLevel;
+    const dossierToAward = dossierMax > dossierMin ? randInt(dossierMin, dossierMax) : dossierMin;
     ctx.wallet.add('dossier', dossierToAward);
     ctx.wallet.add('xp', 1);
     ctx.stats.trackCurrencyGain('dossier', dossierToAward);
     ctx.stats.trackCurrencyGain('xp', 1);
+
+    // Relic: Ring of Shadows — also steal 2 treasure per action
+    if (hasRelic) {
+      ctx.wallet.add('treasure', 2);
+      ctx.stats.trackCurrencyGain('treasure', 2);
+    }
+
     if (ppLevel > 0) {
       const bonus = Math.floor(dossierToAward) * ppLevel;
       if (bonus > 0) {
