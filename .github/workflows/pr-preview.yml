@@ -85,8 +85,20 @@ jobs:
           else
             git checkout --orphan gh-pages
             git rm -rf .
-            git commit --allow-empty -m "Initialize gh-pages branch [skip ci]"
+            # Add .nojekyll immediately so GitHub Pages never runs Jekyll on
+            # this branch.  Jekyll silently drops files whose names start with
+            # an underscore, which would break Angular's hashed asset filenames.
+            touch .nojekyll
+            git add .nojekyll
+            git commit -m "Initialize gh-pages branch [skip ci]"
             git push origin gh-pages
+          fi
+
+          # Ensure .nojekyll is present at the root so GitHub Pages does not run
+          # Jekyll on this branch.  Jekyll would silently drop Angular's hashed
+          # asset files (e.g. main-XXXXXX.js), causing the preview to 404.
+          if [ ! -f .nojekyll ]; then
+            touch .nojekyll
           fi
 
           # Replace the previous preview for this PR (if any) with the new build.
@@ -95,7 +107,7 @@ jobs:
           cp -r /tmp/preview-build/. "${PREVIEW_DIR}/"
 
           # Commit and push only when there are actual changes.
-          git add "${PREVIEW_DIR}"
+          git add .nojekyll "${PREVIEW_DIR}"
           if git diff --cached --quiet; then
             echo "No changes to commit – preview is already up to date."
           else
@@ -153,6 +165,11 @@ jobs:
     if: github.event.action == 'closed'
 
     steps:
+      # Checkout the default branch first so that 'origin' is configured and
+      # git ls-remote can query the remote for branch existence.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Check whether gh-pages branch exists
         id: check-branch
         run: |
