@@ -82,7 +82,6 @@ function buildFighterStats(ctx: HeroStatsContext): HeroStat[] {
 
   return [
     { label: HERO_STATS_FLAVOR.FIGHTER.PER_CLICK,  value: `${goldPerClick}` },
-    { label: HERO_STATS_FLAVOR.FIGHTER.PER_SECOND, value: `${autoGoldPerSec}` },
     ...(ctx.minigameUnlocked
       ? [{ label: HERO_STATS_FLAVOR.FIGHTER.DAMAGE_RANGE, value: `${1 + u.level('SLOW_BLADE')}-${1 + u.level('SHARPER_SWORDS')}` }]
       : []),
@@ -111,12 +110,6 @@ function buildRangerStats(ctx: HeroStatsContext): HeroStat[] {
       : []),
     ...(u.level('BIGGER_GAME') > 0
       ? [{ label: HERO_STATS_FLAVOR.RANGER.MAX_MEAT, value: `${u.level('BIGGER_GAME') + 1}` }]
-      : []),
-    ...(u.level('BAITED_TRAPS') > 0
-      ? [{ label: HERO_STATS_FLAVOR.RANGER.TRAP_RATE, value: `${roundTo(trapRate, 2)}/s` }]
-      : []),
-    ...(u.level('HOVEL_GARDEN') > 0
-      ? [{ label: HERO_STATS_FLAVOR.RANGER.GARDEN_RATE, value: `${roundTo(gardenRate, 2)}/s` }]
       : []),
     ...(u.level('TREASURE_CHEST') > 0
       ? [{ label: HERO_STATS_FLAVOR.RANGER.CHEST_CHANCE, value: `${u.level('TREASURE_CHEST') * 2}%` }]
@@ -204,16 +197,14 @@ function buildArtisanStats(ctx: HeroStatsContext): HeroStat[] {
   const treasureCostPerAppraisal = calcArtisanTreasureCost();
   const artisanJacks = ctx.jacksAllocations['artisan'] ?? 0;
   // Total treasure cost for one manual click or for each jack batch
-  const treasureCostDisplay = artisanJacks > 0
-    ? `${treasureCostPerAppraisal} (${treasureCostPerAppraisal * artisanJacks} per jack batch)`
-    : `${treasureCostPerAppraisal}`;
+  const treasureCostDisplay = treasureCostPerAppraisal;
 
   const timerSec     = calcArtisanTimerMs(fasterAppraisingLevel) / 1000;
   const gemMax       = calcArtisanGemstoneMax(catsPawLevel);
   const metalMax     = calcArtisanMetalMax(catsPawLevel);
 
   const stats: HeroStat[] = [
-    { label: HERO_STATS_FLAVOR.ARTISAN.TREASURE_COST,  value: treasureCostDisplay },
+    { label: HERO_STATS_FLAVOR.ARTISAN.TREASURE_COST,  value: treasureCostDisplay.toString() },
     { label: HERO_STATS_FLAVOR.ARTISAN.TIMER_DURATION, value: `${timerSec}s` },
     { label: HERO_STATS_FLAVOR.ARTISAN.GEMSTONE_RANGE, value: `${YIELDS.ARTISAN_GEMSTONE_MIN} - ${gemMax}` },
     { label: HERO_STATS_FLAVOR.ARTISAN.METAL_RANGE,    value: `${YIELDS.ARTISAN_METAL_MIN} - ${metalMax}` },

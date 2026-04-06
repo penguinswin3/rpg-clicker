@@ -344,7 +344,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     const type: 'default' | 'success' = (this.pixieFound > 0 || this.chestFound > 0) ? 'success' : 'default';
 
     if (parts.length > 0) {
-      this.log.log(`Ranger scouted the area. (${parts.join(', ')})${multiplierStr}`, type);
+      this.log.log(`${multiplierStr} Ranger scouted the area. (${parts.join(', ')})`, type);
     } else {
       this.log.log(`Ranger scouted the area: found nothing useful.`);
     }

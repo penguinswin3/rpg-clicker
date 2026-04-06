@@ -29,7 +29,7 @@ export const CURRENCY_FLAVOR = {
   gemstone:              { name: 'Gemstone',                  symbol: '💎︎',  color: '#54d6ac' },
   jewelry:               { name: 'Jewelry',                   symbol: 'Ő',  color: '#97dfc8' },
   'synaptical-potion':   { name: 'Synaptical Potion Base',    symbol: '⚗',  color: '#5b67eb' },
-  'kobold-feather':      { name: 'Kobold Feathers',           symbol: 'ϡ',  color: '#c5b3aa' },
+  'kobold-feather':      { name: 'Kobold Feather',           symbol: 'ϡ',  color: '#c5b3aa' },
   'bone':                { name: 'Bones',                     symbol: '🕱',  color: '#d7d8e6' },
   'brimstone':           { name: 'Brimstone',                 symbol: '🜏',  color: '#ffbd2b' },
   'soul-stone':          { name: 'Soul Stone',                symbol: '◈',  color: '#8f4fff' },
@@ -75,7 +75,7 @@ export const UPGRADE_FLAVOR = {
   SHORT_REST:           { name: 'Short Rest',                desc: 'Auto-heal to full HP with potions after each victory at a reduced efficiency' },
   SHARPER_SWORDS:       { name: 'Sharper Swords',            desc: '+1 max hit in combat' },
   SLOW_BLADE:           { name: 'The Slow Blade',            desc: '+1 minimum hit in combat' },
-  STRONGER_KOBOLDS:     { name: 'Stronger Kobolds',          desc: 'They grow...' },
+  STRONGER_KOBOLDS:     { name: 'Stronger Kobolds',          desc: 'You can seek out stronger kobolds. They grow...' },
   FIRST_STRIKE:         { name: 'First Strike',              desc: 'The Fighter attacks before the enemy. Let the slaughter begin!' },
   GILDED_BLADE:         { name: 'Gilded Blade',              desc: '+1% secondary drop chance and +1% gold per kill per level' },
   POTION_FORESIGHT:  { name: 'Potion of Foresight',          desc: '+10% chance per level to roll attack damage twice and take the higher result' },
@@ -92,7 +92,7 @@ export const UPGRADE_FLAVOR = {
   ABUNDANT_LANDS:       { name: 'Abundant Lands',            desc: 'Resource gain is multiplied by the number of successful finds' },
   FAIRY_HOSTAGE:        { name: 'Fairy Hostage',             desc: 'A pixie, if present, will call out to a friend for help...' },
   TREASURE_CHEST:       { name: 'Treasure Chest',            desc: '+2% chance per level to find a treasure chest while scouting' },
-  X_MARKS_THE_SPOT:    { name: 'X Marks the Spot',          desc: 'Treasure chest cells are marked with a red X before they are revealed' },
+  X_MARKS_THE_SPOT:    { name: 'X Marks the Spot',           desc: 'Treasure chest cells are marked with a red X ' },
   POTION_CATS_EYE:      { name: "Potion of Cat's Eye",       desc: "+1% chance to roll both herb AND beast" },
   BIGGER_GAME:          { name: 'Bigger Game',               desc: '+1 max Raw Beast Meat per hero button press' },
 
@@ -117,7 +117,7 @@ export const UPGRADE_FLAVOR = {
 
   // Thief
   METICULOUS_PLANNING:      { name: 'Meticulous Planning',       desc: '+1% thieving success chance per level' },
-  PLENTIFUL_PLUNDERING:     { name: 'Plentiful Plundering',      desc: 'Each successful robbery awards gold equal to dossiers collected, per level' },
+  PLENTIFUL_PLUNDERING:     { name: 'Plentiful Plundering',      desc: 'Each successful robbery awards bonus gold equal to dossiers collected, per level' },
   POTION_OF_STICKY_FINGERS: { name: 'Potion of Sticky Fingers',  desc: '+1 max dossier yield per level' },
   VANISHING_POWDER:         { name: 'Vanishing Powder',          desc: '+1 max detection tolerance per level' },
   POTION_CATS_EARS:         { name: "Potion of Cat's Ears",      desc: '+3° sweet spot size per level' },
@@ -130,10 +130,10 @@ export const UPGRADE_FLAVOR = {
   FASTER_APPRAISING:        { name: 'Faster Appraising',         desc: '-1 second appraisal timer per level' },
   POTION_CATS_PAW:          { name: "Potion of the Cat's Paw",   desc: '+1 max gemstone and precious metal yield per level' },
   LUCKY_GEMS:               { name: 'Lucky Gems',                desc: '+10% lucky gem bonus per level' },
-  DOUBLE_DIP:               { name: 'Double Dip',                desc: 'Pick the best gem first to reveal a second pick — find the runner-up for a bonus!' },
+  DOUBLE_DIP:               { name: 'Double Dip',                desc: 'Select the second best jem as well, but only if you find the best first!' },
   GOOD_ENOUGH:              { name: 'Good Enough',               desc: '+1 jewelry for each gem in the round with a quality above 75%' },
   CLOSE_ENOUGH:             { name: 'Close Enough',              desc: 'Selecting the runner-up gem also counts as a successful pick' },
-  STAND_OUT_SELECTION:      { name: 'Stand Out Selection',       desc: 'One attribute of the finest gemstone is set to its maximum value' },
+  STAND_OUT_SELECTION:      { name: 'Stand Out Selection',       desc: 'The Best gemstone is even better' },
 
   // Necromancer
   EXTENDED_RITUAL:          { name: 'Extended Ritual',           desc: '+2 clicks before switching abilities per level' },
@@ -149,7 +149,7 @@ export const UPGRADE_FLAVOR = {
   VAULT_OF_SOULS:           { name: 'Vault of Souls',            desc: 'Increases the maximum familiar time cap by 5 minutes per level' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
-  RELIC_FIGHTER:    { name: 'Crown of Hireling Command',          desc: 'Jacks also generate hireling gold — each Jack earns your full passive gold/sec as a bonus' },
+  RELIC_FIGHTER:    { name: 'Crown of Hireling Command',          desc: 'Each Jack hires hirelings, who in turn hire hirelings' },
   RELIC_RANGER:     { name: 'Belt of the Woodlands',              desc: 'Each assigned Jack adds +1 to the base herb yield (before doubling) and +1 bonus beast meat per hunt' },
   RELIC_APOTHECARY: { name: 'Monocle of Perfect Theurgy',        desc: 'Jacks consume 1 fewer herb per brew (min 0) and automatically dilute each brew into 2 potions' },
   RELIC_CULINARIAN: { name: 'Clasp of Exquisite Taste',          desc: 'Jacks double their effective spice yield per purchase at no additional cost' },

@@ -140,9 +140,9 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'jewelry',            base: 10,   fromCount: 18, untilCount: 19 },  // Jack 19
       { currency: 'synaptical-potion',  base: 25,   fromCount: 19, untilCount: 20 },  // Jack 20
       { currency: 'kobold-feather',     base: 25,   fromCount: 20, untilCount: 21 },  // Jack 21
-      { currency: 'bone',               base: 25,   fromCount: 21, untilCount: 22 },  // Jack 22
-      { currency: 'brimstone',          base: 25,   fromCount: 22, untilCount: 23 },  // Jack 23
-      { currency: 'xp',                 base: 50000,   fromCount: 23, untilCount: 24 },  // Jack 24
+      { currency: 'bone',               base: 1000,   fromCount: 21, untilCount: 22 },  // Jack 22
+      { currency: 'brimstone',          base: 1000,   fromCount: 22, untilCount: 23 },  // Jack 23
+      { currency: 'xp',                 base: 150000,   fromCount: 23, untilCount: 24 },  // Jack 24
       { currency: 'soul-stone',         base: 250,   fromCount: 24, untilCount: 25 },  // Jack 25
     ],
   },
@@ -162,7 +162,7 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
     ],
   },
   {
-    id: 'UNLOCK_CULINARIAN', kind: 'character-unlock', xpMin: 18_000,
+    id: 'UNLOCK_CULINARIAN', kind: 'character-unlock', xpMin: 22_000,
     costs: [
       { currency: 'gold',  base: 15_000 },
       { currency: 'beast', base: 1_500  },
@@ -172,9 +172,9 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
   {
     id: 'UNLOCK_THIEF', kind: 'character-unlock', xpMin: 70_000,
     costs: [
-      { currency: 'gold',        base: 50_000 },
-      { currency: 'spice',       base: 10_000 },
-      { currency: 'kobold-hair', base: 100    },
+      { currency: 'gold',                base: 50_000 },
+      { currency: 'spice',               base: 10_000 },
+      { currency: 'concentrated-potion', base: 50    },
     ],
   },
   {
@@ -186,11 +186,11 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
     ],
   },
   {
-    id: 'UNLOCK_NECROMANCER', kind: 'character-unlock', xpMin: 500_000,
+    id: 'UNLOCK_NECROMANCER', kind: 'character-unlock', xpMin: 750_000,
     costs: [
       { currency: 'gold',           base: 400_000 },
       { currency: 'precious-metal', base: 2000     },
-      { currency: 'gemstone',       base: 1250     },
+      { currency: 'gemstone',       base: 2000     },
     ],
   },
 
@@ -250,17 +250,17 @@ export const XP_THRESHOLDS = {
 export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Fighter — standard ───────────────────────────────────────
   { id: 'BETTER_BOUNTIES',      characterId: 'fighter', category: 'standard', max: 999,
-    costs: [{ currency: 'gold', base: 10, scale: 1.35 }] },
+    costs: [{ currency: 'gold', base: 10, scale: 1.12 }] },
   { id: 'CONTRACTED_HIRELINGS', characterId: 'fighter', category: 'standard', max: 999,
-    costs: [{ currency: 'gold', base: 25, scale: 1.15 }] },
+    costs: [{ currency: 'gold', base: 25, scale: 1.1 }] },
   { id: 'INSIGHTFUL_CONTRACTS', characterId: 'fighter', category: 'standard', max: 999,
     gates: { xpMin: 500 },
     costs: [{ currency: 'gold', base: 400, scale: 1.4 }] },
   { id: 'HIRELINGS_HIRELINGS', characterId: 'fighter', category: 'standard', max: 999,
     gates: { requiresCulinarian: true },
     costs: [
-      { currency: 'gold',  base: 1000, scale: 1.5 },
-      { currency: 'spice', base: 1000,    scale: 1.5 },
+      { currency: 'gold',  base: 1000, scale: 1.25 },
+      { currency: 'spice', base: 1000,    scale: 1.25 },
     ] },
 
   // ── Fighter — minigame ───────────────────────────────────────
@@ -329,18 +329,18 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'BAITED_TRAPS',    characterId: 'ranger', category: 'standard', max: 999,
     costs: [
       { currency: 'gold',  base: 200, scale: 1.2 },
-      { currency: 'beast', base: 50,  scale: 1.3 },
+      { currency: 'beast', base: 50,  scale: 1.1 },
     ] },
   { id: 'SPICED_BAIT',     characterId: 'ranger', category: 'standard', max: 999,
     gates: { requiresCulinarian: true },
     costs: [
-      { currency: 'beast', base: 100, scale: 1.3 },
-      { currency: 'spice', base: 50,  scale: 1.4 },
+      { currency: 'beast', base: 100, scale: 1.2 },
+      { currency: 'spice', base: 50,  scale: 1.3 },
     ] },
   { id: 'HOVEL_GARDEN',    characterId: 'ranger', category: 'standard', max: 999,
     costs: [
       { currency: 'gold', base: 150, scale: 1.2 },
-      { currency: 'herb', base: 50,  scale: 1.3 },
+      { currency: 'herb', base: 50,  scale: 1.1 },
     ] },
   { id: 'ORNATE_HERB_POTS', characterId: 'ranger', category: 'standard', max: 999,
     gates: { requiresThief: true },
@@ -358,7 +358,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Ranger — minigame ────────────────────────────────────────
-  { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 4,      // each level adds +1 guaranteed prize node
+  { id: 'BOUNTIFUL_LANDS', characterId: 'ranger', category: 'minigame', max: 5,      // each level adds +1 guaranteed prize node
     costs: [
       { currency: 'kobold-ear',    base: 50, scale: 1.0, fromLevel: 0, untilLevel: 1 },  // level 1 only
       { currency: 'kobold-tongue', base: 50, scale: 1.0, fromLevel: 1, untilLevel: 2 },  // level 2 only
@@ -385,7 +385,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     gates: { requiresTreasureChestMin: 1 },
     costs: [
       { currency: 'synaptical-potion', base: 100, scale: 1.0 },
-      { currency: 'kobold-brain',      base: 100, scale: 1.0 },
+      { currency: 'dossier',           base: 8500, scale: 1.0 },
       { currency: 'gemstone',          base: 100, scale: 1.0 },
     ] },
 
@@ -406,8 +406,8 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'gold', base: 200, scale: 1.3 }] },
   { id: 'POTION_GLIBNESS',  characterId: 'culinarian', category: 'standard', max: 85,   // 85 × -1% spice purchase cost
     costs: [
-      { currency: 'concentrated-potion', base: 2,  scale: 1.5 },
-      { currency: 'kobold-tongue',       base: 5,  scale: 1.5 },
+      { currency: 'concentrated-potion', base: 2,  scale: 1.1 },
+      { currency: 'kobold-tongue',       base: 5,  scale: 1.1 },
     ] },
 
   // ── Culinarian — minigame ────────────────────────────────────
@@ -424,7 +424,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'dossier',     base: 2_500,   scale: 1.0 },
     ] },
   { id: 'COOKBOOK_ANNOTATIONS', characterId: 'culinarian', category: 'minigame', max: 1,
-    gates: { requiresCulinarian: true },
+    gates: { requiresCulinarian: true, requiresFeather: true },
     costs: [
       { currency: 'dossier',         base: 100_000, scale: 1.0 },
       { currency: 'kobold-feather',  base: 50,      scale: 1.0 },
@@ -432,21 +432,21 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
 
   // ── Thief — standard ─────────────────────────────────────────
   { id: 'METICULOUS_PLANNING', characterId: 'thief', category: 'standard', max: 50,
-    costs: [{ currency: 'gold', base: 1000,       scale: 1.12 },
-            { currency: 'dossier', base: 5,     scale: 1.08 },] },
+    costs: [{ currency: 'gold', base: 1000,       scale: 1.1 },
+            { currency: 'dossier', base: 15,     scale: 1.13 },] },
   { id: 'PLENTIFUL_PLUNDERING', characterId: 'thief', category: 'standard', max: 999,
     costs: [{ currency: 'gold',    base: 1000, scale: 1.15 },
             { currency: 'dossier', base: 10,  scale: 1.10 }] },
   { id: 'POTION_OF_STICKY_FINGERS', characterId: 'thief', category: 'standard', max: 25,
     costs: [
       { currency: 'concentrated-potion', base: 2, scale: 1.3 },
-      { currency: 'kobold-hair',         base: 5, scale: 1.2 },
+      { currency: 'kobold-claw',         base: 5, scale: 1.2 },
     ] },
   { id: 'RELIC_HUNTER', characterId: 'thief', category: 'standard', max: 99,
     gates: { requiresRelic: true },
     costs: [
       // Always: dossier scales steeply with each level
-      { currency: 'dossier',             base: 1000,  scale: 1.6 },
+      { currency: 'dossier',             base: 2000,  scale: 1.6 },
       // Level 1 only: Fighter
       { currency: 'kobold-ear',          base: 200,  scale: 1.0, fromLevel: 0, untilLevel: 1 },
       { currency: 'kobold-tongue',       base: 200,  scale: 1.0, fromLevel: 0, untilLevel: 1 },
@@ -459,6 +459,8 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       // Level 3 only: Apothecary
       { currency: 'potion',              base: 10000, scale: 1.0, fromLevel: 2, untilLevel: 3 },
       { currency: 'concentrated-potion', base: 500,   scale: 1.0, fromLevel: 2, untilLevel: 3 },
+      { currency: 'synaptical-potion',   base: 250,   scale: 1.0, fromLevel: 2, untilLevel: 3 },
+
       // Level 4 only: Culinarian
       { currency: 'spice',               base: 50000, scale: 1.0, fromLevel: 3, untilLevel: 4 },
       { currency: 'hearty-meal',         base: 500,   scale: 1.0, fromLevel: 3, untilLevel: 4 },
@@ -478,8 +480,8 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Thief — minigame ─────────────────────────────────────────
   { id: 'VANISHING_POWDER', characterId: 'thief', category: 'minigame', max: 5,
     costs: [
-      { currency: 'gold',       base: 85000, scale: 1.3  },
-      { currency: 'pixie-dust', base: 100,  scale: 1.3  },
+      { currency: 'gold',       base: 60000, scale: 1.3  },
+      { currency: 'pixie-dust', base: 80,  scale: 1.3  },
     ] },
   { id: 'POTION_CATS_EARS', characterId: 'thief', category: 'minigame', max: 20,
     costs: [
@@ -508,8 +510,8 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Artisan — standard ───────────────────────────────────────
   { id: 'FASTER_APPRAISING', characterId: 'artisan', category: 'standard', max: 10,
     costs: [
-      { currency: 'gold',        base: 10_000, scale: 1.5 },
-      { currency: 'hearty-meal', base: 5,      scale: 1.5 },
+      { currency: 'gold',        base: 18_000, scale: 1.3 },
+      { currency: 'hearty-meal', base: 10,      scale: 1.4 },
     ] },
   { id: 'POTION_CATS_PAW', characterId: 'artisan', category: 'standard', max: 999,
     costs: [
@@ -520,8 +522,8 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Artisan — minigame ───────────────────────────────────────
   { id: 'LUCKY_GEMS', characterId: 'artisan', category: 'minigame', max: 20,
     costs: [
-      { currency: 'gold',       base: 25_000, scale: 1.4 },
-      { currency: 'pixie-dust', base: 10,     scale: 1.3 },
+      { currency: 'gold',       base: 50_000, scale: 1.4 },
+      { currency: 'pixie-dust', base: 15,     scale: 1.3 },
     ] },
   { id: 'DOUBLE_DIP', characterId: 'artisan', category: 'minigame', max: 1,
     costs: [
@@ -574,8 +576,8 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
   { id: 'GRAVE_LOOTING', characterId: 'necromancer', category: 'standard', max: 5,
     costs: [
-      { currency: 'dossier',     base: 500, scale: 1.5 },
-      { currency: 'hearty-meal', base: 25,  scale: 1.5 },
+      { currency: 'dossier',     base: 50000, scale: 1.5 },
+      { currency: 'hearty-meal', base: 250,  scale: 1.5 },
     ] },
 
   // ── Necromancer — minigame ────────────────────────────────────
@@ -599,21 +601,21 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'soul-stone', base: 50,    scale: 1.0 },
       { currency: 'bone',       base: 200,   scale: 1.0 },
       { currency: 'brimstone',  base: 200,   scale: 1.0 },
-      { currency: 'xp',         base: 1_000, scale: 1.0 },
+      { currency: 'xp',         base: 100_000, scale: 1.0 },
     ] },
   { id: 'CONCENTRATED_SOULS', characterId: 'necromancer', category: 'minigame', max: 10,
     gates: { requiresFindFamiliar: true },
     costs: [
       { currency: 'xp',         base: 200,  scale: 1.5 },
       { currency: 'soul-stone', base: 5,    scale: 1.5 },
-      { currency: 'brimstone',  base: 30,   scale: 1.5 },
+      { currency: 'brimstone',  base: 300,   scale: 1.5 },
     ] },
   { id: 'VAULT_OF_SOULS', characterId: 'necromancer', category: 'minigame', max: 15,
     gates: { requiresFindFamiliar: true },
     costs: [
-      { currency: 'precious-metal', base: 5,   scale: 1.4 },
-      { currency: 'brimstone',      base: 75,  scale: 1.4 },
-      { currency: 'soul-stone',     base: 20,  scale: 1.4 },
+      { currency: 'precious-metal', base: 150,   scale: 1.4 },
+      { currency: 'brimstone',      base: 750,  scale: 1.4 },
+      { currency: 'soul-stone',     base: 30,  scale: 1.4 },
     ] },
 
   // ── Apothecary — minigame ────────────────────────────────────
@@ -701,7 +703,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
 // globally (regardless of order): jewelryCost = base × scale^(relicsOwned).
 export const RELIC_COSTS = {
   /** Jewelry required for the first relic upgrade purchased (0 relics owned). */
-  JEWELRY_BASE:  10,
+  JEWELRY_BASE:  5,
   /** Multiplicative scale applied per relic already owned. */
   JEWELRY_SCALE: 2.5,
 } as const;
@@ -738,9 +740,9 @@ export const YIELDS = {
   /** Maximum gemstones awarded per appraisal */
   ARTISAN_GEMSTONE_MAX: 3,
   /** Minimum precious metals awarded per appraisal */
-  ARTISAN_METAL_MIN: 2,
+  ARTISAN_METAL_MIN: 5,
   /** Maximum precious metals awarded per appraisal */
-  ARTISAN_METAL_MAX: 5,
+  ARTISAN_METAL_MAX: 10,
 
   // ── Necromancer ─────────────────────────────────────────────
   /** Bones awarded per Defile click (base, before Speak With Dead) */
@@ -802,9 +804,9 @@ export const FIGHTER_MG = {
 
   // ── Kobold level scaling (applied per level above 1) ──────
   /** Extra HP per kobold level above 1 */
-  KOBOLD_HP_PER_LEVEL:       20,
+  KOBOLD_HP_PER_LEVEL:       12,
   /** Extra enemy max damage per kobold level above 1 */
-  KOBOLD_DMG_PER_LEVEL:       2,
+  KOBOLD_DMG_PER_LEVEL:       5,
   /** Extra gold min reward per kobold level above 1 */
   KOBOLD_GOLD_MIN_PER_LEVEL:  15,
   /** Extra gold max reward per kobold level above 1 */
@@ -885,13 +887,13 @@ export const RANGER_MG = {
   /** Max gold awarded when a treasure chest is found. */
   CHEST_GOLD_MAX: 30000,
   /** Min treasure awarded when a treasure chest is found. */
-  CHEST_TREASURE_MIN: 25,
+  CHEST_TREASURE_MIN: 12,
   /** Max treasure awarded when a treasure chest is found. */
-  CHEST_TREASURE_MAX: 100,
+  CHEST_TREASURE_MAX: 50,
   /** Min gemstones awarded when a treasure chest is found. */
-  CHEST_GEM_MIN: 5,
+  CHEST_GEM_MIN: 1,
   /** Max gemstones awarded when a treasure chest is found. */
-  CHEST_GEM_MAX: 40,
+  CHEST_GEM_MAX: 12,
   /** XP awarded when a treasure chest is found. */
   CHEST_XP: 15,
 } as const;
