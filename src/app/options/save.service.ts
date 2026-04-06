@@ -3,6 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { CharacterService } from '../character/character.service';
 import { ActivityLogService, LogFilterType } from '../activity-log/activity-log.service';
+import { StatisticsService, StatisticsSnapshot } from '../statistics/statistics.service';
 import { UPGRADE_DEFS, VERSION } from '../game-config';
 import { UpgradesSnapshot } from '../upgrade/upgrade.service';
 import { scaledCost } from '../utils/mathUtils';
@@ -26,6 +27,7 @@ export interface UpgradeState {
   upgradeLevels: UpgradesSnapshot;
   selectedKoboldLevel?: number;
   minigameUnlocked?: boolean;
+  jackdUpUnlocked?: boolean;
   jacksOwned?: number;
   jacksAllocations?: Record<string, number>;
   fighterCombatState?: FighterCombatState;
@@ -33,6 +35,21 @@ export interface UpgradeState {
   shortRestEnabled?: boolean;
   wholesaleSpicesEnabled?: boolean;
   dilutionEnabled?: boolean;
+  synapticalEnabled?: boolean;
+  fermentationVatsEnabled?: boolean;
+  koboldBaitEnabled?: boolean;
+  /** Absolute timestamp (ms) when the artisan timer expires (0 = idle). */
+  artisanTimerUntil?: number;
+  /** How many appraisals (manual 1 + jacks N) are batched in the current timer. */
+  artisanTimerBatchSize?: number;
+  /** Which necromancer button is currently active ('defile' or 'ward'). */
+  necromancerActiveButton?: 'defile' | 'ward';
+  /** How many clicks remain before the necromancer button switches. */
+  necromancerClicksRemaining?: number;
+  /** Familiar absolute-expiry timestamps (ms) per jack allocation key. */
+  familiarTimers?: Record<string, number>;
+  /** Whether all familiars are paused (not contributing clicks or per-second). */
+  familiarsPaused?: boolean;
 }
 
 // ── Legacy save migration ─────────────────────────────────────
@@ -167,6 +184,8 @@ export interface SaveSnapshot {
   upgrades: UpgradeState;
   /** UI window/filter preferences — optional for backward compat with older saves. */
   uiPrefs?: UiPrefs;
+  /** Lifetime statistics — optional for backward compat with older saves. */
+  statistics?: StatisticsSnapshot;
 }
 
 const SAVE_KEY = 'rpg-clicker-save';
@@ -178,6 +197,7 @@ export class SaveService {
   private wallet      = inject(WalletService);
   private charService = inject(CharacterService);
   private log         = inject(ActivityLogService);
+  private statsService = inject(StatisticsService);
 
   // Callbacks registered by AppComponent so we can capture / restore upgrade state.
   private upgradeGetter: (() => UpgradeState) | null = null;
@@ -298,6 +318,7 @@ export class SaveService {
       manualUnlocks,
       upgrades,
       uiPrefs,
+      statistics: this.statsService.buildSnapshot(),
     };
   }
 
@@ -353,6 +374,9 @@ export class SaveService {
       this.setBlandMode(p.blandMode                       ?? false);
       this.setEnableDevTools(p.enableDevTools             ?? false);
     }
+
+    // 7 — Statistics (optional — absent in older saves, defaults to empty)
+    this.statsService.applySnapshot(snap.statistics ?? null);
   }
 
   // ── Encoding helpers ─────────────────────────────────────────

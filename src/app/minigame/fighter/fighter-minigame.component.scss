@@ -112,6 +112,7 @@ $font: 'Courier New', Courier, monospace;
 .combatant {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 3px;
   width: 100%;
 }
@@ -130,18 +131,26 @@ $font: 'Courier New', Courier, monospace;
   font-family: $font;
   font-size: 10px;
   line-height: 1.4;
-  /* Center the block as a unit; keep each line left-aligned so the
-     art rows share a common left edge and stay coherent. */
-  display: table;
+  /* Fixed-height flex container keeps ASCII art vertically centered
+     and prevents the action buttons below from shifting when the
+     kobold variant changes.
+     Tallest variant is 6 lines × (10px font × 1.4 lh) = 84px. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0 auto;
   text-align: left;
   white-space: pre;
+  max-width: 100%;
+  overflow: hidden;
+  height: 84px;
 }
 
 // ── HP bars ───────────────────────────────
 
 .hp-track {
   width: 100%;
+  align-self: stretch;
   height: 7px;
   background: #111;
   border: 1px solid #2a2a2a;

@@ -19,12 +19,38 @@ export const CURRENCY_FLAVOR = {
   'kobold-tongue':       { name: 'Kobold Tongue',             symbol: 'γ',  color: '#c75050' },
   'kobold-hair':         { name: 'Kobold Hair',               symbol: 'Ҩ',  color: '#ac7c5a' },
   spice:                 { name: 'Spice',                     symbol: 'Δ',  color: '#f07b28' },
-  'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨', color: '#683a0c' },
-  dossier:               { name: 'Dossier',                   symbol: '⌸', color: '#c0cedc' },
-  treasure:              { name: 'Treasure',                  symbol: '⚱', color: '#989c3a' },
-  relic:                 { name: 'Relic',                     symbol: 'ᛝ', color: '#a700ff' },
-  'kobold-fang':         { name: 'Kobold Fang',               symbol: '৲', color: '#969790' },
+  'hearty-meal':         { name: 'Hearty Meal',               symbol: '♨',  color: '#683a0c' },
+  dossier:               { name: 'Dossier',                   symbol: '⌸',  color: '#c0cedc' },
+  treasure:              { name: 'Treasure',                  symbol: '⚱',  color: '#989c3a' },
+  'kobold-fang':         { name: 'Kobold Fang',               symbol: '৲',  color: '#969790' },
+  relic:                 { name: 'Relic',                     symbol: 'ᛝ',  color: '#a700ff' },
+  'kobold-brain':        { name: 'Kobold Brain',              symbol: 'ↀ',  color: '#d6339d' },
+  'precious-metal':      { name: 'Precious Metal',            symbol: '🜛',  color: '#accccb' },
+  gemstone:              { name: 'Gemstone',                  symbol: '💎︎',  color: '#54d6ac' },
+  jewelry:               { name: 'Jewelry',                   symbol: 'Ő',  color: '#97dfc8' },
+  'synaptical-potion':   { name: 'Synaptical Potion Base',    symbol: '⚗',  color: '#5b67eb' },
+  'kobold-feather':      { name: 'Kobold Feather',           symbol: 'ϡ',  color: '#c5b3aa' },
+  'bone':                { name: 'Bones',                     symbol: '🕱',  color: '#d7d8e6' },
+  'brimstone':           { name: 'Brimstone',                 symbol: '🜏',  color: '#ffbd2b' },
+  'soul-stone':          { name: 'Soul Stone',                symbol: '◈',  color: '#8f4fff' },
+
 } as const;
+
+// ── Currency log helper ───────────────────────────────────────
+/**
+ * Format a currency amount for rich display in the activity log.
+ * Returns a tagged token `{{currencyId|displayText}}` that the
+ * activity-log component parses into a colored `<span>`.
+ *
+ * @param id     Currency key from CURRENCY_FLAVOR (e.g. 'gold').
+ * @param amount Numeric amount to display.
+ * @param sign   Prefix sign: '+' (default), '-', or '' (none).
+ */
+export function cur(id: string, amount: number | string, sign: '+' | '-' | '' = '+'): string {
+  const flavor = (CURRENCY_FLAVOR as Record<string, { symbol: string }>)[id];
+  const symbol = flavor?.symbol ?? '?';
+  return `{{${id}|${sign}${amount}${symbol}}}`;
+}
 
 // ꔮ 𐓑  ᛝ ᚕ
 // ── Upgrade Colors ────────────────────────────────────────────
@@ -48,49 +74,89 @@ export const UPGRADE_FLAVOR = {
   POTION_CHUGGING:      { name: 'Potion of Fortitude',       desc: '+1 HP per potion heal' },
   SHORT_REST:           { name: 'Short Rest',                desc: 'Auto-heal to full HP with potions after each victory at a reduced efficiency' },
   SHARPER_SWORDS:       { name: 'Sharper Swords',            desc: '+1 max hit in combat' },
-  STRONGER_KOBOLDS:     { name: 'Stronger Kobolds',          desc: 'They grow...' },
+  SLOW_BLADE:           { name: 'The Slow Blade',            desc: '+1 minimum hit in combat' },
+  STRONGER_KOBOLDS:     { name: 'Stronger Kobolds',          desc: 'You can seek out stronger kobolds. They grow...' },
   FIRST_STRIKE:         { name: 'First Strike',              desc: 'The Fighter attacks before the enemy. Let the slaughter begin!' },
+  GILDED_BLADE:         { name: 'Gilded Blade',              desc: '+1% secondary drop chance and +1% gold per kill per level' },
+  POTION_MIND_READING:  { name: 'Potion of Foresight',          desc: '+10% chance per level to roll attack damage twice and take the higher result' },
+  CATS_SWIFTNESS:    { name: "Potion of Cat's Swiftness",    desc: '-5% kobold respawn delay per level (up to -50% at max)' },
+  KOBOLD_BAIT:       { name: 'Kobold Bait',                  desc: 'Kobolds drop more parts when baited with meat' },
 
   // Ranger
-  MORE_HERBS:           { name: 'More Herbs',                desc: '+1% chance to double base herbs' },
-  BETTER_TRACKING:      { name: 'Better Tracking',           desc: '+1% beast hunt chance' },
+  MORE_HERBS:           { name: 'More Herbs',                desc: '+3% chance to double base herbs' },
+  BETTER_TRACKING:      { name: 'Better Tracking',           desc: '+3% beast hunt chance' },
+  BAITED_TRAPS:         { name: 'Baited Traps',              desc: '+1 Raw Beast Meat every 5 seconds per level' },
+  SPICED_BAIT:          { name: 'Spiced Bait',               desc: 'Each Baited Trap produces +1 raw beast meat per level of Spiced Bait' },
+  HOVEL_GARDEN:         { name: 'Hovel Garden',              desc: '+1 Herb every 5 seconds per level' },
+  ORNATE_HERB_POTS:     { name: 'Ornate Herb Pots',          desc: 'Each Hovel Garden produces +1 herb per level of Ornate Herb Pots' },
   BOUNTIFUL_LANDS:      { name: 'Bountiful Lands',           desc: '+1 guaranteed prize node per level' },
   ABUNDANT_LANDS:       { name: 'Abundant Lands',            desc: 'Resource gain is multiplied by the number of successful finds' },
   FAIRY_HOSTAGE:        { name: 'Fairy Hostage',             desc: 'A pixie, if present, will call out to a friend for help...' },
-  POTION_CATS_EYE:      { name: "Potion of Cat's Eye",       desc: "+1% chance to roll both herb AND beast" },
+  TREASURE_CHEST:       { name: 'Treasure Chest',            desc: '+2% chance per level to find a treasure chest while scouting' },
+  X_MARKS_THE_SPOT:    { name: 'X Marks the Spot',           desc: 'Treasure chest cells are marked with a red X ' },
+  POTION_CATS_EYE:      { name: "Potion of Cat's Eye",       desc: "+5% chance to roll both herb AND beast" },
   BIGGER_GAME:          { name: 'Bigger Game',               desc: '+1 max Raw Beast Meat per hero button press' },
 
   // Apothecary
-  POTION_TITRATION:     { name: 'Potion Titration',          desc: '+1% herb save chance on brew' },
-  POTION_MARKETING:     { name: 'Potion Marketing',          desc: '+1 gold every time you brew a potion base' },
+  POTION_TITRATION: { name: 'Potion Titration',           desc: '+1% chance to save herbs when brewing' },
+  POTION_MARKETING: { name: 'Potion Marketing',           desc: '+1 gold per potion brewed' },
+  FERMENTATION_VATS: { name: 'Fermentation Vats',         desc: 'Passively converts 1 herb into 1 potion base per level every 10 seconds (toggleable)' },
   POTION_GLIBNESS:      { name: 'Potion of Glibness',        desc: '-1% spice purchase cost per level' },
   BUBBLING_BREW:        { name: 'Bubbling Brew',             desc: 'Skilled brewing will award bonus progress' },
   BIGGER_BUBBLES:       { name: 'Bigger Bubbles',            desc: 'Increases the size of the Bubbling zone' },
   POTION_DILUTION:      { name: 'Potion Dilution',           desc: '2x concentrated potions, with a risk of failure' },
-  SERIAL_DILUTION:      { name: 'Serial Dilution',           desc: '+1% dilution success chance per level' },
-  PERFECT_POTIONS:      { name: 'Perfect Potions',           desc: '+1 concentrated potion per level on a flawless brew' },
+  SERIAL_DILUTION:      { name: 'Serial Dilution',           desc: '+1 additional independent potion roll per level when diluting' },
+  PERFECT_POTIONS:      { name: 'Perfect Potions',           desc: 'Each perfect click adds +5% dilution success chance for that brew' },
+  SYNAPTICAL_POTIONS:   { name: 'Synaptical Potions',        desc: 'Unlocks a new recipe for brewing synaptical potions — a cerebral elixir' },
+  SYNAPTIC_STATIC:      { name: 'Synaptic Static',           desc: '+1 randomly placed bonus zone when brewing synaptical potions' },
 
   // Culinarian
   WHOLESALE_SPICES:     { name: 'Wholesale Spices',          desc: '+1 spice per click, purchased at a discount!' },
   WASTE_NOT:            { name: 'Waste Not',                 desc: '+1 hearty meal per unused guess on a successful recipe' },
   LARGER_COOKBOOKS:     { name: 'Ancient Cookbook',          desc: 'The first ingredient in the recipe is always revealed at the start' },
+  COOKBOOK_ANNOTATIONS: { name: 'Cookbook Annotations',      desc: 'Each round begins with a free guess of one of every ingredient in order (Herb → Meat → Tongue → Spice)' },
 
   // Thief
   METICULOUS_PLANNING:      { name: 'Meticulous Planning',       desc: '+1% thieving success chance per level' },
-  PLENTIFUL_PLUNDERING:     { name: 'Plentiful Plundering',      desc: 'Each successful heist awards gold equal to dossiers collected, per level' },
+  PLENTIFUL_PLUNDERING:     { name: 'Plentiful Plundering',      desc: 'Each successful robbery awards bonus gold equal to dossiers collected, per level' },
   POTION_OF_STICKY_FINGERS: { name: 'Potion of Sticky Fingers',  desc: '+1 max dossier yield per level' },
   VANISHING_POWDER:         { name: 'Vanishing Powder',          desc: '+1 max detection tolerance per level' },
   POTION_CATS_EARS:         { name: "Potion of Cat's Ears",      desc: '+3° sweet spot size per level' },
   BAG_OF_HOLDING:           { name: 'Bag of Holding',            desc: 'Increases maximum gold and treasure yield' },
-  RELIC_HUNTER:             { name: 'Relic Hunter',              desc: '+1% relic drop chance per level' },
+  RELIC_HUNTER:             { name: 'Relic Hunter',              desc: 'Allows the discovery of one additional relic!' },
   LOCKED_IN:                { name: 'Locked In',                 desc: 'Marks failed click positions on the dial with a red tick' },
+  FLOW_STATE:               { name: 'Flow State',                desc: 'Dial ticks now give hints as to where the sweet spot is' },
+
+  // Artisan
+  FASTER_APPRAISING:        { name: 'Faster Appraising',         desc: '-1 second appraisal timer per level' },
+  POTION_CATS_PAW:          { name: "Potion of the Cat's Paw",   desc: '+1 max gemstone and precious metal yield per level' },
+  LUCKY_GEMS:               { name: 'Lucky Gems',                desc: '+10% lucky gem bonus per level' },
+  DOUBLE_DIP:               { name: 'Double Dip',                desc: 'Select the second best jem as well, but only if you find the best first!' },
+  GOOD_ENOUGH:              { name: 'Good Enough',               desc: '+1 jewelry for each gem in the round with a quality above 75%' },
+  CLOSE_ENOUGH:             { name: 'Close Enough',              desc: 'Selecting the runner-up gem also counts as a successful pick' },
+  STAND_OUT_SELECTION:      { name: 'Stand Out Selection',       desc: 'The Best gemstone is even better' },
+
+  // Necromancer
+  EXTENDED_RITUAL:          { name: 'Extended Ritual',           desc: '+2 clicks before switching abilities per level' },
+  DARK_PACT:                { name: 'Dark Pact',                 desc: '-2 XP cost per Ward click per level (min 1)' },
+  AUGURY:                   { name: 'Augury',                    desc: 'Reveals how many clicks remain before the active ability switches' },
+  SPEAK_WITH_DEAD:          { name: 'Potion of Speak With Dead', desc: '+1 max bone yield per Defile per level' },
+  FORTIFIED_CHALK:          { name: 'Fortified Chalk',           desc: '+1 max brimstone yield per Ward per level' },
+  GRAVE_LOOTING:            { name: 'Grave Looting',             desc: '+5% chance per level to find bonus loot (Gold, Gems, or Jewelry) while exhuming' },
+  PERFECT_TRANSMUTATION:    { name: 'Perfect Transmutation',     desc: '+2 Soul Stones per level when completing a ritual with 100% path efficiency' },
+  DEMONIC_KNOWLEDGE:        { name: 'Demonic Knowledge',         desc: 'Reveals a random hint line from the optimal path at the start of each ritual' },
+  FIND_FAMILIAR:            { name: 'Find Familiar',             desc: 'Summon a spectral familiar for each hero button. Feed it Soul Stones for temporary +1 jack power' },
+  CONCENTRATED_SOULS:       { name: 'Concentrated Souls',        desc: 'Each Soul Stone fed to a familiar grants an additional +15s of familiar time per level' },
+  VAULT_OF_SOULS:           { name: 'Vault of Souls',            desc: 'Increases the maximum familiar time cap by 5 minutes per level' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
-  RELIC_FIGHTER:    { name: 'Amulet of Glory',       desc: 'A powerful artifact that empowers the Fighter. (placeholder)' },
-  RELIC_RANGER:     { name: 'Magic Secateurs',    desc: 'A powerful artifact that empowers the Ranger. (placeholder)' },
-  RELIC_APOTHECARY: { name: 'Mask of the Greenman',     desc: 'A powerful artifact that empowers the Apothecary. (placeholder)' },
-  RELIC_CULINARIAN: { name: 'Charming Perfume',  desc: 'A powerful artifact that empowers the Culinarian. (placeholder)' },
-  RELIC_THIEF:      { name: 'Ring of Shadows',     desc: 'A powerful artifact that empowers the Thief. (placeholder)' },
+  RELIC_FIGHTER:    { name: 'Crown of Hireling Command',          desc: 'Each Jack hires hirelings, who in turn hire hirelings' },
+  RELIC_RANGER:     { name: 'Belt of the Woodlands',              desc: 'Each assigned Jack adds +1 to the base herb yield (before doubling) and +1 bonus beast meat per hunt' },
+  RELIC_APOTHECARY: { name: 'Monocle of Perfect Theurgy',        desc: 'Jacks consume 1 fewer herb per brew (min 0) and automatically dilute each brew into 2 potions' },
+  RELIC_CULINARIAN: { name: 'Clasp of Exquisite Taste',          desc: 'Jacks double their effective spice yield per purchase at no additional cost' },
+  RELIC_THIEF:      { name: 'Ring of Shadows',                    desc: 'Jacks double their dossier yield range and steal 2 bonus treasure per successful action' },
+  RELIC_ARTISAN:    { name: 'Masterwork Monocle of Perfection',   desc: 'Jacks always salvage maximum metal and double the minimum gemstone yield' },
+  RELIC_NECROMANCER:{ name: 'Jeweled Hand of the Night',         desc: 'Defile and Ward Jacks each act regardless of which button is active, and produce double the yield' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
@@ -167,6 +233,37 @@ export const KOBOLD_VARIANTS: readonly KoboldVariant[] = [
       chance: 33,
     },
   },
+  // Level 5 — Kobold Sorcerer
+  {
+    name: 'Kobold Sorcerer',
+    ascii:
+      '     *       \n' +
+      '    / \\  o   \n' +
+      '  <(^u^)>|   \n' +
+      '   /||-- |   \n' +
+      '   d  b  |   ',
+    secondaryDrop: {
+      currencyId: 'kobold-brain',
+      amount: 1,
+      chance: 33,
+    },
+  },
+  // Level 6 — Winged Kobold
+  {
+    name: 'Winged Kobold',
+    ascii:
+      '        _\\|     ___     |/_    \n' +
+      '      _-  \\_   <\'v\'>   _/  -_ \n' +
+      '      -_    `-\'(   )`-\'    _-   \n' +
+      '       `=.__.=-(   )-=.__.=\'    \n' +
+      '               |/-\\|                 \n' +
+      '               Y   Y       ',
+    secondaryDrop: {
+      currencyId: 'kobold-feather',
+      amount: 1,
+      chance: 33,
+    },
+  },
 ];
 
 // ── Characters ────────────────────────────────────────────────
@@ -196,6 +293,17 @@ export const CHARACTER_FLAVOR = {
     desc: "A Lady doesn't need to always lurk in the shadows.",
     questBtn: 'Break & Enter',
   },
+  ARTISAN: {
+    name: 'Artisan',
+    desc: 'A meticulous craftsman who sees value where others see junk. Give him any trinket and he will find the gems within.',
+    questBtn: 'Appraisal',
+  },
+  NECROMANCER: {
+    name: 'Necromancer',
+    desc: 'A scholar of the forbidden arts. He commands the boundary between life and death, cycling between desecration and warding.',
+    questBtnExhume: 'Exhume',
+    questBtnWard: 'Ward',
+  },
 } as const;
 
 // ── Minigames ─────────────────────────────────────────────────
@@ -220,6 +328,14 @@ export const MINIGAME_FLAVOR = {
     name: 'Big Heist',
     desc: 'Crack the safe before you\nare detected.',
   },
+  ARTISAN: {
+    name: 'Faceting',
+    desc: 'Appraise raw gemstones and\npick the finest jewel.',
+  },
+  NECROMANCER: {
+    name: 'Well of Souls',
+    desc: 'Draw the binding circle.\nShortest path wins.',
+  },
 } as const;
 
 // ── Global Upgrades ───────────────────────────────────────────
@@ -227,6 +343,10 @@ export const GLOBAL_UPGRADE_FLAVOR = {
   UNLOCK_MINIGAMES: {
     name: 'Unlock Minigames',
     desc: 'Unlocks character-specific minigames',
+  },
+  JACKD_UP: {
+    name: "Jack'd Up",
+    desc: 'Jacks (and familiars) click 50% faster',
   },
 } as const;
 
@@ -249,18 +369,25 @@ export const HERO_STATS_FLAVOR = {
     PER_SECOND:   'Gold Per Second  :',
     XP_PER_CLICK: 'XP Per Bounty    :',
     DAMAGE_RANGE: 'Attack Damage    :',
+    GILDED_BLADE: 'Secondary Chance      :',
+    MIND_READING: 'Foresight Chance :',
   },
   RANGER: {
     BEAST_CHANCE: 'Beast Success :',
     HERB_DOUBLE:  'Herb Double   :',
     CATS_EYE:     "Cat's Eye     :",
     MAX_MEAT:     'Max Meat      :',
+    TRAP_RATE:    'Trap Beast/s  :',
+    GARDEN_RATE:  'Garden Herb/s :',
+    CHEST_CHANCE: 'Chest Chance  :',
   },
   APOTHECARY: {
     HERBS_BREW:           'Herbs Per Brew   :',
     SAVE_CHANCE:          'Herb Save Chance :',
     GOLD_PER_BREW:        'Gold Per Brew    :',
-    DILUTION_SUCCESS:     'Dilution Success :',
+    DILUTION_SUCCESS:     'Dilution Chance  :',
+    DILUTION_ROLLS:       'Dilution Rolls   :',
+    PERFECT_BONUS:        'Perfect Bonus    :',
   },
   CULINARIAN: {
     SPICE_PER_CLICK:  'Spice Per Click  :',
@@ -275,6 +402,23 @@ export const HERO_STATS_FLAVOR = {
     GOLD_RANGE:     'Gold Yield     :',
     TREASURE_RANGE: 'Treasure Yield :',
     RELIC_CHANCE:   'Relic Chance   :',
+    RELIC_CAP:      'Relics Found   :',
+  },
+  ARTISAN: {
+    TREASURE_COST:  'Treasure Cost  :',
+    TIMER_DURATION: 'Appraisal Time :',
+    GEMSTONE_RANGE: 'Gemstone Yield :',
+    METAL_RANGE:    'Metal Yield    :',
+    LUCKY_BONUS:    'Lucky Gem Bonus:',
+  },
+  NECROMANCER: {
+    ACTIVE_BUTTON:    'Active Ability :',
+    CLICKS_LEFT:      'Clicks Left    :',
+    BONE_PER_CLICK:   'Bone Per Click :',
+    BRIMSTONE_PER_W:  'Brimstone Per Ward :',
+    WARD_XP_COST:     'Ward XP Cost   :',
+    SWITCH_RANGE:     'Switch Range   :',
+    GRAVE_LOOT_CHANCE:'Grave Loot     :',
   },
 } as const;
 
@@ -295,13 +439,14 @@ export const MINIGAME_MSG = {
     HIT_ZONE:       (q: number, max: number) => `On beat! +1 quality (${q}/${max})`,
     MISS_ZONE:      (q: number, max: number) => `Off beat! \u22121 quality (${q}/${max})`,
     PERFECT:        'Potion concentrated',
-    DILUTE_FULL:    '2x CONCENTRATED POTIONS',
-    DILUTE_PARTIAL: '1x CONCENTRATED + 1x BASE',
-    DILUTE_FAIL:    'Potion ruined!',
+    DILUTE_FULL:    (concentrated: number, total: number) => `${concentrated}/${total} CONCENTRATED!`,
+    DILUTE_PARTIAL: (concentrated: number, downgraded: number, total: number) => `${concentrated}/${total} CONCENTRATED  (${downgraded} BASE)`,
+    DILUTE_FAIL:    (downgraded: number) => `All ${downgraded} failed — ${downgraded}x BASE`,
   },
 
   RANGER: {
     ROUND_START: (picks: number) => `Choose ${picks} boxes...`,
+    CHEST_FOUND: 'A treasure chest! Riches abound!',
   },
 
   CULINARIAN: {
@@ -315,10 +460,27 @@ export const MINIGAME_MSG = {
 
   THIEF: {
     IDLE:     'Find the sweet spot on the dial!',
-    MISS:     (det: number, max: number) => `Miss! Detection ${det}/${max}`,
+    MISS:     'Miss!',
     HIT:      'Sweet spot found!',
     BUSTED:   'DETECTED! Heist failed.',
     SUCCESS:  'Safe cracked!',
+  },
+
+  ARTISAN: {
+    IDLE:          'Select the highest quality gemstone.',
+    CORRECT:       'Correct! A fine jewel indeed.',
+    WRONG:         'Wrong — not the finest gem.',
+    ROUND_START:   (count: number) => `${count} gems presented. Choose wisely!`,
+    DOUBLE_DIP_HIT:  'Double Dip! The runner-up was found too!',
+    DOUBLE_DIP_MISS: 'Fine eye for the best, but the runner-up slipped away.',
+    CLOSE_ENOUGH_WIN: 'Close enough! The runner-up gem will do.',
+  },
+
+  NECROMANCER: {
+    IDLE:         'Connect the nodes to complete the binding circle.',
+    ROUND_START:  (nodes: number) => `${nodes} soul anchors placed. Draw the shortest path. Do not repeat yourself.`,
+    COMPLETE:     (pct: number) => `Path efficiency: ${pct}%`,
+    PERFECT:      'Perfect binding! The spirits are yours!',
   },
 
 };

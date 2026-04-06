@@ -1,10 +1,11 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
+import { StatisticsService } from '../../statistics/statistics.service';
 import { FIGHTER_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant, MINIGAME_MSG } from '../../flavor-text';
+import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant, MINIGAME_MSG, cur } from '../../flavor-text';
 import { FighterCombatState } from '../../options/save.service';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 
@@ -32,8 +33,9 @@ interface Enemy {
   imports: [CommonModule],
   templateUrl: './fighter-minigame.component.html',
   styleUrls: ['./fighter-minigame.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FighterMinigameComponent implements OnInit, OnDestroy {
+export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   /** Sword sharpness — fed in from goldPerClick on the Fighter. */
   @Input() attackPower = 1;
   /** Potion Chugging upgrade level — each level adds +1 HP to potion heals. */
@@ -54,6 +56,20 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   @Output() selectedKoboldLevelChange = new EventEmitter<number>();
   /** First Strike level — when ≥ 1, the fighter attacks before the enemy can counter on a killing blow. */
   @Input() firstStrikeLevel = 0;
+  /** Slow Blade level — each level adds +1 to the fighter's minimum hit. */
+  @Input() slowBladeLevel = 0;
+  /** Gilded Blade level — +1% secondary drop chance and +1% gold per kill per level. */
+  @Input() gildedBladeLevel = 0;
+  /** Potion of Mind Reading level — each level adds 10% chance to roll attack damage twice and take higher. */
+  @Input() mindReadingLevel = 0;
+  /** Potion of Cat's Swiftness level — each level reduces the kobold respawn delay by 5%. */
+  @Input() catSwiftnessLevel = 0;
+  /** Kobold Bait upgrade level — when ≥ 1, a toggle is shown to spend raw meat and double secondary drops. */
+  @Input() koboldBaitLevel = 0;
+  /** Whether the Kobold Bait toggle is currently enabled. */
+  @Input() koboldBaitEnabled = false;
+  /** Emitted when the player toggles Kobold Bait on/off. */
+  @Output() koboldBaitEnabledChange = new EventEmitter<boolean>();
   /** Previously-saved combat state to restore on init. */
   @Input() savedState: FighterCombatState | null = null;
   /** Emitted whenever combat state changes (HP, defeated, rest countdown). */
@@ -61,6 +77,8 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
 
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
+  private stats  = inject(StatisticsService);
+  private cdr    = inject(ChangeDetectorRef);
   private sub    = new Subscription();
   private spawnTimer?: ReturnType<typeof setTimeout>;
   private restInterval?: ReturnType<typeof setInterval>;
@@ -96,6 +114,11 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   /** Effective rest duration after applying any upgrade reductions. */
   get effectiveRestSec(): number {
     return Math.max(0, Math.floor(FIGHTER_MG.RECOVERY_TIME_MS / 1000) - this.recoveryReductionSec);
+  }
+
+  /** Effective spawn delay after applying Cat's Swiftness reduction (5% per level, min 1 ms). */
+  get effectiveSpawnDelayMs(): number {
+    return Math.max(1, Math.round(FIGHTER_MG.SPAWN_DELAY_MS * (1 - this.catSwiftnessLevel * 0.05)));
   }
 
   // ── Enemy ─────────────────────────────────
@@ -159,12 +182,24 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.shortRestEnabledChange.emit(!this.shortRestEnabled);
   }
 
+  toggleKoboldBait(): void {
+    this.koboldBaitEnabledChange.emit(!this.koboldBaitEnabled);
+  }
+
   // ── Lifecycle ─────────────────────────────
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['firstStrikeLevel'] && this.firstStrikeLevel >= 1) {
+      this.stats.markFirstStrikeUnlocked();
+    }
+  }
+
   ngOnInit(): void {
+    if (this.firstStrikeLevel >= 1) this.stats.markFirstStrikeUnlocked();
     this.sub.add(
       this.wallet.state$.subscribe(s => {
         this.potions = Math.floor(s['potion']?.amount ?? 0);
+        this.cdr.markForCheck();
       })
     );
 
@@ -206,6 +241,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
           this.restInterval = setInterval(() => {
             this.restCountdown = Math.max(0, this.restCountdown - 1);
             this.emitState();
+            this.cdr.markForCheck();
             if (this.restCountdown <= 0) {
               clearInterval(this.restInterval);
               this.restInterval = undefined;
@@ -243,7 +279,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   attack(): void {
     if (this.actionsDisabled) return;
 
-    const dmg  = randInt(1, this.attackPower + 1);
+    const dmg  = this.rollPlayerDamage();
     const eDmg = this.rollEnemyDamage();   // always rolled — counter fires even on a killing blow
 
     this.enemy.hp  = Math.max(0, this.enemy.hp - dmg);
@@ -275,6 +311,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     if (this.healDisabled) return;
 
     this.wallet.remove('potion', 1);
+    this.stats.trackFighterPotionDrank(1);
     const healed = Math.min(this.potionHealAmount, this.maxHp - this.fighterHp);
     this.fighterHp += healed;
 
@@ -307,6 +344,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
         clearTimeout(this.spawnTimer);
         this.spawnTimer = undefined;
       }
+      this.stats.trackFighterKillChain(this.firstStrikeChainCount);
       this.inFirstStrikeChain    = false;
       this.firstStrikeChainCount = 0;
       this.awaitingSpawn         = false;
@@ -335,6 +373,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
         this.log.log('The Fighter fled from combat.', 'default');
         this.emitState();
       }
+      this.cdr.markForCheck();
     }, 1000);
   }
 
@@ -346,6 +385,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
    * if the component is destroyed and recreated (e.g. switching characters).
    */
   private startRest(): void {
+    this.stats.trackFighterDefeated();
     this.restCountdown = this.effectiveRestSec;
     if (this.restCountdown <= 0) return;   // fully reduced — can retry instantly
 
@@ -354,6 +394,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     this.restInterval = setInterval(() => {
       this.restCountdown = Math.max(0, this.restCountdown - 1);
       this.emitState();
+      this.cdr.markForCheck();
       if (this.restCountdown <= 0) {
         clearInterval(this.restInterval);
         this.restInterval = undefined;
@@ -365,6 +406,20 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     return Math.max(0, randInt(1, this.enemy.dmgMax) - this.defense);
   }
 
+  /**
+   * Roll player attack damage, applying Mind Reading advantage when it procs:
+   * each level adds a 10% chance to roll twice and take the higher result.
+   */
+  private rollPlayerDamage(): number {
+    const minHit = Math.min(1 + this.slowBladeLevel, this.attackPower + 1);
+    const roll1  = randInt(minHit, this.attackPower + 1);
+    if (this.mindReadingLevel > 0 && rollChance(this.mindReadingLevel * 10)) {
+      const roll2 = randInt(minHit, this.attackPower + 1);
+      return Math.max(roll1, roll2);
+    }
+    return roll1;
+  }
+
   /** Consume potions one at a time until HP is full or potions run out. */
   private autoHealToFull(): void {
     let potionsConsumed = 0;
@@ -373,7 +428,11 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       potionsConsumed++;
       this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount*this.potionHealEfficiency);
     }
-    this.log.log(`Chugged ${potionsConsumed} potion(s) during a short rest.`, "default")
+    if (potionsConsumed > 0) {
+      this.log.log(`Chugged some potions during a short rest. (${cur('potion', potionsConsumed, '-')})`, "default")
+      this.stats.trackFighterPotionDrank(potionsConsumed);
+    }
+
   }
 
   private applyEnemyDamage(dmg: number): void {
@@ -391,11 +450,20 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
   }
 
   private onEnemyDefeated(enemyLastDmg: number, firstStrike: boolean = false): void {
-    const gold = randInt(this.enemy.goldMin, this.enemy.goldMax);
+    const baseGold = randInt(this.enemy.goldMin, this.enemy.goldMax);
+    const gildedBonus = this.gildedBladeLevel > 0 ? Math.floor(baseGold * this.gildedBladeLevel / 100) : 0;
+    const gold = baseGold + gildedBonus;
 
     this.wallet.add('gold',       gold);
     this.wallet.add('xp',         this.enemy.xpReward);
     this.wallet.add('kobold-ear', this.enemy.earReward);
+
+    // Track stats
+    const variantIdx = Math.min(this.selectedKoboldLevel - 1, KOBOLD_VARIANTS.length - 1);
+    this.stats.trackKoboldKill(KOBOLD_VARIANTS[variantIdx].name);
+    this.stats.trackCurrencyGain('gold', gold);
+    this.stats.trackCurrencyGain('xp', this.enemy.xpReward);
+    this.stats.trackCurrencyGain('kobold-ear', this.enemy.earReward);
 
     const isFirstEar = !this.wallet.isCurrencyUnlocked('kobold-ear');
     if (isFirstEar) {
@@ -408,8 +476,20 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
     if (this.enemy.secondaryDrop) {
       const drop = this.enemy.secondaryDrop;
       if (rollChance(drop.chance)) {
-        this.wallet.add(drop.currencyId, drop.amount);
+        // Kobold Bait: if toggled on, spend 100×koboldLevel raw meat to double the drop
+        let dropAmount = drop.amount;
+        if (this.koboldBaitLevel >= 1 && this.koboldBaitEnabled) {
+          const baitCost = 100 * this.selectedKoboldLevel;
+          const currentBeast = Math.floor(this.wallet.get('beast'));
+          if (currentBeast >= baitCost) {
+            this.wallet.remove('beast', baitCost);
+            dropAmount *= 2;
+          }
+        }
+
+        this.wallet.add(drop.currencyId, dropAmount);
         gotSecondaryDrop = true;
+        this.stats.trackCurrencyGain(drop.currencyId, dropAmount);
         const isFirstSecondary = !this.wallet.isCurrencyUnlocked(drop.currencyId);
         if (isFirstSecondary) {
           this.wallet.unlockCurrency(drop.currencyId);
@@ -420,26 +500,34 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
             'rare'
           );
         }
-        const dropFlavor = (CURRENCY_FLAVOR as Record<string, { symbol: string }>)[drop.currencyId];
-        secondaryMsg = `, +${drop.amount}${dropFlavor?.symbol ?? '?'}`;
+        secondaryMsg = `, ${cur(drop.currencyId, dropAmount)}`;
       }
     }
 
     // ── Log message ───────────────────────────────
-    const logType = gotSecondaryDrop ? 'success' : (isFirstEar ? 'rare' : 'default');
+    // Detect mutual kill first so the log message is accurate even in that case.
+    const isMutualKill = this.fighterHp <= 0;
+    const dropsText = `${cur('gold', gold)}, ${cur('xp', this.enemy.xpReward)}, ${cur('kobold-ear', this.enemy.earReward)}${secondaryMsg}`;
+
     if (isFirstEar) {
       this.log.log(
-        `Victory! The ${this.enemy.name} drops a Kobold Ear! (+${gold}g, +${this.enemy.xpReward} XP${secondaryMsg})`,
+        `${isMutualKill ? 'Mutual kill!' : 'Victory!'} The ${this.enemy.name} drops a Kobold Ear! (${dropsText})`,
         'rare'
       );
-    } else {
+    } else if (isMutualKill) {
       this.log.log(
-        `Victory! ${this.enemy.name} defeated. (+${gold}g, +${this.enemy.xpReward} XP, +${this.enemy.earReward} ear${secondaryMsg})`,
+        `Mutual kill! Loot still collected. (${dropsText})`,
+        'warn'
+      );
+    } else {
+      const logType = gotSecondaryDrop ? 'success' : 'default';
+      this.log.log(
+        `Victory! ${this.enemy.name} defeated. (${dropsText})`,
         logType
       );
     }
 
-    if (this.fighterHp <= 0) {
+    if (isMutualKill) {
       // Mutual kill — awards still granted, but fighter is defeated
       this.fighterHp = 0;
       this.defeated  = true;
@@ -467,13 +555,14 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.msgLine2     = '';
       this.msgClass     = 'msg-neutral';
       this.emitState();
+      this.cdr.markForCheck();
 
       // First Strike: free opening hit at the start of every combat encounter.
       // Only fires here (enemy spawned after a kill), never after fleeing.
       if (this.firstStrikeLevel >= 1) {
         this.applyFirstStrike();
       }
-    }, FIGHTER_MG.SPAWN_DELAY_MS);
+    }, this.effectiveSpawnDelayMs);
   }
 
   /**
@@ -483,7 +572,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
    * (the next spawn also gets a First Strike hit).
    */
   private applyFirstStrike(): void {
-    const dmg = randInt(1, this.attackPower + 1);
+    const dmg = this.rollPlayerDamage();
     this.enemy.hp = Math.max(0, this.enemy.hp - dmg);
 
     if (this.enemy.hp <= 0) {
@@ -495,6 +584,7 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       this.onEnemyDefeated(0, true);
     } else {
       // Enemy survived — chain is over, normal combat resumes
+      this.stats.trackFighterKillChain(this.firstStrikeChainCount);
       this.inFirstStrikeChain    = false;
       this.firstStrikeChainCount = 0;
       this.lastMsg  = `First Strike! ${dmg} dmg!`;
@@ -523,7 +613,9 @@ export class FighterMinigameComponent implements OnInit, OnDestroy {
       earReward: FIGHTER_MG.KOBOLD_EAR_REWARD + extra * FIGHTER_MG.KOBOLD_EAR_PER_LEVEL,
       dmgMax:    FIGHTER_MG.ENEMY_DMG_MAX      + extra * FIGHTER_MG.KOBOLD_DMG_PER_LEVEL,
       ascii:     variant.ascii,
-      secondaryDrop: variant.secondaryDrop ? { ...variant.secondaryDrop } : null,
+      secondaryDrop: variant.secondaryDrop
+        ? { ...variant.secondaryDrop, chance: Math.min(100, variant.secondaryDrop.chance + this.gildedBladeLevel) }
+        : null,
     };
   }
 }

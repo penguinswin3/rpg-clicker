@@ -41,6 +41,8 @@ export class WalletService {
     { id: 'kobold-tongue',        ...CURRENCY_FLAVOR['kobold-tongue'],         requiredCharacterId: 'fighter',   manualUnlock: true },
     { id: 'kobold-hair',          ...CURRENCY_FLAVOR['kobold-hair'],           requiredCharacterId: 'fighter',   manualUnlock: true },
     { id: 'kobold-fang',          ...CURRENCY_FLAVOR['kobold-fang'],           requiredCharacterId: 'fighter',   manualUnlock: true },
+    { id: 'kobold-brain',         ...CURRENCY_FLAVOR['kobold-brain'],          requiredCharacterId: 'fighter',   manualUnlock: true },
+    { id: 'kobold-feather',       ...CURRENCY_FLAVOR['kobold-feather'],        requiredCharacterId: 'fighter',   manualUnlock: true },
 
     // ── Ranger ───────────────────────────────────────────────────────────────
     { id: 'herb',                 ...CURRENCY_FLAVOR['herb'],                  requiredCharacterId: 'ranger'       },
@@ -50,13 +52,23 @@ export class WalletService {
     // ── Apothecary ───────────────────────────────────────────────────────────
     { id: 'potion',               ...CURRENCY_FLAVOR['potion'],                requiredCharacterId: 'apothecary'   },
     { id: 'concentrated-potion',  ...CURRENCY_FLAVOR['concentrated-potion'],   requiredCharacterId: 'apothecary', manualUnlock: true },
+    { id: 'synaptical-potion',    ...CURRENCY_FLAVOR['synaptical-potion'],     requiredCharacterId: 'apothecary', manualUnlock: true },
     // ── Culinarian ───────────────────────────────────────────────────────────
     { id: 'spice',                ...CURRENCY_FLAVOR['spice'],                 requiredCharacterId: 'culinarian'   },
     { id: 'hearty-meal',          ...CURRENCY_FLAVOR['hearty-meal'],           requiredCharacterId: 'culinarian', manualUnlock: true },
-    // ── Thief ─────────────────────────────────────────────────────────────────
+    // ── Thief ─────────────────────────────────────────────────────
     { id: 'dossier',              ...CURRENCY_FLAVOR['dossier'],               requiredCharacterId: 'thief'        },
     { id: 'treasure',             ...CURRENCY_FLAVOR['treasure'],              requiredCharacterId: 'thief',     manualUnlock: true },
     { id: 'relic',                ...CURRENCY_FLAVOR['relic'],                 requiredCharacterId: 'thief',     manualUnlock: true },
+    // ── Artisan ───────────────────────────────────────────────────
+    { id: 'precious-metal',       ...CURRENCY_FLAVOR['precious-metal'],        requiredCharacterId: 'artisan'      },
+    { id: 'gemstone',             ...CURRENCY_FLAVOR['gemstone'],              requiredCharacterId: 'artisan'      },
+    { id: 'jewelry',              ...CURRENCY_FLAVOR['jewelry'],               requiredCharacterId: 'artisan',  manualUnlock: true      },
+    // ── Necromancer ───────────────────────────────────────────────────
+    { id: 'bone',                ...CURRENCY_FLAVOR['bone'],                   requiredCharacterId: 'necromancer'   },
+    { id: 'brimstone',           ...CURRENCY_FLAVOR['brimstone'],              requiredCharacterId: 'necromancer'   },
+    { id: 'soul-stone',          ...CURRENCY_FLAVOR['soul-stone'],             requiredCharacterId: 'necromancer', manualUnlock: true },
+
   ];
 
   private readonly stateSource = new BehaviorSubject<WalletState>(
@@ -176,13 +188,48 @@ export class WalletService {
 
   // ── Private ───────────────────────────────────────────────────
 
+  /** Whether the state has been mutated since the last emission. */
+  private _dirty = false;
+  /** Whether a microtask flush is already scheduled. */
+  private _flushScheduled = false;
+
+  /**
+   * Run a block of mutations and emit exactly once at the end.
+   * Use this when calling multiple add/remove/setPerSecond in a row.
+   */
+  batchUpdate(fn: () => void): void {
+    fn();
+    this._flush();
+  }
+
   private _patch(
     currencyId: string,
     fn: (entry: CurrencyEntry) => CurrencyEntry
   ): void {
     const state = this.stateSource.getValue();
     if (!state[currencyId]) return;
-    this.stateSource.next({ ...state, [currencyId]: fn(state[currencyId]) });
+    // Mutate in place — the BehaviorSubject value IS our source of truth.
+    state[currencyId] = fn(state[currencyId]);
+    this._scheduleDirtyFlush();
+  }
+
+  /** Mark state dirty and schedule a single microtask emission. */
+  private _scheduleDirtyFlush(): void {
+    this._dirty = true;
+    if (!this._flushScheduled) {
+      this._flushScheduled = true;
+      queueMicrotask(() => this._flush());
+    }
+  }
+
+  /** Emit the current state to subscribers if dirty. */
+  private _flush(): void {
+    this._flushScheduled = false;
+    if (this._dirty) {
+      this._dirty = false;
+      // Emit a new reference so subscribers that do === checks see a change.
+      this.stateSource.next({ ...this.stateSource.getValue() });
+    }
   }
 
   /** Update the all-time XP peak if the current XP balance is higher. */

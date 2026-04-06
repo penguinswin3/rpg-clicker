@@ -12,7 +12,7 @@
         class="filter-btn"
         [class.active]="allActive"
         data-type="all"
-        (click)="clearFilters()">
+        (click)="toggleAllFilters()">
         ALL
       </button>
       <span class="filter-sep">|</span>
@@ -36,7 +36,7 @@
         *ngFor="let msg of filteredMessages; trackBy: trackById"
         [ngClass]="'type-' + (msg.type ?? 'default')">
         <span class="log-time">[{{ msg.timestamp }}]</span>
-        <span class="log-text">> {{ msg.text }}</span>
+        <span class="log-text">> <ng-container *ngFor="let seg of parseLogText(msg)"><span *ngIf="seg.color; else plainSeg" [style.color]="seg.color">{{ seg.text }}</span><ng-template #plainSeg>{{ seg.text }}</ng-template></ng-container></span>
       </div>
     </div>
   </ng-container>

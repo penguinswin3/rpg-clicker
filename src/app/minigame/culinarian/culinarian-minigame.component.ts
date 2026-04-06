@@ -1,10 +1,11 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
+import { StatisticsService } from '../../statistics/statistics.service';
 import { CULINARIAN_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 
 /** Feedback per slot after a guess is submitted. */
 export type PegColor = 'green' | 'yellow' | 'miss';
@@ -20,10 +21,13 @@ export interface GuessRow {
   imports: [CommonModule],
   templateUrl: './culinarian-minigame.component.html',
   styleUrls: ['./culinarian-minigame.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CulinarianMinigameComponent implements OnInit, OnDestroy {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
+  private stats  = inject(StatisticsService);
+  private cdr    = inject(ChangeDetectorRef);
   private sub    = new Subscription();
 
   readonly SOLUTION_LENGTH  = CULINARIAN_MG.SOLUTION_LENGTH;
@@ -37,6 +41,8 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
   @Input() wasteNotLevel = 0;
   /** Level of the Larger Cookbooks upgrade — reveals the first ingredient at round start. */
   @Input() largerCookbooksLevel = 0;
+  /** Level of the Cookbook Annotations upgrade — auto-submits one-of-each guess at round start. */
+  @Input() cookbookAnnotationsLevel = 0;
 
   // ── Wallet-synced ─────────────────────────
   herb         = 0;
@@ -90,6 +96,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
         this.beast        = Math.floor(s['beast']?.amount          ?? 0);
         this.koboldTongue = Math.floor(s['kobold-tongue']?.amount  ?? 0);
         this.spice        = Math.floor(s['spice']?.amount          ?? 0);
+        this.cdr.markForCheck();
       })
     );
   }
@@ -122,6 +129,22 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
     this.roundActive = true;
     this.dragIngredient = null;
 
+    // Cookbook Annotations: auto-submit one-of-each guess before the player begins.
+    // The annotation is always [herb, beast, kobold-tongue, spice] — one of every
+    // ingredient in INGREDIENTS order — shown as a free hint (does not count as a used guess).
+    if (this.cookbookAnnotationsLevel >= 1) {
+      const annotationGuess = [...this.INGREDIENTS] as string[]; // one of each, in order
+      const annotationPegs  = this.evaluate(annotationGuess);
+      this.guessHistory.push({ ingredients: annotationGuess, pegs: annotationPegs });
+      // Check for the (very unlikely) case that the annotation is a perfect match
+      if (annotationPegs.every(p => p === 'green')) {
+        this.onWin();
+        this.log.log('Cookbook Annotations: the annotated guess was a perfect match!', 'success');
+        this.cdr.markForCheck();
+        return;
+      }
+    }
+
     // Larger Cookbooks: reveal and lock the first ingredient
     if (this.largerCookbooksLevel >= 1) {
       this.currentGuess[0] = this.solution[0];
@@ -130,7 +153,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
 
     this.lastMsg  = MINIGAME_MSG.CULINARIAN.ROUND_START(this.MAX_GUESSES);
     this.msgClass = 'msg-neutral';
-    this.log.log(`Culinarian begins experimenting. (−${this.INGREDIENT_COST} each ingredient)`);
+    this.log.log(`Culinarian begins experimenting. (${cur('herb', this.INGREDIENT_COST, '-')}, ${cur('beast', this.INGREDIENT_COST, '-')}, ${cur('kobold-tongue', this.INGREDIENT_COST, '-')}, ${cur('spice', this.INGREDIENT_COST, '-')})`);
   }
 
   submitGuess(): void {
@@ -281,13 +304,17 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
 
     this.wallet.add('hearty-meal', totalReward);
 
+    // Track stats
+    this.stats.trackCulinarianResult(true, this.guessesUsed);
+    this.stats.trackCurrencyGain('hearty-meal', totalReward);
+
     if (!this.wallet.isCurrencyUnlocked('hearty-meal')) {
       this.wallet.unlockCurrency('hearty-meal');
       this.log.log(`The Culinarian perfects a Hearty Meal! New currency unlocked!`, 'rare');
     } else if (wasteNotBonus > 0) {
-      this.log.log(`Hearty Meal crafted! (+${this.MEAL_REWARD} +${wasteNotBonus} Waste Not bonus)`, 'success');
+      this.log.log(`Hearty Meal crafted! (${cur('hearty-meal', this.MEAL_REWARD)} base ${cur('hearty-meal', wasteNotBonus)} Waste Not!)`, 'success');
     } else {
-      this.log.log(`Hearty Meal crafted! (+${this.MEAL_REWARD})`, 'success');
+      this.log.log(`Hearty Meal crafted! (${cur('hearty-meal', this.MEAL_REWARD)})`, 'success');
     }
 
     this.lastMsg  = wasteNotBonus > 0
@@ -299,6 +326,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
   private onLose(): void {
     this.lost = true;
     this.roundActive = false;
+    this.stats.trackCulinarianResult(false, this.guessesUsed);
     this.log.log('The Culinarian failed to find the recipe.', 'warn');
     this.lastMsg  = MINIGAME_MSG.CULINARIAN.LOSE;
     this.msgClass = 'msg-bad';

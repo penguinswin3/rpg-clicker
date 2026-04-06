@@ -2,8 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
-import { UPGRADE_DEFS, UpgradeDef, UpgradeCategory, UpgradeGates, CostDef } from '../game-config';
-import { UPGRADE_FLAVOR } from '../flavor-text';
+import { UPGRADE_DEFS, UpgradeDef, UpgradeCategory, UpgradeGates, CostDef, RELIC_COSTS } from '../game-config';
+import { UPGRADE_FLAVOR, cur } from '../flavor-text';
 import { scaledCost } from '../utils/mathUtils';
 
 // Re-export types consumed by other components
@@ -35,6 +35,10 @@ export class UpgradeService {
   private readonly log     = inject(ActivityLogService);
   private readonly defs    = new Map<string, UpgradeDef>(UPGRADE_DEFS.map(d => [d.id, d]));
   private readonly runtime = new Map<string, UpgradeRuntime>();
+  /** Stable list of all relic upgrade IDs — used by syncRelicCosts(). */
+  private readonly relicIds: string[] = UPGRADE_DEFS.filter(d => d.category === 'relic').map(d => d.id);
+  /** Per-upgrade max overrides — used for upgrades with dynamically capped levels. */
+  private readonly maxOverrides = new Map<string, number>();
 
   /** Emits the upgrade ID whenever a level changes. */
   readonly changed$ = new Subject<string>();
@@ -45,6 +49,32 @@ export class UpgradeService {
       for (const c of def.costs) currentCosts[c.currency] = c.base;
       this.runtime.set(def.id, { level: 0, currentCosts });
     }
+    this.syncRelicCosts();
+  }
+
+  // ── Relic cost helpers ─────────────────────────────────────────
+
+  /** How many relic upgrades (category === 'relic') have already been purchased. */
+  relicsOwned(): number {
+    return this.relicIds.filter(id => (this.runtime.get(id)?.level ?? 0) >= 1).length;
+  }
+
+  /**
+   * Recalculates the jewelry component of every un-purchased relic upgrade
+   * based on how many relic upgrades are currently owned globally.
+   * Because ALL unpurchased relics are repriced to the same value, the cost
+   * is identical regardless of the order in which the player buys them.
+   *
+   * Call this whenever relicsOwned() could change (buy, restore, bulk-set).
+   */
+  syncRelicCosts(): void {
+    const owned = this.relicsOwned();
+    const jewelryCost = Math.round(RELIC_COSTS.JEWELRY_BASE * Math.pow(RELIC_COSTS.JEWELRY_SCALE, owned));
+    for (const id of this.relicIds) {
+      const rt = this.runtime.get(id);
+      if (!rt || rt.level >= 1) continue; // already purchased — cost irrelevant
+      rt.currentCosts['jewelry'] = jewelryCost;
+    }
   }
 
   // ── Queries ───────────────────────────────────────────────────
@@ -54,7 +84,13 @@ export class UpgradeService {
   }
 
   maxLevel(id: string): number {
+    if (this.maxOverrides.has(id)) return this.maxOverrides.get(id)!;
     return this.defs.get(id)?.max ?? 0;
+  }
+
+  /** Override the effective max level for an upgrade (e.g. dynamically capped upgrades). */
+  setMaxOverride(id: string, value: number): void {
+    this.maxOverrides.set(id, Math.max(0, value));
   }
 
   category(id: string): UpgradeCategory | undefined {
@@ -84,8 +120,7 @@ export class UpgradeService {
   }
 
   isMaxed(id: string): boolean {
-    const def = this.defs.get(id);
-    return !def || this.level(id) >= def.max;
+    return this.level(id) >= this.maxLevel(id);
   }
 
   canAfford(id: string): boolean {
@@ -97,10 +132,11 @@ export class UpgradeService {
       .every(c => this.wallet.canAfford(c.currency, rt.currentCosts[c.currency]));
   }
 
-  /** Returns upgrade IDs for a given character and category, in registry order. */
+  /** Returns upgrade IDs for a given character and category, in registry order.
+   *  Upgrades with `enabled: false` are always excluded. */
   getUpgradesFor(characterId: string, category: UpgradeCategory): string[] {
     return UPGRADE_DEFS
-      .filter(d => d.characterId === characterId && d.category === category)
+      .filter(d => d.characterId === characterId && d.category === category && d.enabled !== false)
       .map(d => d.id);
   }
 
@@ -119,13 +155,13 @@ export class UpgradeService {
   buy(id: string): boolean {
     const def = this.defs.get(id);
     const rt  = this.runtime.get(id);
-    if (!def || !rt || rt.level >= def.max) return false;
+    if (!def || !rt || rt.level >= this.maxLevel(id)) return false;
 
     const activeCosts = def.costs.filter(c => this.isCostActive(c, rt.level));
 
     if (!this.canAfford(id)) {
       const needs = activeCosts
-        .map(c => `${rt.currentCosts[c.currency]} ${c.currency} (have ${Math.floor(this.wallet.get(c.currency))})`)
+        .map(c => `${cur(c.currency, rt.currentCosts[c.currency], '')} (have ${cur(c.currency, Math.floor(this.wallet.get(c.currency)), '')})`)
         .join(', ');
       const name = (UPGRADE_FLAVOR as Record<string, { name: string }>)[id]?.name ?? id;
       this.log.log(`Not enough resources for ${name}. Need: ${needs}.`, 'warn');
@@ -145,6 +181,7 @@ export class UpgradeService {
 
     const name = (UPGRADE_FLAVOR as Record<string, { name: string }>)[id]?.name ?? id;
     this.log.log(`${name} upgraded to Lv.${rt.level}.`, 'success');
+    this.syncRelicCosts();
     this.changed$.next(id);
     return true;
   }
@@ -177,6 +214,7 @@ export class UpgradeService {
       }
       this.changed$.next(def.id);
     }
+    this.syncRelicCosts();
   }
 
   /**
@@ -188,12 +226,14 @@ export class UpgradeService {
     for (const def of this.defs.values()) {
       const rt = this.runtime.get(def.id);
       if (!rt) continue;
-      rt.level = def.max;
+      const effectiveMax = this.maxLevel(def.id);
+      rt.level = effectiveMax;
       for (const c of def.costs) {
-        rt.currentCosts[c.currency] = scaledCost(c.base, c.scale, def.max);
+        rt.currentCosts[c.currency] = scaledCost(c.base, c.scale, effectiveMax);
       }
       this.changed$.next(def.id);
     }
+    this.syncRelicCosts();
   }
 
   /**
@@ -205,13 +245,14 @@ export class UpgradeService {
     for (const def of this.defs.values()) {
       const rt = this.runtime.get(def.id);
       if (!rt) continue;
-      const targetLevel = Math.floor(def.max / 2);
+      const targetLevel = Math.floor(this.maxLevel(def.id) / 2);
       rt.level = targetLevel;
       for (const c of def.costs) {
         rt.currentCosts[c.currency] = scaledCost(c.base, c.scale, targetLevel);
       }
       this.changed$.next(def.id);
     }
+    this.syncRelicCosts();
   }
 
   /**
@@ -239,6 +280,9 @@ export class UpgradeService {
       }
       rt.currentCosts = restoredCosts;
     }
+    // Recompute jewelry costs for all un-purchased relic upgrades based on
+    // how many relics were restored from save.
+    this.syncRelicCosts();
   }
 
   // ── Private helpers ───────────────────────────────────────────

@@ -1,10 +1,11 @@
-import { Component, Input, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
+import { StatisticsService } from '../../statistics/statistics.service';
 import { THIEF_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 
 @Component({
@@ -13,11 +14,14 @@ import { toPct, randInt, rollChance } from '../../utils/mathUtils';
   imports: [CommonModule],
   templateUrl: './thief-minigame.component.html',
   styleUrls: ['./thief-minigame.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ThiefMinigameComponent implements OnInit, OnDestroy {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
+  private stats  = inject(StatisticsService);
   private zone   = inject(NgZone);
+  private cdr    = inject(ChangeDetectorRef);
   private sub    = new Subscription();
   private animFrame?: number;
   private lastTime?: number;
@@ -39,6 +43,8 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
   @Input() relicHunterLevel     = 0;
   /** Locked In level — when ≥1, failed click positions are shown as red ticks on the dial. */
   @Input() lockedInLevel        = 0;
+  /** Flow State level — when ≥1, failed tick colours shift from red→yellow→green based on proximity to the sweet spot. */
+  @Input() flowStateLevel        = 0;
 
   // ── Wallet-synced ─────────────────────────
   dossiers = 0;
@@ -90,9 +96,19 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     return this.bagOfHoldingLevel * THIEF_MG.BAG_OF_HOLDING_GOLD_YIELD_PER_LEVEL;
   }
 
-  /** Effective relic drop chance (%): base + 1% per Relic Hunter level. */
+  /** Relic drop chance — always 1% regardless of Relic Hunter level (that controls the cap, not the rate). */
   get effectiveRelicChance(): number {
-    return THIEF_MG.RELIC_CHANCE + this.relicHunterLevel * THIEF_MG.RELIC_HUNTER_CHANCE_PER_LEVEL;
+    return THIEF_MG.RELIC_CHANCE;
+  }
+
+  /** Maximum lifetime relics that can ever be found: base 1 + 1 per Relic Hunter level. */
+  get relicCap(): number {
+    return 1 + this.relicHunterLevel;
+  }
+
+  /** True when the player has already found the maximum number of lifetime relics. */
+  get relicCapReached(): boolean {
+    return (this.stats.current.lifetimeCurrency['relic'] ?? 0) >= this.relicCap;
   }
 
   // ── Other computed ────────────────────────
@@ -126,6 +142,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
         this.dossiers = Math.floor(s['dossier']?.amount ?? 0);
+        this.cdr.markForCheck();
       })
     );
   }
@@ -152,7 +169,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     this.lastMsg  = MINIGAME_MSG.THIEF.IDLE;
     this.msgClass = 'msg-neutral';
     this.lastTime = undefined;
-    this.log.log(`Heist started! (−${this.DOSSIER_COST} ${CURRENCY_FLAVOR['dossier'].symbol})`);
+    this.log.log(`Heist started! (${cur('dossier', this.DOSSIER_COST, '-')})`);
     this.startAnimation();
   }
 
@@ -176,6 +193,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
       this.heistWon    = true;
       this.heistActive = false;
       this.stopAnimation();
+      this.stats.trackThiefHeist(true);
       this.awardRewards();
     } else {
       // Record the failed position for Locked In
@@ -187,11 +205,12 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
         this.heistLost   = true;
         this.heistActive = false;
         this.stopAnimation();
+        this.stats.trackThiefHeist(false);
         this.lastMsg  = MINIGAME_MSG.THIEF.BUSTED;
         this.msgClass = 'msg-bad';
         this.log.log('Heist failed — you were detected!', 'warn');
       } else {
-        this.lastMsg  = MINIGAME_MSG.THIEF.MISS(this.detection, this.maxDetection);
+        this.lastMsg  = MINIGAME_MSG.THIEF.MISS;
         this.msgClass = 'msg-bad';
       }
     }
@@ -223,6 +242,11 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     this.wallet.add('gold', gold);
     this.wallet.add('xp', xp);
 
+    // Track stats
+    this.stats.trackCurrencyGain('treasure', treasure);
+    this.stats.trackCurrencyGain('gold', gold);
+    this.stats.trackCurrencyGain('xp', xp);
+
     if (!this.wallet.isCurrencyUnlocked('treasure')) {
       this.wallet.unlockCurrency('treasure');
       this.log.log('Treasure discovered! New currency unlocked!', 'rare');
@@ -234,9 +258,10 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     ];
     this.resultXp = xp;
 
-    // Relic roll
-    if (rollChance(this.effectiveRelicChance)) {
+    // Relic roll — only if the lifetime cap hasn't been reached
+    if (!this.relicCapReached && rollChance(this.effectiveRelicChance)) {
       this.wallet.add('relic', THIEF_MG.RELIC_AMOUNT);
+      this.stats.trackCurrencyGain('relic', THIEF_MG.RELIC_AMOUNT);
       if (!this.wallet.isCurrencyUnlocked('relic')) {
         this.wallet.unlockCurrency('relic');
         this.log.log('A Relic has been unearthed! Incredibly rare!', 'rare');
@@ -246,9 +271,9 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
         symbol: CURRENCY_FLAVOR['relic'].symbol,
         color:  CURRENCY_FLAVOR['relic'].color,
       });
-      this.log.log(`Safe cracked! +${treasure} treasure, +${gold}g, +${THIEF_MG.RELIC_AMOUNT} relic! (+${xp} XP)`, 'rare');
+      this.log.log(`Safe cracked! (${cur('treasure', treasure)}, ${cur('gold', gold)}, ${cur('relic', THIEF_MG.RELIC_AMOUNT)}, ${cur('xp', xp)})`, 'rare');
     } else {
-      this.log.log(`Safe cracked! +${treasure} treasure, +${gold}g (+${xp} XP)`, 'success');
+      this.log.log(`Safe cracked! (${cur('treasure', treasure)}, ${cur('gold', gold)}, ${cur('xp', xp)})`, 'success');
     }
 
     this.lastMsg  = MINIGAME_MSG.THIEF.SUCCESS;
@@ -267,7 +292,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
       }
       this.lastTime = timestamp;
 
-      this.zone.run(() => {}); // tick Angular CD
+      this.cdr.detectChanges(); // re-render only this component
       this.animFrame = requestAnimationFrame(loop);
     };
 
@@ -297,6 +322,27 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
       x2: 60 + 50 * Math.cos(rad),
       y2: 60 + 50 * Math.sin(rad),
     };
+  }
+
+  /**
+   * Returns the stroke color for a failed-click tick mark.
+   * Without Flow State: always red (#f44).
+   * With Flow State: interpolates red → yellow → green on a 0–180° angular
+   * distance scale from the sweet spot center.
+   *   0°  away → hue 120 (green)
+   *   90° away → hue 60  (yellow)
+   *   180° away → hue 0  (red)
+   */
+  getFailedTickColor(angle: number): string {
+    if (this.flowStateLevel < 1) return '#f44';
+    // Compute shortest angular distance from this tick to the sweet spot center
+    let diff = Math.abs(angle - this.sweetSpotCenter) % 360;
+    if (diff > 180) diff = 360 - diff;
+    // Normalize to [0, 1]: 0 = at center, 1 = opposite side
+    const t = Math.min(diff / 180, 1);
+    // Interpolate hue: 120 (green) → 60 (yellow) → 0 (red)
+    const hue = Math.round(120 * (1 - t));
+    return `hsl(${hue}, 90%, 55%)`;
   }
 
   /** Compute the SVG arc path for the sweet-spot indicator (shown after heist ends). */

@@ -80,6 +80,16 @@
       </button>
     </div>
 
+    <!-- Kobold Bait toggle: only visible once the upgrade is purchased -->
+    <div class="short-rest-row" *ngIf="koboldBaitLevel >= 1">
+      <button class="short-rest-btn"
+              [class.sr-on]="koboldBaitEnabled"
+              (click)="toggleKoboldBait()">
+        {{ koboldBaitEnabled ? '[ Kobold Bait: ON  ]' : '[ Kobold Bait: OFF ]' }}
+        (-{{ 100 * selectedKoboldLevel }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>)
+      </button>
+    </div>
+
   </div>
 
   <!-- ── Flee button ─────────────────────── -->

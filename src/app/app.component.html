@@ -7,6 +7,13 @@
     [potionChuggingLevel]="upgrades.level('POTION_CHUGGING')"
     [strongerKoboldsLevel]="upgrades.level('STRONGER_KOBOLDS')"
     [firstStrikeLevel]="upgrades.level('FIRST_STRIKE')"
+    [slowBladeLevel]="upgrades.level('SLOW_BLADE')"
+    [gildedBladeLevel]="upgrades.level('GILDED_BLADE')"
+    [mindReadingLevel]="upgrades.level('POTION_MIND_READING')"
+    [catSwiftnessLevel]="upgrades.level('CATS_SWIFTNESS')"
+    [koboldBaitLevel]="upgrades.level('KOBOLD_BAIT')"
+    [koboldBaitEnabled]="koboldBaitEnabled"
+    (koboldBaitEnabledChange)="koboldBaitEnabled = $event"
     [shortRestLevel]="upgrades.level('SHORT_REST')"
     [shortRestEnabled]="shortRestEnabled"
     (shortRestEnabledChange)="shortRestEnabled = $event"
@@ -15,22 +22,35 @@
     [bountifulLandsLevel]="upgrades.level('BOUNTIFUL_LANDS')"
     [abundantLandsLevel]="upgrades.level('ABUNDANT_LANDS')"
     [fairyHostageLevel]="upgrades.level('FAIRY_HOSTAGE')"
+    [treasureChestLevel]="upgrades.level('TREASURE_CHEST')"
+    [xMarksTheSpotLevel]="upgrades.level('X_MARKS_THE_SPOT')"
     [bubblingBrewLevel]="upgrades.level('BUBBLING_BREW')"
     [biggerBubblesLevel]="upgrades.level('BIGGER_BUBBLES')"
     [potionDilutionLevel]="upgrades.level('POTION_DILUTION')"
     [serialDilutionLevel]="upgrades.level('SERIAL_DILUTION')"
     [perfectPotionsLevel]="upgrades.level('PERFECT_POTIONS')"
+    [synapticalPotionsLevel]="upgrades.level('SYNAPTICAL_POTIONS')"
+    [synapticStaticLevel]="upgrades.level('SYNAPTIC_STATIC')"
+    [synapticalEnabled]="synapticalEnabled"
+    (synapticalEnabledChange)="synapticalEnabled = $event"
     [wasteNotLevel]="upgrades.level('WASTE_NOT')"
     [largerCookbooksLevel]="upgrades.level('LARGER_COOKBOOKS')"
+    [cookbookAnnotationsLevel]="upgrades.level('COOKBOOK_ANNOTATIONS')"
     [vanishingPowderLevel]="upgrades.level('VANISHING_POWDER')"
     [potionCatEarsLevel]="upgrades.level('POTION_CATS_EARS')"
     [bagOfHoldingLevel]="upgrades.level('BAG_OF_HOLDING')"
     [relicHunterLevel]="upgrades.level('RELIC_HUNTER')"
     [lockedInLevel]="upgrades.level('LOCKED_IN')"
+    [flowStateLevel]="upgrades.level('FLOW_STATE')"
     [fighterCombatState]="fighterCombatState"
     (fighterCombatStateChange)="fighterCombatState = $event"
     [dilutionEnabled]="dilutionEnabled"
-    (dilutionEnabledChange)="dilutionEnabled = $event" />
+    (dilutionEnabledChange)="dilutionEnabled = $event"
+    [luckyGemsLevel]="upgrades.level('LUCKY_GEMS')"
+    [doubleDipLevel]="upgrades.level('DOUBLE_DIP')"
+    [standOutSelectionLevel]="upgrades.level('STAND_OUT_SELECTION')"
+    [goodEnoughLevel]="upgrades.level('GOOD_ENOUGH')"
+    [closeEnoughLevel]="upgrades.level('CLOSE_ENOUGH')" />
 
   <div class="game-wrapper">
     <div class="game-container">
@@ -107,33 +127,118 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           <div class="jack-pool-info">
             <span class="jack-pool-label" [style.visibility]="jacksPoolFree > 0 ? 'visible' : 'hidden'">Avail: <span class="jack-pool-count">{{ jacksPoolFree }}</span></span>
           </div>
-          <button class="jack-bulk-btn" *ngIf="jacksOwned >= 5"
-                  [disabled]="jacksPoolFree <= 0"
-                  (click)="allocateAllJacks(activeCharacterInfo.id)">[ALL]</button>
-          <div class="jack-alloc-stack">
-            <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack(activeCharacterInfo.id)">[+]</button>
-            <div class="jack-assigned-display">
-              <span class="jack-assigned-num">{{ getJackCount(activeCharacterInfo.id) }}</span>
-              <span class="jack-assigned-label">Jacks</span>
+
+          <!-- ══ Necromancer: dual jack allocation ══ -->
+          <ng-container *ngIf="activeCharacterId === 'necromancer'; else singleJackColumn">
+            <!-- Defile jacks -->
+            <div class="jack-alloc-label">Defile</div>
+            <div class="jack-alloc-stack">
+              <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-defile')">[+]</button>
+              <div class="jack-assigned-display">
+                <span class="jack-assigned-num">{{ getJackCount('necromancer-defile') }}</span>
+              </div>
+              <button class="jack-alloc-btn" [disabled]="getJackCount('necromancer-defile') <= 0" (click)="deallocateJack('necromancer-defile')">[-]</button>
             </div>
-            <button class="jack-alloc-btn" [disabled]="getJackCount(activeCharacterInfo.id) <= 0" (click)="deallocateJack(activeCharacterInfo.id)">[-]</button>
-          </div>
-          <button class="jack-bulk-btn" *ngIf="jacksOwned >= 5"
-                  [disabled]="getJackCount(activeCharacterInfo.id) <= 0"
-                  (click)="deallocateAllJacks(activeCharacterInfo.id)">[NONE]</button>
+            <!-- Ward jacks -->
+            <div class="jack-alloc-label">Ward</div>
+            <div class="jack-alloc-stack">
+              <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-ward')">[+]</button>
+              <div class="jack-assigned-display">
+                <span class="jack-assigned-num">{{ getJackCount('necromancer-ward') }}</span>
+              </div>
+              <button class="jack-alloc-btn" [disabled]="getJackCount('necromancer-ward') <= 0" (click)="deallocateJack('necromancer-ward')">[-]</button>
+            </div>
+          </ng-container>
+
+          <!-- ══ Standard: single jack allocation ══ -->
+          <ng-template #singleJackColumn>
+            <button class="jack-bulk-btn" *ngIf="jacksOwned >= 5"
+                    [disabled]="jacksPoolFree <= 0"
+                    (click)="allocateAllJacks(activeCharacterInfo.id)">[ALL]</button>
+            <div class="jack-alloc-stack">
+              <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack(activeCharacterInfo.id)">[+]</button>
+              <div class="jack-assigned-display">
+                <span class="jack-assigned-num">{{ getJackCount(activeCharacterInfo.id) }}</span>
+                <span class="jack-assigned-label">Jacks</span>
+              </div>
+              <button class="jack-alloc-btn" [disabled]="getJackCount(activeCharacterInfo.id) <= 0" (click)="deallocateJack(activeCharacterInfo.id)">[-]</button>
+            </div>
+            <button class="jack-bulk-btn" *ngIf="jacksOwned >= 5"
+                    [disabled]="getJackCount(activeCharacterInfo.id) <= 0"
+                    (click)="deallocateAllJacks(activeCharacterInfo.id)">[NONE]</button>
+          </ng-template>
+        </div>
+
+        <!-- ══ Familiar column — soul-stone-fuelled temp jacks ══ -->
+        <div class="familiar-column" [class.familiars-paused]="familiarsPaused" *ngIf="familiarUnlocked && jacksVisible && activeCharacterInfo">
+          <button class="familiar-pause-btn"
+                  [class.paused]="familiarsPaused"
+                  (click)="toggleFamiliarsPaused()">
+            {{ familiarsPaused ? '[ RESUME ]' : '[ PAUSE ]' }}
+          </button>
+          <ng-container *ngFor="let fk of familiarKeys">
+            <div class="familiar-box">
+              <div class="familiar-label">{{ familiarLabel(fk) }}</div>
+              <div class="familiar-bar-track">
+                <div class="familiar-bar-fill" [style.width.%]="getFamiliarPct(fk)"></div>
+              </div>
+              <div class="familiar-time" [class.familiar-active]="isFamiliarActive(fk)">
+                {{ formatFamiliarTime(fk) }}
+              </div>
+              <div class="familiar-btn-row">
+                <button class="familiar-btn" [disabled]="!canFeedFamiliar(fk)" (click)="feedFamiliar(fk)">
+                  +1<span class="familiar-cost-sym" style="color: #8f4fff;">◈</span>
+                </button>
+                <button class="familiar-btn" [disabled]="!canFeedFamiliar(fk)" (click)="feedFamiliarMax(fk)">
+                  MAX
+                </button>
+              </div>
+            </div>
+          </ng-container>
         </div>
 
         <div class="hero-area">
-          <button class="hero-btn" [disabled]="isHeroDisabled" (click)="clickHero()">
-            <div class="stun-fill-bar" *ngIf="isHeroDisabled" [ngStyle]="thiefStunAnimStyle"></div>
-            <span class="hero-btn-label">[ >>> {{ questBtnLabel }} <<< ]</span>
-          </button>
+          <!-- ══ Necromancer: dual alternating buttons ══ -->
+          <ng-container *ngIf="activeCharacterId === 'necromancer'; else singleHeroButton">
+            <div class="necro-buttons">
+              <button class="hero-btn necro-btn"
+                      [class.necro-active]="necromancerActiveButton === 'defile'"
+                      [disabled]="necromancerActiveButton !== 'defile'"
+                      (click)="clickHero()">
+                <span class="hero-btn-label">[ >>> {{ necromancerDefileLabel }} </span>
+              </button>
+              <button class="hero-btn necro-btn"
+                      [class.necro-active]="necromancerActiveButton === 'ward'"
+                      [disabled]="necromancerActiveButton !== 'ward'"
+                      (click)="clickHero()">
+                <span class="hero-btn-label">{{ necromancerWardLabel }} <<< ]</span>
+              </button>
+            </div>
+            <div class="necro-clicks-remaining" *ngIf="upgrades.level('AUGURY') >= 1">
+              Switches in: {{ necromancerClicksRemaining }} clicks
+            </div>
+          </ng-container>
+
+          <!-- ══ Standard: single hero button ══ -->
+          <ng-template #singleHeroButton>
+            <button class="hero-btn" [disabled]="isHeroDisabled" (click)="clickHero()">
+              <div class="stun-fill-bar" *ngIf="activeCharacterId === 'thief' && isThiefStunned" [ngStyle]="thiefStunAnimStyle"></div>
+              <div class="stun-fill-bar" *ngIf="activeCharacterId === 'artisan' && isArtisanTimerActive" [ngStyle]="artisanTimerAnimStyle"></div>
+              <span class="hero-btn-label">[ >>> {{ questBtnLabel }} <<< ]</span>
+            </button>
+          </ng-template>
           <div class="hero-subzone">
             <button class="wholesale-toggle-btn"
-                    [style.visibility]="activeCharacterId === 'culinarian' && upgrades.level('WHOLESALE_SPICES') >= 1 ? 'visible' : 'hidden'"
+                    *ngIf="activeCharacterId === 'culinarian' && upgrades.level('WHOLESALE_SPICES') >= 1"
                     [class.wt-on]="wholesaleSpicesEnabled"
                     (click)="toggleWholesaleSpices()">
               {{ wholesaleSpicesEnabled ? '[ Wholesale Spices: ON  ]' : '[ Wholesale Spices: OFF ]' }}
+            </button>
+            <button class="wholesale-toggle-btn"
+                    *ngIf="activeCharacterId === 'apothecary' && upgrades.level('FERMENTATION_VATS') >= 1"
+                    [class.vat-on]="fermentationVatsEnabled"
+                    (click)="toggleFermentationVats()">
+              {{ fermentationVatsEnabled ? '[ Fermentation Vats: ON  ]' : '[ Fermentation Vats: OFF ]' }}
             </button>
             <div class="jack-error"
                  [style.visibility]="activeCharJackStarved ? 'visible' : 'hidden'">
@@ -191,13 +296,11 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
       <app-character-unlock
         [minigameUnlockAvailable]="minigameUnlockAvailable"
-        [minigameGoldCost]="minigameUnlockCosts.MINIGAME_GOLD"
-        [minigamePotionCost]="minigameUnlockCosts.MINIGAME_POTIONS"
-        [minigameBeastCost]="minigameUnlockCosts.MINIGAME_BEAST"
-        [canAffordMinigame]="gold >= minigameUnlockCosts.MINIGAME_GOLD &&
-                             potions >= minigameUnlockCosts.MINIGAME_POTIONS &&
-                             beast >= minigameUnlockCosts.MINIGAME_BEAST"
+        [minigameCosts]="minigameCosts"
         (minigameUnlock)="buyMinigameUnlock()"
+        [jackdUpUnlockAvailable]="jackdUpUnlockAvailable"
+        [jackdUpCosts]="jackdUpCosts"
+        (jackdUpUnlock)="buyJackdUp()"
         [jackHireAvailable]="jacksToPurchase > 0"
         [canAffordJack]="canAffordJack"
         [jackCosts]="jackCurrentCosts"
@@ -210,9 +313,19 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
   </div>
 
   <!-- Right sidebar -->
-  <app-character-sidebar [heroStats]="heroStats" [jacksAllocations]="jacksAllocations" [jacksOwned]="jacksOwned" (unassignAllJacks)="unassignAllJacks()" />
+  <app-character-sidebar
+    [heroStats]="heroStats"
+    [jacksAllocations]="jacksAllocations"
+    [jacksOwned]="jacksOwned"
+    [isThiefStunned]="isThiefStunned"
+    [thiefStunAnimStyle]="thiefStunAnimStyle"
+    [isArtisanTimerActive]="isArtisanTimerActive"
+    [artisanTimerAnimStyle]="artisanTimerAnimStyle"
+    [necromancerActiveButton]="necromancerActiveButton"
+    (unassignAllJacks)="unassignAllJacks()" />
 </div>
 
 <router-outlet />
 <app-activity-log />
+<app-statistics />
 <app-options-menu />

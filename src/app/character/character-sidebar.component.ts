@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { CharacterService, Character } from './character.service';
@@ -17,6 +17,7 @@ export interface HeroStat {
   imports: [CommonModule],
   templateUrl: './character-sidebar.component.html',
   styleUrl: './character-sidebar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CharacterSidebarComponent implements OnInit, OnDestroy {
   @Input() heroStats: HeroStat[] = [];
@@ -25,7 +26,23 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   @Input() jacksOwned = 0;
   @Output() unassignAllJacks = new EventEmitter<void>();
 
+  // ── Button state mirroring (visual only) ─────────────────
+  /** True while the Thief is in a stun lockout. */
+  @Input() isThiefStunned = false;
+  /** Inline styles for the thief stun fill-bar animation. */
+  @Input() thiefStunAnimStyle: Record<string, string> = {};
+  /** True while the Artisan's appraisal timer is running. */
+  @Input() isArtisanTimerActive = false;
+  /** Inline styles for the artisan timer fill-bar animation. */
+  @Input() artisanTimerAnimStyle: Record<string, string> = {};
+  /** Which necromancer button is currently active ('defile' or 'ward'). */
+  @Input() necromancerActiveButton: 'defile' | 'ward' = 'defile';
+
   getJackCount(charId: string): number {
+    if (charId === 'necromancer') {
+      return (this.jacksAllocations['necromancer-defile'] ?? 0)
+           + (this.jacksAllocations['necromancer-ward'] ?? 0);
+    }
     return this.jacksAllocations[charId] ?? 0;
   }
 
@@ -39,6 +56,7 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
 
   private charService = inject(CharacterService);
   private saveService = inject(SaveService);
+  private cdr         = inject(ChangeDetectorRef);
   private sub = new Subscription();
 
   characters: Character[] = [];
@@ -48,15 +66,18 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
 
   readonly heroStatsFlavor = HERO_STATS_FLAVOR;
 
-  get unlockedCharacters(): Character[] {
-    return this.characters.filter(c => c.unlocked);
-  }
+  /** Pre-computed unlocked characters — updated in subscription callback. */
+  unlockedCharacters: Character[] = [];
 
   ngOnInit(): void {
-    this.sub.add(this.charService.characters$.subscribe(c => (this.characters = c)));
-    this.sub.add(this.charService.activeId$.subscribe(id => (this.activeId = id)));
-    this.sub.add(this.charService.sidebarCollapsed$.subscribe(v => (this.collapsed = v)));
-    this.sub.add(this.saveService.blandMode$.subscribe(v => (this.blandMode = v)));
+    this.sub.add(this.charService.characters$.subscribe(c => {
+      this.characters = c;
+      this.unlockedCharacters = c.filter(ch => ch.unlocked);
+      this.cdr.markForCheck();
+    }));
+    this.sub.add(this.charService.activeId$.subscribe(id => { this.activeId = id; this.cdr.markForCheck(); }));
+    this.sub.add(this.charService.sidebarCollapsed$.subscribe(v => { this.collapsed = v; this.cdr.markForCheck(); }));
+    this.sub.add(this.saveService.blandMode$.subscribe(v => { this.blandMode = v; this.cdr.markForCheck(); }));
   }
 
   ngOnDestroy(): void {

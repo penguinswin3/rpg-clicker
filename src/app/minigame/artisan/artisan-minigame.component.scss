@@ -1,0 +1,211 @@
+/* Artisan minigame — Faceting gem selection */
+$font:   'Courier New', Courier, monospace;
+$accent: #97dfc8;   // jewelry color
+$bg:     #000;
+
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.artisan-mg {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: $font;
+  font-size: 11px;
+  color: #ccc;
+}
+
+// ── Idle block ────────────────────────────
+
+.idle-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.idle-desc {
+  color: #777;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+// ── Facet button ──────────────────────────
+
+.facet-btn {
+  background: #111;
+  border: 1px solid #333;
+  color: $accent;
+  font-family: $font;
+  font-size: 11px;
+  padding: 5px 10px;
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+
+  &:hover:not(:disabled) {
+    background: #1a1a1a;
+    border-color: $accent;
+  }
+  &:disabled {
+    color: #444;
+    cursor: default;
+    border-color: #222;
+  }
+}
+
+.cost-warn {
+  color: #e04040;
+  font-size: 10px;
+  text-align: center;
+}
+
+// ── Round status ──────────────────────────
+
+.round-status {
+  color: #666;
+  font-size: 10px;
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+
+.round-done {
+  color: #555;
+}
+
+.round-restart-hint {
+  color: darken($accent, 15%);
+  font-size: 9px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+// ── Gem grid ──────────────────────────────
+
+.gem-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gem-cell {
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  font-family: $font;
+  height: 68px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  position: relative;
+  transition: background 0.07s, border-color 0.07s;
+  user-select: none;
+
+  &:hover:not(:disabled):not(.gem-selected) {
+    background: #151515;
+    border-color: $accent;
+  }
+
+  &:disabled:not(.gem-restart) {
+    cursor: default;
+  }
+
+  // Player selected this gem
+  &.gem-selected {
+    border-color: #888;
+    background: #111;
+  }
+
+  // Double Dip: first pick confirmed as the best gem — awaiting second pick
+  &.gem-first-pick {
+    border-color: #44dd44;
+    background: #061206;
+    box-shadow: 0 0 8px rgba(68, 221, 68, 0.4);
+  }
+
+  // Close Enough: player picked the runner-up gem and won via Close Enough upgrade
+  &.gem-close-enough {
+    border-color: #ddaa44;
+    background: #141006;
+    box-shadow: 0 0 6px rgba(221, 170, 68, 0.35);
+  }
+
+  // Revealed as the best gem
+  &.gem-best {
+    border-color: $accent;
+    background: #0b1a14;
+    box-shadow: 0 0 6px rgba(151, 223, 200, 0.3);
+  }
+
+  // Player picked this one but it was wrong
+  &.gem-wrong {
+    border-color: #c44;
+    background: #1a0a0a;
+  }
+
+  // Click to restart
+  &.gem-restart {
+    cursor: pointer;
+    &:hover {
+      border-color: $accent;
+      filter: brightness(1.2);
+    }
+  }
+}
+
+// ── Gem icon ──────────────────────────────
+
+.gem-icon {
+  display: inline-block;
+  line-height: 1;
+  transition: font-size 0.1s;
+}
+
+// ── Imperfection dots ─────────────────────
+
+.imperfection {
+  display: block;
+}
+
+// ── Score label ───────────────────────────
+
+.gem-score {
+  font-size: 9px;
+  color: #777;
+  margin-top: 2px;
+
+  &.score-best {
+    color: $accent;
+    font-weight: bold;
+  }
+
+  &.score-confirmed {
+    font-weight: bold;
+  }
+}
+
+// ── Result message ────────────────────────
+
+.round-msg {
+  text-align: center;
+  font-size: 10px;
+  padding: 4px;
+  min-height: 18px;
+
+  &.msg-neutral  { color: #777; }
+  &.msg-success  { color: $accent; }
+  &.msg-fail     { color: #e04040; }
+}

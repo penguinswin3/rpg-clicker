@@ -14,6 +14,13 @@
         [potionChuggingLevel]="potionChuggingLevel"
         [strongerKoboldsLevel]="strongerKoboldsLevel"
         [firstStrikeLevel]="firstStrikeLevel"
+        [slowBladeLevel]="slowBladeLevel"
+        [gildedBladeLevel]="gildedBladeLevel"
+        [mindReadingLevel]="mindReadingLevel"
+        [catSwiftnessLevel]="catSwiftnessLevel"
+        [koboldBaitLevel]="koboldBaitLevel"
+        [koboldBaitEnabled]="koboldBaitEnabled"
+        (koboldBaitEnabledChange)="koboldBaitEnabledChange.emit($event)"
         [shortRestLevel]="shortRestLevel"
         [shortRestEnabled]="shortRestEnabled"
         (shortRestEnabledChange)="shortRestEnabledChange.emit($event)"
@@ -34,17 +41,21 @@
         [perfectPotionsLevel]="perfectPotionsLevel"
         [dilutionEnabled]="dilutionEnabled"
         (dilutionEnabledChange)="dilutionEnabledChange.emit($event)"
+        [synapticalPotionsUnlocked]="synapticalPotionsLevel >= 1"
+        [synapticStaticLevel]="synapticStaticLevel"
+        [synapticalEnabled]="synapticalEnabled"
+        (synapticalEnabledChange)="synapticalEnabledChange.emit($event)"
       />
     </ng-container>
 
     <!-- ── Ranger: scouting grid minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'ranger'">
-      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" [fairyHostageLevel]="fairyHostageLevel" />
+      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" [fairyHostageLevel]="fairyHostageLevel" [treasureChestLevel]="treasureChestLevel" [xMarksTheSpotLevel]="xMarksTheSpotLevel" />
     </ng-container>
 
     <!-- ── Culinarian: Mastermind recipe minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'culinarian'">
-      <app-culinarian-minigame [wasteNotLevel]="wasteNotLevel" [largerCookbooksLevel]="largerCookbooksLevel" />
+      <app-culinarian-minigame [wasteNotLevel]="wasteNotLevel" [largerCookbooksLevel]="largerCookbooksLevel" [cookbookAnnotationsLevel]="cookbookAnnotationsLevel" />
     </ng-container>
 
     <!-- ── Thief: Big Heist safe-cracking minigame ─── -->
@@ -54,11 +65,27 @@
         [potionCatEarsLevel]="potionCatEarsLevel"
         [bagOfHoldingLevel]="bagOfHoldingLevel"
         [relicHunterLevel]="relicHunterLevel"
-        [lockedInLevel]="lockedInLevel" />
+        [lockedInLevel]="lockedInLevel"
+        [flowStateLevel]="flowStateLevel" />
+    </ng-container>
+
+    <!-- ── Artisan: placeholder minigame ─── -->
+    <ng-container *ngIf="activeCharacterId === 'artisan'">
+      <app-artisan-minigame
+        [luckyGemsLevel]="luckyGemsLevel"
+        [doubleDipLevel]="doubleDipLevel"
+        [standOutSelectionLevel]="standOutSelectionLevel"
+        [goodEnoughLevel]="goodEnoughLevel"
+        [closeEnoughLevel]="closeEnoughLevel" />
+    </ng-container>
+
+    <!-- ── Necromancer: Well of Souls minigame ─── -->
+    <ng-container *ngIf="activeCharacterId === 'necromancer'">
+      <app-necromancer-minigame />
     </ng-container>
 
     <!-- ── Other characters: placeholder ── -->
-    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian' && activeCharacterId !== 'thief'">
+    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian' && activeCharacterId !== 'thief' && activeCharacterId !== 'artisan' && activeCharacterId !== 'necromancer'">
 
       <div class="mg-divider">+----------+</div>
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService, Currency, CurrencyEntry, WalletState, PerSecondBreakdown } from './wallet.service';
@@ -12,10 +12,12 @@ import { fmtNumber } from '../utils/mathUtils';
   imports: [CommonModule],
   templateUrl: './wallet-sidebar.component.html',
   styleUrl: './wallet-sidebar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WalletSidebarComponent implements OnInit, OnDestroy {
   private walletService    = inject(WalletService);
   private characterService = inject(CharacterService);
+  private cdr              = inject(ChangeDetectorRef);
   private sub = new Subscription();
 
   allCurrencies: Currency[]  = [];
@@ -35,94 +37,119 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
 
   private static readonly EMPTY: CurrencyEntry = { amount: 0, perSecond: 0 };
 
-  // ── Derived ───────────────────────────────
+  // ── Pre-computed derived state (updated on subscription callbacks) ──
 
   /** Currencies whose gating character (if any) is unlocked, and whose manual-unlock gate (if any) has been opened. */
-  get visibleCurrencies(): Currency[] {
-    const unlockedIds = new Set(this.unlockedCharacters.map(c => c.id));
-    return this.allCurrencies.filter(c => {
-      if (c.requiredCharacterId && !unlockedIds.has(c.requiredCharacterId)) return false;
-      if (c.manualUnlock && !this.manualUnlockIds.has(c.id)) return false;
-      return true;
-    });
-  }
+  visibleCurrencies: Currency[] = [];
 
   /** Currency IDs always floated to the top of the list when visible. */
   private static readonly PINNED_IDS = ['gold', 'xp'];
 
   /** visibleCurrencies further narrowed by the active character filters. */
-  get filteredCurrencies(): Currency[] {
-    if (this.activeCharacterFilters.size === 0) return this.visibleCurrencies;
-    return this.visibleCurrencies.filter(c =>
-      this.activeCharacterFilters.has(c.requiredCharacterId ?? 'global')
-    );
-  }
+  filteredCurrencies: Currency[] = [];
 
   /** Pinned currencies (gold, xp) from the filtered set — rendered above the scroll area. */
-  get pinnedCurrencies(): Currency[] {
-    return this.filteredCurrencies.filter(c => WalletSidebarComponent.PINNED_IDS.includes(c.id));
-  }
+  pinnedCurrencies: Currency[] = [];
 
   /** All other filtered currencies — rendered in the scrollable area below. */
-  get scrollableCurrencies(): Currency[] {
-    return this.filteredCurrencies.filter(c => !WalletSidebarComponent.PINNED_IDS.includes(c.id));
-  }
+  scrollableCurrencies: Currency[] = [];
 
   /** Filter button descriptors, built from whatever is currently visible. */
-  get characterFilters(): { key: string; label: string; color: string }[] {
-    const result: { key: string; label: string; color: string }[] = [];
-    if (this.visibleCurrencies.some(c => !c.requiredCharacterId)) {
-      result.push({ key: 'global', label: 'GLOBAL', color: '#888' });
-    }
-    for (const char of this.unlockedCharacters) {
-      if (this.visibleCurrencies.some(c => c.requiredCharacterId === char.id)) {
-        result.push({ key: char.id, label: char.name.toUpperCase(), color: char.color });
-      }
-    }
-    return result;
-  }
+  characterFilters: { key: string; label: string; color: string }[] = [];
+
+  /** 0–100 percentage progress toward the next XP unlock threshold (based on all-time peak XP). */
+  xpProgressPct = 0;
+
+  /** True once all XP unlock thresholds have been reached. */
+  xpComplete = false;
 
   get allFiltersActive(): boolean {
     return this.activeCharacterFilters.size === 0;
   }
 
-  /** 0–100 percentage progress toward the next XP unlock threshold (based on all-time peak XP). */
-  get xpProgressPct(): number {
+  /** Recompute all derived state from current inputs. Called from subscription callbacks. */
+  private _recalc(): void {
+    // visibleCurrencies
+    const unlockedIds = new Set(this.unlockedCharacters.map(c => c.id));
+    this.visibleCurrencies = this.allCurrencies.filter(c => {
+      if (c.requiredCharacterId && !unlockedIds.has(c.requiredCharacterId)) return false;
+      if (c.manualUnlock && !this.manualUnlockIds.has(c.id)) return false;
+      return true;
+    });
+
+    // filteredCurrencies
+    if (this.activeCharacterFilters.size === 0) {
+      this.filteredCurrencies = this.visibleCurrencies;
+    } else {
+      this.filteredCurrencies = this.visibleCurrencies.filter(c =>
+        this.activeCharacterFilters.has(c.requiredCharacterId ?? 'global')
+      );
+    }
+
+    // pinned / scrollable
+    this.pinnedCurrencies = this.filteredCurrencies.filter(c => WalletSidebarComponent.PINNED_IDS.includes(c.id));
+    this.scrollableCurrencies = this.filteredCurrencies.filter(c => !WalletSidebarComponent.PINNED_IDS.includes(c.id));
+
+    // characterFilters
+    const filters: { key: string; label: string; color: string }[] = [];
+    if (this.visibleCurrencies.some(c => !c.requiredCharacterId)) {
+      filters.push({ key: 'global', label: 'GLOBAL', color: '#888' });
+    }
+    for (const char of this.unlockedCharacters) {
+      if (this.visibleCurrencies.some(c => c.requiredCharacterId === char.id)) {
+        filters.push({ key: char.id, label: char.name.toUpperCase(), color: char.color });
+      }
+    }
+    this.characterFilters = filters;
+
+    // XP progress
     const xp = this.highestXpEver;
     const thresholds = Object.values(XP_THRESHOLDS).sort((a, b) => a - b);
-
+    let pct = 100;
     let prev = 0;
     for (const t of thresholds) {
-      if (xp < t) return Math.min(100, ((xp - prev) / (t - prev)) * 100);
+      if (xp < t) { pct = Math.min(100, ((xp - prev) / (t - prev)) * 100); break; }
       prev = t;
     }
-    return 100;
-  }
-
-  /** True once all XP unlock thresholds have been reached. */
-  get xpComplete(): boolean {
-    return this.xpProgressPct === 100;
+    this.xpProgressPct = pct;
+    this.xpComplete = pct === 100;
   }
 
   // ── Lifecycle ─────────────────────────────
 
   ngOnInit(): void {
     this.allCurrencies = this.walletService.currencies;
-    this.sub.add(this.walletService.state$.subscribe(s => (this.state = s)));
-    this.sub.add(this.walletService.highestXpEver$.subscribe(v => (this.highestXpEver = v)));
+    this.sub.add(this.walletService.state$.subscribe(s => {
+      this.state = s;
+      // No _recalc needed — state changes don't affect currency visibility lists
+      this.cdr.markForCheck();
+    }));
+    this.sub.add(this.walletService.highestXpEver$.subscribe(v => {
+      this.highestXpEver = v;
+      this._recalc();
+      this.cdr.markForCheck();
+    }));
     this.sub.add(
       this.characterService.characters$.subscribe(chars => {
         this.unlockedCharacters = chars.filter(c => c.unlocked);
+        this._recalc();
+        this.cdr.markForCheck();
       })
     );
     this.sub.add(
       this.walletService.manualUnlocks$.subscribe(ids => {
         this.manualUnlockIds = ids;
+        this._recalc();
+        this.cdr.markForCheck();
       })
     );
-    this.sub.add(this.walletService.collapsed$.subscribe(v => (this.collapsed = v)));
-    this.sub.add(this.walletService.characterFilters$.subscribe(f => (this.activeCharacterFilters = f)));
-    this.sub.add(this.walletService.perSecondBreakdown$.subscribe(b => (this.breakdown = b)));
+    this.sub.add(this.walletService.collapsed$.subscribe(v => { this.collapsed = v; this.cdr.markForCheck(); }));
+    this.sub.add(this.walletService.characterFilters$.subscribe(f => {
+      this.activeCharacterFilters = f;
+      this._recalc();
+      this.cdr.markForCheck();
+    }));
+    this.sub.add(this.walletService.perSecondBreakdown$.subscribe(b => { this.breakdown = b; this.cdr.markForCheck(); }));
   }
 
   ngOnDestroy(): void {
@@ -143,6 +170,16 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
 
   clearCharacterFilters(): void {
     this.walletService.setCharacterFilters(new Set());
+  }
+
+  /** If All is already active, enable every individual character filter and disable All.
+   *  Otherwise, clear individual filters to re-enable All. */
+  toggleAllCharacterFilters(): void {
+    if (this.allFiltersActive) {
+      this.walletService.setCharacterFilters(new Set(this.characterFilters.map(f => f.key)));
+    } else {
+      this.walletService.setCharacterFilters(new Set());
+    }
   }
 
   // ── Helpers ───────────────────────────────

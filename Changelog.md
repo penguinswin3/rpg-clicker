@@ -1,3 +1,67 @@
+# Version Alpha 1.2.0
+
+## Added
+- Statistics tracing menu for all sorts of stats! 
+- Two new passive resource generation upgrades for Herbs and Meat
+- A new automatic potion making upgrade for the apothecary. It can be toggled on and off
+- A minimum hit upgrade for the fighter 
+- A new upgrade to the fighter minigame that gives hints as to the sweet spot location 
+- Add new scaling upgrades for herbs and raw meat to the ranger
+- Two new tiers of kobold!
+- A New character, the Artisan! 
+- A New Character, the Necromancer!
+- More Jacks!
+- Artisan "Faceting" minigame, pick the highest quality gem from six randomly generated stones
+- Necromancer "Well of Souls" minigame, allows for the creation of Soul Stones, which can be used to provide temporary jacks!
+- Added a ton of new upgrades across the board 
+- Added a new potion base, Synaptical
+- New Fighter minigame upgrade: Potion of Foresight — each level gives a 10% chance to roll attack damage twice and take the higher result
+- Added a new Familiar system
+
+## Removed
+- Bigger Game upgrade
+
+## Changed
+- More Herbs and Better Tracking are stronger
+- Short Rest is a tad more expensive
+- Toggling a Vault or Activity Log filter while on ALL will select all options individually for ease of exclusion
+- Failing the apothecary minigame will now reduce the percent chance of a successful dilution
+- The dilution percent display color reflects this 
+- Reduced the Kobold Ear cost of the Kobold Ear Jack
+- Swapped the order of the Pixie Dust and Kobold Ear jack 
+- Renamed "Unassign" to "Recall" all jacks
+- Swapped the order of treasure and kobold 
+- Tweaked the description of Plentiful Plundering
+- Significantly more gold is awarded per unused detection in the thief minigame 
+- Relic Hunter now costs more Hearty Meals
+- Sharper Swords scales slower
+- Reworked Serial Dilution to award more concentrated potions
+- Kobolds drop more gold 
+- Waste Not hearty meal cost scales harder
+- Stronger Kobolds has a lower kobold part cost
+- Hovel Garden and Beast Traps scale a little less
+- Bubbling Brew now costs herbs 
+- Fermentation Vats cost scaling is less
+- Made the minigame panel a little wider to give a little more breathing room
+- Unified the scrollbar design to use the clean, blocky style
+- Reworked activity log currency display formatting
+- Reworked Perfect Potions to give bonus dilution success chance per perfect click
+- Reduces kobold ear scaling on Stronger Kobolds
+- Relics now cost a scaling amount of jewelry in addition to the static 1 relic 
+- Increased the Wholesale cap
+
+## Bugfixes
+- Cleaned up the missing row on the ranger character stats box 
+- Cat's Eye potion is now factored in to the per seconds 
+- You can no longer toggle the dilution upgrade in the middle of a brew
+- Differentiated base and waste not yield in the activity log message for the culinarian minigame
+- Fixed perfect potions upgrade not showing up 
+- General Performance improvements
+- Fix a bug with bonus potion not calculating correctly
+- Corrected misc math errors
+
+----------------------------
+
 # Version Alpha 1.1.1
 
 ## Added

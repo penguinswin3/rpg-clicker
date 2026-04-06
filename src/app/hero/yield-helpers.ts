@@ -6,7 +6,7 @@
  * ════════════════════════════════════════════════════════════
  */
 
-import { YIELDS } from '../game-config';
+import { YIELDS, ARTISAN_MG } from '../game-config';
 import { clamp, rollChance, randInt } from '../utils/mathUtils';
 
 // ── Fighter ─────────────────────────────────────────────────
@@ -41,19 +41,45 @@ export function calcFighterAttackPower(sharperSwordsLevel: number): number {
 /** Current beast-find percentage (capped at RANGER_BEAST_CHANCE_CAP). */
 export function calcBeastFindChance(betterTrackingLevel: number): number {
   return clamp(
-    YIELDS.RANGER_BASE_BEAST_CHANCE + betterTrackingLevel,
+    YIELDS.RANGER_BASE_BEAST_CHANCE + betterTrackingLevel * 3,
     0,
     YIELDS.RANGER_BEAST_CHANCE_CAP,
   );
 }
 
 /**
+ * Beast yield per 5-second Baited Traps tick, combining Baited Traps and Spiced Bait.
+ * Formula: baitedTrapsLevel + (baitedTrapsLevel × spicedBaitLevel)
+ * Multiply by 0.2 to get the per-second display rate.
+ */
+export function calcBaitedTrapsBeastPerTick(
+  baitedTrapsLevel: number,
+  spicedBaitLevel: number,
+): number {
+  return baitedTrapsLevel + baitedTrapsLevel * spicedBaitLevel;
+}
+
+/**
+ * Herb yield per 5-second Hovel Garden tick, combining Hovel Garden and Ornate Herb Pots.
+ * Formula: hovelGardenLevel + (hovelGardenLevel × ornateHerbPotsLevel)
+ * Multiply by 0.2 to get the per-second display rate.
+ */
+export function calcHovelGardenHerbPerTick(
+  hovelGardenLevel: number,
+  ornateHerbPotsLevel: number,
+): number {
+  return hovelGardenLevel + hovelGardenLevel * ornateHerbPotsLevel;
+}
+
+/**
  * Compute actual herb yield for a single forage action.
+ * Each More Herbs level adds 3% doubling chance.
  * Rolls the doubling chance and returns the final herb count.
  */
 export function computeHerbYield(moreHerbsLevel: number): number {
-  const guaranteed = Math.floor(moreHerbsLevel / 100);
-  const remainder  = moreHerbsLevel % 100;
+  const totalPct   = moreHerbsLevel * 3;
+  const guaranteed = Math.floor(totalPct / 100);
+  const remainder  = totalPct % 100;
   const extra      = rollChance(remainder) ? 1 : 0;
   return YIELDS.RANGER_BASE_HERBS * Math.pow(2, guaranteed + extra);
 }
@@ -64,8 +90,9 @@ export function computeHerbYield(moreHerbsLevel: number): number {
  * Used for per-second rate display, not for actual rolls.
  */
 export function expectedHerbPerRangerClick(moreHerbsLevel: number): number {
-  const guaranteed = Math.floor(moreHerbsLevel / 100);
-  const remainder  = moreHerbsLevel % 100;
+  const totalPct   = moreHerbsLevel * 3;
+  const guaranteed = Math.floor(totalPct / 100);
+  const remainder  = totalPct % 100;
   return YIELDS.RANGER_BASE_HERBS * Math.pow(2, guaranteed) * (1 + remainder / 100);
 }
 
@@ -76,11 +103,12 @@ export function computeMeatYield(biggerGameLevel: number): number {
 
 /** Display string for herb doubling — e.g. "3× + 25%". */
 export function herbDoublingDisplay(moreHerbsLevel: number): string {
-  const guaranteed = Math.floor(moreHerbsLevel / 100);
-  const remainder  = moreHerbsLevel % 100;
+  const totalPct   = moreHerbsLevel * 3;
+  const guaranteed = Math.floor(totalPct / 100);
+  const remainder  = totalPct % 100;
   if (guaranteed === 0) return `${remainder}%`;
-  if (remainder  === 0) return `${guaranteed}× (guaranteed)`;
-  return `${guaranteed}× + ${remainder}% again`;
+  if (remainder  === 0) return `${guaranteed}×`;
+  return `${guaranteed}× + ${remainder}%`;
 }
 
 // ── Apothecary ──────────────────────────────────────────────
@@ -130,3 +158,106 @@ export function calcExpectedDossierYield(stickyFingersLevel: number): number {
   return stickyFingersLevel > 0 ? 1 + stickyFingersLevel / 2 : 1;
 }
 
+// ── Artisan ─────────────────────────────────────────────────
+
+/** Treasure cost per artisan appraisal (base, upgradeable later). */
+export function calcArtisanTreasureCost(): number {
+  return YIELDS.ARTISAN_TREASURE_COST;
+}
+
+/** Duration of the artisan appraisal timer in ms, reduced by Faster Appraising. */
+export function calcArtisanTimerMs(fasterAppraisingLevel: number = 0): number {
+  return Math.max(
+    ARTISAN_MG.FASTER_APPRAISING_MIN_MS,
+    YIELDS.ARTISAN_TIMER_MS - fasterAppraisingLevel * ARTISAN_MG.FASTER_APPRAISING_MS_PER_LEVEL,
+  );
+}
+
+/** Maximum gemstone yield, increased by Potion of Cat's Paw. */
+export function calcArtisanGemstoneMax(catsPawLevel: number = 0): number {
+  return YIELDS.ARTISAN_GEMSTONE_MAX + catsPawLevel;
+}
+
+/** Maximum precious metal yield, increased by Potion of Cat's Paw. */
+export function calcArtisanMetalMax(catsPawLevel: number = 0): number {
+  return YIELDS.ARTISAN_METAL_MAX + catsPawLevel;
+}
+
+/** Roll a random gemstone yield for one appraisal. */
+export function calcArtisanGemstoneYield(catsPawLevel: number = 0): number {
+  return randInt(YIELDS.ARTISAN_GEMSTONE_MIN, calcArtisanGemstoneMax(catsPawLevel));
+}
+
+/** Roll a gemstone yield for a jack appraisal with optional relic bonus (doubled minimum). */
+export function calcArtisanGemstoneYieldJack(catsPawLevel: number = 0, hasRelic: boolean = false): number {
+  const min = hasRelic ? YIELDS.ARTISAN_GEMSTONE_MIN * 2 : YIELDS.ARTISAN_GEMSTONE_MIN;
+  return randInt(min, Math.max(min, calcArtisanGemstoneMax(catsPawLevel)));
+}
+
+/** Roll a random precious metal yield for one appraisal. */
+export function calcArtisanMetalYield(catsPawLevel: number = 0): number {
+  return randInt(YIELDS.ARTISAN_METAL_MIN, calcArtisanMetalMax(catsPawLevel));
+}
+
+/** Metal yield for a jack appraisal with optional relic bonus (always max). */
+export function calcArtisanMetalYieldJack(catsPawLevel: number = 0, hasRelic: boolean = false): number {
+  return hasRelic ? calcArtisanMetalMax(catsPawLevel) : randInt(YIELDS.ARTISAN_METAL_MIN, calcArtisanMetalMax(catsPawLevel));
+}
+
+/** Expected (average) gemstone yield per appraisal — for per-second display. */
+export function expectedGemstonePerAppraisal(catsPawLevel: number = 0): number {
+  return (YIELDS.ARTISAN_GEMSTONE_MIN + calcArtisanGemstoneMax(catsPawLevel)) / 2;
+}
+
+/** Expected (average) gemstone yield per jack appraisal with optional relic bonus. */
+export function expectedGemstonePerAppraisalJack(catsPawLevel: number = 0, hasRelic: boolean = false): number {
+  const min = hasRelic ? YIELDS.ARTISAN_GEMSTONE_MIN * 2 : YIELDS.ARTISAN_GEMSTONE_MIN;
+  return (min + Math.max(min, calcArtisanGemstoneMax(catsPawLevel))) / 2;
+}
+
+/** Expected (average) precious metal yield per appraisal — for per-second display. */
+export function expectedMetalPerAppraisal(catsPawLevel: number = 0): number {
+  return (YIELDS.ARTISAN_METAL_MIN + calcArtisanMetalMax(catsPawLevel)) / 2;
+}
+
+/** Expected (average) precious metal yield per jack appraisal with optional relic bonus. */
+export function expectedMetalPerAppraisalJack(catsPawLevel: number = 0, hasRelic: boolean = false): number {
+  return hasRelic ? calcArtisanMetalMax(catsPawLevel) : (YIELDS.ARTISAN_METAL_MIN + calcArtisanMetalMax(catsPawLevel)) / 2;
+}
+
+// ── Necromancer ─────────────────────────────────────────────
+
+/** Bones yielded per Defile click (max, based on Speak With Dead level). */
+export function calcNecromancerBoneYield(speakWithDeadLevel: number = 0): number {
+  return YIELDS.NECROMANCER_BONE_PER_CLICK + speakWithDeadLevel;
+}
+
+/** XP cost per Ward click, reduced by Dark Pact (min 1). */
+export function calcNecromancerWardXpCost(darkPactLevel: number): number {
+  return Math.max(1, YIELDS.NECROMANCER_WARD_XP_COST - darkPactLevel * 2);
+}
+
+/** Brimstone yielded per Ward click (max, based on Fortified Chalk level). */
+export function calcNecromancerBrimstoneYield(fortifiedChalkLevel: number = 0): number {
+  return YIELDS.NECROMANCER_BRIMSTONE_PER_WARD + fortifiedChalkLevel;
+}
+
+/** Percent chance to find bonus loot from Grave Looting during Defile (0–100). */
+export function calcGraveLootingChance(graveLootingLevel: number): number {
+  return graveLootingLevel * YIELDS.GRAVE_LOOTING_CHANCE_PER_LEVEL;
+}
+
+/** Minimum clicks before the active necromancer button switches. */
+export function calcNecromancerSwitchMin(extendedRitualLevel: number): number {
+  return YIELDS.NECROMANCER_SWITCH_MIN + extendedRitualLevel * 2;
+}
+
+/** Maximum clicks before the active necromancer button switches. */
+export function calcNecromancerSwitchMax(extendedRitualLevel: number): number {
+  return YIELDS.NECROMANCER_SWITCH_MAX + extendedRitualLevel * 2;
+}
+
+/** Roll a random switch-click threshold for the necromancer. */
+export function rollNecromancerSwitchClicks(extendedRitualLevel: number): number {
+  return randInt(calcNecromancerSwitchMin(extendedRitualLevel), calcNecromancerSwitchMax(extendedRitualLevel));
+}

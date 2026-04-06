@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription, combineLatest } from 'rxjs';
 import { CharacterService, Character } from './character.service';
@@ -13,20 +13,31 @@ import { fmtNumber } from '../utils/mathUtils';
   imports: [CommonModule],
   templateUrl: './character-unlock.component.html',
   styleUrl: './character-unlock.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CharacterUnlockComponent implements OnInit, OnDestroy {
   private charService = inject(CharacterService);
   private wallet      = inject(WalletService);
   private log         = inject(ActivityLogService);
+  private cdr         = inject(ChangeDetectorRef);
   private sub         = new Subscription();
 
   // ── Global upgrade inputs ─────────────────
   @Input() minigameUnlockAvailable = false;
-  @Input() minigameGoldCost   = 0;
-  @Input() minigamePotionCost = 0;
-  @Input() minigameBeastCost  = 0;
-  @Input() canAffordMinigame  = false;
-  @Output() minigameUnlock    = new EventEmitter<void>();
+  @Input() minigameCosts: { currency: string; amount: number }[] = [];
+  @Output() minigameUnlock = new EventEmitter<void>();
+
+  get canAffordMinigame(): boolean {
+    return this.minigameCosts.every(c => this.wallet.canAfford(c.currency, c.amount));
+  }
+
+  @Input() jackdUpUnlockAvailable = false;
+  @Input() jackdUpCosts: { currency: string; amount: number }[] = [];
+  @Output() jackdUpUnlock = new EventEmitter<void>();
+
+  get canAffordJackdUp(): boolean {
+    return this.jackdUpCosts.every(c => this.wallet.canAfford(c.currency, c.amount));
+  }
 
   // ── Jack of All Trades hire inputs ────────
   @Input() jackHireAvailable = false;
@@ -68,6 +79,7 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
           this.available = chars.filter(
             c => !c.unlocked && this.highestXpEver >= c.xpRequirement
           );
+          this.cdr.markForCheck();
         })
     );
   }
