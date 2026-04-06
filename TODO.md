@@ -59,12 +59,11 @@
 ## UI Tweaks
 - Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
 - In game Changelog?
-- clean up the area around the hero button
-  - Relic area can be up above?
-  - maybe make the jacks assignment look better
-  - make the toggles a designated area
-  - make the starved messages a designated area
-  - Relics could look like an arced crown type approach, can socket more in later?
+- Little "shine" on the character select button every time something new shows up there till you click it. 
+- Rename Alchemize to Concoct
+- make a lot of things not highlightable 
+- Make the minigames area collapsable 
+- Rename Minigames to Sidequests
 
 ## Statistics
 - Split the appraisals out from the faceting stats section
@@ -72,10 +71,17 @@
 
 ## Balancing
 - A "Balance Report" that shows gaps in the cost progression
-
+  - Makes graphs of time to recoup costs for an upgrade. number of seconds or clicks
+- Potion Titration can have 200 max levels and give 2% chance 
+- Kobold Bait can be 50% less to use 
+- potion of sticky fingers cost is bugged 
 
 ## Bug Fixes
 
-## Code Refactors
-- Fighter minigame combat log is a mess lmao 
 
+
+## Code Refactors
+
+
+## Maybes
+- Split out upgrades and passives into 3 column? theres not really enough passive to make it meaningful 

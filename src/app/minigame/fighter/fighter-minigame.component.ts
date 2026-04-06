@@ -479,7 +479,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
         // Kobold Bait: if toggled on, spend 100×koboldLevel raw meat to double the drop
         let dropAmount = drop.amount;
         if (this.koboldBaitLevel >= 1 && this.koboldBaitEnabled) {
-          const baitCost = 100 * this.selectedKoboldLevel;
+          const baitCost = FIGHTER_MG.KOBOLD_BAIT_BASE * this.selectedKoboldLevel;
           const currentBeast = Math.floor(this.wallet.get('beast'));
           if (currentBeast >= baitCost) {
             this.wallet.remove('beast', baitCost);

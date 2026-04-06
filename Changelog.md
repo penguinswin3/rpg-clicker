@@ -1,12 +1,17 @@
-# Version Alpha 1.3.0
+# Version Alpha 1.2.1
 
 ## Added
 
 ## Removed
 
 ## Changed
+- Improved the game area layout 
+- Reduced the bait cost for kobolds 
+- Reduced the meat cost of scouting
+- Tweaked the success rates for thieving and meticulious planning
 
 ## Bugfixes
+- Fixed the cost of potion of sticky fingers
 
 ----------------------------
 

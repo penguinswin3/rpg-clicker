@@ -9,7 +9,7 @@
 import { KOBOLD_VARIANTS } from './flavor-text';
 
 // ── Game Version ─────────────────────────────────────────────
-export const VERSION = 'Alpha 1.3.0';
+export const VERSION = 'Alpha 1.2.1';
 
 // ── Shared Upgrade Types ─────────────────────────────────────
 
@@ -449,7 +449,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Thief — standard ─────────────────────────────────────────
-  { id: 'METICULOUS_PLANNING', characterId: 'thief', category: 'standard', max: 50,
+  { id: 'METICULOUS_PLANNING', characterId: 'thief', category: 'standard', max: 40,
     costs: [{ currency: 'gold', base: 1000,       scale: 1.1 },
             { currency: 'dossier', base: 15,     scale: 1.13 },] },
   { id: 'PLENTIFUL_PLUNDERING', characterId: 'thief', category: 'standard', max: 999,
@@ -458,7 +458,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'POTION_OF_STICKY_FINGERS', characterId: 'thief', category: 'standard', max: 25,
     costs: [
       { currency: 'concentrated-potion', base: 2, scale: 1.3 },
-      { currency: 'kobold-claw',         base: 5, scale: 1.2 },
+      { currency: 'kobold-fang',         base: 5, scale: 1.2 },
     ] },
   { id: 'RELIC_HUNTER', characterId: 'thief', category: 'standard', max: 99,
     gates: { requiresRelic: true },
@@ -745,7 +745,7 @@ export const YIELDS = {
   CULINARIAN_SPICE_COST: 25,
 
   /** Base % chance the Thief successfully breaks & enters on a hero-button click */
-  THIEF_BASE_SUCCESS_CHANCE: 50,
+  THIEF_BASE_SUCCESS_CHANCE: 60,
   /** Duration in ms the Thief is stunned on a failed break-in */
   THIEF_STUN_DURATION_MS: 3_000,
 
@@ -820,6 +820,8 @@ export const FIGHTER_MG = {
   /** Chance per level (0–1) to roll player attack damage twice and take the higher. */
   MIND_READING_CHANCE_PER_LEVEL: 0.10,
 
+  KOBOLD_BAIT_BASE: 50,
+
   // ── Kobold level scaling (applied per level above 1) ──────
   /** Extra HP per kobold level above 1 */
   KOBOLD_HP_PER_LEVEL:       12,
@@ -878,7 +880,7 @@ export const RANGER_MG = {
   /** How many of those cells are blank (no reward) */
   BLANK_CELLS:  5,
   /** Raw Beast Meat cost to begin a scouting round */
-  SCOUT_COST:   18,
+  SCOUT_COST:   9,
 
   /** Probability a prize cell contains Pixie Dust (0–1) */
   PIXIE_CHANCE: 0.10,
