@@ -1,3 +1,15 @@
+# Version Alpha 1.3.0
+
+## Added
+
+## Removed
+
+## Changed
+
+## Bugfixes
+
+----------------------------
+
 # Version Alpha 1.2.0
 
 ## Added
@@ -5,7 +17,7 @@
 - Two new passive resource generation upgrades for Herbs and Meat
 - A new automatic potion making upgrade for the apothecary. It can be toggled on and off
 - A minimum hit upgrade for the fighter 
-- A new upgrade to the fighter minigame that gives hints as to the sweet spot location 
+- A new upgrade to the thief minigame that gives hints as to the sweet spot location 
 - Add new scaling upgrades for herbs and raw meat to the ranger
 - Two new tiers of kobold!
 - A New character, the Artisan! 
