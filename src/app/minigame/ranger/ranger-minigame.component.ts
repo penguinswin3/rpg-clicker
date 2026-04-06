@@ -310,6 +310,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
 
     // Track stats
     this.stats.trackRangerHunt(successCount > 0);
+    if (this.chestFound > 0) this.stats.trackRangerTreasureChest(this.chestFound);
     if (totalMeat  > 0) this.stats.trackCurrencyGain('beast', totalMeat);
     if (totalHerb  > 0) this.stats.trackCurrencyGain('herb', totalHerb);
     if (totalPixie > 0) this.stats.trackCurrencyGain('pixie-dust', totalPixie);

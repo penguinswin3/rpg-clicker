@@ -78,8 +78,9 @@ export const UPGRADE_FLAVOR = {
   STRONGER_KOBOLDS:     { name: 'Stronger Kobolds',          desc: 'You can seek out stronger kobolds. They grow...' },
   FIRST_STRIKE:         { name: 'First Strike',              desc: 'The Fighter attacks before the enemy. Let the slaughter begin!' },
   GILDED_BLADE:         { name: 'Gilded Blade',              desc: '+1% secondary drop chance and +1% gold per kill per level' },
-  POTION_FORESIGHT:  { name: 'Potion of Foresight',          desc: '+10% chance per level to roll attack damage twice and take the higher result' },
+  POTION_MIND_READING:  { name: 'Potion of Foresight',          desc: '+10% chance per level to roll attack damage twice and take the higher result' },
   CATS_SWIFTNESS:    { name: "Potion of Cat's Swiftness",    desc: '-5% kobold respawn delay per level (up to -50% at max)' },
+  KOBOLD_BAIT:       { name: 'Kobold Bait',                  desc: 'Kobolds drop more parts when baited with meat' },
 
   // Ranger
   MORE_HERBS:           { name: 'More Herbs',                desc: '+3% chance to double base herbs' },
@@ -93,7 +94,7 @@ export const UPGRADE_FLAVOR = {
   FAIRY_HOSTAGE:        { name: 'Fairy Hostage',             desc: 'A pixie, if present, will call out to a friend for help...' },
   TREASURE_CHEST:       { name: 'Treasure Chest',            desc: '+2% chance per level to find a treasure chest while scouting' },
   X_MARKS_THE_SPOT:    { name: 'X Marks the Spot',           desc: 'Treasure chest cells are marked with a red X ' },
-  POTION_CATS_EYE:      { name: "Potion of Cat's Eye",       desc: "+1% chance to roll both herb AND beast" },
+  POTION_CATS_EYE:      { name: "Potion of Cat's Eye",       desc: "+5% chance to roll both herb AND beast" },
   BIGGER_GAME:          { name: 'Bigger Game',               desc: '+1 max Raw Beast Meat per hero button press' },
 
   // Apothecary
@@ -252,7 +253,7 @@ export const KOBOLD_VARIANTS: readonly KoboldVariant[] = [
     name: 'Winged Kobold',
     ascii:
       '        _\\|     ___     |/_    \n' +
-      '      _-  \\_   <\'-\'>   _/  -_ \n' +
+      '      _-  \\_   <\'v\'>   _/  -_ \n' +
       '      -_    `-\'(   )`-\'    _-   \n' +
       '       `=.__.=-(   )-=.__.=\'    \n' +
       '               |/-\\|                 \n' +
@@ -343,6 +344,10 @@ export const GLOBAL_UPGRADE_FLAVOR = {
     name: 'Unlock Minigames',
     desc: 'Unlocks character-specific minigames',
   },
+  JACKD_UP: {
+    name: "Jack'd Up",
+    desc: 'Jacks (and familiars) click 50% faster',
+  },
 } as const;
 
 // ── Jack of All Trades ────────────────────────────────────────
@@ -365,7 +370,7 @@ export const HERO_STATS_FLAVOR = {
     XP_PER_CLICK: 'XP Per Bounty    :',
     DAMAGE_RANGE: 'Attack Damage    :',
     GILDED_BLADE: 'Secondary Chance      :',
-    MIND_READING: 'Advantage Chance :',
+    MIND_READING: 'Foresight Chance :',
   },
   RANGER: {
     BEAST_CHANCE: 'Beast Success :',
@@ -455,7 +460,7 @@ export const MINIGAME_MSG = {
 
   THIEF: {
     IDLE:     'Find the sweet spot on the dial!',
-    MISS:     (det: number, max: number) => `Miss! Detection ${det}/${max}`,
+    MISS:     'Miss!',
     HIT:      'Sweet spot found!',
     BUSTED:   'DETECTED! Heist failed.',
     SUCCESS:  'Safe cracked!',

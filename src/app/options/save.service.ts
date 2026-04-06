@@ -27,6 +27,7 @@ export interface UpgradeState {
   upgradeLevels: UpgradesSnapshot;
   selectedKoboldLevel?: number;
   minigameUnlocked?: boolean;
+  jackdUpUnlocked?: boolean;
   jacksOwned?: number;
   jacksAllocations?: Record<string, number>;
   fighterCombatState?: FighterCombatState;
@@ -36,6 +37,7 @@ export interface UpgradeState {
   dilutionEnabled?: boolean;
   synapticalEnabled?: boolean;
   fermentationVatsEnabled?: boolean;
+  koboldBaitEnabled?: boolean;
   /** Absolute timestamp (ms) when the artisan timer expires (0 = idle). */
   artisanTimerUntil?: number;
   /** How many appraisals (manual 1 + jacks N) are batched in the current timer. */
@@ -46,6 +48,8 @@ export interface UpgradeState {
   necromancerClicksRemaining?: number;
   /** Familiar absolute-expiry timestamps (ms) per jack allocation key. */
   familiarTimers?: Record<string, number>;
+  /** Whether all familiars are paused (not contributing clicks or per-second). */
+  familiarsPaused?: boolean;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

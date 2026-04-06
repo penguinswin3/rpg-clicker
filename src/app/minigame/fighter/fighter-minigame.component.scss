@@ -112,6 +112,7 @@ $font: 'Courier New', Courier, monospace;
 .combatant {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 3px;
   width: 100%;
 }
@@ -144,6 +145,7 @@ $font: 'Courier New', Courier, monospace;
 
 .hp-track {
   width: 100%;
+  align-self: stretch;
   height: 7px;
   background: #111;
   border: 1px solid #2a2a2a;

@@ -116,7 +116,7 @@ function clickRanger(ctx: HeroActionContext): void {
   const biggerGameLevel = u.level('BIGGER_GAME');
   const beastChance     = calcBeastFindChance(u.level('BETTER_TRACKING'));
   const catsEyeLevel    = u.level('POTION_CATS_EYE');
-  const catsEyeProcs    = catsEyeLevel > 0 && rollChance(catsEyeLevel);
+  const catsEyeProcs    = catsEyeLevel > 0 && rollChance(catsEyeLevel * 5);
 
   if (catsEyeProcs) {
     const herbs    = computeHerbYield(moreHerbsLevel);
@@ -366,7 +366,7 @@ function jackRanger(ctx: JackAutoClickContext): void {
   const biggerGameLevel = u.level('BIGGER_GAME');
   const beastChance     = calcBeastFindChance(u.level('BETTER_TRACKING'));
   const catsEyeLevel    = u.level('POTION_CATS_EYE');
-  const catsEyeProcs    = catsEyeLevel > 0 && rollChance(catsEyeLevel);
+  const catsEyeProcs    = catsEyeLevel > 0 && rollChance(catsEyeLevel * 5);
   const hasRangerRelic  = ctx.relicLevel('ranger') >= 1;
 
   // Relic: Belt of the Woodlands — +1 base herb (before doubling), +1 beast per hunt

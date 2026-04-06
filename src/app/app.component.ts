@@ -14,7 +14,7 @@ import { StatisticsComponent } from './statistics/statistics.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR } from './game-config';
+import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT } from './game-config';
 import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
@@ -63,6 +63,10 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Pre-computed minigame costs (flat, never changes). */
   readonly minigameCosts: { currency: string; amount: number }[] = getActiveCosts(this.minigameDef, 0);
 
+  private readonly jackdUpDef = getGlobalDef('JACKD_UP')!;
+  /** Pre-computed Jack'd Up costs (flat, never changes). */
+  readonly jackdUpCosts: { currency: string; amount: number }[] = getActiveCosts(this.jackdUpDef, 0);
+
   // ── Wallet state (template bindings) ──────────────────────────
   gold                = 0;
   xp                  = 0;
@@ -98,6 +102,13 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.highestXp >= XP_THRESHOLDS.MINIGAME_UNLOCK && !this.minigameUnlocked;
   }
 
+  // ── Jack'd Up state ───────────────────────────────────────────
+  jackdUpUnlocked = false;
+
+  get jackdUpUnlockAvailable(): boolean {
+    return this.highestXp >= XP_THRESHOLDS.JACKD_UP_UNLOCK && !this.jackdUpUnlocked;
+  }
+
   // ── Kobold level selector ──────────────────────────────────────
   selectedKoboldLevel = 1;
 
@@ -113,6 +124,7 @@ export class AppComponent implements OnInit, OnDestroy {
   blandMode               = false;
   wholesaleSpicesEnabled  = true;
   fermentationVatsEnabled = true;
+  koboldBaitEnabled       = false;
 
   // ── Relic popup state ─────────────────────────────────────────
   /** ID of the relic upgrade whose popup is currently shown, or null. */
@@ -174,6 +186,8 @@ export class AppComponent implements OnInit, OnDestroy {
    * A key with 0 or absent = inactive.
    */
   familiarTimers: Record<string, number> = {};
+  /** When true, all familiars are paused — they don't click and don't count for per-second. */
+  familiarsPaused = false;
 
   // ── Jack computed getters (delegated to jack-calculator) ───────
 
@@ -423,13 +437,16 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Jack auto-clicks: each allocated Jack fires once per second
     // Relic doubling: when a character's relic is active, each jack counts as two.
+    // Jack'd Up: when purchased, jacks fire 50% faster (1.5× effective clicks per tick).
     setInterval(() => {
       const ctx = this.buildJackAutoClickCtx();
+      const jackdUpMult = this.jackdUpUnlocked ? JACKD_UP_SPEED_MULT : 1;
       for (const [charId, count] of Object.entries(this.jacksAllocations)) {
         // Normalize compound keys (e.g. 'necromancer-defile' → 'necromancer') for relic lookup
         const baseCharId = charId.startsWith('necromancer') ? 'necromancer' : charId;
         const relicMult = this.upgrades.level(`RELIC_${baseCharId.toUpperCase()}`) >= 1 ? 2 : 1;
-        const effective = count * relicMult;
+        const scaledRaw = count * relicMult * jackdUpMult;
+        const effective = Math.floor(scaledRaw) + (Math.random() < (scaledRaw % 1) ? 1 : 0);
         if (charId === 'artisan') {
           // Artisan jacks share a single timer — handle as a batch
           if (effective > 0) this.handleArtisanJackBatch(effective);
@@ -448,9 +465,13 @@ export class AppComponent implements OnInit, OnDestroy {
             anyExpired = true;
             continue;
           }
+          // Skip clicks when familiars are paused
+          if (this.familiarsPaused) continue;
+
           const baseId = key.startsWith('necromancer') ? 'necromancer' : key;
           const relicMult = this.upgrades.level(`RELIC_${baseId.toUpperCase()}`) >= 1 ? 2 : 1;
-          const clicks = FAMILIAR.JACKS_PER_FAMILIAR * relicMult;
+          const famScaledRaw = FAMILIAR.JACKS_PER_FAMILIAR * relicMult * jackdUpMult;
+          const clicks = Math.floor(famScaledRaw) + (Math.random() < (famScaledRaw % 1) ? 1 : 0);
           if (key === 'artisan') {
             this.handleArtisanJackBatch(clicks);
           } else {
@@ -505,6 +526,7 @@ export class AppComponent implements OnInit, OnDestroy {
       upgradeLevels:           this.upgrades.snapshot(),
       selectedKoboldLevel:     this.selectedKoboldLevel,
       minigameUnlocked:        this.minigameUnlocked,
+      jackdUpUnlocked:         this.jackdUpUnlocked,
       jacksOwned:              this.jacksOwned,
       jacksAllocations:        { ...this.jacksAllocations },
       fighterCombatState:      this.fighterCombatState ?? undefined,
@@ -513,11 +535,13 @@ export class AppComponent implements OnInit, OnDestroy {
       dilutionEnabled:         this.dilutionEnabled,
       synapticalEnabled:       this.synapticalEnabled,
       fermentationVatsEnabled: this.fermentationVatsEnabled,
+      koboldBaitEnabled:       this.koboldBaitEnabled,
       artisanTimerUntil:       this.artisanTimerUntil,
       artisanTimerBatchSize:   this.artisanTimerBatchSize,
       necromancerActiveButton:     this.necromancerActiveButton,
       necromancerClicksRemaining:  this.necromancerClicksRemaining,
       familiarTimers:              { ...this.familiarTimers },
+      familiarsPaused:             this.familiarsPaused,
     };
   }
 
@@ -530,6 +554,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.upgrades.level('STRONGER_KOBOLDS') + 1,
     );
     this.minigameUnlocked        = s.minigameUnlocked        ?? false;
+    this.jackdUpUnlocked         = s.jackdUpUnlocked         ?? false;
     this.jacksOwned              = s.jacksOwned              ?? 0;
     this.jacksAllocations        = s.jacksAllocations ? { ...s.jacksAllocations } : {};
     this.fighterCombatState      = s.fighterCombatState      ?? null;
@@ -538,6 +563,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.dilutionEnabled         = s.dilutionEnabled         ?? false;
     this.synapticalEnabled       = s.synapticalEnabled       ?? false;
     this.fermentationVatsEnabled = s.fermentationVatsEnabled ?? true;
+    this.koboldBaitEnabled       = s.koboldBaitEnabled       ?? false;
     // Restore necromancer state
     this.necromancerActiveButton     = s.necromancerActiveButton     ?? 'defile';
     this.necromancerClicksRemaining  = s.necromancerClicksRemaining  ?? 10;
@@ -549,6 +575,7 @@ export class AppComponent implements OnInit, OnDestroy {
       if (v > now) restoredTimers[k] = v;
     }
     this.familiarTimers = restoredTimers;
+    this.familiarsPaused = s.familiarsPaused ?? false;
     // Restore artisan timer — if still in the future, reschedule the completion callback
     this.artisanTimerUntil     = s.artisanTimerUntil     ?? 0;
     this.artisanTimerBatchSize = s.artisanTimerBatchSize  ?? 0;
@@ -592,6 +619,8 @@ export class AppComponent implements OnInit, OnDestroy {
       },
       necromancerActiveButton: this.necromancerActiveButton,
       familiarTimers: this.familiarTimers,
+      jackdUpUnlocked: this.jackdUpUnlocked,
+      familiarsPaused: this.familiarsPaused,
     };
     const rates = calculatePerSecondRates(ctx);
     this.wallet.batchUpdate(() => {
@@ -786,10 +815,12 @@ export class AppComponent implements OnInit, OnDestroy {
     this.statsService.trackCurrencyGain('xp', xpAwarded);
     this.statsService.trackArtisanAppraisal(batchSize);
 
-    this.log.log(
-      `Appraisal complete! (${cur('gemstone', totalGemstones)}, ${cur('precious-metal', totalMetals)}, ${cur('xp', xpAwarded)})`,
-      'success',
-    );
+    if (!isJack) {
+      this.log.log(
+        `Appraisal complete! (${cur('gemstone', totalGemstones)}, ${cur('precious-metal', totalMetals)}, ${cur('xp', xpAwarded)})`,
+        'success',
+      );
+    }
 
     // Reset timer state
     this.artisanTimerBatchSize   = 0;
@@ -915,6 +946,12 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   // ── Familiar actions ───────────────────────────────────────────
+
+  /** Toggle the paused state of all familiars. */
+  toggleFamiliarsPaused(): void {
+    this.familiarsPaused = !this.familiarsPaused;
+    this.updateAllPerSecond();
+  }
 
   /** Whether the Find Familiar upgrade is purchased. */
   get familiarUnlocked(): boolean {
@@ -1048,6 +1085,24 @@ export class AppComponent implements OnInit, OnDestroy {
     this.statsService.recordMilestone('minigame_unlocked', 'Minigames Unlocked');
   }
 
+  buyJackdUp(): void {
+    if (this.jackdUpUnlocked) return;
+    const costs = this.jackdUpCosts;
+    if (!costs.every(c => this.wallet.canAfford(c.currency, c.amount))) {
+      const missing = costs
+        .filter(c => !this.wallet.canAfford(c.currency, c.amount))
+        .map(c => cur(c.currency, c.amount, ''))
+        .join(', ');
+      this.log.log(`Not enough resources for Jack'd Up. Need ${missing}.`, 'warn');
+      return;
+    }
+    for (const c of costs) this.wallet.remove(c.currency, c.amount);
+    this.jackdUpUnlocked = true;
+    this.updateAllPerSecond();
+    this.log.log("★ JACK'D UP! Your Jacks now click 50% faster!", 'rare');
+    this.statsService.recordMilestone('jackdup_unlocked', "Jack'd Up Unlocked");
+  }
+
   // ── Dev tools ──────────────────────────────────────────────────
 
   devMenuOpen = false;
@@ -1106,6 +1161,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Unlock the minigame system
     this.minigameUnlocked = true;
+
+    // Unlock Jack'd Up
+    this.jackdUpUnlocked = true;
 
     // Max out all jacks
     this.jacksOwned = getJacksMax();

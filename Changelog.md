@@ -48,7 +48,7 @@
 - Reworked Perfect Potions to give bonus dilution success chance per perfect click
 - Reduces kobold ear scaling on Stronger Kobolds
 - Relics now cost a scaling amount of jewelry in addition to the static 1 relic 
-- Increased the Wholesale cap 
+- Increased the Wholesale cap
 
 ## Bugfixes
 - Cleaned up the missing row on the ranger character stats box 
@@ -58,6 +58,7 @@
 - Fixed perfect potions upgrade not showing up 
 - General Performance improvements
 - Fix a bug with bonus potion not calculating correctly
+- Corrected misc math errors
 
 ----------------------------
 

@@ -106,7 +106,7 @@ function buildRangerStats(ctx: HeroStatsContext): HeroStat[] {
     { label: HERO_STATS_FLAVOR.RANGER.BEAST_CHANCE, value: `${calcBeastFindChance(u.level('BETTER_TRACKING'))}%` },
     { label: HERO_STATS_FLAVOR.RANGER.HERB_DOUBLE,  value: herbDoublingDisplay(u.level('MORE_HERBS')) },
     ...(u.level('POTION_CATS_EYE') > 0
-      ? [{ label: HERO_STATS_FLAVOR.RANGER.CATS_EYE, value: `${u.level('POTION_CATS_EYE')}%` }]
+      ? [{ label: HERO_STATS_FLAVOR.RANGER.CATS_EYE, value: `${u.level('POTION_CATS_EYE') * 5}%` }]
       : []),
     ...(u.level('BIGGER_GAME') > 0
       ? [{ label: HERO_STATS_FLAVOR.RANGER.MAX_MEAT, value: `${u.level('BIGGER_GAME') + 1}` }]
@@ -210,8 +210,8 @@ function buildArtisanStats(ctx: HeroStatsContext): HeroStat[] {
     { label: HERO_STATS_FLAVOR.ARTISAN.METAL_RANGE,    value: `${YIELDS.ARTISAN_METAL_MIN} - ${metalMax}` },
   ];
   if (luckyGemsLevel > 0) {
-    const bonus = roundTo(ARTISAN_MG.LUCKY_GEM_BONUS + luckyGemsLevel * ARTISAN_MG.LUCKY_GEM_BONUS_PER_LEVEL, 1);
-    stats.push({ label: HERO_STATS_FLAVOR.ARTISAN.LUCKY_BONUS, value: `+${bonus}` });
+    const bonus = roundTo((ARTISAN_MG.LUCKY_GEM_BONUS + luckyGemsLevel * ARTISAN_MG.LUCKY_GEM_BONUS_PER_LEVEL) * 100, 0);
+    stats.push({ label: HERO_STATS_FLAVOR.ARTISAN.LUCKY_BONUS, value: `+${bonus}%` });
   }
   return stats;
 }

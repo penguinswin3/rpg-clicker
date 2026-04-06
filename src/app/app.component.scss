@@ -51,6 +51,7 @@
   margin: 0.75rem 0;
   letter-spacing: 0;
   white-space: pre;
+  user-select: none;
 }
 
 // ---- Stats ----
@@ -563,6 +564,40 @@
   border: 1px solid #444;
   padding: 0.3rem 0.5rem;
   min-width: 56px;
+
+  .familiars-paused & {
+    opacity: 0.4;
+  }
+}
+
+.familiar-pause-btn {
+  background: #000;
+  color: #8f4fff;
+  border: 1px solid #8f4fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.55rem;
+  padding: 0.1rem 0.3rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.1s, color 0.1s;
+  user-select: none;
+  margin-bottom: 0.15rem;
+
+  &:hover {
+    background: #1a0a33;
+    color: #bf80ff;
+    border-color: #bf80ff;
+  }
+
+  &.paused {
+    color: #666;
+    border-color: #444;
+
+    &:hover {
+      color: #8f4fff;
+      border-color: #8f4fff;
+    }
+  }
 }
 
 .familiar-label {

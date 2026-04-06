@@ -64,6 +64,12 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   @Input() mindReadingLevel = 0;
   /** Potion of Cat's Swiftness level — each level reduces the kobold respawn delay by 5%. */
   @Input() catSwiftnessLevel = 0;
+  /** Kobold Bait upgrade level — when ≥ 1, a toggle is shown to spend raw meat and double secondary drops. */
+  @Input() koboldBaitLevel = 0;
+  /** Whether the Kobold Bait toggle is currently enabled. */
+  @Input() koboldBaitEnabled = false;
+  /** Emitted when the player toggles Kobold Bait on/off. */
+  @Output() koboldBaitEnabledChange = new EventEmitter<boolean>();
   /** Previously-saved combat state to restore on init. */
   @Input() savedState: FighterCombatState | null = null;
   /** Emitted whenever combat state changes (HP, defeated, rest countdown). */
@@ -174,6 +180,10 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
 
   toggleShortRest(): void {
     this.shortRestEnabledChange.emit(!this.shortRestEnabled);
+  }
+
+  toggleKoboldBait(): void {
+    this.koboldBaitEnabledChange.emit(!this.koboldBaitEnabled);
   }
 
   // ── Lifecycle ─────────────────────────────
@@ -466,9 +476,20 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     if (this.enemy.secondaryDrop) {
       const drop = this.enemy.secondaryDrop;
       if (rollChance(drop.chance)) {
-        this.wallet.add(drop.currencyId, drop.amount);
+        // Kobold Bait: if toggled on, spend 100×koboldLevel raw meat to double the drop
+        let dropAmount = drop.amount;
+        if (this.koboldBaitLevel >= 1 && this.koboldBaitEnabled) {
+          const baitCost = 100 * this.selectedKoboldLevel;
+          const currentBeast = Math.floor(this.wallet.get('beast'));
+          if (currentBeast >= baitCost) {
+            this.wallet.remove('beast', baitCost);
+            dropAmount *= 2;
+          }
+        }
+
+        this.wallet.add(drop.currencyId, dropAmount);
         gotSecondaryDrop = true;
-        this.stats.trackCurrencyGain(drop.currencyId, drop.amount);
+        this.stats.trackCurrencyGain(drop.currencyId, dropAmount);
         const isFirstSecondary = !this.wallet.isCurrencyUnlocked(drop.currencyId);
         if (isFirstSecondary) {
           this.wallet.unlockCurrency(drop.currencyId);
@@ -479,7 +500,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
             'rare'
           );
         }
-        secondaryMsg = `, ${cur(drop.currencyId, drop.amount)}`;
+        secondaryMsg = `, ${cur(drop.currencyId, dropAmount)}`;
       }
     }
 

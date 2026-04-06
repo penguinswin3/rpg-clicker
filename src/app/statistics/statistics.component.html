@@ -116,6 +116,10 @@
                 <span class="cur-name">Unsuccessful Hunts</span>
                 <span class="cur-amount stat-bad">{{ fmt(snap.rangerMinigame.unsuccessful) }}</span>
               </div>
+              <div class="stats-row" *ngIf="snap.rangerMinigame.treasureChestsFound > 0">
+                <span class="cur-name">Treasure Chests Found</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.rangerMinigame.treasureChestsFound) }}</span>
+              </div>
             </div>
           </div>
 

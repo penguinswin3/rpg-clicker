@@ -31,6 +31,14 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
     return this.minigameCosts.every(c => this.wallet.canAfford(c.currency, c.amount));
   }
 
+  @Input() jackdUpUnlockAvailable = false;
+  @Input() jackdUpCosts: { currency: string; amount: number }[] = [];
+  @Output() jackdUpUnlock = new EventEmitter<void>();
+
+  get canAffordJackdUp(): boolean {
+    return this.jackdUpCosts.every(c => this.wallet.canAfford(c.currency, c.amount));
+  }
+
   // ── Jack of All Trades hire inputs ────────
   @Input() jackHireAvailable = false;
   @Input() canAffordJack     = false;

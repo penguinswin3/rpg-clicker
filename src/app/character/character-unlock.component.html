@@ -1,4 +1,4 @@
-<ng-container *ngIf="available.length > 0 || minigameUnlockAvailable || jackHireAvailable">
+<ng-container *ngIf="available.length > 0 || minigameUnlockAvailable || jackHireAvailable || jackdUpUnlockAvailable">
   <div class="divider">+===============================================================================================+</div>
   <div class="section-title">[ GLOBAL UPGRADES ]</div>
 
@@ -33,6 +33,25 @@
       (click)="minigameUnlock.emit()">
       [UNLOCK:
       <ng-container *ngFor="let c of minigameCosts; let last = last">
+        <span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ fmt(c.amount) }}<span [style.color]="getCurrencyColor(c.currency)">{{ getCurrencySymbol(c.currency) }}</span></span>
+        <ng-container *ngIf="!last"> + </ng-container>
+      </ng-container>
+      ]
+    </button>
+  </div>
+
+  <!-- Jack'd Up unlock (global one-time upgrade) -->
+  <div class="unlock-card" *ngIf="jackdUpUnlockAvailable">
+    <div class="unlock-left">
+      <span class="unlock-name" style="color:#ffcc00">{{ globalUpgradeFlavor.JACKD_UP.name }}</span>
+      <span class="unlock-desc">{{ globalUpgradeFlavor.JACKD_UP.desc }}</span>
+    </div>
+    <button
+      class="unlock-btn"
+      [disabled]="!canAffordJackdUp"
+      (click)="jackdUpUnlock.emit()">
+      [UPGRADE:
+      <ng-container *ngFor="let c of jackdUpCosts; let last = last">
         <span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ fmt(c.amount) }}<span [style.color]="getCurrencyColor(c.currency)">{{ getCurrencySymbol(c.currency) }}</span></span>
         <ng-container *ngIf="!last"> + </ng-container>
       </ng-container>

@@ -6,7 +6,7 @@
  * ════════════════════════════════════════════════════════════
  */
 
-import { YIELDS, FAMILIAR } from '../game-config';
+import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT } from '../game-config';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { roundTo } from '../utils/mathUtils';
 import {
@@ -39,6 +39,10 @@ export interface PerSecondContext {
   necromancerActiveButton: 'defile' | 'ward';
   /** Familiar absolute-expiry timestamps per jack allocation key (ms). Active if > Date.now(). */
   familiarTimers: Record<string, number>;
+  /** Whether the Jack'd Up global upgrade has been purchased (makes jacks 50% faster). */
+  jackdUpUnlocked: boolean;
+  /** Whether all familiars are currently paused by the player. */
+  familiarsPaused: boolean;
 }
 
 // ── Result ──────────────────────────────────────────────────
@@ -84,14 +88,16 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   // ── Jack counts (starved / stunned jacks produce nothing) ──
   // Relic doubling: when a character's relic is active, each jack counts as two.
   // Familiar: each active familiar adds JACKS_PER_FAMILIAR to the pre-relic count.
+  // Jack'd Up: all effective jack counts are multiplied by JACKD_UP_SPEED_MULT.
+  const jackdUpSpeedMult = ctx.jackdUpUnlocked ? JACKD_UP_SPEED_MULT : 1;
   const now = Date.now();
-  const fam = (key: string) => (ctx.familiarTimers[key] ?? 0) > now ? FAMILIAR.JACKS_PER_FAMILIAR : 0;
-  const fighterJacks    = ((ctx.jacksAllocations['fighter']    ?? 0) + fam('fighter'))    * (hasFighterRelic ? 2 : 1);
-  const rangerJacks     = ((ctx.jacksAllocations['ranger']     ?? 0) + fam('ranger'))     * (hasRangerRelic ? 2 : 1);
-  const apothecaryJacks = (ctx.jackStarved['apothecary'] ? 0 : ((ctx.jacksAllocations['apothecary'] ?? 0) + fam('apothecary'))) * (hasApothecaryRelic ? 2 : 1);
-  const culinarianJacks = (ctx.jackStarved['culinarian'] ? 0 : ((ctx.jacksAllocations['culinarian'] ?? 0) + fam('culinarian'))) * (hasCulinarianRelic ? 2 : 1);
-  const thiefJacks      = ((ctx.jacksAllocations['thief'] ?? 0) + fam('thief'))           * (hasThiefRelic ? 2 : 1);
-  const artisanJacks    = (ctx.jackStarved['artisan'] ? 0 : ((ctx.jacksAllocations['artisan'] ?? 0) + fam('artisan'))) * (hasArtisanRelic ? 2 : 1);
+  const fam = (key: string) => ctx.familiarsPaused ? 0 : ((ctx.familiarTimers[key] ?? 0) > now ? FAMILIAR.JACKS_PER_FAMILIAR : 0);
+  const fighterJacks    = ((ctx.jacksAllocations['fighter']    ?? 0) + fam('fighter'))    * (hasFighterRelic ? 2 : 1) * jackdUpSpeedMult;
+  const rangerJacks     = ((ctx.jacksAllocations['ranger']     ?? 0) + fam('ranger'))     * (hasRangerRelic ? 2 : 1) * jackdUpSpeedMult;
+  const apothecaryJacks = (ctx.jackStarved['apothecary'] ? 0 : ((ctx.jacksAllocations['apothecary'] ?? 0) + fam('apothecary'))) * (hasApothecaryRelic ? 2 : 1) * jackdUpSpeedMult;
+  const culinarianJacks = (ctx.jackStarved['culinarian'] ? 0 : ((ctx.jacksAllocations['culinarian'] ?? 0) + fam('culinarian'))) * (hasCulinarianRelic ? 2 : 1) * jackdUpSpeedMult;
+  const thiefJacks      = ((ctx.jacksAllocations['thief'] ?? 0) + fam('thief'))           * (hasThiefRelic ? 2 : 1) * jackdUpSpeedMult;
+  const artisanJacks    = (ctx.jackStarved['artisan'] ? 0 : ((ctx.jacksAllocations['artisan'] ?? 0) + fam('artisan'))) * (hasArtisanRelic ? 2 : 1) * jackdUpSpeedMult;
 
   // ── Derived values ────────────────────────────────────────
   const goldPerClick    = calcGoldPerClick(u.level('BETTER_BOUNTIES'));
@@ -130,7 +136,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
 
   // ── Cat's Eye factor ──────────────────────────────────────
   const catsEyeLevel   = u.level('POTION_CATS_EYE');
-  const catsEyeFactor  = 0.5 * (1 + catsEyeLevel / 100);
+  const catsEyeFactor  = 0.5 * (1 + (catsEyeLevel * 5) / 100);
 
   // ── Ranger relic: +1 herb base (before doubling), +1 beast per hunt ──
   const rangerHerbBonus  = hasRangerRelic ? rangerJacks : 0;
@@ -164,8 +170,8 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const hasNecromancerRelic = (rl['necromancer'] ?? 0) >= 1;
   // With relic: both jack types always produce regardless of active button.
   // Without relic: only the active button's jacks produce.
-  const rawDefileJacks = (ctx.jacksAllocations['necromancer-defile'] ?? 0) + fam('necromancer-defile');
-  const rawWardJacks   = ctx.jackStarved['necromancer-ward'] ? 0 : ((ctx.jacksAllocations['necromancer-ward'] ?? 0) + fam('necromancer-ward'));
+  const rawDefileJacks = ((ctx.jacksAllocations['necromancer-defile'] ?? 0) + fam('necromancer-defile')) * jackdUpSpeedMult;
+  const rawWardJacks   = ctx.jackStarved['necromancer-ward'] ? 0 : ((ctx.jacksAllocations['necromancer-ward'] ?? 0) + fam('necromancer-ward')) * jackdUpSpeedMult;
   const defileJacks = hasNecromancerRelic ? rawDefileJacks
     : (ctx.necromancerActiveButton === 'defile' ? rawDefileJacks : 0);
   const wardJacks   = hasNecromancerRelic ? rawWardJacks
@@ -224,26 +230,28 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
 
   // ── Jack counts: split into regular jacks vs familiar jacks ──
   // Both are subject to starvation / stun checks and relic doubling.
+  // Jack'd Up: all effective jack counts are multiplied by JACKD_UP_SPEED_MULT.
+  const jackdUpSpeedMult2 = ctx.jackdUpUnlocked ? JACKD_UP_SPEED_MULT : 1;
   const now2 = Date.now();
-  const famRaw = (key: string) => (ctx.familiarTimers[key] ?? 0) > now2 ? FAMILIAR.JACKS_PER_FAMILIAR : 0;
+  const famRaw = (key: string) => ctx.familiarsPaused ? 0 : ((ctx.familiarTimers[key] ?? 0) > now2 ? FAMILIAR.JACKS_PER_FAMILIAR : 0);
 
   const relicMul = (hasRelic: boolean) => hasRelic ? 2 : 1;
 
   // Regular jacks (allocated from pool)
-  const fJacks   = (ctx.jacksAllocations['fighter']    ?? 0) * relicMul(hasFighterRelic);
-  const rJacks   = (ctx.jacksAllocations['ranger']     ?? 0) * relicMul(hasRangerRelic);
-  const aJacks   = (ctx.jackStarved['apothecary'] ? 0 : (ctx.jacksAllocations['apothecary'] ?? 0)) * relicMul(hasApothecaryRelic);
-  const cJacks   = (ctx.jackStarved['culinarian'] ? 0 : (ctx.jacksAllocations['culinarian'] ?? 0)) * relicMul(hasCulinarianRelic);
-  const tJacks   = (ctx.jacksAllocations['thief']      ?? 0) * relicMul(hasThiefRelic);
-  const artJacks = (ctx.jackStarved['artisan'] ? 0 : (ctx.jacksAllocations['artisan'] ?? 0)) * relicMul(hasArtisanRelic);
+  const fJacks   = (ctx.jacksAllocations['fighter']    ?? 0) * relicMul(hasFighterRelic)    * jackdUpSpeedMult2;
+  const rJacks   = (ctx.jacksAllocations['ranger']     ?? 0) * relicMul(hasRangerRelic)     * jackdUpSpeedMult2;
+  const aJacks   = (ctx.jackStarved['apothecary'] ? 0 : (ctx.jacksAllocations['apothecary'] ?? 0)) * relicMul(hasApothecaryRelic) * jackdUpSpeedMult2;
+  const cJacks   = (ctx.jackStarved['culinarian'] ? 0 : (ctx.jacksAllocations['culinarian'] ?? 0)) * relicMul(hasCulinarianRelic) * jackdUpSpeedMult2;
+  const tJacks   = (ctx.jacksAllocations['thief']      ?? 0) * relicMul(hasThiefRelic)      * jackdUpSpeedMult2;
+  const artJacks = (ctx.jackStarved['artisan'] ? 0 : (ctx.jacksAllocations['artisan'] ?? 0)) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2;
 
   // Familiar jacks (separate line in breakdown)
-  const fFam   = famRaw('fighter')    * relicMul(hasFighterRelic);
-  const rFam   = famRaw('ranger')     * relicMul(hasRangerRelic);
-  const aFam   = (ctx.jackStarved['apothecary'] ? 0 : famRaw('apothecary')) * relicMul(hasApothecaryRelic);
-  const cFam   = (ctx.jackStarved['culinarian'] ? 0 : famRaw('culinarian')) * relicMul(hasCulinarianRelic);
-  const tFam   = famRaw('thief')      * relicMul(hasThiefRelic);
-  const artFam = (ctx.jackStarved['artisan'] ? 0 : famRaw('artisan')) * relicMul(hasArtisanRelic);
+  const fFam   = famRaw('fighter')    * relicMul(hasFighterRelic)    * jackdUpSpeedMult2;
+  const rFam   = famRaw('ranger')     * relicMul(hasRangerRelic)     * jackdUpSpeedMult2;
+  const aFam   = (ctx.jackStarved['apothecary'] ? 0 : famRaw('apothecary')) * relicMul(hasApothecaryRelic) * jackdUpSpeedMult2;
+  const cFam   = (ctx.jackStarved['culinarian'] ? 0 : famRaw('culinarian')) * relicMul(hasCulinarianRelic) * jackdUpSpeedMult2;
+  const tFam   = famRaw('thief')      * relicMul(hasThiefRelic)      * jackdUpSpeedMult2;
+  const artFam = (ctx.jackStarved['artisan'] ? 0 : famRaw('artisan')) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2;
 
   // Combined totals (same as calculatePerSecondRates uses)
   const fighterJacks    = fJacks   + fFam;
@@ -276,7 +284,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
 
   // ── Cat's Eye factor ──────────────────────────────────────
   const catsEyeLevel2  = u.level('POTION_CATS_EYE');
-  const catsEyeFactor2 = 0.5 * (1 + catsEyeLevel2 / 100);
+  const catsEyeFactor2 = 0.5 * (1 + (catsEyeLevel2 * 5) / 100);
 
   // ── Ranger relic ──────────────────────────────────────────
   const rangerHerbBonusPerJack = hasRangerRelic ? 1 : 0;
@@ -391,10 +399,10 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const necRelicYieldMul = hasNecromancerRelic2 ? 2 : 1;
 
   // Raw jack counts (before active-button gating)
-  const rawDefJacks = (ctx.jacksAllocations['necromancer-defile'] ?? 0);
-  const rawDefFam   = famRaw('necromancer-defile');
-  const rawWrdJacks = ctx.jackStarved['necromancer-ward'] ? 0 : (ctx.jacksAllocations['necromancer-ward'] ?? 0);
-  const rawWrdFam   = ctx.jackStarved['necromancer-ward'] ? 0 : famRaw('necromancer-ward');
+  const rawDefJacks = (ctx.jacksAllocations['necromancer-defile'] ?? 0) * jackdUpSpeedMult2;
+  const rawDefFam   = famRaw('necromancer-defile') * jackdUpSpeedMult2;
+  const rawWrdJacks = ctx.jackStarved['necromancer-ward'] ? 0 : (ctx.jacksAllocations['necromancer-ward'] ?? 0) * jackdUpSpeedMult2;
+  const rawWrdFam   = ctx.jackStarved['necromancer-ward'] ? 0 : famRaw('necromancer-ward') * jackdUpSpeedMult2;
 
   // Active-button gating (relic: always active)
   const defJacks = hasNecromancerRelic2 ? rawDefJacks : (ctx.necromancerActiveButton === 'defile' ? rawDefJacks : 0);

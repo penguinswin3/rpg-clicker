@@ -131,12 +131,11 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
 
     // Cookbook Annotations: auto-submit one-of-each guess before the player begins.
     // The annotation is always [herb, beast, kobold-tongue, spice] — one of every
-    // ingredient in INGREDIENTS order — and counts as one used guess.
+    // ingredient in INGREDIENTS order — shown as a free hint (does not count as a used guess).
     if (this.cookbookAnnotationsLevel >= 1) {
       const annotationGuess = [...this.INGREDIENTS] as string[]; // one of each, in order
       const annotationPegs  = this.evaluate(annotationGuess);
       this.guessHistory.push({ ingredients: annotationGuess, pegs: annotationPegs });
-      this.guessesUsed++;
       // Check for the (very unlikely) case that the annotation is a perfect match
       if (annotationPegs.every(p => p === 'green')) {
         this.onWin();

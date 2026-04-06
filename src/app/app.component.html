@@ -11,6 +11,9 @@
     [gildedBladeLevel]="upgrades.level('GILDED_BLADE')"
     [mindReadingLevel]="upgrades.level('POTION_MIND_READING')"
     [catSwiftnessLevel]="upgrades.level('CATS_SWIFTNESS')"
+    [koboldBaitLevel]="upgrades.level('KOBOLD_BAIT')"
+    [koboldBaitEnabled]="koboldBaitEnabled"
+    (koboldBaitEnabledChange)="koboldBaitEnabled = $event"
     [shortRestLevel]="upgrades.level('SHORT_REST')"
     [shortRestEnabled]="shortRestEnabled"
     (shortRestEnabledChange)="shortRestEnabled = $event"
@@ -167,7 +170,12 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         </div>
 
         <!-- ══ Familiar column — soul-stone-fuelled temp jacks ══ -->
-        <div class="familiar-column" *ngIf="familiarUnlocked && jacksVisible && activeCharacterInfo">
+        <div class="familiar-column" [class.familiars-paused]="familiarsPaused" *ngIf="familiarUnlocked && jacksVisible && activeCharacterInfo">
+          <button class="familiar-pause-btn"
+                  [class.paused]="familiarsPaused"
+                  (click)="toggleFamiliarsPaused()">
+            {{ familiarsPaused ? '[ RESUME ]' : '[ PAUSE ]' }}
+          </button>
           <ng-container *ngFor="let fk of familiarKeys">
             <div class="familiar-box">
               <div class="familiar-label">{{ familiarLabel(fk) }}</div>
@@ -290,6 +298,9 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         [minigameUnlockAvailable]="minigameUnlockAvailable"
         [minigameCosts]="minigameCosts"
         (minigameUnlock)="buyMinigameUnlock()"
+        [jackdUpUnlockAvailable]="jackdUpUnlockAvailable"
+        [jackdUpCosts]="jackdUpCosts"
+        (jackdUpUnlock)="buyJackdUp()"
         [jackHireAvailable]="jacksToPurchase > 0"
         [canAffordJack]="canAffordJack"
         [jackCosts]="jackCurrentCosts"

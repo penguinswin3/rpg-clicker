@@ -39,6 +39,8 @@ export interface RangerMinigameStats {
   successful: number;
   /** Rounds where nothing was found. */
   unsuccessful: number;
+  /** Total treasure chests found across all rounds. */
+  treasureChestsFound: number;
 }
 
 export interface ApothecaryMinigameStats {
@@ -120,7 +122,7 @@ function defaultSnapshot(): StatisticsSnapshot {
     manualHeroPresses:  {},
     jackHeroPresses:    {},
     fighterMinigame:    { totalKills: 0, killsByType: {}, potionsDrank: 0, timesDefeated: 0, firstStrikeUnlocked: false, longestKillChain: 0 },
-    rangerMinigame:     { successful: 0, unsuccessful: 0 },
+    rangerMinigame:     { successful: 0, unsuccessful: 0, treasureChestsFound: 0 },
     apothecaryMinigame: { minigamesComplete: 0, potionHits: 0, perfectHits: 0, potionMisses: 0, dilutionSuccesses: 0, dilutionFailures: 0 },
     culinarianMinigame: { wins: 0, losses: 0, guessDist: [] },
     thiefMinigame:      { successfulHeists: 0, failedHeists: 0 },
@@ -240,6 +242,13 @@ export class StatisticsService {
     const snap = this.source.getValue();
     if (successful) snap.rangerMinigame.successful++;
     else            snap.rangerMinigame.unsuccessful++;
+    this._scheduleFlush();
+  }
+
+  trackRangerTreasureChest(count: number = 1): void {
+    if (count <= 0) return;
+    const snap = this.source.getValue();
+    snap.rangerMinigame.treasureChestsFound += count;
     this._scheduleFlush();
   }
 

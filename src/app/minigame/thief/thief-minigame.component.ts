@@ -210,7 +210,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
         this.msgClass = 'msg-bad';
         this.log.log('Heist failed — you were detected!', 'warn');
       } else {
-        this.lastMsg  = MINIGAME_MSG.THIEF.MISS(this.detection, this.maxDetection);
+        this.lastMsg  = MINIGAME_MSG.THIEF.MISS;
         this.msgClass = 'msg-bad';
       }
     }

@@ -49,6 +49,12 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() mindReadingLevel = 0;
   /** Potion of Cat's Swiftness level — forwarded to the fighter minigame. */
   @Input() catSwiftnessLevel = 0;
+  /** Kobold Bait level — forwarded to the fighter minigame. */
+  @Input() koboldBaitLevel = 0;
+  /** Whether Kobold Bait is currently enabled — forwarded to the fighter minigame. */
+  @Input() koboldBaitEnabled = false;
+  /** Emitted when the player toggles Kobold Bait inside the fighter minigame. */
+  @Output() koboldBaitEnabledChange = new EventEmitter<boolean>();
   /** Short Rest level — forwarded to the fighter minigame. */
   @Input() shortRestLevel = 0;
   /** Whether Short Rest auto-heal is currently enabled — forwarded to the fighter minigame. */

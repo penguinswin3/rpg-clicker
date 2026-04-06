@@ -87,7 +87,7 @@ export interface UpgradeDef {
 // Adding a new character? Add an 'UNLOCK_<ID>' entry here and update
 // character.service.ts — no other config files need to change.
 
-export type GlobalPurchaseKind = 'jack' | 'character-unlock' | 'minigame-unlock';
+export type GlobalPurchaseKind = 'jack' | 'character-unlock' | 'minigame-unlock' | 'jackdup-unlock';
 
 export interface GlobalCostDef {
   readonly currency:    string;
@@ -204,6 +204,15 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
     ],
   },
 
+  // ── Jack'd Up (one-time upgrade) ──────────────────────────────
+  {
+    id: 'JACKD_UP', kind: 'jackdup-unlock', xpMin: 50_000,
+    costs: [
+      { currency: 'gold',  base: 20_000 },
+      { currency: 'spice', base: 2_000  },
+    ],
+  },
+
 ] as const;
 
 /**
@@ -241,7 +250,11 @@ export const XP_THRESHOLDS = {
   THIEF_UNLOCK:      getGlobalDef('UNLOCK_THIEF')!.xpMin!,
   ARTISAN_UNLOCK:    getGlobalDef('UNLOCK_ARTISAN')!.xpMin!,
   NECROMANCER_UNLOCK:getGlobalDef('UNLOCK_NECROMANCER')!.xpMin!,
+  JACKD_UP_UNLOCK:   getGlobalDef('JACKD_UP')!.xpMin!,
 } as const;
+
+/** Speed multiplier applied to all jack auto-clicks when the Jack'd Up upgrade is purchased. */
+export const JACKD_UP_SPEED_MULT = 1.5;
 
 // ── Upgrade Definitions ──────────────────────────────────────
 // Single source of truth for every upgrade in the game.
@@ -320,6 +333,11 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'concentrated-potion', base: 5,  scale: 1.6 },
       { currency: 'kobold-feather',      base: 8,  scale: 1.6 },
     ] },
+  { id: 'KOBOLD_BAIT', characterId: 'fighter', category: 'minigame', max: 1,
+    costs: [
+      { currency: 'gold',  base: 1000, scale: 1.0 },
+      { currency: 'beast', base: 10,   scale: 1.0 },
+    ] },
 
   // ── Ranger — standard ────────────────────────────────────────
   { id: 'MORE_HERBS',      characterId: 'ranger', category: 'standard', max: 100,
@@ -350,7 +368,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
   { id: 'BIGGER_GAME',     characterId: 'ranger', category: 'standard', max: 999,    // each level +1 max Raw Beast Meat from hero button
     costs: [{ currency: 'gold', base: 480, scale: 1.75 }], enabled: false },
-  { id: 'POTION_CATS_EYE', characterId: 'ranger', category: 'standard', max: 100,    // 100 levels × +1% = 100% chance to roll both herb and beast
+  { id: 'POTION_CATS_EYE', characterId: 'ranger', category: 'standard', max: 20,    // 20 levels × +5% = 100% chance to roll both herb and beast
     gates: { requiresApothecary: true },
     costs: [
       { currency: 'concentrated-potion', base: 2,  scale: 1.3 },

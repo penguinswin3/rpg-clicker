@@ -166,11 +166,14 @@ $chest:  #989c3a;
 }
 
 .fairy-sparkle {
-  // ...existing code...
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-size: 17px;
   color: $pixie;
   pointer-events: none;
-  animation: fairy-sparkle 2.4s ease-in-out infinite;
+  animation: fairy-sparkle 1.2s ease-in-out infinite;
   text-shadow: 0 0 6px rgba(255, 224, 102, 0.8), 0 0 12px rgba(255, 224, 102, 0.4);
 
   // Two small floating motes that drift upward at staggered offsets
@@ -186,8 +189,8 @@ $chest:  #989c3a;
     text-shadow: 0 0 5px rgba(255, 224, 102, 0.95);
   }
 
-  &::before { animation: fairy-mote-a 2.4s 0.55s ease-in-out infinite; }
-  &::after  { animation: fairy-mote-b 2.4s 1.35s ease-in-out infinite; }
+  &::before { animation: fairy-mote-a 1.2s 0.25s ease-in-out infinite; }
+  &::after  { animation: fairy-mote-b 1.2s 0.65s ease-in-out infinite; }
 }
 
 .cell-sym {
