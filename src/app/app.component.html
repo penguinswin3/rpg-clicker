@@ -313,7 +313,16 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
   </div>
 
   <!-- Right sidebar -->
-  <app-character-sidebar [heroStats]="heroStats" [jacksAllocations]="jacksAllocations" [jacksOwned]="jacksOwned" (unassignAllJacks)="unassignAllJacks()" />
+  <app-character-sidebar
+    [heroStats]="heroStats"
+    [jacksAllocations]="jacksAllocations"
+    [jacksOwned]="jacksOwned"
+    [isThiefStunned]="isThiefStunned"
+    [thiefStunAnimStyle]="thiefStunAnimStyle"
+    [isArtisanTimerActive]="isArtisanTimerActive"
+    [artisanTimerAnimStyle]="artisanTimerAnimStyle"
+    [necromancerActiveButton]="necromancerActiveButton"
+    (unassignAllJacks)="unassignAllJacks()" />
 </div>
 
 <router-outlet />

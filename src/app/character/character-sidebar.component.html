@@ -31,6 +31,12 @@
         [class.is-active]="c.id === activeId"
         (click)="setActive(c.id)">
 
+        <!-- State indicator overlays (visual only) -->
+        <div class="state-fill thief-stun-fill" *ngIf="c.id === 'thief' && isThiefStunned" [ngStyle]="thiefStunAnimStyle"></div>
+        <div class="state-fill artisan-timer-fill" *ngIf="c.id === 'artisan' && isArtisanTimerActive" [ngStyle]="artisanTimerAnimStyle"></div>
+        <div class="necro-half necro-defile" *ngIf="c.id === 'necromancer'" [class.necro-active-half]="necromancerActiveButton === 'defile'"></div>
+        <div class="necro-half necro-ward" *ngIf="c.id === 'necromancer'" [class.necro-active-half]="necromancerActiveButton === 'ward'"></div>
+
         <div class="char-header">
           <span class="char-name" [style.color]="c.color">{{ c.name }}</span>
           <span class="badge-jacks" *ngIf="getJackCount(c.id) > 0">({{ getJackCount(c.id) }})</span>
@@ -60,8 +66,13 @@
       *ngFor="let c of unlockedCharacters"
       [class.is-active]="c.id === activeId"
       [class.is-inactive]="c.id !== activeId"
+      [class.compact-stunned]="c.id === 'thief' && isThiefStunned"
+      [class.compact-timer]="c.id === 'artisan' && isArtisanTimerActive"
       [title]="c.name + (c.id === activeId ? ' (active)' : ' — click to switch')"
       (click)="setActive(c.id)">
+      <!-- Necromancer half-shade overlays in collapsed view -->
+      <div class="necro-half-compact necro-defile-compact" *ngIf="c.id === 'necromancer'" [class.necro-active-half]="necromancerActiveButton === 'defile'"></div>
+      <div class="necro-half-compact necro-ward-compact" *ngIf="c.id === 'necromancer'" [class.necro-active-half]="necromancerActiveButton === 'ward'"></div>
       <span class="compact-initial" [style.color]="c.color">{{ c.name[0] }}</span>
       <span class="compact-pip">{{ c.id === activeId ? '*' : 'o' }}</span>
       <span class="compact-jacks" *ngIf="getJackCount(c.id) > 0">({{ getJackCount(c.id) }})</span>

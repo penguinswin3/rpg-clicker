@@ -424,6 +424,7 @@ export class AppComponent implements OnInit, OnDestroy {
     }, 5000);
 
     // Fermentation Vats: convert herbs → potions every 10 seconds (when enabled)
+    // Also awards gold based on Potion Marketing level for each potion brewed.
     setInterval(() => {
       const vatLevel = this.upgrades.level('FERMENTATION_VATS');
       if (vatLevel > 0 && this.fermentationVatsEnabled) {
@@ -431,6 +432,11 @@ export class AppComponent implements OnInit, OnDestroy {
           this.wallet.remove('herb', vatLevel);
           this.wallet.add('potion', vatLevel);
           this.statsService.trackCurrencyGain('potion', vatLevel);
+          const vatGold = vatLevel * this.upgrades.level('POTION_MARKETING');
+          if (vatGold > 0) {
+            this.wallet.add('gold', vatGold);
+            this.statsService.trackCurrencyGain('gold', vatGold);
+          }
         }
       }
     }, 10000);

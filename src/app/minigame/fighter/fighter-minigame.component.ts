@@ -505,20 +505,29 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     // ── Log message ───────────────────────────────
-    const logType = gotSecondaryDrop ? 'success' : (isFirstEar ? 'rare' : 'default');
+    // Detect mutual kill first so the log message is accurate even in that case.
+    const isMutualKill = this.fighterHp <= 0;
+    const dropsText = `${cur('gold', gold)}, ${cur('xp', this.enemy.xpReward)}, ${cur('kobold-ear', this.enemy.earReward)}${secondaryMsg}`;
+
     if (isFirstEar) {
       this.log.log(
-        `Victory! The ${this.enemy.name} drops a Kobold Ear! (${cur('gold', gold)}, ${cur('xp', this.enemy.xpReward)}, ${cur('kobold-ear', this.enemy.earReward)}${secondaryMsg})`,
+        `${isMutualKill ? 'Mutual kill!' : 'Victory!'} The ${this.enemy.name} drops a Kobold Ear! (${dropsText})`,
         'rare'
       );
-    } else {
+    } else if (isMutualKill) {
       this.log.log(
-        `Victory! ${this.enemy.name} defeated. (${cur('gold', gold)}, ${cur('xp', this.enemy.xpReward)}, ${cur('kobold-ear', this.enemy.earReward)}${secondaryMsg})`,
+        `Mutual kill! Loot still collected. (${dropsText})`,
+        'warn'
+      );
+    } else {
+      const logType = gotSecondaryDrop ? 'success' : 'default';
+      this.log.log(
+        `Victory! ${this.enemy.name} defeated. (${dropsText})`,
         logType
       );
     }
 
-    if (this.fighterHp <= 0) {
+    if (isMutualKill) {
       // Mutual kill — awards still granted, but fighter is defeated
       this.fighterHp = 0;
       this.defeated  = true;

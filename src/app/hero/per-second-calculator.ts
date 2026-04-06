@@ -113,8 +113,16 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const fighterRelicGold = (hasFighterRelic && fighterJacks > 0) ? fighterJacks * autoGoldPerSec : 0;
 
   // ── Thief rates ───────────────────────────────────────────
+  // Instead of zeroing out while stunned (which causes flashing in the display),
+  // compute the long-run average uptime fraction that factors in expected stun downtime.
+  // Stun is global: any jack failure triggers a full stun for all thief jacks.
   const thiefSuccessRate  = calcThiefSuccessChance(u.level('METICULOUS_PLANNING')) / 100;
-  const effectiveThiefRate = ctx.isThiefStunned ? 0 : thiefJacks * thiefSuccessRate;
+  const stunSec           = YIELDS.THIEF_STUN_DURATION_MS / 1000;
+  // P(at least one fail per second among all thief jacks) = 1 - successRate^N
+  const allSuccessPerSec  = thiefJacks > 0 ? Math.pow(thiefSuccessRate, thiefJacks) : 1;
+  const stunTriggerRate   = 1 - allSuccessPerSec;
+  const uptimeFraction    = thiefJacks > 0 ? 1 / (1 + stunTriggerRate * stunSec) : 1;
+  const effectiveThiefRate = thiefJacks * thiefSuccessRate * uptimeFraction;
   // Relic: Ring of Shadows — double dossier range
   const sfLevel            = u.level('POTION_OF_STICKY_FINGERS');
   const avgDossierYield    = hasThiefRelic
@@ -146,6 +154,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const vatLevel       = ctx.fermentationVatsEnabled ? u.level('FERMENTATION_VATS') : 0;
   const vatHerbDrain   = vatLevel * 0.1;
   const vatPotionGain  = vatLevel * 0.1;
+  const vatGoldGain    = vatPotionGain * goldPerBrew;
   const hovelGardenRate = calcHovelGardenHerbPerTick(u.level('HOVEL_GARDEN'), u.level('ORNATE_HERB_POTS')) * 0.2;
   const herbProduced = rangerJacks * catsEyeFactor * expectedHerbPerRangerClick(u.level('MORE_HERBS'))
     + rangerHerbBonus * catsEyeFactor
@@ -195,7 +204,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const graveLootJewelryPerSec = defileJacks * graveLootChance * YIELDS.GRAVE_LOOTING_JEWELRY_WEIGHT * YIELDS.GRAVE_LOOTING_JEWELRY_AMOUNT * (hasNecromancerRelic ? 2 : 1);
 
   return {
-    gold:    roundTo(autoGoldPerSec + fighterRelicGold + apothecaryJacks * goldPerBrew + fighterJacks * goldPerClick - culinarianJacks * culGoldCost + ppGoldPerSecond + graveLootGoldPerSec, 2),
+    gold:    roundTo(autoGoldPerSec + fighterRelicGold + apothecaryJacks * goldPerBrew + vatGoldGain + fighterJacks * goldPerClick - culinarianJacks * culGoldCost + ppGoldPerSecond + graveLootGoldPerSec, 2),
     xp:      roundTo(fighterJacks * xpPerBounty + rangerJacks + apothecaryJacks + culinarianJacks + effectiveThiefRate + artisanXpPerSec + necroXpGain - wardXpDrain, 2),
     herb:    roundTo(herbProduced - herbConsumed, 2),
     beast:   roundTo(rangerJacks * catsEyeFactor * (beastChance / 100) * (expectedMeatYield + rangerBeastBonus) + baitedTrapsRate, 2),
@@ -272,9 +281,14 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const culGoldCost     = calcCulinarianGoldCost(ctx.wholesaleSpicesEnabled, u.level('WHOLESALE_SPICES'), u.level('POTION_GLIBNESS'));
 
   // ── Thief rates ───────────────────────────────────────────
+  // Use the same uptime-fraction approach as calculatePerSecondRates to avoid flashing.
   const thiefSuccessRate   = calcThiefSuccessChance(u.level('METICULOUS_PLANNING')) / 100;
-  const effectiveThiefRate = ctx.isThiefStunned ? 0 : tJacks * thiefSuccessRate;
-  const effectiveThiefFam  = ctx.isThiefStunned ? 0 : tFam   * thiefSuccessRate;
+  const stunSec2           = YIELDS.THIEF_STUN_DURATION_MS / 1000;
+  const allSuccessPerSec2  = thiefJacks > 0 ? Math.pow(thiefSuccessRate, thiefJacks) : 1;
+  const stunTriggerRate2   = 1 - allSuccessPerSec2;
+  const uptimeFraction2    = thiefJacks > 0 ? 1 / (1 + stunTriggerRate2 * stunSec2) : 1;
+  const effectiveThiefRate = tJacks * thiefSuccessRate * uptimeFraction2;
+  const effectiveThiefFam  = tFam   * thiefSuccessRate * uptimeFraction2;
   const sfLevel2           = u.level('POTION_OF_STICKY_FINGERS');
   const avgDossierYield    = hasThiefRelic
     ? (2 + 2 * (1 + sfLevel2)) / 2
@@ -294,6 +308,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const vatLevel2     = ctx.fermentationVatsEnabled ? u.level('FERMENTATION_VATS') : 0;
   const vatHerbDrain  = vatLevel2 * 0.1;
   const vatPotionGain = vatLevel2 * 0.1;
+  const vatGoldGain2  = vatPotionGain * goldPerBrew;
   const hovelGardenRate2 = calcHovelGardenHerbPerTick(u.level('HOVEL_GARDEN'), u.level('ORNATE_HERB_POTS')) * 0.2;
   const apothHerbCost = Math.max(0, YIELDS.APOTHECARY_BREW_HERB_COST - (hasApothecaryRelic ? 1 : 0));
   const herbCostPerJack = apothHerbCost - herbSaveChance / 100;
@@ -328,6 +343,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   if (cFam   > 0) add('gold', 'Familiar (Culinarian)', roundTo(-cFam * culGoldCost, 2));
   if (effectiveThiefRate > 0 && ppLevel > 0) add('gold', 'Thief', roundTo(effectiveThiefRate * avgDossierYield * ppLevel, 2));
   if (effectiveThiefFam  > 0 && ppLevel > 0) add('gold', 'Familiar (Thief)', roundTo(effectiveThiefFam * avgDossierYield * ppLevel, 2));
+  if (vatGoldGain2 > 0) add('gold', 'Passive', vatGoldGain2);
 
   // ── XP ────────────────────────────────────────────────────
   if (fJacks > 0) add('xp', 'Fighter', roundTo(fJacks * xpPerBounty, 2));

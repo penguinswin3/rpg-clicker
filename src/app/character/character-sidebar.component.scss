@@ -141,6 +141,8 @@ $cyan: #0ff;
 // ── Character cards ───────────────────────
 
 .char-card {
+  position: relative;
+  overflow: hidden;
   border: 1px solid #222;
   border-left: 3px solid $muted;
   padding: 8px;
@@ -164,6 +166,61 @@ $cyan: #0ff;
     opacity: 0.6;
     cursor: not-allowed;
   }
+}
+
+// ── State indicator overlays (visual mirroring of hero button state) ──
+
+// Shared base for fill-bar overlays
+.state-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  pointer-events: none;
+  z-index: 0;
+  animation: sidebar-state-fill linear forwards;
+}
+
+@keyframes sidebar-state-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+// Thief stun: red tint
+.thief-stun-fill {
+  background: linear-gradient(to right, rgba(160, 30, 30, 0.45), rgba(220, 70, 70, 0.15));
+}
+
+// Artisan timer: amber/brown tint
+.artisan-timer-fill {
+  background: linear-gradient(to right, rgba(160, 100, 20, 0.50), rgba(200, 155, 45, 0.15));
+}
+
+// Necromancer half-shade overlays
+.necro-half {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.necro-defile {
+  left: 0;
+  background: linear-gradient(to right, rgba(60, 200, 80, 0.25), transparent);
+}
+
+.necro-ward {
+  right: 0;
+  background: linear-gradient(to left, rgba(160, 60, 230, 0.30), transparent);
+}
+
+.necro-active-half {
+  opacity: 1;
 }
 
 .char-header {
@@ -228,6 +285,8 @@ $cyan: #0ff;
 }
 
 .compact-char {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -245,6 +304,38 @@ $cyan: #0ff;
 
     .compact-initial { filter: brightness(1.4); }
   }
+
+  // Thief stun: tinted background
+  &.compact-stunned {
+    background: rgba(160, 30, 30, 0.2);
+  }
+
+  // Artisan timer: tinted background
+  &.compact-timer {
+    background: rgba(160, 100, 20, 0.2);
+  }
+}
+
+// Necromancer half-shade in collapsed view
+.necro-half-compact {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.necro-defile-compact {
+  left: 0;
+  background: linear-gradient(to right, rgba(60, 200, 80, 0.25), transparent);
+}
+
+.necro-ward-compact {
+  right: 0;
+  background: linear-gradient(to left, rgba(160, 60, 230, 0.30), transparent);
 }
 
 .compact-initial {

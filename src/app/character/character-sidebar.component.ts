@@ -26,6 +26,18 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   @Input() jacksOwned = 0;
   @Output() unassignAllJacks = new EventEmitter<void>();
 
+  // ── Button state mirroring (visual only) ─────────────────
+  /** True while the Thief is in a stun lockout. */
+  @Input() isThiefStunned = false;
+  /** Inline styles for the thief stun fill-bar animation. */
+  @Input() thiefStunAnimStyle: Record<string, string> = {};
+  /** True while the Artisan's appraisal timer is running. */
+  @Input() isArtisanTimerActive = false;
+  /** Inline styles for the artisan timer fill-bar animation. */
+  @Input() artisanTimerAnimStyle: Record<string, string> = {};
+  /** Which necromancer button is currently active ('defile' or 'ward'). */
+  @Input() necromancerActiveButton: 'defile' | 'ward' = 'defile';
+
   getJackCount(charId: string): number {
     if (charId === 'necromancer') {
       return (this.jacksAllocations['necromancer-defile'] ?? 0)
