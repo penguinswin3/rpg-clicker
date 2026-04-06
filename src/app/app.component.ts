@@ -326,8 +326,18 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // ── Relic popup ────────────────────────────────────────────────
 
+  /** Pre-computed relic socket data for the crown display — refreshed by _refreshDerived(). */
+  relicSlots: { id: string; name: string; purchased: boolean }[] = [];
+
   openRelicPopup(id: string): void { this.relicPopupId = id; }
   closeRelicPopup(): void          { this.relicPopupId = null; }
+
+  /** Buy the relic currently shown in the popup, if affordable. */
+  buyRelicFromPopup(): void {
+    if (this.relicPopupId && !this.upgrades.isMaxed(this.relicPopupId) && this.upgrades.canAfford(this.relicPopupId)) {
+      this.upgrades.buy(this.relicPopupId);
+    }
+  }
 
   // ── Lifecycle ──────────────────────────────────────────────────
 
@@ -682,6 +692,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Relic unpurchased flag
     this.anyRelicUnpurchased = (this._visibleUpgradesCache['relic'] ?? []).some(id => !this.upgrades.isMaxed(id));
+
+    // Relic crown slots
+    this.relicSlots = (this._visibleUpgradesCache['relic'] ?? []).map(id => ({
+      id,
+      name: this.getUpgradeFlavor(id).name,
+      purchased: this.upgrades.isMaxed(id),
+    }));
   }
 
   /** Compute visible upgrade IDs for a category (used by _refreshDerived). */
@@ -1115,8 +1132,8 @@ export class AppComponent implements OnInit, OnDestroy {
   get devToolsEnabled(): boolean { return this.saveService.enableDevTools; }
 
   devGrant(): void {
-    for (const c of this.wallet.currencies) this.wallet.add(c.id, 1000);
-    this.log.log('[DEV] +1k granted to all resources.', 'warn');
+    for (const c of this.wallet.currencies) this.wallet.add(c.id, 1_000_000);
+    this.log.log('[DEV] +1M granted to all resources.', 'warn');
   }
 
   devZero(): void {

@@ -11,6 +11,7 @@
 
 .game-wrapper {
   flex: 1;
+  position: relative;
   display: flex;
   justify-content: center;
   min-height: 100vh;
@@ -21,8 +22,8 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 860px;
-  padding: 2rem 1rem;
+  max-width: 1100px;
+  padding: 1.25rem 1rem;
   background: #000;
   color: #fff;
   font-family: 'Courier New', Courier, monospace;
@@ -40,7 +41,7 @@
   /* Center the block itself; keep each line left-aligned so all rows
      share the same left edge and the art stays coherent. */
   display: table;
-  margin: 0 auto 0.5rem;
+  margin: 0 auto 0.15rem;
   text-align: left;
   white-space: pre;
 }
@@ -48,7 +49,7 @@
 .divider {
   color: #555;
   text-align: center;
-  margin: 0.75rem 0;
+  margin: 0.3rem 0;
   letter-spacing: 0;
   white-space: pre;
   user-select: none;
@@ -108,70 +109,98 @@
 // ---- Click Area ----
 
 .click-area {
-  margin: 1.5rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-// ---- Jack of All Trades ----
-
-// ---- Relic column (left of Jacks) ----
-.relic-column {
+  margin: 0.75rem 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 280px;
-  min-width: 0;
+  gap: 0.35rem;
+  width: 100%;
+}
 
-  .section-title {
-    color: #a700ff;
-    margin: 0 0 0.4rem;
+// ── Relic Crown ─────────────────────────────────────────────
+.relic-crown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 0.25rem;
+}
+
+.crown-sockets {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-family: 'Courier New', Courier, monospace;
+  user-select: none;
+}
+
+.crown-chain {
+  display: inline-block;
+  width: 2rem;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #5a007a);
+
+  .crown-sockets > &:last-child {
+    background: linear-gradient(to left, transparent, #5a007a);
   }
 }
 
-.relic-scroll {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  max-height: 12rem;
-  overflow-y: auto;
-  padding-right: 0.25rem;
-
-  &::-webkit-scrollbar        { width: 6px; }
-  &::-webkit-scrollbar-track  { background: #000; }
-  &::-webkit-scrollbar-thumb  { background: #333; }
-  &::-webkit-scrollbar-thumb:hover { background: #555; }
+.crown-link {
+  color: #3d0066;
+  font-size: 0.75rem;
+  line-height: 1;
+  letter-spacing: -1px;
 }
 
-// Compact icon shown when a relic upgrade is maxed — sized to match
-// the jack-alloc-stack box so they sit neatly side-by-side.
-// margin-top = pool-info height (0.72rem × 1.2 line-height) + gap (0.2rem) = 1.06rem.
-// This makes the relic column the same total height as the jack column (ignoring the
-// symmetric [ALL]/[NONE] buttons), so align-items:center lines up both tops exactly.
-.relic-icon-box {
-  display: flex;
+.relic-socket {
+  background: #000;
+  border: 2px solid #3d0066;
+  color: #3d0066;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.1rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid;      // color set inline
-  padding: 0.35rem 0.6rem;
-  min-height: 4.5rem;
-  min-width: 3rem;
-  margin-top: 1.06rem;
   cursor: pointer;
-  transition: background 0.1s, filter 0.1s;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s, text-shadow 0.2s;
 
-  &:hover {
-    background: #111;
-    filter: brightness(1.3);
+  &.socket-empty {
+    opacity: 0.5;
+
+    &:hover {
+      opacity: 0.85;
+      color: #7700cc;
+      border-color: #7700cc;
+      background: #0a0014;
+    }
+  }
+
+  &.socket-filled {
+    color: #a700ff;
+    border-color: #a700ff;
+    background: #0d001a;
+    box-shadow: 0 0 8px rgba(167, 0, 255, 0.4), inset 0 0 6px rgba(167, 0, 255, 0.15);
+    text-shadow: 0 0 6px rgba(167, 0, 255, 0.6);
+
+    &:hover {
+      color: #c840ff;
+      border-color: #c840ff;
+      box-shadow: 0 0 12px rgba(167, 0, 255, 0.55), inset 0 0 8px rgba(167, 0, 255, 0.25);
+      text-shadow: 0 0 10px rgba(167, 0, 255, 0.8);
+    }
   }
 }
 
-.relic-icon-symbol {
-  font-size: 2.2rem;
-  line-height: 1;
-  font-family: 'Courier New', Courier, monospace;
+.crown-band {
+  width: 80%;
+  max-width: 10rem;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #5a007a 30%, #a700ff 50%, #5a007a 70%, transparent);
+  margin-top: -1px;
 }
 
 // ── Relic detail popup ───────────────────────────────────────
@@ -186,21 +215,28 @@
 }
 
 .relic-popup {
-  background: #0a0a0a;
-  border: 1px solid #444;
-  padding: 1.25rem 1.5rem;
+  background: #050008;
+  border: 2px solid #5a007a;
+  padding: 1.5rem 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.6rem;
-  min-width: 220px;
-  max-width: 320px;
+  min-width: 240px;
+  max-width: 360px;
   font-family: 'Courier New', Courier, monospace;
+  box-shadow: 0 0 20px rgba(167, 0, 255, 0.2);
 }
 
 .relic-popup-symbol {
   font-size: 2.4rem;
   line-height: 1;
+  opacity: 0.3;
+
+  &.relic-popup-owned-symbol {
+    opacity: 1;
+    text-shadow: 0 0 12px rgba(167, 0, 255, 0.7);
+  }
 }
 
 .relic-popup-name {
@@ -214,6 +250,40 @@
   color: #888;
   text-align: center;
   line-height: 1.35;
+}
+
+.relic-popup-buy {
+  background: #000;
+  color: #a700ff;
+  border: 1px solid #5a007a;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+
+  &:hover:not(:disabled) {
+    background: #1a0033;
+    border-color: #a700ff;
+    color: #c840ff;
+  }
+
+  &:disabled {
+    border-color: #2a0044;
+    color: #3d0066;
+    cursor: not-allowed;
+
+    .cost-met {
+      color: #a700ff;
+    }
+  }
+}
+
+.relic-popup-owned-tag {
+  color: #5a007a;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
 }
 
 .relic-popup-close {
@@ -233,7 +303,10 @@
   }
 }
 
-// Outer column: pool-info stacked directly above the bordered assigner
+// ── Action Row → replaced by stacked layout ─────────────────
+
+// ---- Jack of All Trades ----
+
 .jack-column {
   display: flex;
   flex-direction: column;
@@ -241,38 +314,56 @@
   gap: 0.2rem;
 }
 
-// Pool info line sits directly above the bordered box
+// Card — mirrors .familiar-box styling
+.jack-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  border: 1px solid #555;
+  padding: 0.25rem 0.6rem;
+  min-width: 62px;
+}
+
+// Title label — mirrors .familiar-label but in cyan
+.jack-box-label {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.6rem;
+  color: #0ff;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+// Avail info line inside the card
 .jack-pool-info {
   font-family: 'Courier New', Courier, monospace;
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   text-align: center;
   white-space: nowrap;
+  color: #666;
 }
 
-.jack-pool-label { color: #777; }
-.jack-pool-count  { color: #fff; font-weight: bold; }
+.jack-pool-count { color: #fff; font-weight: bold; }
 
-.jack-next-unlock {
-  color: #555;
-  font-size: 0.65rem;
-  font-style: italic;
-}
-
-// Bordered assigner: [+] / number / Jacks / [-] stacked vertically
-.jack-alloc-stack {
+// [-] num [+] centered control row
+.jack-controls {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  border: 1px solid #555;
-  padding: 0.35rem 0.6rem;
+  gap: 0.3rem;
 }
 
-.jack-assigned-display {
+// [NONE] [ALL] row below the controls
+.jack-bulk-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1;
+  gap: 0.3rem;
+  margin-top: 0.05rem;
+}
+
+// Necromancer: two jack cards side by side
+.jack-row-necro {
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-start;
 }
 
 .jack-assigned-num {
@@ -280,14 +371,8 @@
   font-weight: bold;
   color: #0ff;
   font-family: 'Courier New', Courier, monospace;
-}
-
-.jack-assigned-label {
-  font-size: 0.6rem;
-  color: #555;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  font-family: 'Courier New', Courier, monospace;
+  min-width: 1.4ch;
+  text-align: center;
 }
 
 .jack-alloc-btn {
@@ -296,7 +381,7 @@
   border: 1px solid #555;
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.7rem;
-  padding: 0.1rem 0.45rem;
+  padding: 0.1rem 0.4rem;
   cursor: pointer;
   line-height: 1;
   transition: background 0.1s, color 0.1s;
@@ -313,32 +398,35 @@
   }
 }
 
-// Bulk assign / remove all button
+// Bulk [NONE] / [ALL]
 .jack-bulk-btn {
   background: #000;
-  color: #aaa;
-  border: 1px solid #444;
+  color: #666;
+  border: 1px solid #333;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 0.65rem;
-  padding: 0.1rem 0.3rem;
+  font-size: 0.6rem;
+  padding: 0.1rem 0.25rem;
   cursor: pointer;
   line-height: 1;
   transition: background 0.1s, color 0.1s;
 
   &:hover:not(:disabled) {
     background: #333;
-    color: #fff;
+    color: #aaa;
   }
 
   &:disabled {
     border-color: #222;
-    color: #333;
+    color: #2a2a2a;
     cursor: not-allowed;
   }
 }
 
 .dev-menu-wrap {
-  position: relative;
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 300;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -349,10 +437,10 @@
   color: #f0f;
   border: 1px dashed #f0f;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 0.75rem;
-  padding: 0.4rem 0.6rem;
+  font-size: 0.65rem;
+  padding: 0.25rem 0.5rem;
   cursor: pointer;
-  opacity: 0.6;
+  opacity: 0.4;
   transition: opacity 0.1s, background 0.1s, color 0.1s;
 
   &:hover, &:focus {
@@ -510,13 +598,31 @@
   z-index: 0;
 }
 
-// Wraps only the hero button — size is exactly the button, so click-area
-// centering is never disturbed by sub-elements appearing below.
+// Wraps only the hero button — centered in click-area flow.
 .hero-area {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+// Starvation message — fixed height so it doesn't shift hero button on appear/disappear.
+.hero-starvation {
+  min-height: 1.1rem;
+  color: #ff5555;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.72rem;
+  text-align: center;
+  white-space: nowrap;
+  animation: jack-error-blink 1.4s step-start infinite;
+}
+
+// Below-hero info row: toggles and necro clicks.
+.hero-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 0.5rem;
 }
 
 // ── Necromancer dual-button layout ──────────────────────────
@@ -534,17 +640,16 @@
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.72rem;
   color: #777;
-  margin-top: 0.3rem;
   text-align: center;
+  white-space: nowrap;
 }
 
-// Label above each necromancer jack stack
-.jack-alloc-label {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.65rem;
-  color: #999;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+// ── Crew Row: Jacks + Familiars side by side ────────────────
+.crew-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2rem;
   margin-top: 0.25rem;
 }
 
@@ -553,21 +658,45 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+}
+
+// Outer bordered card — wraps the pause button + all familiar boxes
+.familiar-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid #5a3a7a;
+  padding: 0.3rem 0.5rem;
+  transition: opacity 0.2s;
+
+  &.familiars-paused {
+    opacity: 0.45;
+  }
+}
+
+// Horizontal row so necromancer dual familiar boxes sit side-by-side
+.familiar-boxes-row {
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+}
+
+// Subtle vertical divider between multiple familiar boxes
+.familiar-sep {
+  width: 1px;
+  align-self: stretch;
+  background: #3a2050;
+  margin: 0 0.35rem;
 }
 
 .familiar-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.2rem;
-  border: 1px solid #444;
-  padding: 0.3rem 0.5rem;
+  gap: 0.15rem;
+  padding: 0 0.25rem;
   min-width: 56px;
-
-  .familiars-paused & {
-    opacity: 0.4;
-  }
 }
 
 .familiar-pause-btn {
@@ -581,7 +710,7 @@
   line-height: 1;
   transition: background 0.1s, color 0.1s;
   user-select: none;
-  margin-bottom: 0.15rem;
+  white-space: nowrap;
 
   &:hover {
     background: #1a0a33;
@@ -669,21 +798,7 @@
   margin-left: 1px;
 }
 
-// Floats below the hero button without affecting layout flow or centering.
-// Children use visibility (not *ngIf) so this div is always the same size.
-.hero-subzone {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-  padding-top: 0.35rem;
-  white-space: nowrap;
-}
-
+// ── Toggle button styling ──────────────────────────────────
 .wholesale-toggle-btn {
   background: #0a0a0a;
   color: #555;
@@ -723,16 +838,7 @@
   }
 }
 
-// Shown beneath the hero button when the active character's Jacks can't complete their action.
-.jack-error {
-  color: #ff5555;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.72rem;
-  text-align: center;
-  white-space: nowrap;
-  animation: jack-error-blink 1.4s step-start infinite;
-}
-
+// Shown as starvation message above the hero button
 @keyframes jack-error-blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.45; }

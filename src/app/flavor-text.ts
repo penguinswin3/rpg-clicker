@@ -29,10 +29,19 @@ export const CURRENCY_FLAVOR = {
   gemstone:              { name: 'Gemstone',                  symbol: '💎︎',  color: '#54d6ac' },
   jewelry:               { name: 'Jewelry',                   symbol: 'Ő',  color: '#97dfc8' },
   'synaptical-potion':   { name: 'Synaptical Potion Base',    symbol: '⚗',  color: '#5b67eb' },
-  'kobold-feather':      { name: 'Kobold Feather',           symbol: 'ϡ',  color: '#c5b3aa' },
+  'kobold-feather':      { name: 'Kobold Feather',            symbol: '⸙',  color: '#c5b3aa' },
   'bone':                { name: 'Bones',                     symbol: '🕱',  color: '#d7d8e6' },
   'brimstone':           { name: 'Brimstone',                 symbol: '🜏',  color: '#ffbd2b' },
   'soul-stone':          { name: 'Soul Stone',                symbol: '◈',  color: '#8f4fff' },
+  'mana':                { name: 'Mana',                      symbol: 'ᳱ',  color: '#40a3e1' },
+
+  /**
+  Ideas for new Symbols
+   - Relics: ᛤ  ᛥ  ᛯ ᛰ ᛗ ᛃ ᚸ ⸎
+   - Kobold Nose: ᴥ
+   - scroll: ⍯ ⌺ ꖸ
+
+   */
 
 } as const;
 

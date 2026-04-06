@@ -53,6 +53,23 @@
     [closeEnoughLevel]="upgrades.level('CLOSE_ENOUGH')" />
 
   <div class="game-wrapper">
+
+    <!-- Dev menu — top-left of game area, clears both sidebars -->
+    <div class="dev-menu-wrap" *ngIf="devToolsEnabled">
+      <button class="dev-toggle-btn" (click)="devMenuOpen = !devMenuOpen">
+        [DEV {{ devMenuOpen ? '▲' : '▼' }}]
+      </button>
+      <div class="dev-menu" *ngIf="devMenuOpen">
+        <button class="dev-action-btn" (click)="devGrant()">+1M ALL</button>
+        <button class="dev-action-btn dev-zero-btn" (click)="devZero()">ZERO ALL</button>
+        <button class="dev-action-btn dev-xp-btn" (click)="devMaxXp()">XP = 2B</button>
+        <button class="dev-action-btn dev-upgzero-btn" (click)="devZeroUpgrades()">LVL 0</button>
+        <button class="dev-action-btn dev-upgmax-btn" (click)="devMaxUpgrades()">LVL MAX</button>
+        <button class="dev-action-btn dev-unlock-btn" (click)="devUnlockAll()">UNLOCK</button>
+        <button class="dev-action-btn dev-clrsave-btn" (click)="devClearSave()">CLR SAVE</button>
+      </div>
+    </div>
+
     <div class="game-container">
 
       <header>
@@ -89,116 +106,53 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
       <section class="click-area">
 
-        <!-- Relic column -->
-        <div class="relic-column" *ngIf="getVisibleUpgrades('relic').length > 0">
-          <div class="section-title" *ngIf="anyRelicUnpurchased">[ RELICS ]</div>
-          <div class="relic-scroll">
-            <ng-container *ngFor="let id of getVisibleUpgrades('relic')">
-
-              <!-- Maxed relic → compact icon box -->
-              <div class="relic-icon-box" *ngIf="upgrades.isMaxed(id); else relicCard"
-                   [style.border-color]="getUpgradeColor(id)"
-                   [style.color]="getUpgradeColor(id)"
-                   (click)="openRelicPopup(id)">
-                <span class="relic-icon-symbol">{{ relicSymbol }}</span>
-              </div>
-
-              <!-- Unowned relic → normal upgrade card -->
-              <ng-template #relicCard>
-                <ng-container *ngTemplateOutlet="upgradeCard; context: { $implicit: id }"></ng-container>
-              </ng-template>
-
+        <!-- ══ Relic Crown — decorative gem sockets ══ -->
+        <div class="relic-crown" *ngIf="relicSlots.length > 0">
+          <div class="crown-sockets">
+            <span class="crown-chain"></span>
+            <ng-container *ngFor="let slot of relicSlots; let first = first; let last = last">
+              <span class="crown-link" *ngIf="!first">───</span>
+              <button class="relic-socket"
+                      [class.socket-filled]="slot.purchased"
+                      [class.socket-empty]="!slot.purchased"
+                      (click)="openRelicPopup(slot.id)"
+                      [title]="slot.name">
+                {{ relicSymbol }}
+              </button>
             </ng-container>
+            <span class="crown-chain"></span>
           </div>
+          <div class="crown-band"></div>
         </div>
 
         <!-- Relic detail popup -->
         <div class="relic-popup-backdrop" *ngIf="relicPopupId" (click)="closeRelicPopup()">
           <div class="relic-popup" (click)="$event.stopPropagation()">
-            <div class="relic-popup-symbol" [style.color]="getUpgradeColor(relicPopupId)">{{ relicSymbol }}</div>
+            <div class="relic-popup-symbol" [style.color]="getUpgradeColor(relicPopupId)"
+                 [class.relic-popup-owned-symbol]="upgrades.isMaxed(relicPopupId)">
+              {{ relicSymbol }}
+            </div>
             <div class="relic-popup-name" [style.color]="getUpgradeColor(relicPopupId)">{{ getUpgradeFlavor(relicPopupId).name }}</div>
             <div class="relic-popup-desc">{{ getUpgradeFlavor(relicPopupId).desc }}</div>
+            <button class="relic-popup-buy"
+                    *ngIf="!upgrades.isMaxed(relicPopupId)"
+                    [disabled]="!upgrades.canAfford(relicPopupId)"
+                    (click)="buyRelicFromPopup()">
+              [BUY: <ng-container *ngFor="let c of upgrades.allCosts(relicPopupId); let i = index"><ng-container *ngIf="i > 0"> + </ng-container><span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></span></ng-container>]
+            </button>
+            <div class="relic-popup-owned-tag" *ngIf="upgrades.isMaxed(relicPopupId)">── SOCKETED ──</div>
             <button class="relic-popup-close" (click)="closeRelicPopup()">[CLOSE]</button>
           </div>
         </div>
 
-        <!-- Jacks column -->
-        <div class="jack-column" *ngIf="jacksVisible && activeCharacterInfo">
-          <div class="jack-pool-info">
-            <span class="jack-pool-label" [style.visibility]="jacksPoolFree > 0 ? 'visible' : 'hidden'">Avail: <span class="jack-pool-count">{{ jacksPoolFree }}</span></span>
-          </div>
-
-          <!-- ══ Necromancer: dual jack allocation ══ -->
-          <ng-container *ngIf="activeCharacterId === 'necromancer'; else singleJackColumn">
-            <!-- Defile jacks -->
-            <div class="jack-alloc-label">Defile</div>
-            <div class="jack-alloc-stack">
-              <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-defile')">[+]</button>
-              <div class="jack-assigned-display">
-                <span class="jack-assigned-num">{{ getJackCount('necromancer-defile') }}</span>
-              </div>
-              <button class="jack-alloc-btn" [disabled]="getJackCount('necromancer-defile') <= 0" (click)="deallocateJack('necromancer-defile')">[-]</button>
-            </div>
-            <!-- Ward jacks -->
-            <div class="jack-alloc-label">Ward</div>
-            <div class="jack-alloc-stack">
-              <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-ward')">[+]</button>
-              <div class="jack-assigned-display">
-                <span class="jack-assigned-num">{{ getJackCount('necromancer-ward') }}</span>
-              </div>
-              <button class="jack-alloc-btn" [disabled]="getJackCount('necromancer-ward') <= 0" (click)="deallocateJack('necromancer-ward')">[-]</button>
-            </div>
-          </ng-container>
-
-          <!-- ══ Standard: single jack allocation ══ -->
-          <ng-template #singleJackColumn>
-            <button class="jack-bulk-btn" *ngIf="jacksOwned >= 5"
-                    [disabled]="jacksPoolFree <= 0"
-                    (click)="allocateAllJacks(activeCharacterInfo.id)">[ALL]</button>
-            <div class="jack-alloc-stack">
-              <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack(activeCharacterInfo.id)">[+]</button>
-              <div class="jack-assigned-display">
-                <span class="jack-assigned-num">{{ getJackCount(activeCharacterInfo.id) }}</span>
-                <span class="jack-assigned-label">Jacks</span>
-              </div>
-              <button class="jack-alloc-btn" [disabled]="getJackCount(activeCharacterInfo.id) <= 0" (click)="deallocateJack(activeCharacterInfo.id)">[-]</button>
-            </div>
-            <button class="jack-bulk-btn" *ngIf="jacksOwned >= 5"
-                    [disabled]="getJackCount(activeCharacterInfo.id) <= 0"
-                    (click)="deallocateAllJacks(activeCharacterInfo.id)">[NONE]</button>
-          </ng-template>
+        <!-- ══ Starvation message ══ -->
+        <div class="hero-starvation"
+             [style.visibility]="activeCharJackStarved ? 'visible' : 'hidden'">
+          {{ activeCharJackStarvedMsg }}
         </div>
 
-        <!-- ══ Familiar column — soul-stone-fuelled temp jacks ══ -->
-        <div class="familiar-column" [class.familiars-paused]="familiarsPaused" *ngIf="familiarUnlocked && jacksVisible && activeCharacterInfo">
-          <button class="familiar-pause-btn"
-                  [class.paused]="familiarsPaused"
-                  (click)="toggleFamiliarsPaused()">
-            {{ familiarsPaused ? '[ RESUME ]' : '[ PAUSE ]' }}
-          </button>
-          <ng-container *ngFor="let fk of familiarKeys">
-            <div class="familiar-box">
-              <div class="familiar-label">{{ familiarLabel(fk) }}</div>
-              <div class="familiar-bar-track">
-                <div class="familiar-bar-fill" [style.width.%]="getFamiliarPct(fk)"></div>
-              </div>
-              <div class="familiar-time" [class.familiar-active]="isFamiliarActive(fk)">
-                {{ formatFamiliarTime(fk) }}
-              </div>
-              <div class="familiar-btn-row">
-                <button class="familiar-btn" [disabled]="!canFeedFamiliar(fk)" (click)="feedFamiliar(fk)">
-                  +1<span class="familiar-cost-sym" style="color: #8f4fff;">◈</span>
-                </button>
-                <button class="familiar-btn" [disabled]="!canFeedFamiliar(fk)" (click)="feedFamiliarMax(fk)">
-                  MAX
-                </button>
-              </div>
-            </div>
-          </ng-container>
-        </div>
-
+        <!-- ══ Hero button(s) — main focus ══ -->
         <div class="hero-area">
-          <!-- ══ Necromancer: dual alternating buttons ══ -->
           <ng-container *ngIf="activeCharacterId === 'necromancer'; else singleHeroButton">
             <div class="necro-buttons">
               <button class="hero-btn necro-btn"
@@ -214,12 +168,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                 <span class="hero-btn-label">{{ necromancerWardLabel }} <<< ]</span>
               </button>
             </div>
-            <div class="necro-clicks-remaining" *ngIf="upgrades.level('AUGURY') >= 1">
-              Switches in: {{ necromancerClicksRemaining }} clicks
-            </div>
           </ng-container>
-
-          <!-- ══ Standard: single hero button ══ -->
           <ng-template #singleHeroButton>
             <button class="hero-btn" [disabled]="isHeroDisabled" (click)="clickHero()">
               <div class="stun-fill-bar" *ngIf="activeCharacterId === 'thief' && isThiefStunned" [ngStyle]="thiefStunAnimStyle"></div>
@@ -227,41 +176,119 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
               <span class="hero-btn-label">[ >>> {{ questBtnLabel }} <<< ]</span>
             </button>
           </ng-template>
-          <div class="hero-subzone">
-            <button class="wholesale-toggle-btn"
-                    *ngIf="activeCharacterId === 'culinarian' && upgrades.level('WHOLESALE_SPICES') >= 1"
-                    [class.wt-on]="wholesaleSpicesEnabled"
-                    (click)="toggleWholesaleSpices()">
-              {{ wholesaleSpicesEnabled ? '[ Wholesale Spices: ON  ]' : '[ Wholesale Spices: OFF ]' }}
-            </button>
-            <button class="wholesale-toggle-btn"
-                    *ngIf="activeCharacterId === 'apothecary' && upgrades.level('FERMENTATION_VATS') >= 1"
-                    [class.vat-on]="fermentationVatsEnabled"
-                    (click)="toggleFermentationVats()">
-              {{ fermentationVatsEnabled ? '[ Fermentation Vats: ON  ]' : '[ Fermentation Vats: OFF ]' }}
-            </button>
-            <div class="jack-error"
-                 [style.visibility]="activeCharJackStarved ? 'visible' : 'hidden'">
-              {{ activeCharJackStarvedMsg }}
-            </div>
+        </div>
+
+        <!-- ══ Below-hero info: toggles, necro clicks ══ -->
+        <div class="hero-info">
+          <button class="wholesale-toggle-btn"
+                  *ngIf="activeCharacterId === 'culinarian' && upgrades.level('WHOLESALE_SPICES') >= 1"
+                  [class.wt-on]="wholesaleSpicesEnabled"
+                  (click)="toggleWholesaleSpices()">
+            {{ wholesaleSpicesEnabled ? '[ Wholesale Spices: ON  ]' : '[ Wholesale Spices: OFF ]' }}
+          </button>
+          <button class="wholesale-toggle-btn"
+                  *ngIf="activeCharacterId === 'apothecary' && upgrades.level('FERMENTATION_VATS') >= 1"
+                  [class.vat-on]="fermentationVatsEnabled"
+                  (click)="toggleFermentationVats()">
+            {{ fermentationVatsEnabled ? '[ Fermentation Vats: ON  ]' : '[ Fermentation Vats: OFF ]' }}
+          </button>
+          <div class="necro-clicks-remaining" *ngIf="activeCharacterId === 'necromancer' && upgrades.level('AUGURY') >= 1">
+            Switches in: {{ necromancerClicksRemaining }} clicks
           </div>
         </div>
 
-        <!-- Dev menu -->
-        <div class="dev-menu-wrap" *ngIf="devToolsEnabled">
-          <button class="dev-toggle-btn" (click)="devMenuOpen = !devMenuOpen">
-            [DEV {{ devMenuOpen ? '▲' : '▼' }}]
-          </button>
-          <div class="dev-menu" *ngIf="devMenuOpen">
-            <button class="dev-action-btn" (click)="devGrant()">+1k ALL</button>
-            <button class="dev-action-btn dev-zero-btn" (click)="devZero()">ZERO ALL</button>
-            <button class="dev-action-btn dev-xp-btn" (click)="devMaxXp()">XP = 2B</button>
-            <button class="dev-action-btn dev-upgzero-btn" (click)="devZeroUpgrades()">LVL 0</button>
-            <button class="dev-action-btn dev-upgmax-btn" (click)="devMaxUpgrades()">LVL MAX</button>
-            <button class="dev-action-btn dev-unlock-btn" (click)="devUnlockAll()">UNLOCK</button>
-            <button class="dev-action-btn dev-clrsave-btn" (click)="devClearSave()">CLR SAVE</button>
+        <!-- ══ Jacks & Familiars — supporting crew row ══ -->
+        <div class="crew-row" *ngIf="jacksVisible && activeCharacterInfo">
+
+          <!-- ── Jacks ── -->
+          <div class="jack-column">
+
+            <ng-container *ngIf="activeCharacterId === 'necromancer'; else singleJackColumn">
+              <!-- Necromancer: two side-by-side jack cards -->
+              <div class="jack-row-necro">
+                <div class="jack-box">
+                  <div class="jack-box-label">Defile</div>
+                  <div class="jack-controls">
+                    <button class="jack-alloc-btn" [disabled]="getJackCount('necromancer-defile') <= 0" (click)="deallocateJack('necromancer-defile')">[-]</button>
+                    <span class="jack-assigned-num">{{ getJackCount('necromancer-defile') }}</span>
+                    <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-defile')">[+]</button>
+                  </div>
+                </div>
+                <div class="jack-box">
+                  <div class="jack-box-label">Ward</div>
+                  <div class="jack-controls">
+                    <button class="jack-alloc-btn" [disabled]="getJackCount('necromancer-ward') <= 0" (click)="deallocateJack('necromancer-ward')">[-]</button>
+                    <span class="jack-assigned-num">{{ getJackCount('necromancer-ward') }}</span>
+                    <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-ward')">[+]</button>
+                  </div>
+                </div>
+              </div>
+              <!-- Shared pool info for necromancer -->
+              <div class="jack-pool-info" [style.visibility]="jacksPoolFree > 0 ? 'visible' : 'hidden'">
+                Avail: <span class="jack-pool-count">{{ jacksPoolFree }}</span>
+              </div>
+            </ng-container>
+
+            <ng-template #singleJackColumn>
+              <!-- Standard: single jack card -->
+              <div class="jack-box">
+                <div class="jack-box-label">Jacks</div>
+                <div class="jack-pool-info" [style.visibility]="jacksPoolFree > 0 ? 'visible' : 'hidden'">
+                  Avail: <span class="jack-pool-count">{{ jacksPoolFree }}</span>
+                </div>
+                <div class="jack-controls">
+                  <button class="jack-alloc-btn" [disabled]="getJackCount(activeCharacterInfo.id) <= 0" (click)="deallocateJack(activeCharacterInfo.id)">[-]</button>
+                  <span class="jack-assigned-num">{{ getJackCount(activeCharacterInfo.id) }}</span>
+                  <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack(activeCharacterInfo.id)">[+]</button>
+                </div>
+                <div class="jack-bulk-row" *ngIf="jacksOwned >= 5">
+                  <button class="jack-bulk-btn"
+                          [disabled]="getJackCount(activeCharacterInfo.id) <= 0"
+                          (click)="deallocateAllJacks(activeCharacterInfo.id)">[NONE]</button>
+                  <button class="jack-bulk-btn"
+                          [disabled]="jacksPoolFree <= 0"
+                          (click)="allocateAllJacks(activeCharacterInfo.id)">[ALL]</button>
+                </div>
+              </div>
+            </ng-template>
+
           </div>
-        </div>
+
+          <!-- ── Familiars ── -->
+          <div class="familiar-column" *ngIf="familiarUnlocked">
+            <div class="familiar-panel" [class.familiars-paused]="familiarsPaused">
+              <button class="familiar-pause-btn"
+                      [class.paused]="familiarsPaused"
+                      (click)="toggleFamiliarsPaused()">
+                {{ familiarsPaused ? '[ RESUME ]' : '[ PAUSE ]' }}
+              </button>
+              <div class="familiar-boxes-row">
+                <ng-container *ngFor="let fk of familiarKeys; let last = last">
+                  <div class="familiar-box">
+                    <div class="familiar-label">{{ familiarLabel(fk) }}</div>
+                    <div class="familiar-bar-track">
+                      <div class="familiar-bar-fill" [style.width.%]="getFamiliarPct(fk)"></div>
+                    </div>
+                    <div class="familiar-time" [class.familiar-active]="isFamiliarActive(fk)">
+                      {{ formatFamiliarTime(fk) }}
+                    </div>
+                    <div class="familiar-btn-row">
+                      <button class="familiar-btn" [disabled]="!canFeedFamiliar(fk)" (click)="feedFamiliar(fk)">
+                        +1<span class="familiar-cost-sym" style="color: #8f4fff;">◈</span>
+                      </button>
+                      <button class="familiar-btn" [disabled]="!canFeedFamiliar(fk)" (click)="feedFamiliarMax(fk)">
+                        MAX
+                      </button>
+                    </div>
+                  </div>
+                  <div class="familiar-sep" *ngIf="!last"></div>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /crew-row -->
+
       </section>
 
       <section class="upgrades">
@@ -324,6 +351,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
     [necromancerActiveButton]="necromancerActiveButton"
     (unassignAllJacks)="unassignAllJacks()" />
 </div>
+
+<!-- Dev menu moved inside .game-wrapper above -->
 
 <router-outlet />
 <app-activity-log />

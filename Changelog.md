@@ -1,3 +1,20 @@
+# Version Alpha 1.2.1
+
+## Added
+
+## Removed
+
+## Changed
+- Improved the game area layout 
+- Reduced the bait cost for kobolds 
+- Reduced the meat cost of scouting
+- Tweaked the success rates for thieving and meticulious planning
+
+## Bugfixes
+- Fixed the cost of potion of sticky fingers
+
+----------------------------
+
 # Version Alpha 1.2.0
 
 ## Added
@@ -5,7 +22,7 @@
 - Two new passive resource generation upgrades for Herbs and Meat
 - A new automatic potion making upgrade for the apothecary. It can be toggled on and off
 - A minimum hit upgrade for the fighter 
-- A new upgrade to the fighter minigame that gives hints as to the sweet spot location 
+- A new upgrade to the thief minigame that gives hints as to the sweet spot location 
 - Add new scaling upgrades for herbs and raw meat to the ranger
 - Two new tiers of kobold!
 - A New character, the Artisan! 
