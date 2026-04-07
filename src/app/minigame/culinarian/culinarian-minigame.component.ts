@@ -298,9 +298,10 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
     this.won = true;
     this.roundActive = false;
 
+    const bm = this.wallet.getBeadMultiplier('culinarian');
     const unusedGuesses  = this.MAX_GUESSES - this.guessesUsed;
     const wasteNotBonus  = this.wasteNotLevel >= 1 ? unusedGuesses*this.wasteNotLevel : 0;
-    const totalReward    = this.MEAL_REWARD + wasteNotBonus;
+    const totalReward    = (this.MEAL_REWARD + wasteNotBonus) * bm;
 
     this.wallet.add('hearty-meal', totalReward);
 
@@ -312,9 +313,9 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
       this.wallet.unlockCurrency('hearty-meal');
       this.log.log(`The Culinarian perfects a Hearty Meal! New currency unlocked!`, 'rare');
     } else if (wasteNotBonus > 0) {
-      this.log.log(`Hearty Meal crafted! (${cur('hearty-meal', this.MEAL_REWARD)} base ${cur('hearty-meal', wasteNotBonus)} Waste Not!)`, 'success');
+      this.log.log(`Hearty Meal crafted! (${cur('hearty-meal', this.MEAL_REWARD * bm)} base ${cur('hearty-meal', wasteNotBonus * bm)} Waste Not!)`, 'success');
     } else {
-      this.log.log(`Hearty Meal crafted! (${cur('hearty-meal', this.MEAL_REWARD)})`, 'success');
+      this.log.log(`Hearty Meal crafted! (${cur('hearty-meal', totalReward)})`, 'success');
     }
 
     this.lastMsg  = wasteNotBonus > 0

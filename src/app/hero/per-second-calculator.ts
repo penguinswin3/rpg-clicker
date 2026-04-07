@@ -43,6 +43,8 @@ export interface PerSecondContext {
   jackdUpUnlocked: boolean;
   /** Whether all familiars are currently paused by the player. */
   familiarsPaused: boolean;
+  /** Per-character bead yield multipliers (2^N where N = socketed blue beads). */
+  beadMultipliers?: Record<string, number>;
 }
 
 // ── Result ──────────────────────────────────────────────────
@@ -203,20 +205,23 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const graveLootGemPerSec     = defileJacks * graveLootChance * YIELDS.GRAVE_LOOTING_GEM_WEIGHT     * YIELDS.GRAVE_LOOTING_GEM_AMOUNT     * (hasNecromancerRelic ? 2 : 1);
   const graveLootJewelryPerSec = defileJacks * graveLootChance * YIELDS.GRAVE_LOOTING_JEWELRY_WEIGHT * YIELDS.GRAVE_LOOTING_JEWELRY_AMOUNT * (hasNecromancerRelic ? 2 : 1);
 
+  // ── Bead multipliers ─────────────────────────────────────────
+  const bm = (charId: string) => ctx.beadMultipliers?.[charId] ?? 1;
+
   return {
-    gold:    roundTo(autoGoldPerSec + fighterRelicGold + apothecaryJacks * goldPerBrew + vatGoldGain + fighterJacks * goldPerClick - culinarianJacks * culGoldCost + ppGoldPerSecond + graveLootGoldPerSec, 2),
-    xp:      roundTo(fighterJacks * xpPerBounty + rangerJacks + apothecaryJacks + culinarianJacks + effectiveThiefRate + artisanXpPerSec + necroXpGain - wardXpDrain, 2),
-    herb:    roundTo(herbProduced - herbConsumed, 2),
-    beast:   roundTo(rangerJacks * catsEyeFactor * (beastChance / 100) * (expectedMeatYield + rangerBeastBonus) + baitedTrapsRate, 2),
-    potion:  roundTo(apothecaryJacks * potionPerBrew + vatPotionGain, 2),
-    spice:   roundTo(culinarianJacks * spicePerClick * culSpiceMultiplier, 2),
-    dossier: roundTo(effectiveThiefRate * avgDossierYield, 2),
-    treasure:         roundTo(thiefTreasurePerSec - artisanTreasurePerSec, 2),
-    'precious-metal': roundTo(artisanMetalPerSec, 2),
-    gemstone:         roundTo(artisanGemstonePerSec + graveLootGemPerSec, 2),
-    jewelry:          roundTo(graveLootJewelryPerSec, 2),
-    bone:             roundTo(bonePerSec, 2),
-    brimstone:        roundTo(brimstonePerSec, 2),
+    gold:    roundTo((autoGoldPerSec + fighterRelicGold + fighterJacks * goldPerClick) * bm('fighter') + (apothecaryJacks * goldPerBrew + vatGoldGain) * bm('apothecary') - culinarianJacks * culGoldCost + ppGoldPerSecond * bm('thief') + graveLootGoldPerSec * bm('necromancer'), 2),
+    xp:      roundTo(fighterJacks * xpPerBounty * bm('fighter') + rangerJacks * bm('ranger') + apothecaryJacks * bm('apothecary') + culinarianJacks * bm('culinarian') + effectiveThiefRate * bm('thief') + artisanXpPerSec * bm('artisan') + necroXpGain * bm('necromancer') - wardXpDrain, 2),
+    herb:    roundTo(herbProduced * bm('ranger') - herbConsumed, 2),
+    beast:   roundTo((rangerJacks * catsEyeFactor * (beastChance / 100) * (expectedMeatYield + rangerBeastBonus) + baitedTrapsRate) * bm('ranger'), 2),
+    potion:  roundTo((apothecaryJacks * potionPerBrew + vatPotionGain) * bm('apothecary'), 2),
+    spice:   roundTo(culinarianJacks * spicePerClick * culSpiceMultiplier * bm('culinarian'), 2),
+    dossier: roundTo(effectiveThiefRate * avgDossierYield * bm('thief'), 2),
+    treasure:         roundTo(thiefTreasurePerSec * bm('thief') - artisanTreasurePerSec, 2),
+    'precious-metal': roundTo(artisanMetalPerSec * bm('artisan'), 2),
+    gemstone:         roundTo(artisanGemstonePerSec * bm('artisan') + graveLootGemPerSec * bm('necromancer'), 2),
+    jewelry:          roundTo(graveLootJewelryPerSec * bm('necromancer'), 2),
+    bone:             roundTo(bonePerSec * bm('necromancer'), 2),
+    brimstone:        roundTo(brimstonePerSec * bm('necromancer'), 2),
   };
 }
 

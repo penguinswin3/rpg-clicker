@@ -186,6 +186,20 @@ export class WalletService {
     return this.manualUnlocksSource.getValue().has(id);
   }
 
+  // ── Bead Multipliers ───────────────────────────────────────
+  /** Per-character bead yield multipliers. Updated when blue beads are socketed. */
+  private beadMultipliers = new Map<string, number>();
+
+  /** Set the bead yield multiplier for a character (2^N where N = socketed blue beads). */
+  setBeadMultiplier(charId: string, mult: number): void {
+    this.beadMultipliers.set(charId, mult);
+  }
+
+  /** Get the bead yield multiplier for a character (default 1). */
+  getBeadMultiplier(charId: string): number {
+    return this.beadMultipliers.get(charId) ?? 1;
+  }
+
   // ── Private ───────────────────────────────────────────────────
 
   /** Whether the state has been mutated since the last emission. */

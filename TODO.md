@@ -33,6 +33,15 @@
 
 - These tier show up above the hero button, once the minigames are unlocked. THIS NEEDS TO INTEGRATE WITH THE RELIC, BEFORE THE RELIC SHOWS UP SO THAT WHEN THE RELIC SHOWS UP, IT INTEGRATES IN THE UI NICELY 
 -Add a fourth lore tier, post relics, that give another 2x resource yield. Earned from jacks (or familiar) presses only
+
+### Beads System (Implemented ✓)
+- 4 bead slots per character: 2 blue (outer), 2 gold (inner), surrounding the relic socket
+- Blue beads: 1/500 chance per manual hero press. Doubles all resource yields when socketed.
+- Gold beads: 1/10000 chance per jack/familiar press. Placeholder for sidequest automation.
+- Found beads pulse with visual indicator; click to open modal and socket them.
+- Bead multiplier applied to hero clicks, jack clicks, passive income, and per-second display.
+- TODO: Apply bead multiplier to minigame reward outputs
+- TODO: Gold bead sidequest automation functionality
 ### More characters
 - Party Face
   - Card game Blackjack?
@@ -90,32 +99,21 @@
 - Little "shine" on the character select button every time something new shows up there till you click it. 
 - Rename Alchemize to Concoct
 - make a lot of things not highlightable 
-- ~~Make the minigames area collapsable~~ ✅
-- ~~Rename Minigames to Sidequests~~ ✅
 - Add some sort of reference to relics that the thief can get from the minigame 
-- ~~Make the apoth minigame toggles look like the fighter minigame toggles~~ ✅
-- ~~artisan is colored when collapsed?~~ ✅ (necromancer coloring in collapsed view)
-- ~~make sure the ward and defile jacks boxes have the all and none buttons as well~~ ✅
 
 ## Statistics
-- ~~Split the appraisals out from the faceting stats section~~ ✅
 - Statistics culinarian minigame histogram or count %s
-- ~~First Relic unlocked~~ ✅
+
 
 ## Balancing
 - A "Balance Report" that shows gaps in the cost progression
   - Makes grap-hs of time to recoup costs for an upgrade. number of seconds or clicks
-
-- ~~Potion Titration can have 200 max levels and give 2% chance~~ ✅ (100 max levels, 4% chance)
-- ~~Pity drop rate for the first relic~~ ✅ (guaranteed after 100 successful safe cracks with no relic)
 - Add another jacks speed upgrade at Artisan Tier 
 - Each level of relic hunter should give +1% of finding a relic 
 - Ranger, apoth, and culi relic rewards are bad
 - thieving relic might be too good 
 
-
 ## Bug Fixes
-- ~~apraisals complete what is this stat~~ ✅ (moved to its own Appraising section)
 
 ## Code Refactors
 

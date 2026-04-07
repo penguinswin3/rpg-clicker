@@ -108,19 +108,36 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
       <section class="click-area">
 
-        <!-- ══ Relic Crown — decorative gem sockets ══ -->
-        <div class="relic-crown" *ngIf="relicSlots.length > 0">
+        <!-- ══ Bead + Relic Crown — decorative gem sockets ══ -->
+        <div class="relic-crown" *ngIf="beadCrownItems.length > 0">
           <div class="crown-sockets">
             <span class="crown-chain"></span>
-            <ng-container *ngFor="let slot of relicSlots; let first = first; let last = last">
+            <ng-container *ngFor="let item of beadCrownItems; let first = first">
               <span class="crown-link" *ngIf="!first">───</span>
-              <button class="relic-socket"
-                      [class.socket-filled]="slot.purchased"
-                      [class.socket-empty]="!slot.purchased"
-                      (click)="openRelicPopup(slot.id)"
-                      [title]="slot.name">
-                {{ relicSymbol }}
-              </button>
+
+              <!-- Bead socket -->
+              <ng-container *ngIf="item.kind === 'bead'">
+                <button class="bead-socket"
+                        [class.bead-blue]="item.beadType === 'blue'"
+                        [class.bead-gold]="item.beadType === 'gold'"
+                        [class.bead-locked]="item.beadState === 'locked'"
+                        [class.bead-found]="item.beadState === 'found'"
+                        [class.bead-socketed]="item.beadState === 'socketed'"
+                        (click)="openBeadPopup(item)">
+                  {{ getBeadSymbol(item.beadState!) }}
+                </button>
+              </ng-container>
+
+              <!-- Relic socket -->
+              <ng-container *ngIf="item.kind === 'relic'">
+                <button class="relic-socket"
+                        [class.socket-filled]="item.relicPurchased"
+                        [class.socket-empty]="!item.relicPurchased"
+                        (click)="openRelicPopup(item.relicId!)"
+                        [title]="item.relicName!">
+                  {{ relicSymbol }}
+                </button>
+              </ng-container>
             </ng-container>
             <span class="crown-chain"></span>
           </div>
@@ -144,6 +161,35 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             </button>
             <div class="relic-popup-owned-tag" *ngIf="upgrades.isMaxed(relicPopupId)">── SOCKETED ──</div>
             <button class="relic-popup-close" (click)="closeRelicPopup()">[CLOSE]</button>
+          </div>
+        </div>
+
+        <!-- Bead detail popup -->
+        <div class="bead-popup-backdrop" *ngIf="beadPopupInfo" (click)="closeBeadPopup()">
+          <div class="bead-popup" (click)="$event.stopPropagation()"
+               [class.bead-popup-blue]="beadPopupInfo.type === 'blue'"
+               [class.bead-popup-gold]="beadPopupInfo.type === 'gold'">
+            <div class="bead-popup-symbol"
+                 [class.bead-popup-owned]="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).socketed"
+                 [style.color]="getBeadColor(beadPopupInfo.type)">
+              {{ getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found ? '◆' : '◇' }}
+            </div>
+            <div class="bead-popup-name" [style.color]="getBeadColor(beadPopupInfo.type)">{{ getBeadName(beadPopupInfo.charId, beadPopupInfo.type) }}</div>
+            <div class="bead-popup-lore" *ngIf="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">{{ getBeadLore(beadPopupInfo.charId, beadPopupInfo.type) }}</div>
+            <div class="bead-popup-effect" *ngIf="beadPopupInfo.type === 'blue' && getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">
+              <span class="bead-effect-label">Effect:</span> Doubles all resource yields from this character.
+            </div>
+            <div class="bead-popup-effect" *ngIf="beadPopupInfo.type === 'gold' && getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">
+              <span class="bead-effect-label">Effect:</span> Sidequest automation (coming soon).
+            </div>
+            <button class="bead-popup-socket-btn"
+                    *ngIf="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found && !getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).socketed"
+                    (click)="socketBeadFromPopup()">
+              [ SOCKET ]
+            </button>
+            <div class="bead-popup-status socketed" *ngIf="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).socketed">── SOCKETED ──</div>
+            <div class="bead-popup-status locked" *ngIf="!getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">── NOT YET DISCOVERED ──</div>
+            <button class="bead-popup-close" (click)="closeBeadPopup()">[CLOSE]</button>
           </div>
         </div>
 

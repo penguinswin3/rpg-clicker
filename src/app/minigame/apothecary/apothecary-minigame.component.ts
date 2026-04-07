@@ -347,6 +347,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
     // Snapshot before zeroing — the getter depends on both fields.
     const successChance = this.dilutionSuccessChance;
+    const bm = this.wallet.getBeadMultiplier('apothecary');
 
     this.dilutionMissPenalty = 0;
     this.perfectClickBonus   = 0;
@@ -370,43 +371,47 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
           }
         }
 
-        if (synaptical > 0) this.wallet.add('synaptical-potion', synaptical);
-        if (downgraded > 0) this.wallet.add('potion', downgraded);
+        const synapticalYield = synaptical * bm;
+        const downgradedYield = downgraded * bm;
 
-        if (synaptical > 0) this.stats.trackCurrencyGain('synaptical-potion', synaptical);
-        if (downgraded > 0) this.stats.trackCurrencyGain('potion', downgraded);
+        if (synapticalYield > 0) this.wallet.add('synaptical-potion', synapticalYield);
+        if (downgradedYield > 0) this.wallet.add('potion', downgradedYield);
+
+        if (synapticalYield > 0) this.stats.trackCurrencyGain('synaptical-potion', synapticalYield);
+        if (downgradedYield > 0) this.stats.trackCurrencyGain('potion', downgradedYield);
         for (let i = 0; i < totalRolls; i++) {
           this.stats.trackDilution(i < synaptical);
         }
 
-        if (!this.wallet.isCurrencyUnlocked('synaptical-potion') && synaptical > 0) {
+        if (!this.wallet.isCurrencyUnlocked('synaptical-potion') && synapticalYield > 0) {
           this.wallet.unlockCurrency('synaptical-potion');
           this.log.log('A Synaptical Potion has been crafted! New currency unlocked!', 'rare');
         }
 
         if (synaptical === totalRolls) {
-          this.log.log(`Synaptical dilution success! (${cur('synaptical-potion', synaptical)})`, 'success');
+          this.log.log(`Synaptical dilution success! (${cur('synaptical-potion', synapticalYield)})`, 'success');
           this.lastMsg  = `${synaptical}/${totalRolls} SYNAPTICAL!`;
           this.msgClass = 'msg-good';
         } else if (synaptical > 0) {
-          this.log.log(`Synaptical dilution partial! (${cur('synaptical-potion', synaptical)}, ${cur('potion', downgraded)})`, 'success');
+          this.log.log(`Synaptical dilution partial! (${cur('synaptical-potion', synapticalYield)}, ${cur('potion', downgradedYield)})`, 'success');
           this.lastMsg  = `${synaptical}/${totalRolls} SYNAPTICAL  (${downgraded} BASE)`;
           this.msgClass = 'msg-good';
         } else {
-          this.log.log(`Synaptical dilution failed! (${cur('potion', downgraded)})`, 'warn');
+          this.log.log(`Synaptical dilution failed! (${cur('potion', downgradedYield)})`, 'warn');
           this.lastMsg  = `All ${downgraded} failed — ${downgraded}x BASE`;
           this.msgClass = 'msg-bad';
         }
       } else {
         // Standard synaptical: 1 synaptical potion
-        this.wallet.add('synaptical-potion', 1);
-        this.stats.trackCurrencyGain('synaptical-potion', 1);
+        const synYield = 1 * bm;
+        this.wallet.add('synaptical-potion', synYield);
+        this.stats.trackCurrencyGain('synaptical-potion', synYield);
 
         if (!this.wallet.isCurrencyUnlocked('synaptical-potion')) {
           this.wallet.unlockCurrency('synaptical-potion');
           this.log.log('A Synaptical Potion has been crafted! New currency unlocked!', 'rare');
         } else {
-          this.log.log(`Synaptical Potion crafted! (${cur('synaptical-potion', 1)})`, 'success');
+          this.log.log(`Synaptical Potion crafted! (${cur('synaptical-potion', synYield)})`, 'success');
         }
 
         this.lastMsg  = 'Synaptical Potion brewed!';
@@ -431,44 +436,48 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
         }
       }
 
-      if (concentrated > 0) this.wallet.add('concentrated-potion', concentrated);
-      if (downgraded > 0)   this.wallet.add('potion', downgraded);
+      const concentratedYield = concentrated * bm;
+      const downgradedYield   = downgraded * bm;
+
+      if (concentratedYield > 0) this.wallet.add('concentrated-potion', concentratedYield);
+      if (downgradedYield > 0)   this.wallet.add('potion', downgradedYield);
 
       // Track stats
-      if (concentrated > 0) this.stats.trackCurrencyGain('concentrated-potion', concentrated);
-      if (downgraded > 0)   this.stats.trackCurrencyGain('potion', downgraded);
+      if (concentratedYield > 0) this.stats.trackCurrencyGain('concentrated-potion', concentratedYield);
+      if (downgradedYield > 0)   this.stats.trackCurrencyGain('potion', downgradedYield);
       for (let i = 0; i < totalRolls; i++) {
         this.stats.trackDilution(i < concentrated);
       }
 
-      if (!this.wallet.isCurrencyUnlocked('concentrated-potion') && concentrated > 0) {
+      if (!this.wallet.isCurrencyUnlocked('concentrated-potion') && concentratedYield > 0) {
         this.wallet.unlockCurrency('concentrated-potion');
         this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
       }
 
       if (concentrated === totalRolls) {
-        this.log.log(`Dilution success! (${cur('concentrated-potion', concentrated)})`, 'success');
+        this.log.log(`Dilution success! (${cur('concentrated-potion', concentratedYield)})`, 'success');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FULL(concentrated, totalRolls);
         this.msgClass = 'msg-good';
       } else if (concentrated > 0) {
-        this.log.log(`Dilution partial! (${cur('concentrated-potion', concentrated)}, ${cur('potion', downgraded)})`, 'success');
+        this.log.log(`Dilution partial! (${cur('concentrated-potion', concentratedYield)}, ${cur('potion', downgradedYield)})`, 'success');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_PARTIAL(concentrated, downgraded, totalRolls);
         this.msgClass = 'msg-good';
       } else {
-        this.log.log(`Dilution failed! (${cur('potion', downgraded)})`, 'warn');
+        this.log.log(`Dilution failed! (${cur('potion', downgradedYield)})`, 'warn');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FAIL(downgraded);
         this.msgClass = 'msg-bad';
       }
     } else {
       // Standard: 1 concentrated potion
-      this.wallet.add('concentrated-potion', 1);
-      this.stats.trackCurrencyGain('concentrated-potion', 1);
+      const concYield = 1 * bm;
+      this.wallet.add('concentrated-potion', concYield);
+      this.stats.trackCurrencyGain('concentrated-potion', concYield);
 
       if (!this.wallet.isCurrencyUnlocked('concentrated-potion')) {
         this.wallet.unlockCurrency('concentrated-potion');
         this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
       } else {
-        this.log.log(`Concentrated Potion crafted! (${cur('concentrated-potion', 1)})`, 'success');
+        this.log.log(`Concentrated Potion crafted! (${cur('concentrated-potion', concYield)})`, 'success');
       }
 
       this.lastMsg  = MINIGAME_MSG.APOTHECARY.PERFECT;

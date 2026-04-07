@@ -14,8 +14,8 @@ import { StatisticsComponent } from './statistics/statistics.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT } from './game-config';
-import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR } from './flavor-text';
+import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType } from './game-config';
+import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR, BEAD_FLAVOR, BEAD_COLORS } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
 // ── Extracted hero helpers ─────────────────────────────────────
@@ -138,6 +138,22 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** The currency symbol used for the compact relic icon (from CURRENCY_FLAVOR). */
   readonly relicSymbol = CURRENCY_FLAVOR.relic.symbol;
+
+  // ── Bead state ──────────────────────────────────────────────────
+  /**
+   * Bead state per character. Each character has 4 slots:
+   * 'blue-1', 'gold-1', 'gold-2', 'blue-2' (displayed left to right).
+   */
+  beadState: Record<string, Record<string, { found: boolean; socketed: boolean }>> = {};
+
+  /** Info about the bead popup currently open, or null. */
+  beadPopupInfo: { charId: string; slotId: string; type: BeadType } | null = null;
+
+  /** Pre-computed bead crown display items — refreshed by _refreshDerived(). */
+  beadCrownItems: { kind: 'bead' | 'relic'; slotId?: string; beadType?: BeadType; beadState?: 'locked' | 'found' | 'socketed'; relicId?: string; relicPurchased?: boolean; relicName?: string }[] = [];
+
+  /** Whether any bead for the active character is found but not yet socketed. */
+  anyBeadUnsocketed = false;
 
   // ── Thief stun state ───────────────────────────────────────────
   /** Absolute timestamp (ms) when the Thief's stun expires. 0 = not stunned. */
@@ -345,6 +361,127 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ── Bead helpers ────────────────────────────────────────────────
+
+  /** Ensure bead state exists for a character, initializing all 4 slots. */
+  private ensureBeadState(charId: string): void {
+    if (!this.beadState[charId]) {
+      this.beadState[charId] = {};
+    }
+    for (const slotId of BEAD_SLOT_ORDER) {
+      if (!this.beadState[charId][slotId]) {
+        this.beadState[charId][slotId] = { found: false, socketed: false };
+      }
+    }
+  }
+
+  /** Get the bead state for a specific character + slot. */
+  getBeadSlot(charId: string, slotId: string): { found: boolean; socketed: boolean } {
+    return this.beadState[charId]?.[slotId] ?? { found: false, socketed: false };
+  }
+
+  /** Whether the character's LEFT blue bead (blue-1, awarded by manual clicks) is undiscovered. */
+  hasUnfoundBlueBead(charId: string): boolean {
+    this.ensureBeadState(charId);
+    return !this.beadState[charId]['blue-1'].found;
+  }
+
+  /** Whether the character's RIGHT blue bead (blue-2, awarded by jacks) is undiscovered. */
+  hasUnfoundJackBead(charId: string): boolean {
+    this.ensureBeadState(charId);
+    return !this.beadState[charId]['blue-2'].found;
+  }
+
+  /** Award the left blue bead (blue-1) for a character via manual clicks. */
+  findBlueBead(charId: string): void {
+    this.ensureBeadState(charId);
+    if (this.beadState[charId]['blue-1'].found) return;
+    this.beadState[charId]['blue-1'].found = true;
+    this.beadState = { ...this.beadState };
+    this._refreshDerived();
+    const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
+    this.log.log(`★ ${charName} discovered a mysterious bead! Check the crown above.`, 'rare');
+    this.statsService.recordMilestone(`bead_blue_${charId}`, `${charName}: Blue Bead Found`);
+  }
+
+  /** Award the right blue bead (blue-2) for a character via jack/familiar auto-clicks. */
+  findJackBead(charId: string): void {
+    this.ensureBeadState(charId);
+    if (this.beadState[charId]['blue-2'].found) return;
+    this.beadState[charId]['blue-2'].found = true;
+    this.beadState = { ...this.beadState };
+    this._refreshDerived();
+    const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
+    this.log.log(`★ ${charName}'s Jacks discovered a mysterious bead! Check the crown above.`, 'rare');
+    this.statsService.recordMilestone(`bead_jack_${charId}`, `${charName}: Jack Bead Found`);
+  }
+
+  /** Socket a bead from the popup. */
+  socketBeadFromPopup(): void {
+    if (!this.beadPopupInfo) return;
+    const { charId, slotId, type } = this.beadPopupInfo;
+    this.ensureBeadState(charId);
+    const slot = this.beadState[charId][slotId];
+    if (slot?.found && !slot?.socketed) {
+      slot.socketed = true;
+      this.beadState = { ...this.beadState };
+      this.syncBeadMultipliers();
+      this._refreshDerived();
+      this.updateAllPerSecond();
+      const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
+      const beadName = BEAD_FLAVOR[charId]?.[type]?.name ?? 'Bead';
+      this.log.log(`★ ${beadName} socketed for ${charName}!${type === 'blue' ? ' Resource yields doubled!' : ''}`, 'rare');
+    }
+  }
+
+  /** Open the bead detail popup. */
+  openBeadPopup(item: { slotId?: string; beadType?: BeadType }): void {
+    if (!item.slotId || !item.beadType) return;
+    this.beadPopupInfo = { charId: this.activeCharacterId, slotId: item.slotId, type: item.beadType };
+  }
+
+  /** Close the bead popup. */
+  closeBeadPopup(): void { this.beadPopupInfo = null; }
+
+  /** Get bead flavor name for a character + type. */
+  getBeadName(charId: string, type: BeadType): string {
+    return BEAD_FLAVOR[charId]?.[type]?.name ?? 'Unknown Bead';
+  }
+
+  /** Get bead lore for a character + type. */
+  getBeadLore(charId: string, type: BeadType): string {
+    return BEAD_FLAVOR[charId]?.[type]?.lore ?? '';
+  }
+
+  /** Get bead display symbol based on state. */
+  getBeadSymbol(state: string): string {
+    return state === 'locked' ? '◇' : '◆';
+  }
+
+  /** Get bead primary color for a type. */
+  getBeadColor(type: BeadType): string {
+    return BEAD_COLORS[type].primary;
+  }
+
+  /** Count socketed blue beads for a character. */
+  private getSocketedBlueCount(charId: string): number {
+    const char = this.beadState[charId];
+    if (!char) return 0;
+    let count = 0;
+    if (char['blue-1']?.socketed) count++;
+    if (char['blue-2']?.socketed) count++;
+    return count;
+  }
+
+  /** Sync all bead multipliers to the wallet service. */
+  private syncBeadMultipliers(): void {
+    const allChars = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief', 'artisan', 'necromancer'];
+    for (const charId of allChars) {
+      const blueCount = this.getSocketedBlueCount(charId);
+      this.wallet.setBeadMultiplier(charId, Math.pow(BEADS.BLUE_YIELD_MULT, blueCount));
+    }
+  }
+
   // ── Lifecycle ──────────────────────────────────────────────────
 
   constructor() {
@@ -412,7 +549,7 @@ export class AppComponent implements OnInit, OnDestroy {
       const autoGold = calcAutoGoldPerSecond(
         this.upgrades.level('CONTRACTED_HIRELINGS'),
         this.upgrades.level('HIRELINGS_HIRELINGS'),
-      );
+      ) * this.wallet.getBeadMultiplier('fighter');
       if (autoGold > 0) {
         this.wallet.add('gold', autoGold);
         this.statsService.trackCurrencyGain('gold', autoGold);
@@ -421,10 +558,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Passive ranger income: Baited Traps + Spiced Bait (beast) and Hovel Garden + Ornate Herb Pots (herb) — every 5 seconds
     setInterval(() => {
+      const rangerMult = this.wallet.getBeadMultiplier('ranger');
       const beastYield = calcBaitedTrapsBeastPerTick(
         this.upgrades.level('BAITED_TRAPS'),
         this.upgrades.level('SPICED_BAIT'),
-      );
+      ) * rangerMult;
       if (beastYield > 0) {
         this.wallet.add('beast', beastYield);
         this.statsService.trackCurrencyGain('beast', beastYield);
@@ -432,7 +570,7 @@ export class AppComponent implements OnInit, OnDestroy {
       const herbYield = calcHovelGardenHerbPerTick(
         this.upgrades.level('HOVEL_GARDEN'),
         this.upgrades.level('ORNATE_HERB_POTS'),
-      );
+      ) * rangerMult;
       if (herbYield > 0) {
         this.wallet.add('herb', herbYield);
         this.statsService.trackCurrencyGain('herb', herbYield);
@@ -445,10 +583,12 @@ export class AppComponent implements OnInit, OnDestroy {
       const vatLevel = this.upgrades.level('FERMENTATION_VATS');
       if (vatLevel > 0 && this.fermentationVatsEnabled) {
         if (this.wallet.canAfford('herb', vatLevel)) {
+          const apothMult = this.wallet.getBeadMultiplier('apothecary');
           this.wallet.remove('herb', vatLevel);
-          this.wallet.add('potion', vatLevel);
-          this.statsService.trackCurrencyGain('potion', vatLevel);
-          const vatGold = vatLevel * this.upgrades.level('POTION_MARKETING');
+          const potionYield = vatLevel * apothMult;
+          this.wallet.add('potion', potionYield);
+          this.statsService.trackCurrencyGain('potion', potionYield);
+          const vatGold = vatLevel * this.upgrades.level('POTION_MARKETING') * apothMult;
           if (vatGold > 0) {
             this.wallet.add('gold', vatGold);
             this.statsService.trackCurrencyGain('gold', vatGold);
@@ -565,6 +705,7 @@ export class AppComponent implements OnInit, OnDestroy {
       necromancerClicksRemaining:  this.necromancerClicksRemaining,
       familiarTimers:              { ...this.familiarTimers },
       familiarsPaused:             this.familiarsPaused,
+      beads:                       JSON.parse(JSON.stringify(this.beadState)),
     };
   }
 
@@ -599,6 +740,9 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     this.familiarTimers = restoredTimers;
     this.familiarsPaused = s.familiarsPaused ?? false;
+    // Restore bead state
+    this.beadState = s.beads ? JSON.parse(JSON.stringify(s.beads)) : {};
+    this.syncBeadMultipliers();
     // Restore artisan timer — if still in the future, reschedule the completion callback
     this.artisanTimerUntil     = s.artisanTimerUntil     ?? 0;
     this.artisanTimerBatchSize = s.artisanTimerBatchSize  ?? 0;
@@ -644,6 +788,15 @@ export class AppComponent implements OnInit, OnDestroy {
       familiarTimers: this.familiarTimers,
       jackdUpUnlocked: this.jackdUpUnlocked,
       familiarsPaused: this.familiarsPaused,
+      beadMultipliers: {
+        fighter:     this.wallet.getBeadMultiplier('fighter'),
+        ranger:      this.wallet.getBeadMultiplier('ranger'),
+        apothecary:  this.wallet.getBeadMultiplier('apothecary'),
+        culinarian:  this.wallet.getBeadMultiplier('culinarian'),
+        thief:       this.wallet.getBeadMultiplier('thief'),
+        artisan:     this.wallet.getBeadMultiplier('artisan'),
+        necromancer: this.wallet.getBeadMultiplier('necromancer'),
+      },
     };
     const rates = calculatePerSecondRates(ctx);
     this.wallet.batchUpdate(() => {
@@ -706,6 +859,12 @@ export class AppComponent implements OnInit, OnDestroy {
       name: this.getUpgradeFlavor(id).name,
       purchased: this.upgrades.isMaxed(id),
     }));
+
+    // Bead + relic crown items for the active character
+    this.beadCrownItems = this._buildBeadCrownItems();
+    this.anyBeadUnsocketed = this.beadCrownItems.some(
+      item => item.kind === 'bead' && item.beadState === 'found'
+    );
   }
 
   /** Compute visible upgrade IDs for a category (used by _refreshDerived). */
@@ -716,6 +875,45 @@ export class AppComponent implements OnInit, OnDestroy {
         if (category === 'relic') return true;
         return this.shouldShowUpgrade(this.upgrades.isMaxed(id));
       });
+  }
+
+  /** Build the combined bead + relic crown display items for the active character. */
+  private _buildBeadCrownItems(): { kind: 'bead' | 'relic'; slotId?: string; beadType?: BeadType; beadState?: 'locked' | 'found' | 'socketed'; relicId?: string; relicPurchased?: boolean; relicName?: string }[] {
+    if (!this.minigameUnlocked) return [];
+
+    const charId = this.activeCharacterId;
+    const items: { kind: 'bead' | 'relic'; slotId?: string; beadType?: BeadType; beadState?: 'locked' | 'found' | 'socketed'; relicId?: string; relicPurchased?: boolean; relicName?: string }[] = [];
+
+    // Left beads: blue-1, gold-1
+    items.push(this._makeBeadItem(charId, 'blue-1', 'blue'));
+    items.push(this._makeBeadItem(charId, 'gold-1', 'gold'));
+
+    // Center: active character's relic (if visible)
+    const relicId = `RELIC_${charId.toUpperCase()}`;
+    const relicSlot = this.relicSlots.find(s => s.id === relicId);
+    if (relicSlot) {
+      items.push({
+        kind: 'relic',
+        relicId: relicSlot.id,
+        relicPurchased: relicSlot.purchased,
+        relicName: relicSlot.name,
+      });
+    }
+
+    // Right beads: gold-2, blue-2
+    items.push(this._makeBeadItem(charId, 'gold-2', 'gold'));
+    items.push(this._makeBeadItem(charId, 'blue-2', 'blue'));
+
+    return items;
+  }
+
+  /** Create a single bead crown item. */
+  private _makeBeadItem(charId: string, slotId: string, type: BeadType): { kind: 'bead'; slotId: string; beadType: BeadType; beadState: 'locked' | 'found' | 'socketed' } {
+    const s = this.getBeadSlot(charId, slotId);
+    let state: 'locked' | 'found' | 'socketed' = 'locked';
+    if (s.socketed) state = 'socketed';
+    else if (s.found) state = 'found';
+    return { kind: 'bead', slotId, beadType: type, beadState: state };
   }
 
   /**
@@ -829,13 +1027,16 @@ export class AppComponent implements OnInit, OnDestroy {
     const catsPawLevel = this.upgrades.level('POTION_CATS_PAW');
     const isJack       = this.artisanTimerIsJackBatch;
     const hasRelic     = isJack && this.upgrades.level('RELIC_ARTISAN') >= 1;
+    const artisanMult  = this.wallet.getBeadMultiplier('artisan');
     let totalGemstones = 0;
     let totalMetals    = 0;
     for (let i = 0; i < batchSize; i++) {
       totalGemstones += hasRelic ? calcArtisanGemstoneYieldJack(catsPawLevel, true) : calcArtisanGemstoneYield(catsPawLevel);
       totalMetals    += hasRelic ? calcArtisanMetalYieldJack(catsPawLevel, true) : calcArtisanMetalYield(catsPawLevel);
     }
-    const xpAwarded = batchSize;
+    totalGemstones = totalGemstones * artisanMult;
+    totalMetals    = totalMetals * artisanMult;
+    const xpAwarded = batchSize * artisanMult;
 
     this.wallet.add('gemstone', totalGemstones);
     this.wallet.add('precious-metal', totalMetals);
@@ -1198,6 +1399,16 @@ export class AppComponent implements OnInit, OnDestroy {
     // Max out all jacks
     this.jacksOwned = getJacksMax();
 
+    // Find all blue beads (but don't socket — let the player do that)
+    // Gold beads are not droppable yet — left as locked placeholders.
+    for (const char of this.charService.getCharacters()) {
+      this.ensureBeadState(char.id);
+      this.beadState[char.id]['blue-1'].found = true;
+      this.beadState[char.id]['blue-2'].found = true;
+    }
+    this.beadState = { ...this.beadState };
+    this._refreshDerived();
+
     this.updateAllPerSecond();
 
     this.log.log('[DEV] Everything unlocked.', 'warn');
@@ -1219,6 +1430,9 @@ export class AppComponent implements OnInit, OnDestroy {
       startArtisanTimer:      (batchSize) => this.startArtisanTimer(batchSize),
       necromancerActiveButton: this.necromancerActiveButton,
       necromancerDecrementClick: () => this.necromancerDecrementClick(),
+      beadMultiplier: (charId: string) => this.wallet.getBeadMultiplier(charId),
+      hasUnfoundBlueBead: (charId: string) => this.minigameUnlocked && this.hasUnfoundBlueBead(charId),
+      onBlueBeadFound: (charId: string) => this.findBlueBead(charId),
     };
   }
 
@@ -1245,6 +1459,9 @@ export class AppComponent implements OnInit, OnDestroy {
       relicLevel:             (charId) => this.upgrades.level(`RELIC_${charId.toUpperCase()}`),
       necromancerActiveButton: () => this.necromancerActiveButton,
       necromancerDecrementClick: () => this.necromancerDecrementClick(),
+      beadMultiplier: (charId: string) => this.wallet.getBeadMultiplier(charId),
+      hasUnfoundJackBead: (charId: string) => this.minigameUnlocked && this.hasUnfoundJackBead(charId),
+      onJackBeadFound: (charId: string) => this.findJackBead(charId),
     };
   }
 }

@@ -1043,3 +1043,22 @@ export const FAMILIAR = {
   JACKS_PER_FAMILIAR: 1,
 } as const;
 
+// ── Bead System ──────────────────────────────────────────────
+export const BEADS = {
+  /** Chance (0–1) per manual hero click to discover a blue bead. */
+  BLUE_CHANCE: 1 / 500,
+  /** Chance (0–1) per jack/familiar auto-click to discover a gold bead. */
+  GOLD_CHANCE: 1 / 10000,
+  /** Resource yield multiplier per socketed blue bead. */
+  BLUE_YIELD_MULT: 2,
+} as const;
+
+/** Ordered bead slot IDs as displayed left-to-right around the relic socket. */
+export const BEAD_SLOT_ORDER = ['blue-1', 'gold-1', 'gold-2', 'blue-2'] as const;
+export type BeadSlotId = typeof BEAD_SLOT_ORDER[number];
+export type BeadType = 'blue' | 'gold';
+
+export interface BeadSlotState {
+  found: boolean;
+  socketed: boolean;
+}

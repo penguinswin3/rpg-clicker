@@ -50,6 +50,8 @@ export interface UpgradeState {
   familiarTimers?: Record<string, number>;
   /** Whether all familiars are paused (not contributing clicks or per-second). */
   familiarsPaused?: boolean;
+  /** Bead state per character — { charId: { slotId: { found, socketed } } } */
+  beads?: Record<string, Record<string, { found: boolean; socketed: boolean }>>;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

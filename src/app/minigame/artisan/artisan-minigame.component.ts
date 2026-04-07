@@ -269,6 +269,7 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
         );
       }
 
+      const bm = this.wallet.getBeadMultiplier('artisan');
       let totalJewelry = this.JEWELRY_REWARD;
       let totalXp      = ARTISAN_MG.XP_REWARD;
 
@@ -293,6 +294,10 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
         totalJewelry += ARTISAN_MG.DOUBLE_DIP_JEWELRY_BONUS;
         totalXp      += ARTISAN_MG.DOUBLE_DIP_XP_BONUS;
       }
+
+      // Apply bead multiplier to final yields
+      totalJewelry = totalJewelry * bm;
+      totalXp      = totalXp * bm;
 
       this.wallet.add('jewelry', totalJewelry);
       this.wallet.add('xp', totalXp);

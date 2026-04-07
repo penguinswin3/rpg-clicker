@@ -493,3 +493,41 @@ export const MINIGAME_MSG = {
   },
 
 };
+
+// ── Bead System ───────────────────────────────────────────────
+export const BEAD_COLORS = {
+  blue: { primary: '#00fff8', dim: '#004d4b', glow: 'rgba(0, 255, 248, 0.4)' },
+  gold: { primary: '#ffcc00', dim: '#4d3d00', glow: 'rgba(255, 204, 0, 0.4)' },
+} as const;
+
+/** Per-character lore for each bead type. */
+export const BEAD_FLAVOR: Record<string, { blue: { name: string; lore: string }; gold: { name: string; lore: string } }> = {
+  fighter: {
+    blue: { name: 'Bead of Valor',        lore: 'Forged in the heat of countless battles, this bead hums with the memory of every bounty completed.' },
+    gold: { name: 'Bead of the Vanguard', lore: 'Carried by those who fight on behalf of others. Its power awaits a worthy quest.' },
+  },
+  ranger: {
+    blue: { name: 'Bead of the Wild',     lore: 'Grown from the heartwood of an ancient tree, it pulses with the rhythm of the forest.' },
+    gold: { name: 'Bead of the Pathfinder', lore: 'Found in the deepest thicket, where only the most tireless scouts dare to tread.' },
+  },
+  apothecary: {
+    blue: { name: 'Bead of Distillation', lore: 'Crystallized from a thousand perfect brews, it amplifies the potency of every concoction.' },
+    gold: { name: 'Bead of the Alembic',  lore: 'Formed in the residue of a master\'s cauldron. Its purpose is yet unrevealed.' },
+  },
+  culinarian: {
+    blue: { name: 'Bead of Seasoning',    lore: 'Imbued with the essence of rare spices from distant lands, it enriches every ingredient it touches.' },
+    gold: { name: 'Bead of the Hearth',   lore: 'Warmed by countless fires. It holds the promise of a recipe yet to be written.' },
+  },
+  thief: {
+    blue: { name: 'Bead of Shadows',      lore: 'Stolen from the vault of a legendary thief, it ensures every heist yields double the spoils.' },
+    gold: { name: 'Bead of the Unseen Hand', lore: 'Passed between thieves in the dark. Its true use remains a secret.' },
+  },
+  artisan: {
+    blue: { name: 'Bead of Precision',    lore: 'Cut by the steadiest hand, it doubles the value found in every raw material.' },
+    gold: { name: 'Bead of the Masterwork', lore: 'Embedded in a workbench for generations. It whispers of automation yet to come.' },
+  },
+  necromancer: {
+    blue: { name: 'Bead of the Veil',     lore: 'Harvested from the space between worlds, it amplifies the yield of every dark ritual.' },
+    gold: { name: 'Bead of Binding',      lore: 'Chains the familiar realm to this one. Its full power remains dormant.' },
+  },
+};

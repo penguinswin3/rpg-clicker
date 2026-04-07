@@ -235,26 +235,27 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   }
 
   private award(prize: PrizeType): void {
+    const bm = this.wallet.getBeadMultiplier('ranger');
     switch (prize) {
       case 'meat':
         // Currency deferred to endRound for Abundant Lands multiplier
-        this.wallet.add('xp', RANGER_MG.MEAT_XP);
+        this.wallet.add('xp', RANGER_MG.MEAT_XP * bm);
         this.meatFound++;
-        this.xpGained += RANGER_MG.MEAT_XP;
+        this.xpGained += RANGER_MG.MEAT_XP * bm;
         break;
 
       case 'herb':
         // Currency deferred to endRound for Abundant Lands multiplier
-        this.wallet.add('xp', RANGER_MG.HERB_XP);
+        this.wallet.add('xp', RANGER_MG.HERB_XP * bm);
         this.herbFound++;
-        this.xpGained += RANGER_MG.HERB_XP;
+        this.xpGained += RANGER_MG.HERB_XP * bm;
         break;
 
       case 'pixie':
         // Currency deferred to endRound for Abundant Lands multiplier
-        this.wallet.add('xp', RANGER_MG.PIXIE_XP);
+        this.wallet.add('xp', RANGER_MG.PIXIE_XP * bm);
         this.pixieFound++;
-        this.xpGained += RANGER_MG.PIXIE_XP;
+        this.xpGained += RANGER_MG.PIXIE_XP * bm;
         if (!this.wallet.isCurrencyUnlocked('pixie-dust')) {
           this.wallet.unlockCurrency('pixie-dust');
           this.log.log('A Pixie emerged from the undergrowth! Pixie Dust unlocked!', 'rare');
@@ -263,9 +264,9 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
 
       case 'chest':
         // Gold, treasure, gems deferred to endRound for Abundant Lands multiplier
-        this.wallet.add('xp', RANGER_MG.CHEST_XP);
+        this.wallet.add('xp', RANGER_MG.CHEST_XP * bm);
         this.chestFound++;
-        this.xpGained += RANGER_MG.CHEST_XP;
+        this.xpGained += RANGER_MG.CHEST_XP * bm;
         // Track individual chest rewards for batching
         this.chestGold     += randInt(RANGER_MG.CHEST_GOLD_MIN, RANGER_MG.CHEST_GOLD_MAX);
         this.chestTreasure += randInt(RANGER_MG.CHEST_TREASURE_MIN, RANGER_MG.CHEST_TREASURE_MAX);
@@ -287,19 +288,22 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     // Reveal all unrevealed cells
     this.cells.forEach(c => (c.revealed = true));
 
+    // Bead multiplier for ranger character
+    const bm = this.wallet.getBeadMultiplier('ranger');
+
     // Abundant Lands: multiply currency by the number of successful squares found
     const successCount = this.meatFound + this.herbFound + this.pixieFound + this.chestFound;
     const multiplier   = (this.abundantLandsLevel >= 1 && successCount > 0)
       ? successCount
       : 1;
 
-    // Batch-award all currencies now (with multiplier applied)
-    const totalMeat  = this.meatFound  * multiplier;
-    const totalHerb  = this.herbFound  * multiplier;
-    const totalPixie = this.pixieFound * multiplier;
-    const totalChestGold     = this.chestGold     * multiplier;
-    const totalChestTreasure = this.chestTreasure  * multiplier;
-    const totalChestGems     = this.chestGems      * multiplier;
+    // Batch-award all currencies now (with multiplier and bead multiplier applied)
+    const totalMeat  = this.meatFound  * multiplier * bm;
+    const totalHerb  = this.herbFound  * multiplier * bm;
+    const totalPixie = this.pixieFound * multiplier * bm;
+    const totalChestGold     = this.chestGold     * multiplier * bm;
+    const totalChestTreasure = this.chestTreasure  * multiplier * bm;
+    const totalChestGems     = this.chestGems      * multiplier * bm;
 
     if (totalMeat  > 0) this.wallet.add('beast',      totalMeat);
     if (totalHerb  > 0) this.wallet.add('herb',        totalHerb);

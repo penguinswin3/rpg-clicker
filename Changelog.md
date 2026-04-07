@@ -1,3 +1,15 @@
+# Version Alpha 1.3.0
+
+## Added
+- Bead System
+
+## Removed
+
+## Changed
+
+## Bugfixes
+
+----------------------------
 # Version Alpha 1.2.2
 
 ## Added

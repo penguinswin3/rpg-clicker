@@ -303,6 +303,233 @@
   }
 }
 
+// ── Bead Sockets ─────────────────────────────────────────────
+
+.bead-socket {
+  background: #000;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.1rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s, text-shadow 0.2s;
+
+  // ── Blue bead ──────────────────────────────
+  &.bead-blue {
+    border: 2px solid #004d4b;
+    color: #004d4b;
+
+    &.bead-locked {
+      opacity: 0.4;
+      &:hover { opacity: 0.65; color: #00a09a; border-color: #00a09a; }
+    }
+
+    &.bead-found {
+      color: #00fff8;
+      border-color: #00fff8;
+      animation: bead-pulse-blue 1.2s ease-in-out infinite;
+      box-shadow: 0 0 8px rgba(0, 255, 248, 0.4);
+      text-shadow: 0 0 6px rgba(0, 255, 248, 0.6);
+
+      &:hover {
+        box-shadow: 0 0 14px rgba(0, 255, 248, 0.6);
+        text-shadow: 0 0 10px rgba(0, 255, 248, 0.8);
+      }
+    }
+
+    &.bead-socketed {
+      color: #00fff8;
+      border-color: #00fff8;
+      background: #001a1a;
+      box-shadow: 0 0 8px rgba(0, 255, 248, 0.35), inset 0 0 6px rgba(0, 255, 248, 0.1);
+      text-shadow: 0 0 6px rgba(0, 255, 248, 0.5);
+
+      &:hover {
+        color: #66fffc;
+        border-color: #66fffc;
+        box-shadow: 0 0 12px rgba(0, 255, 248, 0.5), inset 0 0 8px rgba(0, 255, 248, 0.2);
+      }
+    }
+  }
+
+  // ── Gold bead ──────────────────────────────
+  &.bead-gold {
+    border: 2px solid #4d3d00;
+    color: #4d3d00;
+
+    &.bead-locked {
+      opacity: 0.4;
+      &:hover { opacity: 0.65; color: #b39500; border-color: #b39500; }
+    }
+
+    &.bead-found {
+      color: #ffcc00;
+      border-color: #ffcc00;
+      animation: bead-pulse-gold 1.2s ease-in-out infinite;
+      box-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
+      text-shadow: 0 0 6px rgba(255, 204, 0, 0.6);
+
+      &:hover {
+        box-shadow: 0 0 14px rgba(255, 204, 0, 0.6);
+        text-shadow: 0 0 10px rgba(255, 204, 0, 0.8);
+      }
+    }
+
+    &.bead-socketed {
+      color: #ffcc00;
+      border-color: #ffcc00;
+      background: #1a1500;
+      box-shadow: 0 0 8px rgba(255, 204, 0, 0.35), inset 0 0 6px rgba(255, 204, 0, 0.1);
+      text-shadow: 0 0 6px rgba(255, 204, 0, 0.5);
+
+      &:hover {
+        color: #ffe066;
+        border-color: #ffe066;
+        box-shadow: 0 0 12px rgba(255, 204, 0, 0.5), inset 0 0 8px rgba(255, 204, 0, 0.2);
+      }
+    }
+  }
+}
+
+@keyframes bead-pulse-blue {
+  0%, 100% { box-shadow: 0 0 6px rgba(0, 255, 248, 0.3); }
+  50%      { box-shadow: 0 0 16px rgba(0, 255, 248, 0.7), 0 0 24px rgba(0, 255, 248, 0.3); }
+}
+
+@keyframes bead-pulse-gold {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 204, 0, 0.3); }
+  50%      { box-shadow: 0 0 16px rgba(255, 204, 0, 0.7), 0 0 24px rgba(255, 204, 0, 0.3); }
+}
+
+// ── Bead detail popup ────────────────────────────────────────
+.bead-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bead-popup {
+  background: #050008;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 240px;
+  max-width: 360px;
+  font-family: 'Courier New', Courier, monospace;
+
+  &.bead-popup-blue {
+    border: 2px solid #006663;
+    box-shadow: 0 0 20px rgba(0, 255, 248, 0.15);
+  }
+
+  &.bead-popup-gold {
+    border: 2px solid #665200;
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.15);
+  }
+}
+
+.bead-popup-symbol {
+  font-size: 2.4rem;
+  line-height: 1;
+  opacity: 0.3;
+
+  &.bead-popup-owned {
+    opacity: 1;
+    text-shadow: 0 0 12px currentColor;
+  }
+}
+
+.bead-popup-name {
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.bead-popup-lore {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+  line-height: 1.35;
+  font-style: italic;
+}
+
+.bead-popup-effect {
+  font-size: 0.8rem;
+  color: #aaa;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.bead-effect-label {
+  color: #ccc;
+  font-weight: bold;
+}
+
+.bead-popup-socket-btn {
+  background: #000;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+
+  .bead-popup-blue & {
+    color: #00fff8;
+    border: 1px solid #006663;
+    &:hover { background: #001a1a; border-color: #00fff8; }
+  }
+
+  .bead-popup-gold & {
+    color: #ffcc00;
+    border: 1px solid #665200;
+    &:hover { background: #1a1500; border-color: #ffcc00; }
+  }
+}
+
+.bead-popup-status {
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+
+  &.socketed {
+    .bead-popup-blue & { color: #006663; }
+    .bead-popup-gold & { color: #665200; }
+  }
+
+  &.locked {
+    color: #444;
+    font-style: italic;
+  }
+}
+
+.bead-popup-close {
+  background: #000;
+  color: #fff;
+  border: 1px solid #555;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  margin-top: 0.3rem;
+  transition: background 0.1s, color 0.1s;
+
+  &:hover {
+    background: #fff;
+    color: #000;
+  }
+}
+
 // ── Action Row → replaced by stacked layout ─────────────────
 
 // ---- Jack of All Trades ----

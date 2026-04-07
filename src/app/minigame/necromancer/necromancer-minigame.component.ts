@@ -533,14 +533,19 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
     // Base soul stone reward: 5% steps, floor at 50% (gives 0), ceiling at 100% (gives 10).
     // Formula: every 5 percentage-points above 50 earns 1 stone.
     //   91% → 8,  94% → 8,  95% → 9,  96% → 9,  100% → 10,  <50% → 0
-    this.soulStonesAwarded = Math.max(0, Math.floor((this.efficiencyPct - 50) / 5));
-    this.xpAwarded = this.cfg.XP_REWARD;
+    let baseSoulStones = Math.max(0, Math.floor((this.efficiencyPct - 50) / 5));
+    let baseXp = this.cfg.XP_REWARD;
 
     // Perfect Transmutation bonus: +2 soul stones per upgrade level on a perfect run
     const transmutationBonus = this.efficiencyPct >= 100
       ? this.upgrades.level('PERFECT_TRANSMUTATION') * 2
       : 0;
-    this.soulStonesAwarded += transmutationBonus;
+    baseSoulStones += transmutationBonus;
+
+    // Apply bead multiplier
+    const bm = this.wallet.getBeadMultiplier('necromancer');
+    this.soulStonesAwarded = baseSoulStones * bm;
+    this.xpAwarded = baseXp * bm;
 
     if (this.soulStonesAwarded > 0) {
       this.wallet.add('soul-stone', this.soulStonesAwarded);

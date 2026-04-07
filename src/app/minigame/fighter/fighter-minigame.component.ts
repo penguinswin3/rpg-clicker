@@ -450,20 +450,23 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private onEnemyDefeated(enemyLastDmg: number, firstStrike: boolean = false): void {
+    const bm = this.wallet.getBeadMultiplier('fighter');
     const baseGold = randInt(this.enemy.goldMin, this.enemy.goldMax);
     const gildedBonus = this.gildedBladeLevel > 0 ? Math.floor(baseGold * this.gildedBladeLevel / 100) : 0;
-    const gold = baseGold + gildedBonus;
+    const gold = (baseGold + gildedBonus) * bm;
+    const xpReward  = this.enemy.xpReward * bm;
+    const earReward = this.enemy.earReward * bm;
 
     this.wallet.add('gold',       gold);
-    this.wallet.add('xp',         this.enemy.xpReward);
-    this.wallet.add('kobold-ear', this.enemy.earReward);
+    this.wallet.add('xp',         xpReward);
+    this.wallet.add('kobold-ear', earReward);
 
     // Track stats
     const variantIdx = Math.min(this.selectedKoboldLevel - 1, KOBOLD_VARIANTS.length - 1);
     this.stats.trackKoboldKill(KOBOLD_VARIANTS[variantIdx].name);
     this.stats.trackCurrencyGain('gold', gold);
-    this.stats.trackCurrencyGain('xp', this.enemy.xpReward);
-    this.stats.trackCurrencyGain('kobold-ear', this.enemy.earReward);
+    this.stats.trackCurrencyGain('xp', xpReward);
+    this.stats.trackCurrencyGain('kobold-ear', earReward);
 
     const isFirstEar = !this.wallet.isCurrencyUnlocked('kobold-ear');
     if (isFirstEar) {
@@ -486,6 +489,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
             dropAmount *= 2;
           }
         }
+        dropAmount *= bm;
 
         this.wallet.add(drop.currencyId, dropAmount);
         gotSecondaryDrop = true;
@@ -507,7 +511,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     // ── Log message ───────────────────────────────
     // Detect mutual kill first so the log message is accurate even in that case.
     const isMutualKill = this.fighterHp <= 0;
-    const dropsText = `${cur('gold', gold)}, ${cur('xp', this.enemy.xpReward)}, ${cur('kobold-ear', this.enemy.earReward)}${secondaryMsg}`;
+    const dropsText = `${cur('gold', gold)}, ${cur('xp', xpReward)}, ${cur('kobold-ear', earReward)}${secondaryMsg}`;
 
     if (isFirstEar) {
       this.log.log(

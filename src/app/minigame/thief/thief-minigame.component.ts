@@ -229,14 +229,15 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
   }
 
   private awardRewards(): void {
+    const bm = this.wallet.getBeadMultiplier('thief');
     const unused   = this.maxDetection - this.detection;
     // Bag of Holding bonus scales with efficiency: full bonus at 0 detection used, none at full detection used
     const unusedFraction = this.maxDetection > 0 ? unused / this.maxDetection : 0;
-    const treasure = THIEF_MG.TREASURE_BASE + THIEF_MG.TREASURE_PER_UNUSED * unused
-                   + Math.floor(this.effectiveMaxTreasureBonus * unusedFraction);
-    const gold     = THIEF_MG.GOLD_BASE     + THIEF_MG.GOLD_PER_UNUSED     * unused
-                   + Math.floor(this.effectiveMaxGoldBonus     * unusedFraction);
-    const xp       = THIEF_MG.XP_REWARD;
+    const treasure = (THIEF_MG.TREASURE_BASE + THIEF_MG.TREASURE_PER_UNUSED * unused
+                   + Math.floor(this.effectiveMaxTreasureBonus * unusedFraction)) * bm;
+    const gold     = (THIEF_MG.GOLD_BASE     + THIEF_MG.GOLD_PER_UNUSED     * unused
+                   + Math.floor(this.effectiveMaxGoldBonus     * unusedFraction)) * bm;
+    const xp       = THIEF_MG.XP_REWARD * bm;
 
     this.wallet.add('treasure', treasure);
     this.wallet.add('gold', gold);
