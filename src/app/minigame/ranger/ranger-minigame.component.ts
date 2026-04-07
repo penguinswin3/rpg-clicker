@@ -1,10 +1,10 @@
-import { Component, Input, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { RANGER_MG } from '../../game-config';
+import { RANGER_MG, AUTO_SOLVE, BEADS } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 import { shuffleInPlace, randInt } from '../../utils/mathUtils';
 
@@ -47,7 +47,7 @@ const PRIZE_NAME: Record<PrizeType, string> = {
   styleUrls: ['./ranger-minigame.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RangerMinigameComponent implements OnInit, OnDestroy {
+export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
@@ -69,6 +69,19 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
   @Input() treasureChestLevel = 0;
   /** When >= 1, unrevealed chest cells display a red X. */
   @Input() xMarksTheSpotLevel = 0;
+
+  // ── Auto-solve ──────────────────────────
+  @Input() autoSolveUnlocked = false;
+  @Input() autoSolveEnabled = false;
+  @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
+  @Output() goldBeadFound = new EventEmitter<void>();
+  private autoSolveInterval?: ReturnType<typeof setInterval>;
+  /** Pre-selected random indices for auto-solve to pick (3 cells). */
+  private autoSolveTargets: number[] = [];
+
+  toggleAutoSolve(): void {
+    this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
 
   // Wallet-synced
   beastMeat = 0;
@@ -107,6 +120,16 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['autoSolveEnabled']) {
+      if (this.autoSolveEnabled && this.autoSolveUnlocked) {
+        this.startAutoSolve();
+      } else {
+        this.stopAutoSolve();
+      }
+    }
+  }
+
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
@@ -118,6 +141,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+    this.stopAutoSolve();
   }
 
   // ── Actions ───────────────────────────────
@@ -219,7 +243,54 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
     return this.xMarksTheSpotLevel >= 1 && !cell.revealed && cell.prize === 'chest';
   }
 
-  // ── Private ───────────────────────────────
+  // ── Auto-solve helpers ──────────────────
+
+  private startAutoSolve(): void {
+    this.stopAutoSolve();
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.RANGER_TICK_MS);
+  }
+
+  private stopAutoSolve(): void {
+    if (this.autoSolveInterval) {
+      clearInterval(this.autoSolveInterval);
+      this.autoSolveInterval = undefined;
+    }
+  }
+
+  private autoSolveTick(): void {
+    if (!this.autoSolveEnabled || !this.autoSolveUnlocked) {
+      this.stopAutoSolve();
+      return;
+    }
+    // If round is over or not started, start a new round
+    if (!this.roundStarted || this.roundOver) {
+      if (this.canScout) {
+        this.newRound();
+        // Pre-select 3 random cell indices to reveal
+        const indices = Array.from({ length: this.cells.length }, (_, i) => i);
+        shuffleInPlace(indices);
+        this.autoSolveTargets = indices.slice(0, this.PICKS);
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+    // If round is active, pick the next auto-solve target
+    if (this.picksLeft > 0 && this.autoSolveTargets.length > 0) {
+      const idx = this.autoSolveTargets.shift()!;
+      if (!this.cells[idx].revealed) {
+        this.select(idx);
+      }
+      this.cdr.markForCheck();
+    }
+  }
+
+  private rollMinigameGoldBead(): void {
+    if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
+      this.goldBeadFound.emit();
+    }
+  }
+
+  // ── Private ───────────────────────────
 
   private rollPrize(): PrizeType {
     const r = Math.random();
@@ -356,6 +427,11 @@ export class RangerMinigameComponent implements OnInit, OnDestroy {
 
     this.lastMsg  = successCount === 0 ? 'Found: Nothing...' : 'Found:';
     this.msgClass = successCount === 0 ? 'msg-neutral' : (this.pixieFound > 0 || this.chestFound > 0 ? 'msg-rare' : 'msg-good');
+
+    // Roll for gold bead on successful round
+    if (successCount > 0) {
+      this.rollMinigameGoldBead();
+    }
   }
 }
 

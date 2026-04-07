@@ -310,3 +310,39 @@ $green: #44dd44;
   &.msg-neutral { color: #666;  border-color: #1e1e1e; }
 }
 
+// ── Auto-solve toggle (gold theme) ───────────
+
+.auto-solve-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.auto-solve-btn {
+  background: #0a0a0a;
+  color: #665200;
+  border: 1px solid #4d3d00;
+  font-family: $font;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+
+  &:hover:not(:disabled) {
+    border-color: #997a00;
+    color: #cca300;
+  }
+
+  &.as-on {
+    color: #ffcc00;
+    border-color: #997a00;
+    background: #1a1500;
+
+    &:hover:not(:disabled) {
+      background: #2a2200;
+      border-color: #ffcc00;
+    }
+  }
+}

@@ -2,6 +2,15 @@
 
 ## Added
 - Bead System
+- Auto-Solve system for all sidequests, unlocked by socketing a Gold Bead (gold-1)
+  - Fighter: Automatically attacks once per second. Will not heal and can die.
+  - Ranger: Randomly picks 3 squares, one per second.
+  - Apothecary: Clicks within the sweet spot with a 0.5s cooldown. Does not target inner/synaptic zones.
+  - Culinarian: Brute-force approach — submits all-herb, all-meat, all-tongue guesses, then deduces the answer on the 4th try. One guess per second.
+  - Thief: Evenly distributes crack attempts across the dial based on available detection.
+  - Artisan: 50% chance to pick the best gem (75% best / 50% second-best with multiple picks). One pick per second.
+  - Necromancer: Starts at a random node and selects the next clockwise valid node. 0.5s per click.
+- Gold Bead (gold-1) has a 1/50 chance to drop on any successful sidequest completion
 
 ## Removed
 

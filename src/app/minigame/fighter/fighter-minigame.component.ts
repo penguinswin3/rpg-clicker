@@ -8,6 +8,7 @@ import { FIGHTER_MG } from '../../game-config';
 import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant, MINIGAME_MSG, cur } from '../../flavor-text';
 import { FighterCombatState } from '../../options/save.service';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
+import { AUTO_SOLVE, BEADS } from '../../game-config';
 
 interface Enemy {
   name: string;
@@ -74,6 +75,17 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   @Input() savedState: FighterCombatState | null = null;
   /** Emitted whenever combat state changes (HP, defeated, rest countdown). */
   @Output() stateChange = new EventEmitter<FighterCombatState>();
+
+  // ── Auto-solve ──────────────────────────
+  /** Whether auto-solve is unlocked (gold-1 bead socketed). */
+  @Input() autoSolveUnlocked = false;
+  /** Whether auto-solve is currently active. */
+  @Input() autoSolveEnabled = false;
+  /** Emitted when the player toggles auto-solve on/off. */
+  @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
+  /** Emitted when a gold bead is found from minigame success. */
+  @Output() goldBeadFound = new EventEmitter<void>();
+  private autoSolveInterval?: ReturnType<typeof setInterval>;
 
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
@@ -186,11 +198,22 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     this.koboldBaitEnabledChange.emit(!this.koboldBaitEnabled);
   }
 
+  toggleAutoSolve(): void {
+    this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
+
   // ── Lifecycle ─────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['firstStrikeLevel'] && this.firstStrikeLevel >= 1) {
       this.stats.markFirstStrikeUnlocked();
+    }
+    if (changes['autoSolveEnabled']) {
+      if (this.autoSolveEnabled && this.autoSolveUnlocked) {
+        this.startAutoSolve();
+      } else {
+        this.stopAutoSolve();
+      }
     }
   }
 
@@ -272,6 +295,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     if (this.spawnTimer)   clearTimeout(this.spawnTimer);
     if (this.restInterval) clearInterval(this.restInterval);
     if (this.fleeInterval) clearInterval(this.fleeInterval);
+    this.stopAutoSolve();
   }
 
   // ── Actions ───────────────────────────────
@@ -531,6 +555,9 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       );
     }
 
+    // Roll for gold bead drop on successful kill
+    this.rollMinigameGoldBead();
+
     if (isMutualKill) {
       // Mutual kill — awards still granted, but fighter is defeated
       this.fighterHp = 0;
@@ -595,6 +622,46 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       this.msgLine2 = `The kobold can't keep up!`;
       this.msgClass = 'msg-good';
       this.emitState();
+    }
+  }
+
+  // ── Auto-solve helpers ──────────────────
+
+  private startAutoSolve(): void {
+    this.stopAutoSolve();
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.FIGHTER_TICK_MS);
+  }
+
+  private stopAutoSolve(): void {
+    if (this.autoSolveInterval) {
+      clearInterval(this.autoSolveInterval);
+      this.autoSolveInterval = undefined;
+    }
+  }
+
+  private autoSolveTick(): void {
+    if (!this.autoSolveEnabled || !this.autoSolveUnlocked) {
+      this.stopAutoSolve();
+      return;
+    }
+    // If defeated and rest is done, retry
+    if (this.defeated && this.restCountdown <= 0) {
+      this.retry();
+      this.cdr.markForCheck();
+      return;
+    }
+    // If not defeated and actions not disabled, attack
+    if (!this.actionsDisabled) {
+      this.attack();
+      this.cdr.markForCheck();
+    }
+  }
+
+  // ── Gold bead roll helper ──────────────
+
+  private rollMinigameGoldBead(): void {
+    if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
+      this.goldBeadFound.emit();
     }
   }
 

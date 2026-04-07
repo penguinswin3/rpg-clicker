@@ -1,10 +1,10 @@
-import { Component, Input, OnInit, OnDestroy, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { THIEF_MG } from '../../game-config';
+import { THIEF_MG, AUTO_SOLVE, BEADS } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 
@@ -16,7 +16,7 @@ import { toPct, randInt, rollChance } from '../../utils/mathUtils';
   styleUrls: ['./thief-minigame.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ThiefMinigameComponent implements OnInit, OnDestroy {
+export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
@@ -45,6 +45,20 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
   @Input() lockedInLevel        = 0;
   /** Flow State level — when ≥1, failed tick colours shift from red→yellow→green based on proximity to the sweet spot. */
   @Input() flowStateLevel        = 0;
+
+  // ── Auto-solve ──────────────────────────
+  @Input() autoSolveUnlocked = false;
+  @Input() autoSolveEnabled = false;
+  @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
+  @Output() goldBeadFound = new EventEmitter<void>();
+  private autoSolveInterval?: ReturnType<typeof setInterval>;
+  /** Pre-computed evenly-spaced angles for the auto-solve guesses. */
+  private autoSolveAngles: number[] = [];
+  private autoSolveAngleIdx = 0;
+
+  toggleAutoSolve(): void {
+    this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
 
   // ── Wallet-synced ─────────────────────────
   dossiers = 0;
@@ -138,6 +152,16 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['autoSolveEnabled']) {
+      if (this.autoSolveEnabled && this.autoSolveUnlocked) {
+        this.startAutoSolve();
+      } else {
+        this.stopAutoSolve();
+      }
+    }
+  }
+
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
@@ -150,6 +174,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sub.unsubscribe();
     this.stopAnimation();
+    this.stopAutoSolve();
   }
 
   // ── Actions ───────────────────────────────
@@ -213,6 +238,63 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
         this.lastMsg  = MINIGAME_MSG.THIEF.MISS;
         this.msgClass = 'msg-bad';
       }
+    }
+  }
+
+  // ── Auto-solve helpers ──────────────────
+
+  private startAutoSolve(): void {
+    this.stopAutoSolve();
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.THIEF_TICK_MS);
+  }
+
+  private stopAutoSolve(): void {
+    if (this.autoSolveInterval) {
+      clearInterval(this.autoSolveInterval);
+      this.autoSolveInterval = undefined;
+    }
+  }
+
+  /** The interval tick only handles starting new heists and pre-computing target angles. */
+  private autoSolveTick(): void {
+    if (!this.autoSolveEnabled || !this.autoSolveUnlocked) {
+      this.stopAutoSolve();
+      return;
+    }
+    // If heist is not active, start one
+    if (!this.heistActive) {
+      if (this.canStart) {
+        this.startHeist();
+        // Pre-compute evenly spaced angles based on maxDetection
+        const attempts = this.maxDetection;
+        this.autoSolveAngles = [];
+        for (let i = 0; i < attempts; i++) {
+          this.autoSolveAngles.push((360 / attempts) * i);
+        }
+        this.autoSolveAngleIdx = 0;
+      }
+      this.cdr.markForCheck();
+    }
+    // Actual crack attempts are handled inside the animation loop
+  }
+
+  /**
+   * Check if the pointer crossed a target angle between two frames.
+   * Handles the 360→0 wrap-around.
+   */
+  private hasCrossedAngle(prev: number, curr: number, target: number): boolean {
+    if (prev <= curr) {
+      // No wrap: check if target is between prev and curr (inclusive)
+      return target >= prev && target <= curr;
+    } else {
+      // Wrapped past 360→0: target in [prev, 360) or [0, curr]
+      return target >= prev || target <= curr;
+    }
+  }
+
+  private rollMinigameGoldBead(): void {
+    if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
+      this.goldBeadFound.emit();
     }
   }
 
@@ -284,6 +366,9 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
 
     this.lastMsg  = MINIGAME_MSG.THIEF.SUCCESS;
     this.msgClass = 'msg-good';
+
+    // Roll for gold bead on successful heist
+    this.rollMinigameGoldBead();
   }
 
   // ── Animation loop ────────────────────────
@@ -294,7 +379,25 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
 
       if (this.lastTime !== undefined) {
         const dt = timestamp - this.lastTime;
+        const prevAngle = this.pointerAngle;
         this.pointerAngle = (this.pointerAngle + THIEF_MG.DIAL_SPEED * dt / 1000) % 360;
+
+        // Auto-solve: check if the spinning pointer crossed the next target angle
+        if (this.autoSolveEnabled
+            && this.autoSolveAngleIdx < this.autoSolveAngles.length
+            && this.heistActive) {
+          const target = this.autoSolveAngles[this.autoSolveAngleIdx];
+          if (this.hasCrossedAngle(prevAngle, this.pointerAngle, target)) {
+            this.pointerAngle = target; // snap to the exact target angle
+            this.autoSolveAngleIdx++;
+            this.attemptCrack();
+            // If heist ended from that crack, bail out of this frame
+            if (!this.heistActive) {
+              this.cdr.detectChanges();
+              return;
+            }
+          }
+        }
       }
       this.lastTime = timestamp;
 

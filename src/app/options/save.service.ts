@@ -52,6 +52,8 @@ export interface UpgradeState {
   familiarsPaused?: boolean;
   /** Bead state per character — { charId: { slotId: { found, socketed } } } */
   beads?: Record<string, Record<string, { found: boolean; socketed: boolean }>>;
+  /** Auto-solve toggle state per character — { charId: true/false } */
+  autoSolveEnabled?: Record<string, boolean>;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

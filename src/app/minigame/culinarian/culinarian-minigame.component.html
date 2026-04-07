@@ -3,7 +3,7 @@
   <!-- ── Start button (idle) ─────────── -->
   <div class="primary-slot" *ngIf="!roundActive && !won && !lost">
     <button class="action-btn start-btn"
-            [disabled]="!canStart"
+            [disabled]="!canStart || autoSolveEnabled"
             (click)="startRound()">
       [ GET COOKIN' ]
     </button>
@@ -37,8 +37,9 @@
         <div class="palette-item"
              *ngFor="let id of INGREDIENTS"
              draggable="true"
+             [class.disabled]="autoSolveEnabled"
              (dragstart)="onDragStart($event, id)"
-             (click)="selectIngredient(id)">
+             (click)="autoSolveEnabled ? null : selectIngredient(id)">
           <span class="p-symbol" [style.color]="ingredientColor(id)">{{ ingredientSymbol(id) }}</span>
         </div>
       </div>
@@ -64,11 +65,12 @@
     <!-- ── Submit / Clear ─────────────── -->
     <div class="action-row" *ngIf="!won && !lost">
       <button class="action-btn submit-btn"
-              [disabled]="!canSubmit"
+              [disabled]="!canSubmit || autoSolveEnabled"
               (click)="submitGuess()">
         [ SUBMIT ]
       </button>
       <button class="action-btn clear-btn"
+              [disabled]="autoSolveEnabled"
               (click)="clearGuess()">
         [ CLEAR ]
       </button>
@@ -108,7 +110,7 @@
     <!-- ── Play again ─────────────────── -->
     <div class="play-again" *ngIf="won || lost">
       <button class="action-btn start-btn"
-              [disabled]="!canStart"
+              [disabled]="!canStart || autoSolveEnabled"
               (click)="startRound()">
         [ COOK AGAIN ]
       </button>
@@ -133,6 +135,15 @@
   <!-- ── Status message ───────────────── -->
   <div class="brew-msg" *ngIf="lastMsg" [ngClass]="msgClass">
     {{ lastMsg }}
+  </div>
+
+  <!-- ── Auto-solve toggle ─────────────── -->
+  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
+    <button class="auto-solve-btn"
+            [class.as-on]="autoSolveEnabled"
+            (click)="toggleAutoSolve()">
+      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
+    </button>
   </div>
 
 </div>

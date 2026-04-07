@@ -8,7 +8,7 @@
         Costs {{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
         + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>
       </div>
-      <button class="facet-btn" [disabled]="!canStart" (click)="startRound()">
+      <button class="facet-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startRound()">
         [ FACET ({{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
         + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>) ]
       </button>
@@ -43,7 +43,7 @@
         [class.gem-best]="roundOver && isBest(i)"
         [class.gem-wrong]="roundOver && gem.selected && !isBest(i) && i !== doubleDipSecondPickIndex && i !== closeEnoughPickIndex"
         [class.gem-restart]="roundOver && canStart"
-        [disabled]="roundOver ? !canStart : gem.selected"
+        [disabled]="autoSolveEnabled || (roundOver ? !canStart : gem.selected)"
         (click)="roundOver ? tryRestart() : selectGem(i)">
 
         <!-- Gem icon container -->
@@ -82,7 +82,7 @@
 
     <!-- Restart area -->
     <ng-container *ngIf="roundOver">
-      <button class="facet-btn" [disabled]="!canStart" (click)="startRound()">
+      <button class="facet-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startRound()">
         [ FACET AGAIN ({{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
         + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>) ]
       </button>
@@ -98,5 +98,14 @@
     </ng-container>
 
   </ng-container>
+
+  <!-- ── Auto-solve toggle ─────────────── -->
+  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
+    <button class="auto-solve-btn"
+            [class.as-on]="autoSolveEnabled"
+            (click)="toggleAutoSolve()">
+      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
+    </button>
+  </div>
 
 </div>

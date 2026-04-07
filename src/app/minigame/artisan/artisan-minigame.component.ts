@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy, inject, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, OnChanges, SimpleChanges, inject, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { ARTISAN_MG } from '../../game-config';
+import { ARTISAN_MG, AUTO_SOLVE, BEADS } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 import {randInt} from "../../utils/mathUtils";
 
@@ -34,7 +34,7 @@ interface Gem {
   styleUrls: ['./artisan-minigame.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ArtisanMinigameComponent implements OnInit, OnDestroy {
+export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
@@ -56,6 +56,17 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
   @Input() standOutSelectionLevel = 0;
   @Input() goodEnoughLevel = 0;
   @Input() closeEnoughLevel = 0;
+
+  // ── Auto-solve ──────────────────────────
+  @Input() autoSolveUnlocked = false;
+  @Input() autoSolveEnabled = false;
+  @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
+  @Output() goldBeadFound = new EventEmitter<void>();
+  private autoSolveInterval?: ReturnType<typeof setInterval>;
+
+  toggleAutoSolve(): void {
+    this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
 
   // ── Wallet-synced ─────────────────────────
   gemstones = 0;
@@ -102,6 +113,16 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['autoSolveEnabled']) {
+      if (this.autoSolveEnabled && this.autoSolveUnlocked) {
+        this.startAutoSolve();
+      } else {
+        this.stopAutoSolve();
+      }
+    }
+  }
+
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
@@ -114,6 +135,7 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+    this.stopAutoSolve();
   }
 
   // ── Actions ───────────────────────────────
@@ -260,6 +282,9 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
     const won = pickedBest || pickedCloseEnough;
 
     if (won) {
+      // Roll for gold bead on successful faceting
+      this.rollMinigameGoldBead();
+
       // Award jewelry — unlock it on first acquisition
       if (!this.wallet.isCurrencyUnlocked('jewelry')) {
         this.wallet.unlockCurrency('jewelry');
@@ -349,6 +374,81 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy {
     }
 
     this.cdr.markForCheck();
+  }
+
+  // ── Auto-solve helpers ──────────────────
+
+  private startAutoSolve(): void {
+    this.stopAutoSolve();
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.ARTISAN_TICK_MS);
+  }
+
+  private stopAutoSolve(): void {
+    if (this.autoSolveInterval) {
+      clearInterval(this.autoSolveInterval);
+      this.autoSolveInterval = undefined;
+    }
+  }
+
+  private autoSolveTick(): void {
+    if (!this.autoSolveEnabled || !this.autoSolveUnlocked) {
+      this.stopAutoSolve();
+      return;
+    }
+    // If round is over or not started, start a new round
+    if (!this.roundStarted || this.roundOver) {
+      if (this.canStart) {
+        this.startRound();
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+    // Pick a gem
+    if (this.picksLeft > 0) {
+      const totalPicks = this.PICKS + (this.doubleDipLevel >= 1 ? 1 : 0);
+      const isFirstPick = this.picksLeft === totalPicks;
+      let chosenIdx: number;
+
+      if (totalPicks > 1) {
+        // Multiple picks: 75% chance for best on first pick, 50% for second-best on second pick
+        if (isFirstPick) {
+          chosenIdx = Math.random() < 0.75 ? this.bestGemIndex : this.pickRandomExcluding(this.bestGemIndex);
+        } else {
+          // Second pick — try for the second-best
+          chosenIdx = Math.random() < 0.50 ? this.secondBestGemIndex : this.pickRandomUnselected();
+        }
+      } else {
+        // Single pick: 50% chance to select the best gem
+        chosenIdx = Math.random() < 0.50 ? this.bestGemIndex : this.pickRandomExcluding(this.bestGemIndex);
+      }
+
+      if (chosenIdx >= 0 && chosenIdx < this.gems.length && !this.gems[chosenIdx].selected) {
+        this.selectGem(chosenIdx);
+      } else {
+        // Fallback: pick any unselected gem
+        const fallback = this.pickRandomUnselected();
+        if (fallback >= 0) this.selectGem(fallback);
+      }
+      this.cdr.markForCheck();
+    }
+  }
+
+  /** Pick a random gem index that isn't the excluded index. */
+  private pickRandomExcluding(excludeIdx: number): number {
+    const options = this.gems.map((_, i) => i).filter(i => i !== excludeIdx && !this.gems[i].selected);
+    return options.length > 0 ? options[Math.floor(Math.random() * options.length)] : excludeIdx;
+  }
+
+  /** Pick a random unselected gem. */
+  private pickRandomUnselected(): number {
+    const options = this.gems.map((_, i) => i).filter(i => !this.gems[i].selected);
+    return options.length > 0 ? options[Math.floor(Math.random() * options.length)] : -1;
+  }
+
+  private rollMinigameGoldBead(): void {
+    if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
+      this.goldBeadFound.emit();
+    }
   }
 
   /** Restart shortcut when round is over. */

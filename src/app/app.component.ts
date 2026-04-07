@@ -15,7 +15,7 @@ import { SaveService, UpgradeState, FighterCombatState } from './options/save.se
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
 import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType } from './game-config';
-import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR, BEAD_FLAVOR, BEAD_COLORS } from './flavor-text';
+import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR, BEAD_FLAVOR, BEAD_COLORS, BEAD_SYMBOL } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
 // ── Extracted hero helpers ─────────────────────────────────────
@@ -155,6 +155,32 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Whether any bead for the active character is found but not yet socketed. */
   anyBeadUnsocketed = false;
 
+  // ── Auto-solve state ──────────────────────────────────────────
+  /** Per-character auto-solve toggle state. */
+  autoSolveEnabled: Record<string, boolean> = {};
+
+  /** Whether auto-solve is unlocked for a character (gold-1 bead socketed). */
+  isAutoSolveUnlocked(charId: string): boolean {
+    return !!this.beadState[charId]?.['gold-1']?.socketed;
+  }
+
+  /** Whether the character's first gold bead (gold-1, awarded by minigame success) is undiscovered. */
+  hasUnfoundMinigameGoldBead(charId: string): boolean {
+    this.ensureBeadState(charId);
+    return !this.beadState[charId]['gold-1'].found;
+  }
+
+  /** Award the first gold bead (gold-1) for a character via minigame success. */
+  findMinigameGoldBead(charId: string): void {
+    this.ensureBeadState(charId);
+    if (this.beadState[charId]['gold-1'].found) return;
+    this.beadState[charId]['gold-1'].found = true;
+    this.beadState = { ...this.beadState };
+    this._refreshDerived();
+    const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
+    this.log.log(`★ ${charName} discovered a golden bead from their sidequest! Check the crown above.`, 'rare');
+    this.statsService.recordMilestone(`bead_gold_mg_${charId}`, `${charName}: Gold Bead Found (Sidequest)`);
+  }
   // ── Thief stun state ───────────────────────────────────────────
   /** Absolute timestamp (ms) when the Thief's stun expires. 0 = not stunned. */
   thiefStunUntil = 0;
@@ -429,7 +455,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this._refreshDerived();
       this.updateAllPerSecond();
       const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
-      const beadName = BEAD_FLAVOR[charId]?.[type]?.name ?? 'Bead';
+      const beadName = BEAD_FLAVOR[charId]?.[slotId]?.name ?? 'Bead';
       this.log.log(`★ ${beadName} socketed for ${charName}!${type === 'blue' ? ' Resource yields doubled!' : ''}`, 'rare');
     }
   }
@@ -443,19 +469,24 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Close the bead popup. */
   closeBeadPopup(): void { this.beadPopupInfo = null; }
 
-  /** Get bead flavor name for a character + type. */
-  getBeadName(charId: string, type: BeadType): string {
-    return BEAD_FLAVOR[charId]?.[type]?.name ?? 'Unknown Bead';
+  /** Get bead flavor name for a character + slot. */
+  getBeadName(charId: string, slotId: string): string {
+    return BEAD_FLAVOR[charId]?.[slotId]?.name ?? 'Unknown Bead';
   }
 
-  /** Get bead lore for a character + type. */
-  getBeadLore(charId: string, type: BeadType): string {
-    return BEAD_FLAVOR[charId]?.[type]?.lore ?? '';
+  /** Get bead lore for a character + slot. */
+  getBeadLore(charId: string, slotId: string): string {
+    return BEAD_FLAVOR[charId]?.[slotId]?.lore ?? '';
+  }
+
+  /** Get bead effect text for a character + slot. */
+  getBeadEffect(charId: string, slotId: string): string {
+    return BEAD_FLAVOR[charId]?.[slotId]?.effect ?? '';
   }
 
   /** Get bead display symbol based on state. */
   getBeadSymbol(state: string): string {
-    return state === 'locked' ? '◇' : '◆';
+    return BEAD_SYMBOL;
   }
 
   /** Get bead primary color for a type. */
@@ -706,6 +737,7 @@ export class AppComponent implements OnInit, OnDestroy {
       familiarTimers:              { ...this.familiarTimers },
       familiarsPaused:             this.familiarsPaused,
       beads:                       JSON.parse(JSON.stringify(this.beadState)),
+      autoSolveEnabled:            { ...this.autoSolveEnabled },
     };
   }
 
@@ -743,6 +775,8 @@ export class AppComponent implements OnInit, OnDestroy {
     // Restore bead state
     this.beadState = s.beads ? JSON.parse(JSON.stringify(s.beads)) : {};
     this.syncBeadMultipliers();
+    // Restore auto-solve toggle state
+    this.autoSolveEnabled = s.autoSolveEnabled ? { ...s.autoSolveEnabled } : {};
     // Restore artisan timer — if still in the future, reschedule the completion callback
     this.artisanTimerUntil     = s.artisanTimerUntil     ?? 0;
     this.artisanTimerBatchSize = s.artisanTimerBatchSize  ?? 0;

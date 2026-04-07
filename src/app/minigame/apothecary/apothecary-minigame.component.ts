@@ -1,10 +1,10 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { APOTH_MG } from '../../game-config';
+import { APOTH_MG, AUTO_SOLVE, BEADS } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 import { toPct, rollChance } from '../../utils/mathUtils';
 
@@ -16,7 +16,7 @@ import { toPct, rollChance } from '../../utils/mathUtils';
   styleUrls: ['./apothecary-minigame.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
+export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
@@ -70,6 +70,17 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
   /** Accumulated dilution success chance penalty from misses in the current brew session. */
   dilutionMissPenalty = 0;
+
+  // ── Auto-solve ──────────────────────────
+  @Input() autoSolveUnlocked = false;
+  @Input() autoSolveEnabled = false;
+  @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
+  @Output() goldBeadFound = new EventEmitter<void>();
+  private autoSolveInterval?: ReturnType<typeof setInterval>;
+
+  toggleAutoSolve(): void {
+    this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
 
   onDilutionChange(val: boolean): void {
     this.dilutionEnabled = val;
@@ -182,6 +193,16 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['autoSolveEnabled']) {
+      if (this.autoSolveEnabled && this.autoSolveUnlocked) {
+        this.startAutoSolve();
+      } else {
+        this.stopAutoSolve();
+      }
+    }
+  }
+
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
@@ -197,6 +218,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sub.unsubscribe();
     this.stopAnimation();
+    this.stopAutoSolve();
   }
 
   // ── Actions ───────────────────────────────
@@ -307,7 +329,47 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── Private ───────────────────────────────
+  // ── Auto-solve helpers ──────────────────
+
+  private startAutoSolve(): void {
+    this.stopAutoSolve();
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.APOTHECARY_TICK_MS);
+  }
+
+  private stopAutoSolve(): void {
+    if (this.autoSolveInterval) {
+      clearInterval(this.autoSolveInterval);
+      this.autoSolveInterval = undefined;
+    }
+  }
+
+  private autoSolveTick(): void {
+    if (!this.autoSolveEnabled || !this.autoSolveUnlocked) {
+      this.stopAutoSolve();
+      return;
+    }
+    // If no potion is active, start one
+    if (!this.potionActive) {
+      if (this.canStart) {
+        this.startPotion();
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+    // Only click when the cursor is in the sweet spot zone (not inner zone, not synaptic zones)
+    if (this.isInZone) {
+      this.brew();
+      this.cdr.markForCheck();
+    }
+  }
+
+  private rollMinigameGoldBead(): void {
+    if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
+      this.goldBeadFound.emit();
+    }
+  }
+
+  // ── Private ───────────────────────────
 
   private startAnimation(): void {
     // Run rAF outside Angular so the frame loop doesn't trigger global CD.
@@ -344,6 +406,9 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   private onPerfectPotion(): void {
     this.stopAnimation();
     this.potionActive = false;
+
+    // Roll for gold bead on successful brew
+    this.rollMinigameGoldBead();
 
     // Snapshot before zeroing — the getter depends on both fields.
     const successChance = this.dilutionSuccessChance;

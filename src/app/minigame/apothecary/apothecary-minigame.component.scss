@@ -302,3 +302,41 @@ $green:  #44dd44;
   &.msg-double  { color: $purple; border-color: #4a1a7a; font-weight: bold; }
 }
 
+// ── Auto-solve toggle (gold theme) ───────────
+.auto-solve-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+.auto-solve-btn {
+  background: #0a0a0a;
+  color: #665200;
+  border: 1px solid #4d3d00;
+  font-family: $font;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+
+  &:hover:not(:disabled) {
+    border-color: #997a00;
+    color: #cca300;
+  }
+
+  &.as-on {
+    color: #ffcc00;
+    border-color: #997a00;
+    background: #1a1500;
+
+    &:hover:not(:disabled) {
+      background: #2a2200;
+      border-color: #ffcc00;
+    }
+  }
+}

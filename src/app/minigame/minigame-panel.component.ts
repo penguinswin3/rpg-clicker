@@ -130,6 +130,19 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   /** Emitted when the player toggles dilution inside the apothecary minigame. */
   @Output() dilutionEnabledChange = new EventEmitter<boolean>();
 
+  /** Per-character auto-solve unlock state (gold-1 bead socketed). */
+  @Input() autoSolveUnlocked: Record<string, boolean> = {};
+  /** Per-character auto-solve toggle state. */
+  @Input() autoSolveEnabled: Record<string, boolean> = {};
+  /** Emitted when a minigame auto-solve toggle changes. */
+  @Output() autoSolveEnabledChange = new EventEmitter<{ charId: string; enabled: boolean }>();
+  /** Emitted when a minigame awards a gold bead. */
+  @Output() goldBeadFound = new EventEmitter<string>();
+
+  onAutoSolveToggle(charId: string, enabled: boolean): void {
+    this.autoSolveEnabledChange.emit({ charId, enabled });
+  }
+
   xp = 0;
   /** All-time peak XP — used for the threshold gate. */
   highestXpEver = 0;

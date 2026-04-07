@@ -34,6 +34,10 @@
         (selectedKoboldLevelChange)="selectedKoboldLevelChange.emit($event)"
         [savedState]="fighterCombatState"
         (stateChange)="fighterCombatStateChange.emit($event)"
+        [autoSolveUnlocked]="!!autoSolveUnlocked['fighter']"
+        [autoSolveEnabled]="!!autoSolveEnabled['fighter']"
+        (autoSolveEnabledChange)="onAutoSolveToggle('fighter', $event)"
+        (goldBeadFound)="goldBeadFound.emit('fighter')"
       />
     </ng-container>
 
@@ -51,17 +55,31 @@
         [synapticStaticLevel]="synapticStaticLevel"
         [synapticalEnabled]="synapticalEnabled"
         (synapticalEnabledChange)="synapticalEnabledChange.emit($event)"
+        [autoSolveUnlocked]="!!autoSolveUnlocked['apothecary']"
+        [autoSolveEnabled]="!!autoSolveEnabled['apothecary']"
+        (autoSolveEnabledChange)="onAutoSolveToggle('apothecary', $event)"
+        (goldBeadFound)="goldBeadFound.emit('apothecary')"
       />
     </ng-container>
 
     <!-- ── Ranger: scouting grid minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'ranger'">
-      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" [fairyHostageLevel]="fairyHostageLevel" [treasureChestLevel]="treasureChestLevel" [xMarksTheSpotLevel]="xMarksTheSpotLevel" />
+      <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" [fairyHostageLevel]="fairyHostageLevel" [treasureChestLevel]="treasureChestLevel" [xMarksTheSpotLevel]="xMarksTheSpotLevel"
+        [autoSolveUnlocked]="!!autoSolveUnlocked['ranger']"
+        [autoSolveEnabled]="!!autoSolveEnabled['ranger']"
+        (autoSolveEnabledChange)="onAutoSolveToggle('ranger', $event)"
+        (goldBeadFound)="goldBeadFound.emit('ranger')"
+      />
     </ng-container>
 
     <!-- ── Culinarian: Mastermind recipe minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'culinarian'">
-      <app-culinarian-minigame [wasteNotLevel]="wasteNotLevel" [largerCookbooksLevel]="largerCookbooksLevel" [cookbookAnnotationsLevel]="cookbookAnnotationsLevel" />
+      <app-culinarian-minigame [wasteNotLevel]="wasteNotLevel" [largerCookbooksLevel]="largerCookbooksLevel" [cookbookAnnotationsLevel]="cookbookAnnotationsLevel"
+        [autoSolveUnlocked]="!!autoSolveUnlocked['culinarian']"
+        [autoSolveEnabled]="!!autoSolveEnabled['culinarian']"
+        (autoSolveEnabledChange)="onAutoSolveToggle('culinarian', $event)"
+        (goldBeadFound)="goldBeadFound.emit('culinarian')"
+      />
     </ng-container>
 
     <!-- ── Thief: Big Heist safe-cracking minigame ─── -->
@@ -72,7 +90,12 @@
         [bagOfHoldingLevel]="bagOfHoldingLevel"
         [relicHunterLevel]="relicHunterLevel"
         [lockedInLevel]="lockedInLevel"
-        [flowStateLevel]="flowStateLevel" />
+        [flowStateLevel]="flowStateLevel"
+        [autoSolveUnlocked]="!!autoSolveUnlocked['thief']"
+        [autoSolveEnabled]="!!autoSolveEnabled['thief']"
+        (autoSolveEnabledChange)="onAutoSolveToggle('thief', $event)"
+        (goldBeadFound)="goldBeadFound.emit('thief')"
+      />
     </ng-container>
 
     <!-- ── Artisan: placeholder minigame ─── -->
@@ -82,12 +105,22 @@
         [doubleDipLevel]="doubleDipLevel"
         [standOutSelectionLevel]="standOutSelectionLevel"
         [goodEnoughLevel]="goodEnoughLevel"
-        [closeEnoughLevel]="closeEnoughLevel" />
+        [closeEnoughLevel]="closeEnoughLevel"
+        [autoSolveUnlocked]="!!autoSolveUnlocked['artisan']"
+        [autoSolveEnabled]="!!autoSolveEnabled['artisan']"
+        (autoSolveEnabledChange)="onAutoSolveToggle('artisan', $event)"
+        (goldBeadFound)="goldBeadFound.emit('artisan')"
+      />
     </ng-container>
 
     <!-- ── Necromancer: Well of Souls minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'necromancer'">
-      <app-necromancer-minigame />
+      <app-necromancer-minigame
+        [autoSolveUnlocked]="!!autoSolveUnlocked['necromancer']"
+        [autoSolveEnabled]="!!autoSolveEnabled['necromancer']"
+        (autoSolveEnabledChange)="onAutoSolveToggle('necromancer', $event)"
+        (goldBeadFound)="goldBeadFound.emit('necromancer')"
+      />
     </ng-container>
 
     <!-- ── Other characters: placeholder ── -->

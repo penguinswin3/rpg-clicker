@@ -9,7 +9,7 @@
 import { KOBOLD_VARIANTS } from './flavor-text';
 
 // ── Game Version ─────────────────────────────────────────────
-export const VERSION = 'Alpha 1.2.2';
+export const VERSION = 'Alpha 1.3.0';
 
 // ── Shared Upgrade Types ─────────────────────────────────────
 
@@ -1051,6 +1051,26 @@ export const BEADS = {
   GOLD_CHANCE: 1 / 10000,
   /** Resource yield multiplier per socketed blue bead. */
   BLUE_YIELD_MULT: 2,
+  /** Chance (0–1) per successful minigame completion to discover a gold bead. */
+  MINIGAME_GOLD_BEAD_CHANCE: 1 / 40,
+} as const;
+
+// ── Auto-Solve Timings ──────────────────────────────────────
+export const AUTO_SOLVE = {
+  /** Fighter: one attack per this many ms. */
+  FIGHTER_TICK_MS:      1000,
+  /** Ranger: one cell pick per this many ms. */
+  RANGER_TICK_MS:       1000,
+  /** Apothecary: one brew click per this many ms. */
+  APOTHECARY_TICK_MS:   200,
+  /** Culinarian: one guess action per this many ms. */
+  CULINARIAN_TICK_MS:   1500,
+  /** Thief: one crack attempt per this many ms. */
+  THIEF_TICK_MS:        1000,
+  /** Artisan: one gem selection per this many ms. */
+  ARTISAN_TICK_MS:      1000,
+  /** Necromancer: one node selection per this many ms. */
+  NECROMANCER_TICK_MS:  750,
 } as const;
 
 /** Ordered bead slot IDs as displayed left-to-right around the relic socket. */

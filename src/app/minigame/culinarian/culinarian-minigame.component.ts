@@ -1,10 +1,10 @@
-import { Component, Input, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { CULINARIAN_MG } from '../../game-config';
+import { CULINARIAN_MG, AUTO_SOLVE, BEADS } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 
 /** Feedback per slot after a guess is submitted. */
@@ -23,7 +23,7 @@ export interface GuessRow {
   styleUrls: ['./culinarian-minigame.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CulinarianMinigameComponent implements OnInit, OnDestroy {
+export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
@@ -43,6 +43,25 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
   @Input() largerCookbooksLevel = 0;
   /** Level of the Cookbook Annotations upgrade — auto-submits one-of-each guess at round start. */
   @Input() cookbookAnnotationsLevel = 0;
+
+  // ── Auto-solve ──────────────────────────
+  @Input() autoSolveUnlocked = false;
+  @Input() autoSolveEnabled = false;
+  @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
+  @Output() goldBeadFound = new EventEmitter<void>();
+  private autoSolveInterval?: ReturnType<typeof setInterval>;
+  /**
+   * Brute-force approach: systematically test each ingredient in each slot.
+   * 4 herb guesses, 4 meat guesses, 4 tongue guesses → solve on 4th try.
+   * This tracks which auto-guess step we're on (0–15).
+   */
+  private autoSolveStep = 0;
+  /** Pre-built brute-force guesses for auto-solve. */
+  private autoSolveGuesses: string[][] = [];
+
+  toggleAutoSolve(): void {
+    this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
 
   // ── Wallet-synced ─────────────────────────
   herb         = 0;
@@ -89,6 +108,16 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['autoSolveEnabled']) {
+      if (this.autoSolveEnabled && this.autoSolveUnlocked) {
+        this.startAutoSolve();
+      } else {
+        this.stopAutoSolve();
+      }
+    }
+  }
+
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
@@ -103,6 +132,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+    this.stopAutoSolve();
   }
 
   // ── Actions ───────────────────────────────
@@ -259,6 +289,114 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ── Auto-solve helpers ──────────────────
+
+  private startAutoSolve(): void {
+    this.stopAutoSolve();
+    this.autoSolveStep = 0;
+    this.autoSolveGuesses = [];
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.CULINARIAN_TICK_MS);
+  }
+
+  private stopAutoSolve(): void {
+    if (this.autoSolveInterval) {
+      clearInterval(this.autoSolveInterval);
+      this.autoSolveInterval = undefined;
+    }
+  }
+
+  private autoSolveTick(): void {
+    if (!this.autoSolveEnabled || !this.autoSolveUnlocked) {
+      this.stopAutoSolve();
+      return;
+    }
+
+    // If no round is active and we can start, start one
+    if (!this.roundActive && !this.won && !this.lost) {
+      if (this.canStart) {
+        this.startRound();
+        this.autoSolveStep = 0;
+        // Build the brute-force guesses: all-herb, all-beast, all-tongue, then deduced solution
+        this.autoSolveGuesses = [
+          Array(this.SOLUTION_LENGTH).fill('herb'),
+          Array(this.SOLUTION_LENGTH).fill('beast'),
+          Array(this.SOLUTION_LENGTH).fill('kobold-tongue'),
+          // The 4th guess will be computed after the first 3 results
+        ];
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // If round is over (won or lost), reset for next round
+    if (this.won || this.lost) {
+      this.autoSolveStep = 0;
+      this.autoSolveGuesses = [];
+      // Clear state so the next tick can start a new round
+      this.roundActive = false;
+      this.won = false;
+      this.lost = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // If round is active but we haven't built guesses yet (enabled mid-round), build them now
+    if (this.roundActive && this.autoSolveGuesses.length === 0) {
+      this.autoSolveStep = 0;
+      this.autoSolveGuesses = [
+        Array(this.SOLUTION_LENGTH).fill('herb'),
+        Array(this.SOLUTION_LENGTH).fill('beast'),
+        Array(this.SOLUTION_LENGTH).fill('kobold-tongue'),
+      ];
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // Submit the next brute-force guess
+    if (this.roundActive && this.autoSolveStep < 3 && this.autoSolveStep < this.autoSolveGuesses.length) {
+      const guess = this.autoSolveGuesses[this.autoSolveStep];
+      this.currentGuess = [...guess];
+      this.submitGuess();
+      this.autoSolveStep++;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // On the 4th guess, deduce the solution from the first 3 all-same-ingredient guesses
+    if (this.roundActive && this.autoSolveStep === 3) {
+      // Analyze guessHistory to reconstruct the solution.
+      // Guess 1 (all herb): green pegs show which slots have 'herb'
+      // Guess 2 (all beast): green pegs show which slots have 'beast'
+      // Guess 3 (all tongue): green pegs show which slots have 'kobold-tongue'
+      // Remaining slots must be 'spice'
+      const deduced: string[] = Array(this.SOLUTION_LENGTH).fill('spice');
+      const testIngredients = ['herb', 'beast', 'kobold-tongue'];
+      // Account for cookbook annotations: if cookbookAnnotationsLevel >= 1, the first entry
+      // in guessHistory is the annotation, so our brute-force guesses start at index offset.
+      const offset = this.cookbookAnnotationsLevel >= 1 ? 1 : 0;
+      for (let g = 0; g < 3; g++) {
+        const historyIdx = offset + g;
+        if (historyIdx >= this.guessHistory.length) break;
+        const row = this.guessHistory[historyIdx];
+        for (let s = 0; s < this.SOLUTION_LENGTH; s++) {
+          if (row.pegs[s] === 'green') {
+            deduced[s] = testIngredients[g];
+          }
+        }
+      }
+      this.currentGuess = [...deduced];
+      this.submitGuess();
+      this.autoSolveStep++;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private rollMinigameGoldBead(): void {
+    if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
+      this.goldBeadFound.emit();
+    }
+  }
+
   // ── Private ───────────────────────────────
 
   /**
@@ -297,6 +435,9 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy {
   private onWin(): void {
     this.won = true;
     this.roundActive = false;
+
+    // Roll for gold bead on successful recipe
+    this.rollMinigameGoldBead();
 
     const bm = this.wallet.getBeadMultiplier('culinarian');
     const unusedGuesses  = this.MAX_GUESSES - this.guessesUsed;

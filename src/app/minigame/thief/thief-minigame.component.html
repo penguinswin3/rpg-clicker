@@ -7,7 +7,7 @@
         Crack the safe by finding the sweet spot.<br>
         Costs {{ DOSSIER_COST }}<span [style.color]="currencyFlavor['dossier'].color">{{ currencyFlavor['dossier'].symbol }}</span> per heist.
       </div>
-      <button class="heist-btn" [disabled]="!canStart" (click)="startHeist()">
+      <button class="heist-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startHeist()">
         [ START HEIST ({{ DOSSIER_COST }}<span [style.color]="currencyFlavor['dossier'].color">{{ currencyFlavor['dossier'].symbol }}</span>) ]
       </button>
     </div>
@@ -17,7 +17,7 @@
   <ng-container *ngIf="heistActive">
 
     <!-- Dial -->
-    <div class="dial-container" (click)="attemptCrack()">
+    <div class="dial-container" (click)="autoSolveEnabled ? null : attemptCrack()">
       <svg viewBox="0 0 120 120" class="dial-svg">
         <!-- Dial circle -->
         <circle cx="60" cy="60" r="50" class="dial-ring" />
@@ -67,7 +67,7 @@
   <ng-container *ngIf="!heistActive && (heistWon || heistLost)">
 
     <!-- Show the dial one more time with the sweet spot revealed; click to restart -->
-    <div class="dial-container dial-result" (click)="attemptCrack()">
+    <div class="dial-container dial-result" (click)="autoSolveEnabled ? null : attemptCrack()">
       <svg viewBox="0 0 120 120" class="dial-svg">
         <circle cx="60" cy="60" r="50" class="dial-ring" />
 
@@ -127,7 +127,7 @@
     </div>
 
     <!-- Try again -->
-    <button class="heist-btn" [disabled]="!canStart" (click)="startHeist()">
+    <button class="heist-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startHeist()">
       [ HEIST AGAIN ({{ DOSSIER_COST }}<span [style.color]="currencyFlavor['dossier'].color">{{ currencyFlavor['dossier'].symbol }}</span>) ]
     </button>
     <div class="cost-warn" *ngIf="dossiers < DOSSIER_COST">
@@ -138,6 +138,15 @@
   <!-- ── Last message ─────────────────── -->
   <div class="heist-msg" *ngIf="heistActive && lastMsg" [ngClass]="msgClass">
     {{ lastMsg }}
+  </div>
+
+  <!-- ── Auto-solve toggle ─────────────── -->
+  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
+    <button class="auto-solve-btn"
+            [class.as-on]="autoSolveEnabled"
+            (click)="toggleAutoSolve()">
+      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
+    </button>
   </div>
 
 </div>

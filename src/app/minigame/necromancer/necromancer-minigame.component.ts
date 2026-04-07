@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, OnDestroy, inject,
+  Component, OnInit, OnDestroy, OnChanges, SimpleChanges, inject, Input, Output, EventEmitter,
   ChangeDetectionStrategy, ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -8,7 +8,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { UpgradeService } from '../../upgrade/upgrade.service';
-import { NECROMANCER_MG } from '../../game-config';
+import { NECROMANCER_MG, AUTO_SOLVE, BEADS } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
 
 // ── Helpers ─────────────────────────────────────────────────
@@ -102,7 +102,7 @@ function shortestCycle(
   styleUrls: ['./necromancer-minigame.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NecromancerMinigameComponent implements OnInit, OnDestroy {
+export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChanges {
   private wallet   = inject(WalletService);
   private log      = inject(ActivityLogService);
   private stats    = inject(StatisticsService);
@@ -152,6 +152,17 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
   lastMsg  = '';
   msgClass = 'msg-neutral';
 
+  // ── Auto-solve ──────────────────────────
+  @Input() autoSolveUnlocked = false;
+  @Input() autoSolveEnabled = false;
+  @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
+  @Output() goldBeadFound = new EventEmitter<void>();
+  private autoSolveInterval?: ReturnType<typeof setInterval>;
+
+  toggleAutoSolve(): void {
+    this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
+
   // ── Costs ──────────────────────────────────
   readonly costs: { id: string; amount: number }[] = [
     { id: 'gemstone',   amount: NECROMANCER_MG.GEMSTONE_COST },
@@ -200,6 +211,16 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ──────────────────────────────
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['autoSolveEnabled']) {
+      if (this.autoSolveEnabled && this.autoSolveUnlocked) {
+        this.startAutoSolve();
+      } else {
+        this.stopAutoSolve();
+      }
+    }
+  }
+
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
@@ -215,6 +236,7 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+    this.stopAutoSolve();
   }
 
   // ── Actions ────────────────────────────────
@@ -344,6 +366,75 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
       this.lastMsg = 'Insufficient resources to begin the ritual.';
       this.msgClass = 'msg-bad';
       this.cdr.markForCheck();
+    }
+  }
+
+  // ── Auto-solve helpers ──────────────────
+
+  private startAutoSolve(): void {
+    this.stopAutoSolve();
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.NECROMANCER_TICK_MS);
+  }
+
+  private stopAutoSolve(): void {
+    if (this.autoSolveInterval) {
+      clearInterval(this.autoSolveInterval);
+      this.autoSolveInterval = undefined;
+    }
+  }
+
+  private autoSolveTick(): void {
+    if (!this.autoSolveEnabled || !this.autoSolveUnlocked) {
+      this.stopAutoSolve();
+      return;
+    }
+    // If ritual is done or not started, start a new one
+    if (!this.ritualActive || this.ritualDone) {
+      if (this.canStart) {
+        this.startRitual();
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+    // If no node selected yet, pick a random one
+    if (this.selectedPath.length === 0) {
+      // Pick a random starting node
+      const startIdx = Math.floor(Math.random() * this.nodes.length);
+      if (this.isNodeSelectable(startIdx)) {
+        this.selectNode(startIdx);
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+    // Select next valid node going clockwise
+    // Sort nodes by their angle from center, then find the next one clockwise from current
+    const lastIdx = this.selectedPath[this.selectedPath.length - 1];
+    const lastNode = this.nodes[lastIdx];
+    const lastAngle = Math.atan2(lastNode.pos.y - this.CY, lastNode.pos.x - this.CX) * 180 / Math.PI;
+
+    // Build list of selectable nodes with their angles
+    const candidates: { idx: number; angleDelta: number }[] = [];
+    for (let i = 0; i < this.nodes.length; i++) {
+      if (this.isNodeSelectable(i)) {
+        const node = this.nodes[i];
+        const angle = Math.atan2(node.pos.y - this.CY, node.pos.x - this.CX) * 180 / Math.PI;
+        let delta = angle - lastAngle;
+        if (delta <= 0) delta += 360; // Ensure clockwise direction
+        candidates.push({ idx: i, angleDelta: delta });
+      }
+    }
+
+    if (candidates.length > 0) {
+      // Sort by smallest positive clockwise angle delta
+      candidates.sort((a, b) => a.angleDelta - b.angleDelta);
+      this.selectNode(candidates[0].idx);
+    }
+    this.cdr.markForCheck();
+  }
+
+  private rollMinigameGoldBead(): void {
+    if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
+      this.goldBeadFound.emit();
     }
   }
 
@@ -510,6 +601,9 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
   private completeRitual(): void {
     this.ritualDone   = true;
     this.ritualActive = false;
+
+    // Roll for gold bead on successful ritual
+    this.rollMinigameGoldBead();
 
     // Compute player's path length
     let playerLen = 0;

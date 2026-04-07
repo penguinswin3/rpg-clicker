@@ -52,7 +52,19 @@
     [doubleDipLevel]="upgrades.level('DOUBLE_DIP')"
     [standOutSelectionLevel]="upgrades.level('STAND_OUT_SELECTION')"
     [goodEnoughLevel]="upgrades.level('GOOD_ENOUGH')"
-    [closeEnoughLevel]="upgrades.level('CLOSE_ENOUGH')" />
+    [closeEnoughLevel]="upgrades.level('CLOSE_ENOUGH')"
+    [autoSolveUnlocked]="{
+      fighter: isAutoSolveUnlocked('fighter'),
+      ranger: isAutoSolveUnlocked('ranger'),
+      apothecary: isAutoSolveUnlocked('apothecary'),
+      culinarian: isAutoSolveUnlocked('culinarian'),
+      thief: isAutoSolveUnlocked('thief'),
+      artisan: isAutoSolveUnlocked('artisan'),
+      necromancer: isAutoSolveUnlocked('necromancer')
+    }"
+    [autoSolveEnabled]="autoSolveEnabled"
+    (autoSolveEnabledChange)="autoSolveEnabled[$event.charId] = $event.enabled"
+    (goldBeadFound)="findMinigameGoldBead($event)" />
 
   <div class="game-wrapper">
 
@@ -172,15 +184,12 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <div class="bead-popup-symbol"
                  [class.bead-popup-owned]="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).socketed"
                  [style.color]="getBeadColor(beadPopupInfo.type)">
-              {{ getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found ? '◆' : '◇' }}
+              {{ getBeadSymbol('') }}
             </div>
-            <div class="bead-popup-name" [style.color]="getBeadColor(beadPopupInfo.type)">{{ getBeadName(beadPopupInfo.charId, beadPopupInfo.type) }}</div>
-            <div class="bead-popup-lore" *ngIf="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">{{ getBeadLore(beadPopupInfo.charId, beadPopupInfo.type) }}</div>
-            <div class="bead-popup-effect" *ngIf="beadPopupInfo.type === 'blue' && getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">
-              <span class="bead-effect-label">Effect:</span> Doubles all resource yields from this character.
-            </div>
-            <div class="bead-popup-effect" *ngIf="beadPopupInfo.type === 'gold' && getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">
-              <span class="bead-effect-label">Effect:</span> Sidequest automation (coming soon).
+            <div class="bead-popup-name" [style.color]="getBeadColor(beadPopupInfo.type)">{{ getBeadName(beadPopupInfo.charId, beadPopupInfo.slotId) }}</div>
+            <div class="bead-popup-lore" *ngIf="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">{{ getBeadLore(beadPopupInfo.charId, beadPopupInfo.slotId) }}</div>
+            <div class="bead-popup-effect" *ngIf="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">
+              <span class="bead-effect-label">Effect:</span> {{ getBeadEffect(beadPopupInfo.charId, beadPopupInfo.slotId) }}
             </div>
             <button class="bead-popup-socket-btn"
                     *ngIf="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found && !getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).socketed"
