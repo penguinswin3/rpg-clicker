@@ -259,12 +259,17 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     this.resultXp = xp;
 
     // Relic roll — only if the lifetime cap hasn't been reached
-    if (!this.relicCapReached && rollChance(this.effectiveRelicChance)) {
+    // Pity: guarantee a relic if player has 100+ successful heists and has never found one
+    const lifetimeRelics = this.stats.current.lifetimeCurrency['relic'] ?? 0;
+    const pityGuarantee = lifetimeRelics === 0
+      && this.stats.current.thiefMinigame.successfulHeists >= 100;
+    if (!this.relicCapReached && (pityGuarantee || rollChance(this.effectiveRelicChance))) {
       this.wallet.add('relic', THIEF_MG.RELIC_AMOUNT);
       this.stats.trackCurrencyGain('relic', THIEF_MG.RELIC_AMOUNT);
       if (!this.wallet.isCurrencyUnlocked('relic')) {
         this.wallet.unlockCurrency('relic');
         this.log.log('A Relic has been unearthed! Incredibly rare!', 'rare');
+        this.stats.recordMilestone('first_relic', 'First Relic Found');
       }
       this.resultParts.push({
         amount: THIEF_MG.RELIC_AMOUNT,

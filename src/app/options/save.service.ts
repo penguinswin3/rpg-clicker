@@ -157,6 +157,8 @@ export interface UiPrefs {
   hideMinigameUpgrades?: boolean;
   blandMode?: boolean;
   enableDevTools?: boolean;
+  /** Whether the sidequest panel is collapsed. */
+  sidequestCollapsed?: boolean;
 }
 
 export interface SaveSnapshot {
@@ -220,6 +222,9 @@ export class SaveService {
   get hideMinigameUpgrades(): boolean { return this.hideMinigameSource.getValue(); }
   get blandMode():            boolean { return this.blandModeSource.getValue(); }
   get enableDevTools():       boolean { return this.enableDevToolsSource.getValue(); }
+
+  /** Sidequest collapsed state — set by AppComponent, read during save. */
+  sidequestCollapsed = false;
 
   setHideMaxedUpgrades(v: boolean):    void { this.hideMaxedSource.next(v); }
   setHideMinigameUpgrades(v: boolean): void { this.hideMinigameSource.next(v); }
@@ -305,6 +310,7 @@ export class SaveService {
       hideMinigameUpgrades: this.hideMinigameUpgrades,
       blandMode:            this.blandMode,
       enableDevTools:       this.enableDevTools,
+      sidequestCollapsed:   this.sidequestCollapsed,
     };
 
     return {
@@ -373,6 +379,7 @@ export class SaveService {
       this.setHideMinigameUpgrades(p.hideMinigameUpgrades ?? false);
       this.setBlandMode(p.blandMode                       ?? false);
       this.setEnableDevTools(p.enableDevTools             ?? false);
+      this.sidequestCollapsed = p.sidequestCollapsed      ?? false;
     }
 
     // 7 — Statistics (optional — absent in older saves, defaults to empty)

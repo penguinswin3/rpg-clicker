@@ -96,6 +96,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // ── Minigame state ─────────────────────────────────────────────
   minigameUnlocked = false;
+  private _sidequestCollapsed = false;
+  get sidequestCollapsed(): boolean { return this._sidequestCollapsed; }
+  set sidequestCollapsed(v: boolean) {
+    this._sidequestCollapsed = v;
+    this.saveService.sidequestCollapsed = v;
+  }
 
   get minigameShown():           boolean { return this.minigameUnlocked; }
   get minigameUnlockAvailable(): boolean {
@@ -523,6 +529,7 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     if (this.saveService.hasSave()) this.saveService.loadFromLocalStorage();
+    this.sidequestCollapsed = this.saveService.sidequestCollapsed;
     this.saveService.startAutoSave();
   }
 
@@ -1099,13 +1106,13 @@ export class AppComponent implements OnInit, OnDestroy {
         .filter(c => !this.wallet.canAfford(c.currency, c.amount))
         .map(c => cur(c.currency, c.amount, ''))
         .join(', ');
-      this.log.log(`Not enough resources to unlock Minigames. Need ${missing}.`, 'warn');
+      this.log.log(`Not enough resources to unlock Sidequests. Need ${missing}.`, 'warn');
       return;
     }
     for (const c of costs) this.wallet.remove(c.currency, c.amount);
     this.minigameUnlocked = true;
-    this.log.log('★ MINIGAMES UNLOCKED! Character-specific challenges are now available.', 'rare');
-    this.statsService.recordMilestone('minigame_unlocked', 'Minigames Unlocked');
+    this.log.log('★ SIDEQUESTS UNLOCKED! Character-specific challenges are now available.', 'rare');
+    this.statsService.recordMilestone('minigame_unlocked', 'Sidequests Unlocked');
   }
 
   buyJackdUp(): void {

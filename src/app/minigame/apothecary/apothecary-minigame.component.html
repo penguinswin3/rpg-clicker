@@ -99,31 +99,27 @@
   </ng-container>
 
   <!-- ── Synaptical toggle ───────────── -->
-  <div class="dilution-toggle" *ngIf="synapticalPotionsUnlocked">
-    <label class="toggle-label">
-      <input type="checkbox"
-             [ngModel]="synapticalEnabled"
-             (ngModelChange)="onSynapticalChange($event)"
-             [ngModelOptions]="{standalone: true}"
-             [disabled]="potionActive" />
-      Synaptical Potion
-    </label>
-    <span class="dilution-info" *ngIf="synapticalEnabled && synapticStaticLevel > 0" style="color: #5bc0eb">
+  <div class="toggle-row" *ngIf="synapticalPotionsUnlocked">
+    <button class="toggle-btn"
+            [class.toggle-on]="synapticalEnabled"
+            [disabled]="potionActive"
+            (click)="onSynapticalChange(!synapticalEnabled)">
+      {{ synapticalEnabled ? '[ Synaptical Potion: ON  ]' : '[ Synaptical Potion: OFF ]' }}
+    </button>
+    <span class="toggle-info" *ngIf="synapticalEnabled && synapticStaticLevel > 0" style="color: #5bc0eb">
       ({{ synapticStaticLevel }} bonus zone{{ synapticStaticLevel > 1 ? 's' : '' }})
     </span>
   </div>
 
   <!-- ── Dilution toggle ─────────────────────────────────── -->
-  <div class="dilution-toggle" *ngIf="potionDilutionUnlocked">
-    <label class="toggle-label">
-      <input type="checkbox"
-             [ngModel]="dilutionEnabled"
-             (ngModelChange)="onDilutionChange($event)"
-             [ngModelOptions]="{standalone: true}"
-             [disabled]="potionActive" />
-      Dilution
-    </label>
-    <span class="dilution-info" *ngIf="dilutionEnabled" [style.color]="dilutionColor">
+  <div class="toggle-row" *ngIf="potionDilutionUnlocked">
+    <button class="toggle-btn"
+            [class.toggle-on]="dilutionEnabled"
+            [disabled]="potionActive"
+            (click)="onDilutionChange(!dilutionEnabled)">
+      {{ dilutionEnabled ? '[ Dilution: ON  ]' : '[ Dilution: OFF ]' }}
+    </button>
+    <span class="toggle-info" *ngIf="dilutionEnabled" [style.color]="dilutionColor">
       ({{ dilutionTotalRolls }}x, {{ dilutionSuccessChance }}% each<ng-container *ngIf="dilutionNetModifier !== 0">, {{ dilutionNetModifier > 0 ? '+' : '−' }}{{ dilutionNetModifier > 0 ? dilutionNetModifier : -dilutionNetModifier }}%</ng-container>)
     </span>
   </div>

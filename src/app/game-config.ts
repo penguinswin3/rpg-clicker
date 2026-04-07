@@ -9,7 +9,7 @@
 import { KOBOLD_VARIANTS } from './flavor-text';
 
 // ── Game Version ─────────────────────────────────────────────
-export const VERSION = 'Alpha 1.2.1';
+export const VERSION = 'Alpha 1.2.2';
 
 // ── Shared Upgrade Types ─────────────────────────────────────
 
@@ -82,7 +82,7 @@ export interface UpgradeDef {
 // Single source of truth for every one-time or repeatable global purchase:
 //   • 'jack'             — Jack of All Trades hire (repeatable, costs scale)
 //   • 'character-unlock' — Character unlock (one-time flat cost)
-//   • 'minigame-unlock'  — Minigame system unlock (one-time flat cost)
+//   • 'minigame-unlock'  — Sidequest system unlock (one-time flat cost)
 //
 // Adding a new character? Add an 'UNLOCK_<ID>' entry here and update
 // character.service.ts — no other config files need to change.
@@ -408,7 +408,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Apothecary — standard ────────────────────────────────────
-  { id: 'POTION_TITRATION', characterId: 'apothecary', category: 'standard', max: 400,  // 400 × +1% save-chance
+  { id: 'POTION_TITRATION', characterId: 'apothecary', category: 'standard', max: 100,  // 100 × +4% save-chance
     costs: [{ currency: 'gold', base: 20, scale: 1.2 }] },
   { id: 'POTION_MARKETING', characterId: 'apothecary', category: 'standard', max: 999,
     costs: [{ currency: 'gold', base: 50, scale: 1.07 }] },
@@ -538,7 +538,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Artisan — minigame ───────────────────────────────────────
-  { id: 'LUCKY_GEMS', characterId: 'artisan', category: 'minigame', max: 20,
+  { id: 'LUCKY_GEMS', characterId: 'artisan', category: 'minigame', max: 9,
     costs: [
       { currency: 'gold',       base: 50_000, scale: 1.4 },
       { currency: 'pixie-dust', base: 15,     scale: 1.3 },
@@ -992,7 +992,7 @@ export const ARTISAN_MG = {
   /** Base bonus added to the "Lucky Gem" attributes (before upgrades). */
   LUCKY_GEM_BONUS: 0.1,
   /** Additional bonus per Lucky Gems upgrade level. */
-  LUCKY_GEM_BONUS_PER_LEVEL: 0.01,
+  LUCKY_GEM_BONUS_PER_LEVEL: 0.1,
   /** Milliseconds subtracted from the appraisal timer per Faster Appraising level. */
   FASTER_APPRAISING_MS_PER_LEVEL: 1000,
   /** Minimum appraisal timer duration in ms (hard floor). */
@@ -1002,7 +1002,7 @@ export const ARTISAN_MG = {
   /** Bonus XP awarded for a successful Double Dip. */
   DOUBLE_DIP_XP_BONUS: 3,
   /** Minimum gem score (0–1) qualifying for the Good Enough bonus jewelry. */
-  GOOD_ENOUGH_THRESHOLD: 0.75,
+  GOOD_ENOUGH_THRESHOLD: 0.5,
   /** Bonus jewelry per qualifying gem when Good Enough is active. */
   GOOD_ENOUGH_JEWELRY_PER_GEM: 1,
 } as const;

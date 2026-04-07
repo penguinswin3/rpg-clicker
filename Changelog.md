@@ -1,3 +1,25 @@
+# Version Alpha 1.2.2
+
+## Added
+- You are gaurenteed to get a relic on your first successful safe crack after you have 100 successful safe cracks, and you have yet to recieve a relic
+- Added a stat milestone for when you obtain your first relic currency
+## Removed
+- Appraisals removed from the sidequest stats section
+## Changed
+- Renamed the minigame system to the sidequest system.
+- The sidequest menu collapsable
+- Good Enough now only checks for a 50% gem rather than a 75% gem. 
+- Lucky Gem now contributes more and has fewer levels. It can max out at 100% 
+- Potion Titration can have 100 max levels and gives a 4% chance each level
+- The apothecary minigame toggles look like the fighter minigame toggles.
+## Bugfixes
+- Spelling mistakes
+- Fixed a bug where Lucky Gems wasn't applying as much as it should have 
+- Ward and defile jacks boxes have the all and none buttons
+- Necromancer has coloring as well when the character select menu is collapsed
+- Kobold Bait cost now displays correctly
+----------------------------
+
 # Version Alpha 1.2.1
 
 ## Added

@@ -107,7 +107,7 @@ export const UPGRADE_FLAVOR = {
   BIGGER_GAME:          { name: 'Bigger Game',               desc: '+1 max Raw Beast Meat per hero button press' },
 
   // Apothecary
-  POTION_TITRATION: { name: 'Potion Titration',           desc: '+1% chance to save herbs when brewing' },
+  POTION_TITRATION: { name: 'Potion Titration',           desc: '+4% chance to save herbs when brewing' },
   POTION_MARKETING: { name: 'Potion Marketing',           desc: '+1 gold per potion brewed' },
   FERMENTATION_VATS: { name: 'Fermentation Vats',         desc: 'Passively converts 1 herb into 1 potion base per level every 10 seconds (toggleable)' },
   POTION_GLIBNESS:      { name: 'Potion of Glibness',        desc: '-1% spice purchase cost per level' },
@@ -140,8 +140,8 @@ export const UPGRADE_FLAVOR = {
   FASTER_APPRAISING:        { name: 'Faster Appraising',         desc: '-1 second appraisal timer per level' },
   POTION_CATS_PAW:          { name: "Potion of the Cat's Paw",   desc: '+1 max gemstone and precious metal yield per level' },
   LUCKY_GEMS:               { name: 'Lucky Gems',                desc: '+10% lucky gem bonus per level' },
-  DOUBLE_DIP:               { name: 'Double Dip',                desc: 'Select the second best jem as well, but only if you find the best first!' },
-  GOOD_ENOUGH:              { name: 'Good Enough',               desc: '+1 jewelry for each gem in the round with a quality above 75%' },
+  DOUBLE_DIP:               { name: 'Double Dip',                desc: 'Select the second best gem as well, but only if you find the best first!' },
+  GOOD_ENOUGH:              { name: 'Good Enough',               desc: '+1 jewelry for each gem in the round with a quality above 50%' },
   CLOSE_ENOUGH:             { name: 'Close Enough',              desc: 'Selecting the runner-up gem also counts as a successful pick' },
   STAND_OUT_SELECTION:      { name: 'Stand Out Selection',       desc: 'The Best gemstone is even better' },
 
@@ -350,8 +350,8 @@ export const MINIGAME_FLAVOR = {
 // ── Global Upgrades ───────────────────────────────────────────
 export const GLOBAL_UPGRADE_FLAVOR = {
   UNLOCK_MINIGAMES: {
-    name: 'Unlock Minigames',
-    desc: 'Unlocks character-specific minigames',
+    name: 'Unlock Sidequests',
+    desc: 'Unlocks character-specific sidequests',
   },
   JACKD_UP: {
     name: "Jack'd Up",

@@ -236,44 +236,51 @@ $green:  #44dd44;
   text-align: center;
 }
 
-// ── Dilution toggle ───────────────────────
+// ── Toggle buttons (fighter-style) ────────
 
-.dilution-toggle {
+.toggle-row {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 3px 0;
-  border: 1px solid #222;
-  background: #0a0a0a;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.toggle-label {
-  color: #aaa;
-  font-size: 10px;
+.toggle-btn {
+  background: #0a0a0a;
+  color: #555;
+  border: 1px solid #333;
+  font-family: $font;
+  font-size: 9px;
+  padding: 2px 6px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  width: 100%;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
 
-  input[type="checkbox"] {
-    cursor: pointer;
-    accent-color: $purple;
+  &:hover:not(:disabled) {
+    border-color: #666;
+    color: #999;
+  }
 
-    &:disabled {
-      cursor: not-allowed;
-      opacity: 0.4;
-      accent-color: #555;
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &.toggle-on {
+    color: #4caf50;
+    border-color: #2e6e31;
+    background: #051205;
+
+    &:hover:not(:disabled) {
+      background: #0a200a;
+      border-color: #4caf50;
     }
   }
-
-  &:has(input[type="checkbox"]:disabled) {
-    color: #555;
-    opacity: 0.6;
-  }
 }
 
-.dilution-info {
+.toggle-info {
   font-size: 9px;
 }
 
