@@ -734,6 +734,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.saveService.stopAutoSave();
+    this.heroHoldStop();
   }
 
   @HostListener('window:beforeunload')
@@ -1001,6 +1002,28 @@ export class AppComponent implements OnInit, OnDestroy {
       this.updateAllPerSecond();
     }
   }
+
+  // ── Hold-to-auto-click hero button ────────────────────────────
+  private heroHoldInterval: ReturnType<typeof setInterval> | null = null;
+  heroHolding = false;
+
+  heroHoldStart(): void {
+    this.heroHoldStop();
+    this.heroHolding = true;
+    this.heroHoldInterval = setInterval(() => {
+      if (this.isHeroDisabled) return;
+      this.clickHero();
+    }, 200);
+  }
+
+  heroHoldStop(): void {
+    this.heroHolding = false;
+    if (this.heroHoldInterval) {
+      clearInterval(this.heroHoldInterval);
+      this.heroHoldInterval = null;
+    }
+  }
+
 
   toggleWholesaleSpices(): void {
     this.wholesaleSpicesEnabled = !this.wholesaleSpicesEnabled;

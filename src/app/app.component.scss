@@ -799,6 +799,16 @@
     color: #555;
     cursor: not-allowed;
   }
+
+  &.hero-holding:not(:disabled) {
+    border-color: rgba(255, 255, 255, 0.5);
+    animation: hero-hold-pulse 0.5s ease-in-out infinite;
+  }
+}
+
+@keyframes hero-hold-pulse {
+  0%, 100% { border-color: rgba(255, 255, 255, 0.35); }
+  50%       { border-color: rgba(255, 255, 255, 0.75); }
 }
 
 // Label sits above the fill bar so text is always readable.

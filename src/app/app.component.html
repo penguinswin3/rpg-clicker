@@ -238,20 +238,43 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <div class="necro-buttons">
               <button class="hero-btn necro-btn"
                       [class.necro-active]="necromancerActiveButton === 'defile'"
+                      [class.hero-holding]="heroHolding"
                       [disabled]="necromancerActiveButton !== 'defile'"
-                      (click)="clickHero()">
+                      (click)="clickHero()"
+                      (mousedown)="heroHoldStart()"
+                      (mouseup)="heroHoldStop()"
+                      (mouseleave)="heroHoldStop()"
+                      (touchstart)="heroHoldStart()"
+                      (touchend)="heroHoldStop()"
+                      (touchcancel)="heroHoldStop()">
                 <span class="hero-btn-label">[ >>> {{ necromancerDefileLabel }} </span>
               </button>
               <button class="hero-btn necro-btn"
                       [class.necro-active]="necromancerActiveButton === 'ward'"
+                      [class.hero-holding]="heroHolding"
                       [disabled]="necromancerActiveButton !== 'ward'"
-                      (click)="clickHero()">
+                      (click)="clickHero()"
+                      (mousedown)="heroHoldStart()"
+                      (mouseup)="heroHoldStop()"
+                      (mouseleave)="heroHoldStop()"
+                      (touchstart)="heroHoldStart()"
+                      (touchend)="heroHoldStop()"
+                      (touchcancel)="heroHoldStop()">
                 <span class="hero-btn-label">{{ necromancerWardLabel }} <<< ]</span>
               </button>
             </div>
           </ng-container>
           <ng-template #singleHeroButton>
-            <button class="hero-btn" [disabled]="isHeroDisabled" (click)="clickHero()">
+            <button class="hero-btn"
+                    [class.hero-holding]="heroHolding"
+                    [disabled]="isHeroDisabled"
+                    (click)="clickHero()"
+                    (mousedown)="heroHoldStart()"
+                    (mouseup)="heroHoldStop()"
+                    (mouseleave)="heroHoldStop()"
+                    (touchstart)="heroHoldStart()"
+                    (touchend)="heroHoldStop()"
+                    (touchcancel)="heroHoldStop()">
               <div class="stun-fill-bar" *ngIf="activeCharacterId === 'thief' && isThiefStunned" [ngStyle]="thiefStunAnimStyle"></div>
               <div class="stun-fill-bar" *ngIf="activeCharacterId === 'artisan' && isArtisanTimerActive" [ngStyle]="artisanTimerAnimStyle"></div>
               <span class="hero-btn-label">[ >>> {{ questBtnLabel }} <<< ]</span>
