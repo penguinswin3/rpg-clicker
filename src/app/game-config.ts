@@ -1050,7 +1050,7 @@ export const FAMILIAR = {
 // ── Bead System ──────────────────────────────────────────────
 export const BEADS = {
   /** Chance (0–1) per manual hero click to discover a blue bead. */
-  BLUE_CHANCE: 1 / 500,
+  BLUE_CHANCE: 1 / 1500,
   /** Chance (0–1) per jack/familiar auto-click to discover a gold bead. */
   GOLD_CHANCE: 1 / 10000,
   /** Resource yield multiplier per socketed blue bead. */
