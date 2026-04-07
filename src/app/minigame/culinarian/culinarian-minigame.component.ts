@@ -4,8 +4,8 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { CULINARIAN_MG, AUTO_SOLVE, BEADS } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
+import { CULINARIAN_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
 
 /** Feedback per slot after a guess is submitted. */
 export type PegColor = 'green' | 'yellow' | 'miss';
@@ -41,12 +41,17 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
   @Input() wasteNotLevel = 0;
   /** Level of the Larger Cookbooks upgrade — reveals the first ingredient at round start. */
   @Input() largerCookbooksLevel = 0;
+  /** Whether the Ancient Cookbook reveal is enabled. */
+  @Input() ancientCookbookEnabled = true;
+  /** Emitted when the player toggles the Ancient Cookbook. */
+  @Output() ancientCookbookEnabledChange = new EventEmitter<boolean>();
   /** Level of the Cookbook Annotations upgrade — auto-submits one-of-each guess at round start. */
   @Input() cookbookAnnotationsLevel = 0;
 
   // ── Auto-solve ──────────────────────────
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled = false;
+  @Input() autoSolveGoodMode = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   private autoSolveInterval?: ReturnType<typeof setInterval>;
@@ -59,8 +64,22 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
   /** Pre-built brute-force guesses for auto-solve. */
   private autoSolveGuesses: string[][] = [];
 
+  // ── Gold-2 bead tracking ─────────────────
+  @Input() gold2Progress: unknown;
+  @Output() gold2ProgressChange = new EventEmitter<unknown>();
+  @Output() gold2BeadFound = new EventEmitter<void>();
+  private gold2Awarded = false;
+  /** Level of the Gem Hunter upgrade — enables gold-2 log progress messages. */
+  @Input() gemHunterLevel = 0;
+  /** Whether the gold-2 bead has already been found for this character (suppresses log messages). */
+  @Input() gold2BeadAlreadyFound = false;
+
   toggleAutoSolve(): void {
     this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
+
+  toggleAncientCookbook(): void {
+    this.ancientCookbookEnabledChange.emit(!this.ancientCookbookEnabled);
   }
 
   // ── Wallet-synced ─────────────────────────
@@ -109,7 +128,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
   // ── Lifecycle ─────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -176,7 +195,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
     }
 
     // Larger Cookbooks: reveal and lock the first ingredient
-    if (this.largerCookbooksLevel >= 1) {
+    if (this.largerCookbooksLevel >= 1 && this.ancientCookbookEnabled) {
       this.currentGuess[0] = this.solution[0];
       this.revealedSlots.add(0);
     }
@@ -190,6 +209,12 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
     if (!this.canSubmit) return;
 
     const guess = this.currentGuess as string[];
+
+    // Gold-2 tracking: check if the first guess of this round matches the pattern
+    if (!this.autoSolveEnabled && !this.gold2Awarded && this.guessesUsed === 0) {
+      this.trackGold2FirstGuess(guess);
+    }
+
     const pegs  = this.evaluate(guess);
     this.guessHistory.push({ ingredients: [...guess], pegs: [...pegs] });
     this.guessesUsed++;
@@ -316,13 +341,21 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
       if (this.canStart) {
         this.startRound();
         this.autoSolveStep = 0;
-        // Build the brute-force guesses: all-herb, all-beast, all-tongue, then deduced solution
-        this.autoSolveGuesses = [
-          Array(this.SOLUTION_LENGTH).fill('herb'),
-          Array(this.SOLUTION_LENGTH).fill('beast'),
-          Array(this.SOLUTION_LENGTH).fill('kobold-tongue'),
-          // The 4th guess will be computed after the first 3 results
-        ];
+
+        if (this.autoSolveGoodMode) {
+          // Good auto-solve: first guess is always [herb, beast, kobold-tongue, spice]
+          this.autoSolveGuesses = [
+            ['herb', 'beast', 'kobold-tongue', 'spice'],
+          ];
+        } else {
+          // Build the brute-force guesses: all-herb, all-beast, all-tongue, then deduced solution
+          this.autoSolveGuesses = [
+            Array(this.SOLUTION_LENGTH).fill('herb'),
+            Array(this.SOLUTION_LENGTH).fill('beast'),
+            Array(this.SOLUTION_LENGTH).fill('kobold-tongue'),
+            // The 4th guess will be computed after the first 3 results
+          ];
+        }
       }
       this.cdr.markForCheck();
       return;
@@ -343,15 +376,30 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
     // If round is active but we haven't built guesses yet (enabled mid-round), build them now
     if (this.roundActive && this.autoSolveGuesses.length === 0) {
       this.autoSolveStep = 0;
-      this.autoSolveGuesses = [
-        Array(this.SOLUTION_LENGTH).fill('herb'),
-        Array(this.SOLUTION_LENGTH).fill('beast'),
-        Array(this.SOLUTION_LENGTH).fill('kobold-tongue'),
-      ];
+      if (this.autoSolveGoodMode) {
+        this.autoSolveGuesses = [
+          ['herb', 'beast', 'kobold-tongue', 'spice'],
+        ];
+      } else {
+        this.autoSolveGuesses = [
+          Array(this.SOLUTION_LENGTH).fill('herb'),
+          Array(this.SOLUTION_LENGTH).fill('beast'),
+          Array(this.SOLUTION_LENGTH).fill('kobold-tongue'),
+        ];
+      }
       this.cdr.markForCheck();
       return;
     }
 
+    if (this.autoSolveGoodMode) {
+      this.autoSolveTickGood();
+    } else {
+      this.autoSolveTickBad();
+    }
+  }
+
+  /** Bad auto-solve: brute force with 3 all-same guesses then deduced 4th. */
+  private autoSolveTickBad(): void {
     // Submit the next brute-force guess
     if (this.roundActive && this.autoSolveStep < 3 && this.autoSolveStep < this.autoSolveGuesses.length) {
       const guess = this.autoSolveGuesses[this.autoSolveStep];
@@ -364,15 +412,8 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
 
     // On the 4th guess, deduce the solution from the first 3 all-same-ingredient guesses
     if (this.roundActive && this.autoSolveStep === 3) {
-      // Analyze guessHistory to reconstruct the solution.
-      // Guess 1 (all herb): green pegs show which slots have 'herb'
-      // Guess 2 (all beast): green pegs show which slots have 'beast'
-      // Guess 3 (all tongue): green pegs show which slots have 'kobold-tongue'
-      // Remaining slots must be 'spice'
       const deduced: string[] = Array(this.SOLUTION_LENGTH).fill('spice');
       const testIngredients = ['herb', 'beast', 'kobold-tongue'];
-      // Account for cookbook annotations: if cookbookAnnotationsLevel >= 1, the first entry
-      // in guessHistory is the annotation, so our brute-force guesses start at index offset.
       const offset = this.cookbookAnnotationsLevel >= 1 ? 1 : 0;
       for (let g = 0; g < 3; g++) {
         const historyIdx = offset + g;
@@ -388,6 +429,137 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
       this.submitGuess();
       this.autoSolveStep++;
       this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Good auto-solve: guess [herb, beast, kobold-tongue, spice] first,
+   * then deduce and submit the correct solution on the second guess.
+   */
+  private autoSolveTickGood(): void {
+    // Step 0: submit the one-of-each guess
+    if (this.roundActive && this.autoSolveStep === 0 && this.autoSolveGuesses.length > 0) {
+      const guess = this.autoSolveGuesses[0];
+      this.currentGuess = [...guess];
+      this.submitGuess();
+      this.autoSolveStep++;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // Step 1: deduce the solution using all available guess history
+    if (this.roundActive && this.autoSolveStep === 1) {
+      const deduced = this.deduceSolutionFromHistory();
+      this.currentGuess = [...deduced];
+      this.submitGuess();
+      this.autoSolveStep++;
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Enumerate all 256 possible solutions (4^4), filter to those consistent
+   * with every guess in the history, and return the first match.
+   */
+  private deduceSolutionFromHistory(): string[] {
+    const ingredients = this.INGREDIENTS;
+    const n = this.SOLUTION_LENGTH;
+
+    // Generate all possible solutions
+    const total = Math.pow(ingredients.length, n);
+    for (let code = 0; code < total; code++) {
+      const candidate: string[] = [];
+      let c = code;
+      for (let i = 0; i < n; i++) {
+        candidate.push(ingredients[c % ingredients.length]);
+        c = Math.floor(c / ingredients.length);
+      }
+
+      // Check if this candidate is consistent with all guess history
+      let consistent = true;
+      for (const row of this.guessHistory) {
+        const pegs = this.evaluateAgainst(row.ingredients, candidate);
+        if (!this.pegsMatch(pegs, row.pegs)) {
+          consistent = false;
+          break;
+        }
+      }
+      if (consistent) return candidate;
+    }
+
+    // Fallback: just return the solution (shouldn't happen)
+    return [...this.solution];
+  }
+
+  /** Evaluate a guess against a hypothetical solution. */
+  private evaluateAgainst(guess: string[], sol: string[]): PegColor[] {
+    const pegs: PegColor[] = Array(this.SOLUTION_LENGTH).fill('miss');
+    const solR: (string | null)[] = [...sol];
+    const guessR: (string | null)[] = [...guess];
+
+    for (let i = 0; i < this.SOLUTION_LENGTH; i++) {
+      if (guess[i] === sol[i]) {
+        pegs[i] = 'green';
+        solR[i] = null;
+        guessR[i] = null;
+      }
+    }
+    for (let i = 0; i < this.SOLUTION_LENGTH; i++) {
+      if (guessR[i] === null) continue;
+      const idx = solR.indexOf(guessR[i]);
+      if (idx !== -1) {
+        pegs[i] = 'yellow';
+        solR[idx] = null;
+      }
+    }
+    return pegs;
+  }
+
+  /** Check if two peg arrays are identical. */
+  private pegsMatch(a: PegColor[], b: PegColor[]): boolean {
+    return a.length === b.length && a.every((p, i) => p === b[i]);
+  }
+
+  // ── Gold-2 helpers ─────────────────────
+
+  /**
+   * Track the first guess of each round for gold-2 unlock.
+   * Must match the required sequence across 3 consecutive games.
+   */
+  private trackGold2FirstGuess(guess: string[]): void {
+    const progress = (this.gold2Progress as { step?: number }) ?? {};
+    let step = progress.step ?? 0;
+    const patterns = GOLD2_CONDITIONS.CULINARIAN_FIRST_GUESSES;
+
+    if (step >= patterns.length) {
+      this.gold2ProgressChange.emit({ step: 0 });
+      return;
+    }
+
+    const expected = patterns[step];
+    if (guess.length === expected.length && guess.every((g, i) => g === expected[i])) {
+      step++;
+      if (step >= patterns.length) {
+        // All 3 games completed — award the bead!
+        this.gold2Awarded = true;
+        this.gold2BeadFound.emit();
+        this.gold2ProgressChange.emit({ step: 0 });
+      } else {
+        if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) {
+          const msgs = GOLD2_STEP_MESSAGES['culinarian'];
+          this.log.log(msgs[(step - 1) % msgs.length], 'rare');
+        }
+        this.gold2ProgressChange.emit({ step });
+      }
+    } else {
+      // Mismatch — reset, but check if this guess matches step 0
+      const first = patterns[0];
+      if (guess.length === first.length && guess.every((g, i) => g === first[i])) {
+        if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) this.log.log(GOLD2_STEP_MESSAGES['culinarian'][0], 'rare');
+        this.gold2ProgressChange.emit({ step: 1 });
+      } else {
+        this.gold2ProgressChange.emit({ step: 0 });
+      }
     }
   }
 
@@ -474,4 +646,3 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
     this.msgClass = 'msg-bad';
   }
 }
-

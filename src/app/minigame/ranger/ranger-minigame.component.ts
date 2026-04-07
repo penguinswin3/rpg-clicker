@@ -4,8 +4,8 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { RANGER_MG, AUTO_SOLVE, BEADS } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
+import { RANGER_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
 import { shuffleInPlace, randInt } from '../../utils/mathUtils';
 
 type PrizeType = 'meat' | 'herb' | 'pixie' | 'chest' | 'blank';
@@ -73,11 +73,24 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
   // ── Auto-solve ──────────────────────────
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled = false;
+  @Input() autoSolveGoodMode = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   private autoSolveInterval?: ReturnType<typeof setInterval>;
   /** Pre-selected random indices for auto-solve to pick (3 cells). */
   private autoSolveTargets: number[] = [];
+
+  // ── Gold-2 bead tracking ─────────────────
+  @Input() gold2Progress: unknown;
+  @Output() gold2ProgressChange = new EventEmitter<unknown>();
+  @Output() gold2BeadFound = new EventEmitter<void>();
+  private gold2Awarded = false;
+  /** Level of the Gem Hunter upgrade — enables gold-2 log progress messages. */
+  @Input() gemHunterLevel = 0;
+  /** Whether the gold-2 bead has already been found for this character (suppresses log messages). */
+  @Input() gold2BeadAlreadyFound = false;
+  /** Tracks the cells clicked in the current round, in order. */
+  private currentRoundClicks: number[] = [];
 
   toggleAutoSolve(): void {
     this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
@@ -121,7 +134,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
   // ── Lifecycle ─────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -154,6 +167,11 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
     this.picksLeft--;
     this.award(cell.prize);
 
+    // Track click order for gold-2
+    if (!this.autoSolveEnabled && !this.gold2Awarded) {
+      this.currentRoundClicks.push(i);
+    }
+
     if (this.picksLeft <= 0) {
       this.endRound();
     }
@@ -174,6 +192,9 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
 
   newRound(): void {
     if (!this.canScout) return;
+    // Reset current round click tracking for gold-2
+    this.currentRoundClicks = [];
+
     this.wallet.remove('beast', this.SCOUT_COST);
     this.log.log(`Ranger sets out to scout the area. (${cur('beast', this.SCOUT_COST, '-')})`);
 
@@ -266,13 +287,31 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
     if (!this.roundStarted || this.roundOver) {
       if (this.canScout) {
         this.newRound();
-        // Pre-select 3 random cell indices to reveal
-        const indices = Array.from({ length: this.cells.length }, (_, i) => i);
-        shuffleInPlace(indices);
-        this.autoSolveTargets = indices.slice(0, this.PICKS);
+        if (this.autoSolveGoodMode) {
+          // Good auto-solve: prioritize pixie cells, then X-mark (chest) cells, then random
+          this.autoSolveTargets = this.buildGoodAutoSolveTargets();
+        } else {
+          // Pre-select 3 random cell indices to reveal
+          const indices = Array.from({ length: this.cells.length }, (_, i) => i);
+          shuffleInPlace(indices);
+          this.autoSolveTargets = indices.slice(0, this.PICKS);
+        }
       }
       this.cdr.markForCheck();
       return;
+    }
+    // If round is active but no targets queued (enabled mid-round), build targets now
+    if (this.picksLeft > 0 && this.autoSolveTargets.length === 0) {
+      if (this.autoSolveGoodMode) {
+        this.autoSolveTargets = this.buildGoodAutoSolveTargets();
+      } else {
+        const indices = this.cells
+          .map((c, i) => ({ c, i }))
+          .filter(({ c }) => !c.revealed)
+          .map(({ i }) => i);
+        shuffleInPlace(indices);
+        this.autoSolveTargets = indices.slice(0, this.picksLeft);
+      }
     }
     // If round is active, pick the next auto-solve target
     if (this.picksLeft > 0 && this.autoSolveTargets.length > 0) {
@@ -282,6 +321,50 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
       }
       this.cdr.markForCheck();
     }
+  }
+
+  /**
+   * Good auto-solve target selection: pick pixie cells first (if Fairy Hostage unlocked),
+   * then up to two X-mark (chest) cells (if X Marks the Spot unlocked), then random.
+   */
+  private buildGoodAutoSolveTargets(): number[] {
+    const targets: number[] = [];
+    const remaining = new Set(Array.from({ length: this.cells.length }, (_, i) => i));
+
+    // 1) Pick revealed pixie hint cell (Fairy Hostage)
+    if (this.fairyHostageLevel >= 1) {
+      for (const idx of this.pixieCellIndices) {
+        if (!this.cells[idx].revealed && targets.length < this.PICKS) {
+          targets.push(idx);
+          remaining.delete(idx);
+        }
+      }
+    }
+
+    // 2) Pick up to 2 X-mark (chest) cells
+    if (this.xMarksTheSpotLevel >= 1) {
+      let chestPicks = 0;
+      for (const idx of remaining) {
+        if (chestPicks >= 2 || targets.length >= this.PICKS) break;
+        if (this.cells[idx].prize === 'chest' && !this.cells[idx].revealed) {
+          targets.push(idx);
+          remaining.delete(idx);
+          chestPicks++;
+        }
+      }
+    }
+
+    // 3) Fill remaining picks randomly
+    const leftover = Array.from(remaining);
+    shuffleInPlace(leftover);
+    for (const idx of leftover) {
+      if (targets.length >= this.PICKS) break;
+      if (!this.cells[idx].revealed) {
+        targets.push(idx);
+      }
+    }
+
+    return targets;
   }
 
   private rollMinigameGoldBead(): void {
@@ -356,6 +439,11 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
 
   private endRound(): void {
     this.roundOver = true;
+    // ── Gold-2 tracking after round completes ──
+    if (!this.autoSolveEnabled && !this.gold2Awarded) {
+      this.trackGold2Round();
+    }
+
     // Reveal all unrevealed cells
     this.cells.forEach(c => (c.revealed = true));
 
@@ -433,5 +521,50 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
       this.rollMinigameGoldBead();
     }
   }
-}
 
+  // ── Gold-2 helpers ─────────────────────
+
+  /**
+   * Track the completed round's click pattern for gold-2 unlock.
+   * Pattern must match across 5 consecutive games.
+   */
+  private trackGold2Round(): void {
+    const progress = (this.gold2Progress as { step?: number }) ?? {};
+    let step = progress.step ?? 0;
+    const patterns = GOLD2_CONDITIONS.RANGER_CLICK_PATTERNS;
+    if (step >= patterns.length) {
+      // Already completed or out of bounds — reset
+      this.gold2ProgressChange.emit({ step: 0 });
+      return;
+    }
+
+    const expected = patterns[step];
+    const clicks = this.currentRoundClicks;
+
+    // Check if the clicks match the expected pattern (same elements in same order)
+    if (clicks.length === expected.length && clicks.every((c, i) => c === expected[i])) {
+      step++;
+      if (step >= patterns.length) {
+        // All 5 games completed — award the bead!
+        this.gold2Awarded = true;
+        this.gold2BeadFound.emit();
+        this.gold2ProgressChange.emit({ step: 0 });
+      } else {
+        if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) {
+          const msgs = GOLD2_STEP_MESSAGES['ranger'];
+          this.log.log(msgs[(step - 1) % msgs.length], 'rare');
+        }
+        this.gold2ProgressChange.emit({ step });
+      }
+    } else {
+      // Mismatch — reset, but check if this round matches step 0
+      const first = patterns[0];
+      if (clicks.length === first.length && clicks.every((c, i) => c === first[i])) {
+        if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) this.log.log(GOLD2_STEP_MESSAGES['ranger'][0], 'rare');
+        this.gold2ProgressChange.emit({ step: 1 });
+      } else {
+        this.gold2ProgressChange.emit({ step: 0 });
+      }
+    }
+  }
+}

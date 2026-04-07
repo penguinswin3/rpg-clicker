@@ -133,6 +133,7 @@ export const UPGRADE_FLAVOR = {
   POTION_CATS_EARS:         { name: "Potion of Cat's Ears",      desc: '+3° sweet spot size per level' },
   BAG_OF_HOLDING:           { name: 'Bag of Holding',            desc: 'Increases maximum gold and treasure yield' },
   RELIC_HUNTER:             { name: 'Relic Hunter',              desc: 'Allows the discovery of one additional relic!' },
+  GEM_HUNTER:               { name: 'Gem Hunter',                desc: 'Reveals cryptic progress messages when completing steps toward unclaimed golden bead challenges' },
   LOCKED_IN:                { name: 'Locked In',                 desc: 'Marks failed click positions on the dial with a red tick' },
   FLOW_STATE:               { name: 'Flow State',                desc: 'Dial ticks now give hints as to where the sweet spot is' },
 
@@ -514,43 +515,59 @@ export const BEAD_FLAVOR: Record<string, Record<string, BeadSlotFlavor>> = {
   fighter: {
     'blue-1': { name: 'Bead of Valor',         lore: 'Forged in the heat of countless battles, this bead hums with the memory of every bounty completed.',               effect: '2× resource yields from this character.' },
     'gold-1': { name: 'Bead of the Vanguard',  lore: 'Carried by those who fight on behalf of others. It empowers the blade to swing on its own.',                        effect: 'Unlocks basic sidequest automation.' },
-    'gold-2': { name: 'Bead of Supremacy',     lore: 'Awaits the ultimate proof of martial prowess.',                                                                     effect: 'Improved sidequest automation (not yet discovered).' },
+    'gold-2': { name: 'Bead of Supremacy',     lore: 'Awaits the ultimate proof of martial prowess.',                                                                     effect: 'Attacks faster and auto-heals below half HP.' },
     'blue-2': { name: 'Bead of the Mercenary', lore: 'Pulled from the coffers of a hired band, it resonates with the tireless work of loyal hirelings.',                   effect: '2× resource yields from this character (stacks).' },
   },
   ranger: {
     'blue-1': { name: 'Bead of the Wild',       lore: 'Grown from the heartwood of an ancient tree, it pulses with the rhythm of the forest.',                             effect: '2× resource yields from this character.' },
     'gold-1': { name: 'Bead of the Pathfinder', lore: 'Found in the deepest thicket, where only the most tireless scouts dare to tread.',                                  effect: 'Unlocks basic sidequest automation.' },
-    'gold-2': { name: 'Bead of Mastery',        lore: 'Only the most skilled tracker can reveal its secrets.',                                                              effect: 'Improved sidequest automation (not yet discovered).' },
+    'gold-2': { name: 'Bead of Mastery',        lore: 'Only the most skilled tracker can reveal its secrets.',                                                              effect: 'Prioritizes pixies and treasure chests when auto-solving.' },
     'blue-2': { name: 'Bead of the Pack',       lore: 'Formed from the ambient magic of a hundred tireless hunts, it hums with the rhythm of the pack.',                   effect: '2× resource yields from this character (stacks).' },
   },
   apothecary: {
     'blue-1': { name: 'Bead of Distillation',   lore: 'Crystallized from a thousand perfect brews, it amplifies the potency of every concoction.',                         effect: '2× resource yields from this character.' },
     'gold-1': { name: 'Bead of the Alembic',    lore: 'Formed in the residue of a master\'s cauldron. It stirs the brew without a hand.',                                  effect: 'Unlocks basic sidequest automation.' },
-    'gold-2': { name: 'Bead of Perfection',     lore: 'Whispers of an impeccable brew echo within.',                                                                       effect: 'Improved sidequest automation (not yet discovered).' },
+    'gold-2': { name: 'Bead of Perfection',     lore: 'Whispers of an impeccable brew echo within.',                                                                       effect: 'Ultra-fast auto-brew at 20 ms tick speed.' },
     'blue-2': { name: 'Bead of Automation',     lore: 'Crystallized in an unattended cauldron, it carries the echo of a thousand mechanical stirs.',                        effect: '2× resource yields from this character (stacks).' },
   },
   culinarian: {
     'blue-1': { name: 'Bead of Seasoning',      lore: 'Imbued with the essence of rare spices from distant lands, it enriches every ingredient it touches.',               effect: '2× resource yields from this character.' },
     'gold-1': { name: 'Bead of the Hearth',     lore: 'Warmed by countless fires. It stokes the flame without tending.',                                                   effect: 'Unlocks basic sidequest automation.' },
-    'gold-2': { name: 'Bead of the Epicure',    lore: 'Reserved for a chef who never wastes a single ingredient.',                                                          effect: 'Improved sidequest automation (not yet discovered).' },
+    'gold-2': { name: 'Bead of the Epicure',    lore: 'Reserved for a chef who never wastes a single ingredient.',                                                          effect: 'Solves every recipe in exactly 2 guesses.' },
     'blue-2': { name: 'Bead of the Sous Chef',  lore: 'Warmed by dutiful hands that never tire, it doubles the bounty of every sous chef\'s contribution.',                 effect: '2× resource yields from this character (stacks).' },
   },
   thief: {
     'blue-1': { name: 'Bead of Shadows',        lore: 'Stolen from the vault of a legendary thief, it ensures every heist yields double the spoils.',                      effect: '2× resource yields from this character.' },
     'gold-1': { name: 'Bead of the Unseen Hand',lore: 'Passed between thieves in the dark. It picks the lock without a finger.',                                            effect: 'Unlocks basic sidequest automation.' },
-    'gold-2': { name: 'Bead of the Ghost',      lore: 'Said to appear only to one who cracks the impossible.',                                                              effect: 'Improved sidequest automation (not yet discovered).' },
+    'gold-2': { name: 'Bead of the Ghost',      lore: 'Said to appear only to one who cracks the impossible.',                                                              effect: 'Deduces the sweet spot in two quick guesses, then cracks it.' },
     'blue-2': { name: 'Bead of the Fence',      lore: 'Exchanged in back alleys between middlemen, it amplifies the yield of every clandestine operation.',                 effect: '2× resource yields from this character (stacks).' },
   },
   artisan: {
     'blue-1': { name: 'Bead of Precision',      lore: 'Cut by the steadiest hand, it doubles the value found in every raw material.',                                      effect: '2× resource yields from this character.' },
     'gold-1': { name: 'Bead of the Masterwork', lore: 'Embedded in a workbench for generations. It guides the chisel with phantom hands.',                                  effect: 'Unlocks basic sidequest automation.' },
-    'gold-2': { name: 'Bead of the Prodigy',    lore: 'Hidden within a flawless gem, waiting to be found.',                                                                 effect: 'Improved sidequest automation (not yet discovered).' },
+    'gold-2': { name: 'Bead of the Prodigy',    lore: 'Hidden within a flawless gem, waiting to be found.',                                                                 effect: 'Always selects the top two gems each game.' },
     'blue-2': { name: 'Bead of Industry',       lore: 'Polished by the relentless grind of a workshop that never sleeps, it doubles every yield.',                           effect: '2× resource yields from this character (stacks).' },
   },
   necromancer: {
     'blue-1': { name: 'Bead of the Veil',       lore: 'Harvested from the space between worlds, it amplifies the yield of every dark ritual.',                              effect: '2× resource yields from this character.' },
     'gold-1': { name: 'Bead of Binding',        lore: 'Chains the familiar realm to this one. It traces the circle without mortal hands.',                                   effect: 'Unlocks basic sidequest automation.' },
-    'gold-2': { name: 'Bead of Dominion',       lore: 'Pulses with the promise of absolute control.',                                                                       effect: 'Improved sidequest automation (not yet discovered).' },
+    'gold-2': { name: 'Bead of Dominion',       lore: 'Pulses with the promise of absolute control.',                                                                       effect: 'Always follows the optimal ritual path.' },
     'blue-2': { name: 'Bead of the Thrall',     lore: 'Bound to an undying servant, it channels the tireless labor of those who cannot rest.',                               effect: '2× resource yields from this character (stacks).' },
   },
 };
+
+/**
+ * Cryptic messages shown (as 'rare' log entries) when the player completes
+ * one step of a multi-step gold-2 bead unlock sequence.
+ * Each array entry is picked based on step index (wrapping if needed).
+ */
+export const GOLD2_STEP_MESSAGES: Record<string, string[]> = {
+  fighter:     ['The blade remembers…',          'A familiar rhythm echoes.',     'The pattern deepens.',               'Something stirs in the steel.',  'Almost there — the final strike awaits.'],
+  ranger:      ['The forest acknowledges you.',   'Footprints align.',             'The path reveals itself.',           'Nature bends to your will.',     'One final trace remains.'],
+  apothecary:  ['The cauldron hums in recognition.', 'The brew senses your intent.'],
+  culinarian:  ['The hearth remembers this taste.', 'Ingredients align.',           'The recipe whispers its name.'],
+  thief:       ['The tumblers shift…',            'A click in the dark.',          'The mechanism yields.',              'Pins fall into place.',          'The vault trembles.',        'Almost free…',        'One final turn.'],
+  artisan:     ['The gem glimmers knowingly.',    'A facet catches the light.',    'The jewel responds to your touch.',  'Crystalline whispers grow.',     'The pattern sharpens.',      'Cut after cut, the gem obeys.', 'Brilliance takes shape.', 'The stone sings.', 'One final selection.'],
+  necromancer: ['The spirits fall silent.',        'The circle holds.',             'Dominion approaches.'],
+};
+

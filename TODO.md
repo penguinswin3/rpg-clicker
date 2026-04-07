@@ -1,47 +1,11 @@
 # TODO List
 ## Systems
 - kobold paw
-- - potion of the collosus, +1hp per level in potion of fortitude
+- - potion of the colossus, +1hp per level in potion of fortitude
 
-### Lore Pages
-- Lore Pages that give context about the character or the world they live in. Can be unlocked by doing certain things in minigames...
-- Each lore page gives a static resource multiplier for some of that characters resources from ALL sources
-- One can be gotten from randomly clicking the button
-  - Gives lore on the character's Bagkground
-- one can be gotten from doing a particular action in the minigame
-  - A small vignette on the character's interaction with the doomsayer
-  - Fighter: Killing kobolds in a certain pattern
-  - Ranger: Selecting a particular set of 3 in a few games in a row 
-  - Apothecary: clicking the synapse zones in a particular order, maybe doing it at 0% dilution
-  - Culinarian: guess a certain pattern of 4 in a row
-  - Thief: lockpicking times at a certain time (across multiple games cause you can get it first try)
-  - Artisan: Selecting some assortment of gems, or intentionally throwing too much in a certain way 
-  - Necromancer:drawing a certain pattern (cross through the gem 3 times?)
+###
+-Add the flavor lore
 
--Collecting one allows you to autoplay their minigame, slower than you might be able to. 
-- Collecting doubles all resource gains from that character
-- collecting 3 upgrades the minigame to the optimal strategy
-  Can this be done while not on the page? 
-  - Maybe add a secret third note that gives them an optimal strategy? 
-  - Fighter: Spam attack -> spam attack and heal when under half
-  - Ranger: 3 random squares -> star square, two treasure squares, then random
-  - Apothecary: one click per box pass through -> spam click in boxes
-  - Culinarian: "All one suit" guesses to force it -> actually use the info available
-  - Thief: Click on cadence -> Use the colored info to guess better
-  - Artisan: Factors in color and size -> Just reads the game data lol, maybe just factors in blur too
-  - Necromancer: Clicks the next available clockwise -> Just reads the game data 
-
-- These tier show up above the hero button, once the minigames are unlocked. THIS NEEDS TO INTEGRATE WITH THE RELIC, BEFORE THE RELIC SHOWS UP SO THAT WHEN THE RELIC SHOWS UP, IT INTEGRATES IN THE UI NICELY 
--Add a fourth lore tier, post relics, that give another 2x resource yield. Earned from jacks (or familiar) presses only
-
-### Beads System (Implemented ✓)
-- 4 bead slots per character: 2 blue (outer), 2 gold (inner), surrounding the relic socket
-- Blue beads: 1/500 chance per manual hero press. Doubles all resource yields when socketed.
-- Gold beads: 1/10000 chance per jack/familiar press. Placeholder for sidequest automation.
-- Found beads pulse with visual indicator; click to open modal and socket them.
-- Bead multiplier applied to hero clicks, jack clicks, passive income, and per-second display.
-- TODO: Apply bead multiplier to minigame reward outputs
-- TODO: Gold bead sidequest automation functionality
 ### More characters
 - Party Face
   - Card game Blackjack?
@@ -62,11 +26,6 @@
   - Slayer
     - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
     - Has to slay the horror 
-  
-### Easter Eggs
-- Fairy Ring codes in the ranger minigame
-- Kobold Killing... The numbers... What do they mean? Numbers Station... s: 0–2–5–8–8
-- killstreak
 
 ## Upgrade Ideas
 - Master of All - An upgrade for jacks that auto play minigames. Might be a good relic upgrade? 
@@ -114,6 +73,8 @@
 - thieving relic might be too good 
 
 ## Bug Fixes
+- fighter gold2 checks the selected level not the level of the kobold being killed. its easier to input the code when it is like it is now, but you arent actually killing the right thing 
+
 
 ## Code Refactors
 

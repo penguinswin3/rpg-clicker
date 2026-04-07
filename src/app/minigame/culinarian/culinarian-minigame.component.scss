@@ -310,6 +310,49 @@ $green: #44dd44;
   &.msg-neutral { color: #666;  border-color: #1e1e1e; }
 }
 
+// ── Toggle buttons (sidequest-style) ──────
+.toggle-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.toggle-btn {
+  background: #0a0a0a;
+  color: #555;
+  border: 1px solid #333;
+  font-family: $font;
+  font-size: 9px;
+  padding: 2px 6px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+
+  &:hover:not(:disabled) {
+    border-color: #666;
+    color: #999;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &.toggle-on {
+    color: #4caf50;
+    border-color: #2e6e31;
+    background: #051205;
+
+    &:hover:not(:disabled) {
+      background: #0a200a;
+      border-color: #4caf50;
+    }
+  }
+}
+
 // ── Auto-solve toggle (gold theme) ───────────
 
 .auto-solve-row {

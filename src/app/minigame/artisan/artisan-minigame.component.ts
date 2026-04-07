@@ -4,8 +4,8 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { ARTISAN_MG, AUTO_SOLVE, BEADS } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
+import { ARTISAN_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
 import {randInt} from "../../utils/mathUtils";
 
 /** Internal representation of one gemstone in the Faceting minigame. */
@@ -60,9 +60,22 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
   // ── Auto-solve ──────────────────────────
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled = false;
+  @Input() autoSolveGoodMode = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   private autoSolveInterval?: ReturnType<typeof setInterval>;
+
+  // ── Gold-2 bead tracking ─────────────────
+  @Input() gold2Progress: unknown;
+  @Output() gold2ProgressChange = new EventEmitter<unknown>();
+  @Output() gold2BeadFound = new EventEmitter<void>();
+  private gold2Awarded = false;
+  /** Level of the Gem Hunter upgrade — enables gold-2 log progress messages. */
+  @Input() gemHunterLevel = 0;
+  /** Whether the gold-2 bead has already been found for this character (suppresses log messages). */
+  @Input() gold2BeadAlreadyFound = false;
+  /** Whether the first gem of the current round has been recorded for gold-2. */
+  private gold2FirstGemTracked = false;
 
   toggleAutoSolve(): void {
     this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
@@ -114,7 +127,7 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
   // ── Lifecycle ─────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -215,6 +228,7 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
     this.doubleDipConfirmedIndex  = -1;
     this.doubleDipSecondPickIndex = -1;
     this.closeEnoughPickIndex     = -1;
+    this.gold2FirstGemTracked     = false;
     this.roundStarted = true;
     this.roundOver    = false;
     this.lastMsg      = MINIGAME_MSG.ARTISAN.ROUND_START(this.GEM_COUNT);
@@ -228,6 +242,12 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
     if (this.roundOver || this.picksLeft <= 0) return;
     const gem = this.gems[index];
     if (gem.selected) return;
+
+    // Gold-2 tracking: record the FIRST gem selected each round
+    if (!this.autoSolveEnabled && !this.gold2Awarded && !this.gold2FirstGemTracked) {
+      this.gold2FirstGemTracked = true;
+      this.trackGold2FirstGem(index);
+    }
 
     gem.selected = true;
     this.picksLeft--;
@@ -409,7 +429,14 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
       const isFirstPick = this.picksLeft === totalPicks;
       let chosenIdx: number;
 
-      if (totalPicks > 1) {
+      if (this.autoSolveGoodMode) {
+        // Good auto-solve: always select the best gem first, then second-best
+        if (isFirstPick) {
+          chosenIdx = this.bestGemIndex;
+        } else {
+          chosenIdx = this.secondBestGemIndex >= 0 ? this.secondBestGemIndex : this.pickRandomUnselected();
+        }
+      } else if (totalPicks > 1) {
         // Multiple picks: 75% chance for best on first pick, 50% for second-best on second pick
         if (isFirstPick) {
           chosenIdx = Math.random() < 0.75 ? this.bestGemIndex : this.pickRandomExcluding(this.bestGemIndex);
@@ -448,6 +475,47 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
   private rollMinigameGoldBead(): void {
     if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
       this.goldBeadFound.emit();
+    }
+  }
+
+  // ── Gold-2 helpers ─────────────────────
+
+  /**
+   * Track the first gem selected each round for gold-2 unlock.
+   * Must match the sequence across 10 consecutive games.
+   */
+  private trackGold2FirstGem(gemIndex: number): void {
+    const progress = (this.gold2Progress as { step?: number }) ?? {};
+    let step = progress.step ?? 0;
+    const sequence = GOLD2_CONDITIONS.ARTISAN_FIRST_GEM_SEQUENCE;
+
+    if (step >= sequence.length) {
+      this.gold2ProgressChange.emit({ step: 0 });
+      return;
+    }
+
+    if (gemIndex === sequence[step]) {
+      step++;
+      if (step >= sequence.length) {
+        // Pattern complete — award the bead!
+        this.gold2Awarded = true;
+        this.gold2BeadFound.emit();
+        this.gold2ProgressChange.emit({ step: 0 });
+      } else {
+        if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) {
+          const msgs = GOLD2_STEP_MESSAGES['artisan'];
+          this.log.log(msgs[(step - 1) % msgs.length], 'rare');
+        }
+        this.gold2ProgressChange.emit({ step });
+      }
+    } else {
+      // Mismatch — reset, but check if this gem matches step 0
+      if (gemIndex === sequence[0]) {
+        if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) this.log.log(GOLD2_STEP_MESSAGES['artisan'][0], 'rare');
+        this.gold2ProgressChange.emit({ step: 1 });
+      } else {
+        this.gold2ProgressChange.emit({ step: 0 });
+      }
     }
   }
 

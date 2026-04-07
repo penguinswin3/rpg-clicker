@@ -37,6 +37,8 @@
     (synapticalEnabledChange)="synapticalEnabled = $event"
     [wasteNotLevel]="upgrades.level('WASTE_NOT')"
     [largerCookbooksLevel]="upgrades.level('LARGER_COOKBOOKS')"
+    [ancientCookbookEnabled]="ancientCookbookEnabled"
+    (ancientCookbookEnabledChange)="ancientCookbookEnabled = $event"
     [cookbookAnnotationsLevel]="upgrades.level('COOKBOOK_ANNOTATIONS')"
     [vanishingPowderLevel]="upgrades.level('VANISHING_POWDER')"
     [potionCatEarsLevel]="upgrades.level('POTION_CATS_EARS')"
@@ -62,9 +64,31 @@
       artisan: isAutoSolveUnlocked('artisan'),
       necromancer: isAutoSolveUnlocked('necromancer')
     }"
+    [autoSolveGoodMode]="{
+      fighter: isAutoSolveGood('fighter'),
+      ranger: isAutoSolveGood('ranger'),
+      apothecary: isAutoSolveGood('apothecary'),
+      culinarian: isAutoSolveGood('culinarian'),
+      thief: isAutoSolveGood('thief'),
+      artisan: isAutoSolveGood('artisan'),
+      necromancer: isAutoSolveGood('necromancer')
+    }"
     [autoSolveEnabled]="autoSolveEnabled"
     (autoSolveEnabledChange)="autoSolveEnabled[$event.charId] = $event.enabled"
-    (goldBeadFound)="findMinigameGoldBead($event)" />
+    (goldBeadFound)="findMinigameGoldBead($event)"
+    [gold2Progress]="gold2Progress"
+    (gold2ProgressChange)="onGold2ProgressChange($event.charId, $event.progress)"
+    (gold2BeadFound)="findGold2Bead($event)"
+    [gemHunterLevel]="upgrades.level('GEM_HUNTER')"
+    [gold2BeadFoundState]="{
+      fighter: !!beadState['fighter']?.['gold-2']?.found,
+      ranger: !!beadState['ranger']?.['gold-2']?.found,
+      apothecary: !!beadState['apothecary']?.['gold-2']?.found,
+      culinarian: !!beadState['culinarian']?.['gold-2']?.found,
+      thief: !!beadState['thief']?.['gold-2']?.found,
+      artisan: !!beadState['artisan']?.['gold-2']?.found,
+      necromancer: !!beadState['necromancer']?.['gold-2']?.found
+    }" />
 
   <div class="game-wrapper">
 

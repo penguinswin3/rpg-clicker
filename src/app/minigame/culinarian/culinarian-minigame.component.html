@@ -137,6 +137,16 @@
     {{ lastMsg }}
   </div>
 
+  <!-- ── Ancient Cookbook toggle ─────────── -->
+  <div class="toggle-row" *ngIf="largerCookbooksLevel >= 1">
+    <button class="toggle-btn"
+            [class.toggle-on]="ancientCookbookEnabled"
+            [disabled]="roundActive && !won && !lost"
+            (click)="toggleAncientCookbook()">
+      {{ ancientCookbookEnabled ? '[ Ancient Cookbook: ON  ]' : '[ Ancient Cookbook: OFF ]' }}
+    </button>
+  </div>
+
   <!-- ── Auto-solve toggle ─────────────── -->
   <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
     <button class="auto-solve-btn"

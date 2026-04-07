@@ -4,8 +4,8 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { APOTH_MG, AUTO_SOLVE, BEADS } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
+import { APOTH_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE } from '../../game-config';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
 import { toPct, rollChance } from '../../utils/mathUtils';
 
 @Component({
@@ -74,9 +74,22 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
   // ── Auto-solve ──────────────────────────
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled = false;
+  @Input() autoSolveGoodMode = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   private autoSolveInterval?: ReturnType<typeof setInterval>;
+
+  // ── Gold-2 bead tracking ─────────────────
+  @Input() gold2Progress: unknown;
+  @Output() gold2ProgressChange = new EventEmitter<unknown>();
+  @Output() gold2BeadFound = new EventEmitter<void>();
+  private gold2Awarded = false;
+  /** Level of the Gem Hunter upgrade — enables gold-2 log progress messages. */
+  @Input() gemHunterLevel = 0;
+  /** Whether the gold-2 bead has already been found for this character (suppresses log messages). */
+  @Input() gold2BeadAlreadyFound = false;
+  /** Tracks the phase within a single brew for gold-2: 'up' → 'down' → 'inner'. */
+  private gold2Phase: 'up' | 'down' | 'inner' | 'failed' = 'up';
 
   toggleAutoSolve(): void {
     this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
@@ -194,7 +207,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
   // ── Lifecycle ─────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -268,6 +281,9 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
       }
     }
 
+    // Reset gold-2 tracking for this brew
+    this.gold2Phase = 'up';
+
     this.log.log(`Apothecary begins brewing. (${logCostStr})`);
     this.startAnimation();
   }
@@ -327,13 +343,19 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
         this.stats.trackPotionMiss();
       }
     }
+
+    // Gold-2 tracking (only manual play, non-synaptical)
+    if (!this.autoSolveEnabled && !this.gold2Awarded && !this.synapticalEnabled) {
+      this.trackGold2Brew();
+    }
   }
 
   // ── Auto-solve helpers ──────────────────
 
   private startAutoSolve(): void {
     this.stopAutoSolve();
-    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.APOTHECARY_TICK_MS);
+    const tickMs = this.autoSolveGoodMode ? GOOD_AUTO_SOLVE.APOTHECARY_TICK_MS : AUTO_SOLVE.APOTHECARY_TICK_MS;
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), tickMs);
   }
 
   private stopAutoSolve(): void {
@@ -369,7 +391,66 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
     }
   }
 
-  // ── Private ───────────────────────────
+  // ── Gold-2 helpers ─────────────────────
+
+  /**
+   * Track brew clicks for the gold-2 pattern:
+   * Phase 1 (up): Brew up to 9/10 quality (only zone/inner zone hits)
+   * Phase 2 (down): Miss down to 0/10 quality (only misses)
+   * Phase 3 (inner): Complete using ONLY inner zone clicks
+   */
+  private trackGold2Brew(): void {
+    const peakTarget = GOLD2_CONDITIONS.APOTHECARY_PEAK_QUALITY;
+
+    switch (this.gold2Phase) {
+      case 'up':
+        // During "up" phase, we just track. Once quality reaches peakTarget, advance to "down".
+        if (this.quality >= peakTarget && this.quality < this.maxQuality) {
+          this.gold2Phase = 'down';
+          if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) {
+            const msgs = GOLD2_STEP_MESSAGES['apothecary'];
+            this.log.log(msgs[0 % msgs.length], 'rare');
+          }
+        } else if (this.quality >= this.maxQuality) {
+          // Completed too early — not the right pattern
+          this.gold2Phase = 'failed';
+        }
+        break;
+
+      case 'down':
+        // During "down" phase, quality should be going down via misses.
+        if (this.quality <= 0) {
+          this.gold2Phase = 'inner';
+          if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) {
+            const msgs = GOLD2_STEP_MESSAGES['apothecary'];
+            this.log.log(msgs[1 % msgs.length], 'rare');
+          }
+        }
+        // If quality goes UP during down phase (hit zone), it's ok — the player might
+        // have been in the zone accidentally. But if quality reaches max, it's failed.
+        if (this.quality >= this.maxQuality) {
+          this.gold2Phase = 'failed';
+        }
+        break;
+
+      case 'inner':
+        // During "inner" phase, only inner zone clicks are allowed.
+        // If the player clicked and was NOT in inner zone, fail.
+        if (!this.isInInnerZone && this.isInZone) {
+          // Hit the outer zone (not inner) — fail
+          this.gold2Phase = 'failed';
+        } else if (!this.isInZone) {
+          // Missed entirely — fail (going backwards)
+          this.gold2Phase = 'failed';
+        }
+        // If quality reached max via inner zone only — success! (checked in onPerfectPotion)
+        break;
+
+      case 'failed':
+        // Already failed — no tracking
+        break;
+    }
+  }
 
   private startAnimation(): void {
     // Run rAF outside Angular so the frame loop doesn't trigger global CD.
@@ -409,6 +490,12 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
 
     // Roll for gold bead on successful brew
     this.rollMinigameGoldBead();
+
+    // Gold-2 check: if we completed in the 'inner' phase, award the bead
+    if (!this.autoSolveEnabled && !this.gold2Awarded && !this.synapticalEnabled && this.gold2Phase === 'inner') {
+      this.gold2Awarded = true;
+      this.gold2BeadFound.emit();
+    }
 
     // Snapshot before zeroing — the getter depends on both fields.
     const successChance = this.dilutionSuccessChance;

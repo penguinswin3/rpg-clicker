@@ -8,8 +8,8 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { UpgradeService } from '../../upgrade/upgrade.service';
-import { NECROMANCER_MG, AUTO_SOLVE, BEADS } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
+import { NECROMANCER_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
 
 // ── Helpers ─────────────────────────────────────────────────
 
@@ -155,9 +155,22 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
   // ── Auto-solve ──────────────────────────
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled = false;
+  @Input() autoSolveGoodMode = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   private autoSolveInterval?: ReturnType<typeof setInterval>;
+
+  // ── Gold-2 bead tracking ─────────────────
+  @Input() gold2Progress: unknown;
+  @Output() gold2ProgressChange = new EventEmitter<unknown>();
+  @Output() gold2BeadFound = new EventEmitter<void>();
+  private gold2Awarded = false;
+  /** Level of the Gem Hunter upgrade — enables gold-2 log progress messages. */
+  @Input() gemHunterLevel = 0;
+  /** Whether the gold-2 bead has already been found for this character (suppresses log messages). */
+  @Input() gold2BeadAlreadyFound = false;
+  /** Whether the current ritual has ever selected a ring-adjacent node. */
+  private gold2AdjacentUsed = false;
 
   toggleAutoSolve(): void {
     this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
@@ -212,7 +225,7 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
   // ── Lifecycle ──────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -261,6 +274,7 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
     this.optimalPath       = [];
     this.optimalPathLength = 0;
     this.hintLines         = [];
+    this.gold2AdjacentUsed = false;
     this.lastMsg  = MINIGAME_MSG.NECROMANCER.ROUND_START(this.cfg.NODE_COUNT);
     this.msgClass = 'msg-neutral';
 
@@ -300,10 +314,25 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
 
     // Clicking the starting node again to close the loop
     if (idx === this.startNodeIdx && this.selectedPath.length === this.nodes.length) {
+      // Gold-2: check closing edge adjacency before completing
+      if (!this.autoSolveEnabled && !this.gold2Awarded) {
+        const lastIdx = this.selectedPath[this.selectedPath.length - 1];
+        if (this.areRingAdjacent(lastIdx, idx)) {
+          this.gold2AdjacentUsed = true;
+        }
+      }
       // All nodes visited — close the circuit
       this.selectedPath.push(idx); // add start again to close
       this.completeRitual();
       return;
+    }
+
+    // Gold-2: track whether this selection is ring-adjacent to the previous node
+    if (!this.autoSolveEnabled && !this.gold2Awarded && this.selectedPath.length > 0) {
+      const prevIdx = this.selectedPath[this.selectedPath.length - 1];
+      if (this.areRingAdjacent(prevIdx, idx)) {
+        this.gold2AdjacentUsed = true;
+      }
     }
 
     // Add to path
@@ -396,7 +425,32 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
       this.cdr.markForCheck();
       return;
     }
-    // If no node selected yet, pick a random one
+
+    // ── Good auto-solve: follow the optimal path exactly ──
+    if (this.autoSolveGoodMode) {
+      if (this.selectedPath.length === 0) {
+        // Start from the optimal path's first node
+        const startIdx = this.optimalPath[0];
+        if (this.isNodeSelectable(startIdx)) {
+          this.selectNode(startIdx);
+        }
+      } else if (this.selectedPath.length < this.nodes.length) {
+        // Follow the optimal path order
+        const nextOptIdx = this.optimalPath[this.selectedPath.length];
+        if (this.isNodeSelectable(nextOptIdx)) {
+          this.selectNode(nextOptIdx);
+        }
+      } else {
+        // Close the loop back to start
+        if (this.isNodeSelectable(this.startNodeIdx)) {
+          this.selectNode(this.startNodeIdx);
+        }
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // ── Basic auto-solve: next clockwise node ──
     if (this.selectedPath.length === 0) {
       // Pick a random starting node
       const startIdx = Math.floor(Math.random() * this.nodes.length);
@@ -435,6 +489,50 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
   private rollMinigameGoldBead(): void {
     if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
       this.goldBeadFound.emit();
+    }
+  }
+
+  // ── Gold-2 helpers ─────────────────────
+
+  /**
+   * Returns true if nodes at indices `a` and `b` are directly adjacent
+   * in the circular ring (i.e. their array positions differ by exactly 1
+   * modulo the total node count).
+   */
+  private areRingAdjacent(a: number, b: number): boolean {
+    const n = this.nodes.length;
+    const diff = ((a - b) % n + n) % n;
+    return diff === 1 || diff === n - 1;
+  }
+
+  /**
+   * After a successful ritual, check if the player never selected a
+   * ring-adjacent node. Track a streak across consecutive games.
+   * 3 games in a row → award the gold-2 bead.
+   */
+  private trackGold2NoAdjacent(): void {
+    const progress = (this.gold2Progress as { streak?: number }) ?? {};
+    let streak = progress.streak ?? 0;
+    const target = GOLD2_CONDITIONS.NECROMANCER_NO_ADJACENT_STREAK;
+
+    if (this.gold2AdjacentUsed) {
+      // Used an adjacent node — reset streak
+      this.gold2ProgressChange.emit({ streak: 0 });
+    } else {
+      // Clean game — increment streak
+      streak++;
+      if (streak >= target) {
+        // Pattern complete — award the bead!
+        this.gold2Awarded = true;
+        this.gold2BeadFound.emit();
+        this.gold2ProgressChange.emit({ streak: 0 });
+      } else {
+        if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) {
+          const msgs = GOLD2_STEP_MESSAGES['necromancer'];
+          this.log.log(msgs[(streak - 1) % msgs.length], 'rare');
+        }
+        this.gold2ProgressChange.emit({ streak });
+      }
     }
   }
 
@@ -604,6 +702,11 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
 
     // Roll for gold bead on successful ritual
     this.rollMinigameGoldBead();
+
+    // Gold-2: track no-adjacent streak
+    if (!this.autoSolveEnabled && !this.gold2Awarded) {
+      this.trackGold2NoAdjacent();
+    }
 
     // Compute player's path length
     let playerLen = 0;

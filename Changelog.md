@@ -10,12 +10,12 @@
   - Thief: Evenly distributes crack attempts across the dial based on available detection.
   - Artisan: 50% chance to pick the best gem (75% best / 50% second-best with multiple picks). One pick per second.
   - Necromancer: Starts at a random node and selects the next clockwise valid node. 0.5s per click.
-- Gold Bead (gold-1) has a 1/50 chance to drop on any successful sidequest completion
-
+- Gold Bead has a 1/50 chance to drop on any successful sidequest completion
+- Gold Bead 2 is unlocked through secret patterns in sidequests
 ## Removed
 
 ## Changed
-
+- Misc UI tweaks
 ## Bugfixes
 
 ----------------------------

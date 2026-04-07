@@ -4,8 +4,8 @@ import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { THIEF_MG, AUTO_SOLVE, BEADS } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
+import { THIEF_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 
 @Component({
@@ -49,12 +49,34 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
   // ── Auto-solve ──────────────────────────
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled = false;
+  @Input() autoSolveGoodMode = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   private autoSolveInterval?: ReturnType<typeof setInterval>;
   /** Pre-computed evenly-spaced angles for the auto-solve guesses. */
   private autoSolveAngles: number[] = [];
   private autoSolveAngleIdx = 0;
+
+  // ── Gold-2 bead tracking ─────────────────
+  @Input() gold2Progress: unknown;
+  @Output() gold2ProgressChange = new EventEmitter<unknown>();
+  @Output() gold2BeadFound = new EventEmitter<void>();
+  private gold2Awarded = false;
+  /** Level of the Gem Hunter upgrade — enables gold-2 log progress messages. */
+  @Input() gemHunterLevel = 0;
+  /** Whether the gold-2 bead has already been found for this character (suppresses log messages). */
+  @Input() gold2BeadAlreadyFound = false;
+
+  // ── Good auto-solve state ────────────────
+  /** Phase of the good auto-solve: 'probe1' → 'probe2' → 'crack'. */
+  private goodAutoPhase: 'probe1' | 'probe2' | 'crack' = 'probe1';
+  /** The two probe angles used by good auto-solve. */
+  private goodProbeAngle1 = 0;
+  private goodProbeAngle2 = 0;
+  /** Whether the first probe was a hit or miss. */
+  private goodProbe1Hit = false;
+  /** The deduced sweet spot center angle. */
+  private goodDeducedAngle = 0;
 
   toggleAutoSolve(): void {
     this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
@@ -153,7 +175,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
   // ── Lifecycle ─────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -214,6 +236,11 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
     // Normal crack attempt during active heist
     if (!this.heistActive) return;
 
+    // Gold-2 tracking: record each crack attempt angle
+    if (!this.autoSolveEnabled && !this.gold2Awarded) {
+      this.trackGold2Angle();
+    }
+
     if (this.isInSweetSpot()) {
       this.heistWon    = true;
       this.heistActive = false;
@@ -265,13 +292,22 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
     if (!this.heistActive) {
       if (this.canStart) {
         this.startHeist();
-        // Pre-compute evenly spaced angles based on maxDetection
-        const attempts = this.maxDetection;
-        this.autoSolveAngles = [];
-        for (let i = 0; i < attempts; i++) {
-          this.autoSolveAngles.push((360 / attempts) * i);
+        if (this.autoSolveGoodMode) {
+          // Good auto-solve: two quick probes at 0° and 180° to deduce direction
+          this.goodAutoPhase = 'probe1';
+          this.goodProbeAngle1 = 0;
+          this.goodProbeAngle2 = 180;
+          this.autoSolveAngles = [this.goodProbeAngle1, this.goodProbeAngle2];
+          this.autoSolveAngleIdx = 0;
+        } else {
+          // Pre-compute evenly spaced angles based on maxDetection
+          const attempts = this.maxDetection;
+          this.autoSolveAngles = [];
+          for (let i = 0; i < attempts; i++) {
+            this.autoSolveAngles.push((360 / attempts) * i);
+          }
+          this.autoSolveAngleIdx = 0;
         }
-        this.autoSolveAngleIdx = 0;
       }
       this.cdr.markForCheck();
     }
@@ -391,6 +427,12 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
             this.pointerAngle = target; // snap to the exact target angle
             this.autoSolveAngleIdx++;
             this.attemptCrack();
+
+            // Good auto-solve: after each probe, update state
+            if (this.autoSolveGoodMode && this.heistActive) {
+              this.handleGoodAutoProbeResult();
+            }
+
             // If heist ended from that crack, bail out of this frame
             if (!this.heistActive) {
               this.cdr.detectChanges();
@@ -417,54 +459,136 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  // ── SVG helpers ───────────────────────────
+  // ── Good auto-solve helpers ─────────────
 
   /**
-   * SVG line endpoints for a Locked In failed-click tick mark.
-   * Drawn from just inside the ring (r=43) to the ring edge (r=50).
+   * After a probe attempt in good auto-solve, determine the sweet spot location.
+   * Probe1 at 0°, Probe2 at 180°. Based on which hit, deduce the center.
+   * If neither hit, use the miss feedback to narrow down; pick the midpoint of
+   * the remaining arc and go for it.
    */
-  getFailedTickCoords(angle: number): { x1: number; y1: number; x2: number; y2: number } {
-    const rad = (angle - 90) * Math.PI / 180;
+  private handleGoodAutoProbeResult(): void {
+    if (this.goodAutoPhase === 'probe1') {
+      // First probe was at goodProbeAngle1
+      this.goodProbe1Hit = this.heistWon; // If heist is won, probe1 was a hit
+      if (!this.heistWon) {
+        this.goodAutoPhase = 'probe2';
+        // probe2 angle is already scheduled
+      }
+    } else if (this.goodAutoPhase === 'probe2') {
+      // Both probes done — deduce the sweet spot
+      // If probe2 hit, great. If not, the sweet spot is somewhere else.
+      // Use angular distance: sweet spot is closer to whichever probe had a closer miss.
+      // Since we have failedAngles from Locked In, we can use the Flow State proximity info.
+      // Simple heuristic: pick 90° (between 0° and 180°) or 270° as our guess.
+      // More sophisticated: use the two misses to bracket the sweet spot to a 180° arc,
+      // then guess the midpoint.
+      this.goodAutoPhase = 'crack';
+      // The sweet spot is NOT near 0° and NOT near 180°, so it's near 90° or 270°.
+      // Pick 90° as the crack target.
+      this.goodDeducedAngle = 90;
+      this.autoSolveAngles.push(this.goodDeducedAngle);
+      // If that also misses, try 270°
+      this.autoSolveAngles.push(270);
+    }
+  }
+
+  // ── Gold-2 helpers ─────────────────────
+
+  /**
+   * Track crack attempt angles for the gold-2 unlock.
+   * Must guess specific angles in order within tolerance.
+   * On a matching angle: advance the step.
+   * On a non-matching angle: do nothing (don't reset).
+   * The streak is only reset when a heist FAILS (see attemptCrack).
+   */
+  private trackGold2Angle(): void {
+    const progress = (this.gold2Progress as { step?: number }) ?? {};
+    let step = progress.step ?? 0;
+    const sequence = GOLD2_CONDITIONS.THIEF_ANGLE_SEQUENCE;
+    const tolerance = GOLD2_CONDITIONS.THIEF_ANGLE_TOLERANCE;
+
+    if (step >= sequence.length) {
+      return;
+    }
+
+    const targetAngle = sequence[step];
+    const clickAngle = this.pointerAngle;
+
+    // Check if the click is within tolerance of the target clock-face angle
+    let diff = Math.abs(clickAngle - targetAngle);
+    if (diff > 180) diff = 360 - diff;
+
+    if (diff <= tolerance) {
+      step++;
+      if (step >= sequence.length) {
+        // Pattern complete — award the bead!
+        this.gold2Awarded = true;
+        this.gold2BeadFound.emit();
+        this.gold2ProgressChange.emit({ step: 0 });
+      } else {
+        if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) {
+          const msgs = GOLD2_STEP_MESSAGES['thief'];
+          this.log.log(msgs[(step - 1) % msgs.length], 'rare');
+        }
+        this.gold2ProgressChange.emit({ step });
+      }
+    }
+    // Non-matching angle: do nothing — streak preserved.
+    // Only reset on heist failure (handled in attemptCrack).
+  }
+
+  /** Reset the gold-2 streak on heist failure. */
+  private resetGold2OnFailure(): void {
+    if (!this.gold2Awarded) {
+      this.gold2ProgressChange.emit({ step: 0 });
+    }
+  }
+
+  // ── Dial SVG helpers ────────────────────
+
+  /** Compute (x1,y1)→(x2,y2) for a failed-click tick mark on the dial at angle `a`. */
+  getFailedTickCoords(a: number): { x1: number; y1: number; x2: number; y2: number } {
+    const rad = (a - 90) * Math.PI / 180;
     return {
-      x1: 60 + 43 * Math.cos(rad),
-      y1: 60 + 43 * Math.sin(rad),
+      x1: 60 + 42 * Math.cos(rad),
+      y1: 60 + 42 * Math.sin(rad),
       x2: 60 + 50 * Math.cos(rad),
       y2: 60 + 50 * Math.sin(rad),
     };
   }
 
   /**
-   * Returns the stroke color for a failed-click tick mark.
-   * Without Flow State: always red (#f44).
-   * With Flow State: interpolates red → yellow → green on a 0–180° angular
-   * distance scale from the sweet spot center.
-   *   0°  away → hue 120 (green)
-   *   90° away → hue 60  (yellow)
-   *   180° away → hue 0  (red)
+   * Colour for a failed tick — grades from red (far from sweet spot) through
+   * yellow to green (very close) when Flow State is active.
+   * Without Flow State, all failed ticks are red.
    */
-  getFailedTickColor(angle: number): string {
-    if (this.flowStateLevel < 1) return '#f44';
-    // Compute shortest angular distance from this tick to the sweet spot center
-    let diff = Math.abs(angle - this.sweetSpotCenter) % 360;
+  getFailedTickColor(a: number): string {
+    if (this.flowStateLevel < 1) return '#ff4444';
+    // Proximity to the sweet spot center (0 = on it, 180 = opposite side)
+    let diff = Math.abs(a - this.sweetSpotCenter);
     if (diff > 180) diff = 360 - diff;
-    // Normalize to [0, 1]: 0 = at center, 1 = opposite side
-    const t = Math.min(diff / 180, 1);
-    // Interpolate hue: 120 (green) → 60 (yellow) → 0 (red)
-    const hue = Math.round(120 * (1 - t));
-    return `hsl(${hue}, 90%, 55%)`;
+    const halfSpot = this.effectiveSweetSpotSize / 2;
+    if (diff <= halfSpot) return '#44ff44'; // shouldn't normally happen (that's a hit)
+    // Map distance to hue: close → green (120), far → red (0)
+    const maxDist = 180;
+    const t = Math.max(0, Math.min(1, 1 - (diff - halfSpot) / (maxDist - halfSpot)));
+    const hue = Math.round(t * 120);
+    return `hsl(${hue}, 100%, 50%)`;
   }
 
-  /** Compute the SVG arc path for the sweet-spot indicator (shown after heist ends). */
+  /** Build an SVG arc path string for the sweet-spot highlight. */
   getSweetSpotArc(cx: number, cy: number, r: number): string {
-    const startRad = (this.sweetSpotStartDeg - 90) * Math.PI / 180;
-    const endRad   = (this.sweetSpotEndDeg   - 90) * Math.PI / 180;
+    const startDeg = this.sweetSpotStartDeg - 90;
+    const endDeg   = this.sweetSpotEndDeg - 90;
+    const startRad = startDeg * Math.PI / 180;
+    const endRad   = endDeg * Math.PI / 180;
     const x1 = cx + r * Math.cos(startRad);
     const y1 = cy + r * Math.sin(startRad);
     const x2 = cx + r * Math.cos(endRad);
     const y2 = cy + r * Math.sin(endRad);
-    const largeArc = this.effectiveSweetSpotSize > 180 ? 1 : 0;
+    const largeArc = (endDeg - startDeg + 360) % 360 > 180 ? 1 : 0;
     return `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
   }
 }
-
 

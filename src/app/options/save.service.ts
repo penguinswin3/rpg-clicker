@@ -38,6 +38,7 @@ export interface UpgradeState {
   synapticalEnabled?: boolean;
   fermentationVatsEnabled?: boolean;
   koboldBaitEnabled?: boolean;
+  ancientCookbookEnabled?: boolean;
   /** Absolute timestamp (ms) when the artisan timer expires (0 = idle). */
   artisanTimerUntil?: number;
   /** How many appraisals (manual 1 + jacks N) are batched in the current timer. */
@@ -54,6 +55,8 @@ export interface UpgradeState {
   beads?: Record<string, Record<string, { found: boolean; socketed: boolean }>>;
   /** Auto-solve toggle state per character — { charId: true/false } */
   autoSolveEnabled?: Record<string, boolean>;
+  /** Gold-2 bead unlock progress per character — shape varies by character. */
+  gold2Progress?: Record<string, unknown>;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

@@ -36,8 +36,14 @@
         (stateChange)="fighterCombatStateChange.emit($event)"
         [autoSolveUnlocked]="!!autoSolveUnlocked['fighter']"
         [autoSolveEnabled]="!!autoSolveEnabled['fighter']"
+        [autoSolveGoodMode]="!!autoSolveGoodMode['fighter']"
         (autoSolveEnabledChange)="onAutoSolveToggle('fighter', $event)"
         (goldBeadFound)="goldBeadFound.emit('fighter')"
+        [gold2Progress]="gold2Progress['fighter']"
+        (gold2ProgressChange)="onGold2Progress('fighter', $event)"
+        (gold2BeadFound)="gold2BeadFound.emit('fighter')"
+        [gemHunterLevel]="gemHunterLevel"
+        [gold2BeadAlreadyFound]="!!gold2BeadFoundState['fighter']"
       />
     </ng-container>
 
@@ -57,8 +63,14 @@
         (synapticalEnabledChange)="synapticalEnabledChange.emit($event)"
         [autoSolveUnlocked]="!!autoSolveUnlocked['apothecary']"
         [autoSolveEnabled]="!!autoSolveEnabled['apothecary']"
+        [autoSolveGoodMode]="!!autoSolveGoodMode['apothecary']"
         (autoSolveEnabledChange)="onAutoSolveToggle('apothecary', $event)"
         (goldBeadFound)="goldBeadFound.emit('apothecary')"
+        [gold2Progress]="gold2Progress['apothecary']"
+        (gold2ProgressChange)="onGold2Progress('apothecary', $event)"
+        (gold2BeadFound)="gold2BeadFound.emit('apothecary')"
+        [gemHunterLevel]="gemHunterLevel"
+        [gold2BeadAlreadyFound]="!!gold2BeadFoundState['apothecary']"
       />
     </ng-container>
 
@@ -67,18 +79,32 @@
       <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" [fairyHostageLevel]="fairyHostageLevel" [treasureChestLevel]="treasureChestLevel" [xMarksTheSpotLevel]="xMarksTheSpotLevel"
         [autoSolveUnlocked]="!!autoSolveUnlocked['ranger']"
         [autoSolveEnabled]="!!autoSolveEnabled['ranger']"
+        [autoSolveGoodMode]="!!autoSolveGoodMode['ranger']"
         (autoSolveEnabledChange)="onAutoSolveToggle('ranger', $event)"
         (goldBeadFound)="goldBeadFound.emit('ranger')"
+        [gold2Progress]="gold2Progress['ranger']"
+        (gold2ProgressChange)="onGold2Progress('ranger', $event)"
+        (gold2BeadFound)="gold2BeadFound.emit('ranger')"
+        [gemHunterLevel]="gemHunterLevel"
+        [gold2BeadAlreadyFound]="!!gold2BeadFoundState['ranger']"
       />
     </ng-container>
 
     <!-- ── Culinarian: Mastermind recipe minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'culinarian'">
       <app-culinarian-minigame [wasteNotLevel]="wasteNotLevel" [largerCookbooksLevel]="largerCookbooksLevel" [cookbookAnnotationsLevel]="cookbookAnnotationsLevel"
+        [ancientCookbookEnabled]="ancientCookbookEnabled"
+        (ancientCookbookEnabledChange)="ancientCookbookEnabledChange.emit($event)"
         [autoSolveUnlocked]="!!autoSolveUnlocked['culinarian']"
         [autoSolveEnabled]="!!autoSolveEnabled['culinarian']"
+        [autoSolveGoodMode]="!!autoSolveGoodMode['culinarian']"
         (autoSolveEnabledChange)="onAutoSolveToggle('culinarian', $event)"
         (goldBeadFound)="goldBeadFound.emit('culinarian')"
+        [gold2Progress]="gold2Progress['culinarian']"
+        (gold2ProgressChange)="onGold2Progress('culinarian', $event)"
+        (gold2BeadFound)="gold2BeadFound.emit('culinarian')"
+        [gemHunterLevel]="gemHunterLevel"
+        [gold2BeadAlreadyFound]="!!gold2BeadFoundState['culinarian']"
       />
     </ng-container>
 
@@ -93,8 +119,14 @@
         [flowStateLevel]="flowStateLevel"
         [autoSolveUnlocked]="!!autoSolveUnlocked['thief']"
         [autoSolveEnabled]="!!autoSolveEnabled['thief']"
+        [autoSolveGoodMode]="!!autoSolveGoodMode['thief']"
         (autoSolveEnabledChange)="onAutoSolveToggle('thief', $event)"
         (goldBeadFound)="goldBeadFound.emit('thief')"
+        [gold2Progress]="gold2Progress['thief']"
+        (gold2ProgressChange)="onGold2Progress('thief', $event)"
+        (gold2BeadFound)="gold2BeadFound.emit('thief')"
+        [gemHunterLevel]="gemHunterLevel"
+        [gold2BeadAlreadyFound]="!!gold2BeadFoundState['thief']"
       />
     </ng-container>
 
@@ -108,8 +140,14 @@
         [closeEnoughLevel]="closeEnoughLevel"
         [autoSolveUnlocked]="!!autoSolveUnlocked['artisan']"
         [autoSolveEnabled]="!!autoSolveEnabled['artisan']"
+        [autoSolveGoodMode]="!!autoSolveGoodMode['artisan']"
         (autoSolveEnabledChange)="onAutoSolveToggle('artisan', $event)"
         (goldBeadFound)="goldBeadFound.emit('artisan')"
+        [gold2Progress]="gold2Progress['artisan']"
+        (gold2ProgressChange)="onGold2Progress('artisan', $event)"
+        (gold2BeadFound)="gold2BeadFound.emit('artisan')"
+        [gemHunterLevel]="gemHunterLevel"
+        [gold2BeadAlreadyFound]="!!gold2BeadFoundState['artisan']"
       />
     </ng-container>
 
@@ -118,8 +156,14 @@
       <app-necromancer-minigame
         [autoSolveUnlocked]="!!autoSolveUnlocked['necromancer']"
         [autoSolveEnabled]="!!autoSolveEnabled['necromancer']"
+        [autoSolveGoodMode]="!!autoSolveGoodMode['necromancer']"
         (autoSolveEnabledChange)="onAutoSolveToggle('necromancer', $event)"
         (goldBeadFound)="goldBeadFound.emit('necromancer')"
+        [gold2Progress]="gold2Progress['necromancer']"
+        (gold2ProgressChange)="onGold2Progress('necromancer', $event)"
+        (gold2BeadFound)="gold2BeadFound.emit('necromancer')"
+        [gemHunterLevel]="gemHunterLevel"
+        [gold2BeadAlreadyFound]="!!gold2BeadFoundState['necromancer']"
       />
     </ng-container>
 

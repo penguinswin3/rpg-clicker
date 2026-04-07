@@ -14,7 +14,7 @@ import { StatisticsComponent } from './statistics/statistics.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType } from './game-config';
+import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE } from './game-config';
 import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR, BEAD_FLAVOR, BEAD_COLORS, BEAD_SYMBOL } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
@@ -131,6 +131,7 @@ export class AppComponent implements OnInit, OnDestroy {
   wholesaleSpicesEnabled  = true;
   fermentationVatsEnabled = true;
   koboldBaitEnabled       = false;
+  ancientCookbookEnabled  = true;
 
   // ── Relic popup state ─────────────────────────────────────────
   /** ID of the relic upgrade whose popup is currently shown, or null. */
@@ -159,9 +160,19 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Per-character auto-solve toggle state. */
   autoSolveEnabled: Record<string, boolean> = {};
 
-  /** Whether auto-solve is unlocked for a character (gold-1 bead socketed). */
+  /** Per-character gold-2 bead unlock progress (shape varies per character). */
+  gold2Progress: Record<string, unknown> = {};
+
+  /** Whether auto-solve is unlocked for a character (either gold bead socketed). */
   isAutoSolveUnlocked(charId: string): boolean {
-    return !!this.beadState[charId]?.['gold-1']?.socketed;
+    return !!this.beadState[charId]?.['gold-1']?.socketed
+        || !!this.beadState[charId]?.['gold-2']?.socketed;
+  }
+
+  /** Whether the "good" auto-solve is active (both gold beads socketed). */
+  isAutoSolveGood(charId: string): boolean {
+    return !!this.beadState[charId]?.['gold-1']?.socketed
+        && !!this.beadState[charId]?.['gold-2']?.socketed;
   }
 
   /** Whether the character's first gold bead (gold-1, awarded by minigame success) is undiscovered. */
@@ -180,6 +191,23 @@ export class AppComponent implements OnInit, OnDestroy {
     const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
     this.log.log(`★ ${charName} discovered a golden bead from their sidequest! Check the crown above.`, 'rare');
     this.statsService.recordMilestone(`bead_gold_mg_${charId}`, `${charName}: Gold Bead Found (Sidequest)`);
+  }
+
+  /** Award the gold-2 bead for a character via the deterministic unlock challenge. */
+  findGold2Bead(charId: string): void {
+    this.ensureBeadState(charId);
+    if (this.beadState[charId]['gold-2'].found) return;
+    this.beadState[charId]['gold-2'].found = true;
+    this.beadState = { ...this.beadState };
+    this._refreshDerived();
+    const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
+    this.log.log(`★ ${charName} unlocked a golden bead of mastery! Check the crown above.`, 'rare');
+    this.statsService.recordMilestone(`bead_gold2_${charId}`, `${charName}: Gold Bead Found (Challenge)`);
+  }
+
+  /** Update gold-2 progress for a character. */
+  onGold2ProgressChange(charId: string, progress: unknown): void {
+    this.gold2Progress = { ...this.gold2Progress, [charId]: progress };
   }
   // ── Thief stun state ───────────────────────────────────────────
   /** Absolute timestamp (ms) when the Thief's stun expires. 0 = not stunned. */
@@ -730,6 +758,7 @@ export class AppComponent implements OnInit, OnDestroy {
       synapticalEnabled:       this.synapticalEnabled,
       fermentationVatsEnabled: this.fermentationVatsEnabled,
       koboldBaitEnabled:       this.koboldBaitEnabled,
+      ancientCookbookEnabled:  this.ancientCookbookEnabled,
       artisanTimerUntil:       this.artisanTimerUntil,
       artisanTimerBatchSize:   this.artisanTimerBatchSize,
       necromancerActiveButton:     this.necromancerActiveButton,
@@ -738,6 +767,7 @@ export class AppComponent implements OnInit, OnDestroy {
       familiarsPaused:             this.familiarsPaused,
       beads:                       JSON.parse(JSON.stringify(this.beadState)),
       autoSolveEnabled:            { ...this.autoSolveEnabled },
+      gold2Progress:               JSON.parse(JSON.stringify(this.gold2Progress)),
     };
   }
 
@@ -760,6 +790,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.synapticalEnabled       = s.synapticalEnabled       ?? false;
     this.fermentationVatsEnabled = s.fermentationVatsEnabled ?? true;
     this.koboldBaitEnabled       = s.koboldBaitEnabled       ?? false;
+    this.ancientCookbookEnabled  = s.ancientCookbookEnabled  ?? true;
     // Restore necromancer state
     this.necromancerActiveButton     = s.necromancerActiveButton     ?? 'defile';
     this.necromancerClicksRemaining  = s.necromancerClicksRemaining  ?? 10;
@@ -777,6 +808,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.syncBeadMultipliers();
     // Restore auto-solve toggle state
     this.autoSolveEnabled = s.autoSolveEnabled ? { ...s.autoSolveEnabled } : {};
+    // Restore gold-2 progress state
+    this.gold2Progress = s.gold2Progress ? JSON.parse(JSON.stringify(s.gold2Progress)) : {};
     // Restore artisan timer — if still in the future, reschedule the completion callback
     this.artisanTimerUntil     = s.artisanTimerUntil     ?? 0;
     this.artisanTimerBatchSize = s.artisanTimerBatchSize  ?? 0;

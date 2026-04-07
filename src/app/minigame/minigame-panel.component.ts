@@ -97,6 +97,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() wasteNotLevel = 0;
   /** Larger Cookbooks level — forwarded to the culinarian minigame. */
   @Input() largerCookbooksLevel = 0;
+  /** Whether the Ancient Cookbook (Larger Cookbooks) reveal is enabled. */
+  @Input() ancientCookbookEnabled = true;
+  /** Emitted when the player toggles the Ancient Cookbook. */
+  @Output() ancientCookbookEnabledChange = new EventEmitter<boolean>();
   /** Cookbook Annotations level — forwarded to the culinarian minigame. */
   @Input() cookbookAnnotationsLevel = 0;
   /** Vanishing Powder level — forwarded to the thief minigame. */
@@ -111,6 +115,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() lockedInLevel = 0;
   /** Flow State level — forwarded to the thief minigame. */
   @Input() flowStateLevel = 0;
+  /** Gem Hunter level — enables gold-2 progress log messages across all minigames. */
+  @Input() gemHunterLevel = 0;
+  /** Per-character gold-2 bead found status — used to suppress messages once bead is unlocked. */
+  @Input() gold2BeadFoundState: Record<string, boolean> = {};
   /** Lucky Gems level — forwarded to the artisan minigame. */
   @Input() luckyGemsLevel = 0;
   /** Double Dip level — forwarded to the artisan minigame. */
@@ -132,12 +140,25 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
 
   /** Per-character auto-solve unlock state (gold-1 bead socketed). */
   @Input() autoSolveUnlocked: Record<string, boolean> = {};
+  /** Per-character "good" auto-solve mode (both gold beads socketed). */
+  @Input() autoSolveGoodMode: Record<string, boolean> = {};
   /** Per-character auto-solve toggle state. */
   @Input() autoSolveEnabled: Record<string, boolean> = {};
   /** Emitted when a minigame auto-solve toggle changes. */
   @Output() autoSolveEnabledChange = new EventEmitter<{ charId: string; enabled: boolean }>();
   /** Emitted when a minigame awards a gold bead. */
   @Output() goldBeadFound = new EventEmitter<string>();
+
+  /** Per-character gold-2 bead unlock progress. */
+  @Input() gold2Progress: Record<string, unknown> = {};
+  /** Emitted when gold-2 progress changes. */
+  @Output() gold2ProgressChange = new EventEmitter<{ charId: string; progress: unknown }>();
+  /** Emitted when a gold-2 bead is unlocked. */
+  @Output() gold2BeadFound = new EventEmitter<string>();
+
+  onGold2Progress(charId: string, progress: unknown): void {
+    this.gold2ProgressChange.emit({ charId, progress });
+  }
 
   onAutoSolveToggle(charId: string, enabled: boolean): void {
     this.autoSolveEnabledChange.emit({ charId, enabled });

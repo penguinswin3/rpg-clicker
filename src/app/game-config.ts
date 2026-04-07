@@ -494,6 +494,10 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'soul-stone',          base: 500,    scale: 1.0, fromLevel: 6, untilLevel: 7 },
       { currency: 'xp',                  base: 50000,  scale: 1.0, fromLevel: 6, untilLevel: 7 },
     ] },
+  { id: 'GEM_HUNTER', characterId: 'thief', category: 'standard', max: 1,
+    costs: [
+      { currency: 'dossier', base: 500_000, scale: 1.0 },
+    ] },
 
   // ── Thief — minigame ─────────────────────────────────────────
   { id: 'VANISHING_POWDER', characterId: 'thief', category: 'minigame', max: 5,
@@ -1082,3 +1086,68 @@ export interface BeadSlotState {
   found: boolean;
   socketed: boolean;
 }
+
+// ── Gold-2 bead unlock conditions ────────────────────────────────
+/**
+ * Each character has a deterministic unlock condition for the gold-2 bead.
+ * These are multi-game patterns that must be completed without breaking the streak.
+ */
+export const GOLD2_CONDITIONS = {
+  /** When true, log a 'rare' message each time a gold-2 sequence step is completed. */
+  LOG_PROGRESS: true,
+
+  /** Fighter: kill kobolds at selected levels 1, 1, 2, 3, 5 in sequence. */
+  FIGHTER_KILL_LEVELS: [1, 1, 2, 3, 5] as readonly number[],
+
+  /**
+   * Ranger: click cells in a specific pattern across 5 consecutive games.
+   * Grid indices: TL=0  TM=1  TR=2  / ML=3  MM=4  MR=5  / BL=6  BM=7  BR=8
+   */
+  RANGER_CLICK_PATTERNS: [
+    [0, 2, 7],     // Game 1: TL, TR, BM
+    [1, 6, 8],     // Game 2: TM, BL, BR
+    [5, 4, 3],     // Game 3: MR, MM, ML
+    [0, 1, 2],     // Game 4: TL, TM, TR
+    [6, 7, 8],     // Game 5: BL, BM, BR
+  ] as readonly (readonly number[])[],
+
+  /** Apothecary: brew up to 8/10, miss down to 0/10, then finish using only inner zone. */
+  APOTHECARY_PEAK_QUALITY: 8,
+
+  /**
+   * Culinarian: submit these first guesses across 3 consecutive games.
+   * Ingredients: herb, beast (meat), kobold-tongue (tongue), spice
+   */
+  CULINARIAN_FIRST_GUESSES: [
+    ['spice', 'spice', 'herb', 'herb'],
+    ['kobold-tongue', 'kobold-tongue', 'beast', 'beast'],
+    ['kobold-tongue', 'herb', 'beast', 'spice'],
+  ] as readonly (readonly string[])[],
+
+  /**
+   * Thief: guess these clock-face angles in order within 10° tolerance.
+   * 12=0°, 3=90°, 6=180°, 9=270°
+   */
+  THIEF_ANGLE_SEQUENCE: [270, 90, 270, 0, 180, 270, 90] as readonly number[],
+  THIEF_ANGLE_TOLERANCE: 20,
+
+  /**
+   * Artisan: first gem selected across 10 games.
+   * Grid: TL=0  TM=1  TR=2  / BL=3  BM=4  BR=5
+   */
+  ARTISAN_FIRST_GEM_SEQUENCE: [0, 2, 3, 5, 2, 0, 3, 5, 1, 4] as readonly number[],
+
+  /** Necromancer: complete 3 consecutive games without ever selecting an adjacent node. */
+  NECROMANCER_NO_ADJACENT_STREAK: 3,
+} as const;
+
+/**
+ * Good auto-solve tuning — used when both gold beads are socketed.
+ */
+export const GOOD_AUTO_SOLVE = {
+  /** Fighter: faster tick (ms) when upgraded. */
+  FIGHTER_TICK_MS:     500,
+  /** Apothecary: ultra-fast tick (ms) when upgraded. */
+  APOTHECARY_TICK_MS:  20,
+} as const;
+
