@@ -1,6 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
@@ -12,7 +11,7 @@ import { toPct, rollChance } from '../../utils/mathUtils';
 @Component({
   selector: 'app-apothecary-minigame',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './apothecary-minigame.component.html',
   styleUrls: ['./apothecary-minigame.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -178,6 +178,16 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     );
   }
 
+  /** Whether the sidequest panel is collapsed. */
+  @Input() collapsed = false;
+  @Output() collapsedChange = new EventEmitter<boolean>();
+
+  toggleCollapsed(): void {
+    this.collapsed = !this.collapsed;
+    this.collapsedChange.emit(this.collapsed);
+    this.cdr.markForCheck();
+  }
+
 
   ngOnInit(): void {
     this.sub.add(

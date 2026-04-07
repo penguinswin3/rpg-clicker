@@ -1,30 +1,58 @@
 # TODO List
 ## Systems
-
+- kobold paw
+- - potion of the collosus, +1hp per level in potion of fortitude
 
 ### Lore Pages
 - Lore Pages that give context about the character or the world they live in. Can be unlocked by doing certain things in minigames...
+- Each lore page gives a static resource multiplier for some of that characters resources from ALL sources
+- One can be gotten from randomly clicking the button
+  - Gives lore on the character's Bagkground
+- one can be gotten from doing a particular action in the minigame
+  - A small vignette on the character's interaction with the doomsayer
+  - Fighter: Killing kobolds in a certain pattern
+  - Ranger: Selecting a particular set of 3 in a few games in a row 
+  - Apothecary: clicking the synapse zones in a particular order, maybe doing it at 0% dilution
+  - Culinarian: guess a certain pattern of 4 in a row
+  - Thief: lockpicking times at a certain time (across multiple games cause you can get it first try)
+  - Artisan: Selecting some assortment of gems, or intentionally throwing too much in a certain way 
+  - Necromancer:drawing a certain pattern (cross through the gem 3 times?)
 
+-Collecting one allows you to autoplay their minigame, slower than you might be able to. 
+- Collecting doubles all resource gains from that character
+- collecting 3 upgrades the minigame to the optimal strategy
+  Can this be done while not on the page? 
+  - Maybe add a secret third note that gives them an optimal strategy? 
+  - Fighter: Spam attack -> spam attack and heal when under half
+  - Ranger: 3 random squares -> star square, two treasure squares, then random
+  - Apothecary: one click per box pass through -> spam click in boxes
+  - Culinarian: "All one suit" guesses to force it -> actually use the info available
+  - Thief: Click on cadence -> Use the colored info to guess better
+  - Artisan: Factors in color and size -> Just reads the game data lol, maybe just factors in blur too
+  - Necromancer: Clicks the next available clockwise -> Just reads the game data 
+
+- These tier show up above the hero button, once the minigames are unlocked. THIS NEEDS TO INTEGRATE WITH THE RELIC, BEFORE THE RELIC SHOWS UP SO THAT WHEN THE RELIC SHOWS UP, IT INTEGRATES IN THE UI NICELY 
+-Add a fourth lore tier, post relics, that give another 2x resource yield. Earned from jacks (or familiar) presses only
 ### More characters
-
-  - Mage
-    - Memory matching / Simon Says
-    - Reads pages from the intel
-    - Generates Mana
-    - Minigame creates Spell Scrolls
-    - Spell Scrolls can be used to buff familiars?
-  - Chimeramancer
-    - Animal parts combination mix and match synergy?
-      - kobold ear, kobold tongue, kobold hair, beast meat, bones, other things from the fighter 
-  - Party Face
-    - Card game Blackjack?
-  - Merchant
-    - Stock market game where you can sell your materials for gp, and buy other materials for gp
+- Party Face
+  - Card game Blackjack?
+- Merchant
+  - Stock market game where you can sell your materials for gp, and buy other materials for gp
+- Artificer
+  - Memory matching / Simon Says
+  - Reads pages from the intel
+  - Generates Mana
+  - Minigame creates Spell Scrolls
+  - Spell Scrolls can be used to buff familiars?
+- Chimeramancer
+  - Animal parts combination mix and match synergy?
+    - kobold ear, kobold tongue, kobold hair, beast meat, bones, other things from the fighter 
+  - Makes a horror beyond our comprehension
   - Something else?
 
   - Slayer
     - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
-
+    - Has to slay the horror 
   
 ### Easter Eggs
 - Fairy Ring codes in the ranger minigame
@@ -35,7 +63,7 @@
 - Master of All - An upgrade for jacks that auto play minigames. Might be a good relic upgrade? 
 
 ### Fighter
-
+- Swarm Killing. Kobolds might have more HP, but you might get some bonus parts of a lower tier 
 
 ### Ranger 
 - Once better tracing is maxed open a new upgrade (Bigger beasts? Maybe add a new level select button or something?)
@@ -62,26 +90,32 @@
 - Little "shine" on the character select button every time something new shows up there till you click it. 
 - Rename Alchemize to Concoct
 - make a lot of things not highlightable 
-- Make the minigames area collapsable 
-- Rename Minigames to Sidequests
+- ~~Make the minigames area collapsable~~ ✅
+- ~~Rename Minigames to Sidequests~~ ✅
+- Add some sort of reference to relics that the thief can get from the minigame 
+- ~~Make the apoth minigame toggles look like the fighter minigame toggles~~ ✅
+- ~~artisan is colored when collapsed?~~ ✅ (necromancer coloring in collapsed view)
+- ~~make sure the ward and defile jacks boxes have the all and none buttons as well~~ ✅
 
 ## Statistics
-- Split the appraisals out from the faceting stats section
+- ~~Split the appraisals out from the faceting stats section~~ ✅
 - Statistics culinarian minigame histogram or count %s
+- ~~First Relic unlocked~~ ✅
 
 ## Balancing
 - A "Balance Report" that shows gaps in the cost progression
-  - Makes graphs of time to recoup costs for an upgrade. number of seconds or clicks
-- Potion Titration can have 200 max levels and give 2% chance 
-- Kobold Bait can be 50% less to use 
-- potion of sticky fingers cost is bugged 
+  - Makes grap-hs of time to recoup costs for an upgrade. number of seconds or clicks
+
+- ~~Potion Titration can have 200 max levels and give 2% chance~~ ✅ (100 max levels, 4% chance)
+- ~~Pity drop rate for the first relic~~ ✅ (guaranteed after 100 successful safe cracks with no relic)
+- Add another jacks speed upgrade at Artisan Tier 
+- Each level of relic hunter should give +1% of finding a relic 
+- Ranger, apoth, and culi relic rewards are bad
+- thieving relic might be too good 
+
 
 ## Bug Fixes
-
-
+- ~~apraisals complete what is this stat~~ ✅ (moved to its own Appraising section)
 
 ## Code Refactors
 
-
-## Maybes
-- Split out upgrades and passives into 3 column? theres not really enough passive to make it meaningful 

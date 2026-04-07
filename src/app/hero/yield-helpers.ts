@@ -118,9 +118,9 @@ export function calcPotionMarketingGoldPerBrew(potionMarketingLevel: number): nu
   return potionMarketingLevel;
 }
 
-/** Herb save chance in % — equals Potion Titration level. */
+/** Herb save chance in % — 4% per Potion Titration level. */
 export function calcHerbSaveChance(potionTitrationLevel: number): number {
-  return potionTitrationLevel;
+  return potionTitrationLevel * 4;
 }
 
 // ── Culinarian ──────────────────────────────────────────────

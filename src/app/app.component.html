@@ -1,8 +1,10 @@
 <div class="root-layout">
   <app-wallet-sidebar></app-wallet-sidebar>
 
-  <!-- Minigame panel: unlocked at 2500 XP, spans left of game area -->
+  <!-- Sidequest panel: unlocked at 2500 XP, spans left of game area -->
   <app-minigame-panel *ngIf="minigameShown"
+    [collapsed]="sidequestCollapsed"
+    (collapsedChange)="sidequestCollapsed = $event"
     [fighterAttack]="fighterAttackPower"
     [potionChuggingLevel]="upgrades.level('POTION_CHUGGING')"
     [strongerKoboldsLevel]="upgrades.level('STRONGER_KOBOLDS')"
@@ -84,7 +86,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         <div class="divider">+===============================================================================================+</div>
       </header>
 
-      <!-- Shared upgrade card template — used by relic column, standard, and minigame columns -->
+      <!-- Shared upgrade card template — used by relic column, standard, and sidequest columns -->
       <ng-template #upgradeCard let-id>
         <div class="upgrade-card" [class.bland]="blandMode" [style.border-left-color]="getUpgradeColor(id)">
           <span class="upgrade-name" [style.color]="getUpgradeColor(id)">{{ getUpgradeFlavor(id).name }}</span>
@@ -213,6 +215,14 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     <span class="jack-assigned-num">{{ getJackCount('necromancer-defile') }}</span>
                     <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-defile')">[+]</button>
                   </div>
+                  <div class="jack-bulk-row" *ngIf="jacksOwned >= 5">
+                    <button class="jack-bulk-btn"
+                            [disabled]="getJackCount('necromancer-defile') <= 0"
+                            (click)="deallocateAllJacks('necromancer-defile')">[NONE]</button>
+                    <button class="jack-bulk-btn"
+                            [disabled]="jacksPoolFree <= 0"
+                            (click)="allocateAllJacks('necromancer-defile')">[ALL]</button>
+                  </div>
                 </div>
                 <div class="jack-box">
                   <div class="jack-box-label">Ward</div>
@@ -220,6 +230,14 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                     <button class="jack-alloc-btn" [disabled]="getJackCount('necromancer-ward') <= 0" (click)="deallocateJack('necromancer-ward')">[-]</button>
                     <span class="jack-assigned-num">{{ getJackCount('necromancer-ward') }}</span>
                     <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-ward')">[+]</button>
+                  </div>
+                  <div class="jack-bulk-row" *ngIf="jacksOwned >= 5">
+                    <button class="jack-bulk-btn"
+                            [disabled]="getJackCount('necromancer-ward') <= 0"
+                            (click)="deallocateAllJacks('necromancer-ward')">[NONE]</button>
+                    <button class="jack-bulk-btn"
+                            [disabled]="jacksPoolFree <= 0"
+                            (click)="allocateAllJacks('necromancer-ward')">[ALL]</button>
                   </div>
                 </div>
               </div>

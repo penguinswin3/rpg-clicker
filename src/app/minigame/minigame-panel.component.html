@@ -1,11 +1,17 @@
-<aside class="minigame-panel" *ngIf="shown">
+<aside class="minigame-panel" [class.collapsed]="collapsed" *ngIf="shown">
 
   <!-- Header -->
-  <div class="panel-header">
-    <span class="panel-title">[ {{ activeMinigame.title | uppercase }} ]</span>
+  <div class="panel-header" (click)="toggleCollapsed()">
+    <span class="panel-title" *ngIf="!collapsed">[ {{ activeMinigame.title | uppercase }} ]</span>
+    <span class="panel-toggle">{{ collapsed ? '[&gt;]' : '[&lt;]' }}</span>
   </div>
 
-  <div class="panel-body">
+  <!-- ── Collapsed view ─────────────────── -->
+  <div class="collapsed-label" *ngIf="collapsed">
+    <span class="collapsed-text">S I D E Q U E S T</span>
+  </div>
+
+  <div class="panel-body" *ngIf="!collapsed">
 
     <!-- ── Fighter: live combat minigame ── -->
     <ng-container *ngIf="activeCharacterId === 'fighter'">
@@ -90,7 +96,7 @@
       <div class="mg-divider">+----------+</div>
 
       <div class="mg-coming-soon">
-        <span class="cs-label">&gt;&gt; MINIGAME &lt;&lt;</span>
+        <span class="cs-label">&gt;&gt; SIDEQUEST &lt;&lt;</span>
         <span class="cs-sub">[ Under Construction ]</span>
         <span class="cs-hint">// more content soon //</span>
       </div>

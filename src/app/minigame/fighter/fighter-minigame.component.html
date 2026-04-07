@@ -86,7 +86,7 @@
               [class.sr-on]="koboldBaitEnabled"
               (click)="toggleKoboldBait()">
         {{ koboldBaitEnabled ? '[ Kobold Bait: ON  ]' : '[ Kobold Bait: OFF ]' }}
-        (-{{ 100 * selectedKoboldLevel }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>)
+        (-{{ 50 * selectedKoboldLevel }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>)
       </button>
     </div>
 

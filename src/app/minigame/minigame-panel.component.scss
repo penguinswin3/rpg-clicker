@@ -20,6 +20,11 @@ $accent: #0ff;
   border-right: 1px solid $border;
   font-family: 'Courier New', Courier, monospace;
   font-size: 12px;
+  transition: width 0.15s ease;
+
+  &.collapsed {
+    width: 28px;
+  }
 }
 
 // ── Header ────────────────────────────────
@@ -32,7 +37,12 @@ $accent: #0ff;
   min-height: 28px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+
+  &:hover { background: #1a1a1a; }
 }
 
 .panel-title {
@@ -41,6 +51,31 @@ $accent: #0ff;
   font-size: 11px;
   white-space: nowrap;
   overflow: hidden;
+}
+
+.panel-toggle {
+  color: $accent;
+  font-weight: bold;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+// ── Collapsed label ───────────────────────
+
+.collapsed-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.collapsed-text {
+  color: #555;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  white-space: nowrap;
 }
 
 // ── Body ──────────────────────────────────
