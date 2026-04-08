@@ -235,9 +235,46 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
     return !!sources && Object.keys(sources).length > 0;
   }
 
-  showTooltip(currencyId: string): void {
+  showTooltip(currencyId: string, event: MouseEvent): void {
     this.hoveredCurrencyId = currencyId;
+
+    // Compute fixed-position placement so the tooltip isn't clipped by
+    // the sidebar's overflow:hidden or the viewport edge.
+    const el = event.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
+
+    // Estimated tooltip size (min-width 120, typical height ~100)
+    const tooltipW = 160;
+    const tooltipH = 120;
+    const pad = 4;
+
+    // Default: below the element, right-aligned with it
+    let top = rect.bottom + pad;
+    let left = rect.right - tooltipW;
+
+    // Flip above if it would overflow the bottom
+    if (top + tooltipH > window.innerHeight) {
+      top = rect.top - tooltipH - pad;
+    }
+
+    // Push right if it would overflow the left edge
+    if (left < 0) {
+      left = rect.left;
+    }
+
+    // Push left if it would overflow the right edge
+    if (left + tooltipW > window.innerWidth) {
+      left = window.innerWidth - tooltipW - pad;
+    }
+
+    this.tooltipStyle = {
+      top: `${top}px`,
+      left: `${left}px`,
+    };
   }
+
+  /** Computed fixed-position style for the tooltip. */
+  tooltipStyle: { top: string; left: string } = { top: '0', left: '0' };
 
   hideTooltip(): void {
     this.hoveredCurrencyId = null;
