@@ -53,7 +53,6 @@
   - Makes grap-hs of time to recoup costs for an upgrade. number of seconds or clicks
 - Ranger, apoth, and culi relic rewards are bad
 - two new gems, that allow the minigames to operate behind the scenes at 50% and then 100% capacity. You can purchase these
-- Bead unlock notif should say that you need to socket it 
 - Add a cost to socketing beads? 
 
 
