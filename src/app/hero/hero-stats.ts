@@ -8,7 +8,7 @@
 
 import { HeroStat } from '../character/character-sidebar.component';
 import { HERO_STATS_FLAVOR, CHARACTER_FLAVOR } from '../flavor-text';
-import { YIELDS, APOTH_MG, THIEF_MG, ARTISAN_MG } from '../game-config';
+import { YIELDS, APOTH_MG, THIEF_MG, ARTISAN_MG, MERCHANT_MG } from '../game-config';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { WalletService } from '../wallet/wallet.service';
 import { roundTo } from '../utils/mathUtils';
@@ -24,6 +24,7 @@ import {
   calcNecromancerBoneYield, calcNecromancerWardXpCost,
   calcNecromancerBrimstoneYield, calcNecromancerSwitchMin,
   calcNecromancerSwitchMax, calcGraveLootingChance,
+  calcMerchantFencedGold,
 } from './yield-helpers';
 
 // ── Context required by the builder ──────────────────────────
@@ -55,6 +56,7 @@ export function getQuestBtnLabel(charId: string): string {
     thief:      CHARACTER_FLAVOR.THIEF.questBtn,
     artisan:    CHARACTER_FLAVOR.ARTISAN.questBtn,
     necromancer: CHARACTER_FLAVOR.NECROMANCER.questBtnExhume,
+    merchant:   CHARACTER_FLAVOR.MERCHANT.questBtn,
   };
   return map[charId] ?? CHARACTER_FLAVOR.FIGHTER.questBtn;
 }
@@ -68,6 +70,7 @@ export function buildHeroStats(charId: string, ctx: HeroStatsContext): HeroStat[
     case 'thief':       return buildThiefStats(ctx);
     case 'artisan':     return buildArtisanStats(ctx);
     case 'necromancer': return buildNecromancerStats(ctx);
+    case 'merchant':    return buildMerchantStats(ctx);
     default:            return buildFighterStats(ctx);
   }
 }
@@ -243,3 +246,21 @@ function buildNecromancerStats(ctx: HeroStatsContext): HeroStat[] {
 
   return stats;
 }
+
+function buildMerchantStats(ctx: HeroStatsContext): HeroStat[] {
+  const u = ctx.upgrades;
+  const fencedGold    = calcMerchantFencedGold(u.level('FENCED_GOODS'));
+  const shadyBonus    = u.level('SHADY_CONNECTIONS') * MERCHANT_MG.SHADY_CONNECTIONS_BONUS_PER_LEVEL;
+
+  const stats: HeroStat[] = [
+    { label: HERO_STATS_FLAVOR.MERCHANT.GOODS_COST, value: `${MERCHANT_MG.GOODS_COST}` },
+  ];
+  if (shadyBonus > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.MERCHANT.BONUS_LOOT, value: `+${shadyBonus}%` });
+  }
+  if (fencedGold > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.MERCHANT.FENCED_GOLD, value: `${fencedGold}g` });
+  }
+  return stats;
+}
+

@@ -62,7 +62,8 @@
       culinarian: isAutoSolveUnlocked('culinarian'),
       thief: isAutoSolveUnlocked('thief'),
       artisan: isAutoSolveUnlocked('artisan'),
-      necromancer: isAutoSolveUnlocked('necromancer')
+      necromancer: isAutoSolveUnlocked('necromancer'),
+      merchant: isAutoSolveUnlocked('merchant')
     }"
     [autoSolveGoodMode]="{
       fighter: isAutoSolveGood('fighter'),
@@ -71,7 +72,8 @@
       culinarian: isAutoSolveGood('culinarian'),
       thief: isAutoSolveGood('thief'),
       artisan: isAutoSolveGood('artisan'),
-      necromancer: isAutoSolveGood('necromancer')
+      necromancer: isAutoSolveGood('necromancer'),
+      merchant: isAutoSolveGood('merchant')
     }"
     [autoSolveEnabled]="autoSolveEnabled"
     (autoSolveEnabledChange)="autoSolveEnabled[$event.charId] = $event.enabled"
@@ -87,7 +89,8 @@
       culinarian: !!beadState['culinarian']?.['gold-2']?.found,
       thief: !!beadState['thief']?.['gold-2']?.found,
       artisan: !!beadState['artisan']?.['gold-2']?.found,
-      necromancer: !!beadState['necromancer']?.['gold-2']?.found
+      necromancer: !!beadState['necromancer']?.['gold-2']?.found,
+      merchant: !!beadState['merchant']?.['gold-2']?.found
     }" />
 
   <div class="game-wrapper">

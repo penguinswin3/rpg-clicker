@@ -6,21 +6,31 @@
 -Add the flavor lore
 
 ### More characters
-- Party Face
-  - Card game Blackjack?
+
 - Merchant
-  - Stock market game where you can sell your materials for gp, and buy other materials for gp
+  - Hero button opens illicit packages
+  - Illicit packages are purchased as part of the stock trading minigame
+  - Opening illicit packages can yield a handful of other random resources, as well as three new ones
+    - Monster Trophy
+    - Forbidden Tome
+    - Magical Implements
+
 - Artificer
-  - Memory matching / Simon Says
-  - Reads pages from the intel
-  - Generates Mana
+  - Reads pages from the forbidden tomes to gain insight
+    - insight gives a temporary buff to mana generation
+    - you must have insight to generate mana
+    - Having more insight makes more mana
   - Minigame creates Spell Scrolls
-  - Spell Scrolls can be used to buff familiars?
+    - Memory matching / Simon Says
+    - Spell Scrolls can be used to buff familiars
+      - Makes them act as +1 familiar, max +5, lasts some minutes
+
 - Chimeramancer
-  - Animal parts combination mix and match synergy?
+  - Final main minigame, hero button prepares the parts, which in turn you have to add to the flesh construct
     - kobold ear, kobold tongue, kobold hair, beast meat, bones, other things from the fighter 
+    - Parts are prepared with part + resource
   - Makes a horror beyond our comprehension
-  - Something else?
+
 - Slayer
   - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
   - Has to slay the horror 

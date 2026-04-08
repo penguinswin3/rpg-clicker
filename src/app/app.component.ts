@@ -86,6 +86,7 @@ export class AppComponent implements OnInit, OnDestroy {
   thiefUnlocked      = false;
   artisanUnlocked    = false;
   necromancerUnlocked = false;
+  merchantUnlocked    = false;
   unlockedCharacters: { id: string; name: string; color: string }[] = [];
 
   // ── Necromancer state ────────────────────────────────────────────
@@ -366,6 +367,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresThief         && !this.thiefUnlocked)                          return false;
     if (gates.requiresArtisan       && !this.artisanUnlocked)                        return false;
     if (gates.requiresNecromancer   && !this.necromancerUnlocked)                     return false;
+    if (gates.requiresMerchant      && !this.merchantUnlocked)                        return false;
     if (gates.requiresRelic         && !this.wallet.isCurrencyUnlocked('relic'))     return false;
     if (gates.requiresFang          && !this.wallet.isCurrencyUnlocked('kobold-fang')) return false;
     if (gates.requiresFeather       && !this.wallet.isCurrencyUnlocked('kobold-feather')) return false;
@@ -591,7 +593,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Sync all bead multipliers to the wallet service. */
   private syncBeadMultipliers(): void {
-    const allChars = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief', 'artisan', 'necromancer'];
+    const allChars = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief', 'artisan', 'necromancer', 'merchant'];
     for (const charId of allChars) {
       const blueCount = this.getSocketedBlueCount(charId);
       this.wallet.setBeadMultiplier(charId, Math.pow(BEADS.BLUE_YIELD_MULT, blueCount));
@@ -641,6 +643,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.thiefUnlocked      = chars.find(c => c.id === 'thief')?.unlocked      ?? false;
       this.artisanUnlocked    = chars.find(c => c.id === 'artisan')?.unlocked    ?? false;
       this.necromancerUnlocked = chars.find(c => c.id === 'necromancer')?.unlocked ?? false;
+      this.merchantUnlocked   = chars.find(c => c.id === 'merchant')?.unlocked   ?? false;
       this.unlockedCharacters = chars.filter(c => c.unlocked).map(c => ({ id: c.id, name: c.name, color: c.color }));
       this.updateRelicHunterMax(chars);
       // Shine newly unlocked characters (skip ones already known from save restore)
@@ -925,6 +928,7 @@ export class AppComponent implements OnInit, OnDestroy {
         thief:      this.upgrades.level('RELIC_THIEF'),
         artisan:    this.upgrades.level('RELIC_ARTISAN'),
         necromancer:this.upgrades.level('RELIC_NECROMANCER'),
+        merchant:   this.upgrades.level('RELIC_MERCHANT'),
       },
       necromancerActiveButton: this.necromancerActiveButton,
       familiarTimers: this.familiarTimers,
@@ -938,6 +942,7 @@ export class AppComponent implements OnInit, OnDestroy {
         thief:       this.wallet.getBeadMultiplier('thief'),
         artisan:     this.wallet.getBeadMultiplier('artisan'),
         necromancer: this.wallet.getBeadMultiplier('necromancer'),
+        merchant:    this.wallet.getBeadMultiplier('merchant'),
       },
     };
     const rates = calculatePerSecondRates(ctx);
@@ -955,6 +960,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.setPerSecond('jewelry',         rates.jewelry);
       this.wallet.setPerSecond('bone',            rates.bone);
       this.wallet.setPerSecond('brimstone',       rates.brimstone);
+      this.wallet.setPerSecond('illicit-goods',   rates['illicit-goods']);
       this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
     });
   }

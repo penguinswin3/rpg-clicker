@@ -10,6 +10,7 @@ import { CulinarianMinigameComponent } from './culinarian/culinarian-minigame.co
 import { ThiefMinigameComponent } from './thief/thief-minigame.component';
 import { ArtisanMinigameComponent } from './artisan/artisan-minigame.component';
 import { NecromancerMinigameComponent } from './necromancer/necromancer-minigame.component';
+import { MerchantMinigameComponent } from './merchant/merchant-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
 import { FighterCombatState } from '../options/save.service';
@@ -22,7 +23,7 @@ interface MinigameInfo {
 @Component({
   selector: 'app-minigame-panel',
   standalone: true,
-  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent, NecromancerMinigameComponent],
+  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent, NecromancerMinigameComponent, MerchantMinigameComponent],
   templateUrl: './minigame-panel.component.html',
   styleUrls: ['./minigame-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -198,6 +199,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     {
       characterId: 'necromancer',
       title: MINIGAME_FLAVOR.NECROMANCER.name,
+    },
+    {
+      characterId: 'merchant',
+      title: MINIGAME_FLAVOR.MERCHANT.name,
     },
   ];
 

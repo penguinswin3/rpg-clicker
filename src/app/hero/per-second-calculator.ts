@@ -6,7 +6,7 @@
  * ════════════════════════════════════════════════════════════
  */
 
-import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT } from '../game-config';
+import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG } from '../game-config';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { roundTo } from '../utils/mathUtils';
 import {
@@ -62,6 +62,7 @@ export interface PerSecondRates {
   jewelry:           number;
   bone:              number;
   brimstone:         number;
+  'illicit-goods':   number;
 }
 
 /**
@@ -85,6 +86,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const hasCulinarianRelic = (rl['culinarian'] ?? 0) >= 1;
   const hasThiefRelic      = (rl['thief']      ?? 0) >= 1;
   const hasArtisanRelic    = (rl['artisan']    ?? 0) >= 1;
+  const hasMerchantRelic   = (rl['merchant']   ?? 0) >= 1;
 
   // ── Jack counts (starved / stunned jacks produce nothing) ──
   // Relic doubling: when a character's relic is active, each jack counts as two.
@@ -99,6 +101,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const culinarianJacks = (ctx.jackStarved['culinarian'] ? 0 : ((ctx.jacksAllocations['culinarian'] ?? 0) + fam('culinarian'))) * (hasCulinarianRelic ? 2 : 1) * jackdUpSpeedMult;
   const thiefJacks      = ((ctx.jacksAllocations['thief'] ?? 0) + fam('thief'))           * (hasThiefRelic ? 2 : 1) * jackdUpSpeedMult;
   const artisanJacks    = (ctx.jackStarved['artisan'] ? 0 : ((ctx.jacksAllocations['artisan'] ?? 0) + fam('artisan'))) * (hasArtisanRelic ? 2 : 1) * jackdUpSpeedMult;
+  const merchantJacks   = (ctx.jackStarved['merchant'] ? 0 : ((ctx.jacksAllocations['merchant'] ?? 0) + fam('merchant'))) * (hasMerchantRelic ? 2 : 1) * jackdUpSpeedMult;
 
   // ── Derived values ────────────────────────────────────────
   const goldPerClick    = calcGoldPerClick(u.level('BETTER_BOUNTIES'));
@@ -204,12 +207,17 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const graveLootGemPerSec     = defileJacks * graveLootChance * YIELDS.GRAVE_LOOTING_GEM_WEIGHT     * YIELDS.GRAVE_LOOTING_GEM_AMOUNT     * (hasNecromancerRelic ? 2 : 1);
   const graveLootJewelryPerSec = defileJacks * graveLootChance * YIELDS.GRAVE_LOOTING_JEWELRY_WEIGHT * YIELDS.GRAVE_LOOTING_JEWELRY_AMOUNT * (hasNecromancerRelic ? 2 : 1);
 
+  // ── Merchant rates ─────────────────────────────────────────
+  // Merchant jacks now consume illicit goods to open crates (like the old minigame).
+  // They consume GOODS_COST per click and produce loot-table rewards.
+  const merchantGoodsDrain = merchantJacks * MERCHANT_MG.GOODS_COST * (hasMerchantRelic ? 2 : 1);
+
   // ── Bead multipliers ─────────────────────────────────────────
   const bm = (charId: string) => ctx.beadMultipliers?.[charId] ?? 1;
 
   return {
     gold:    roundTo((autoGoldPerSec + fighterRelicGold + fighterJacks * goldPerClick) * bm('fighter') + (apothecaryJacks * goldPerBrew + vatGoldGain) * bm('apothecary') - culinarianJacks * culGoldCost + ppGoldPerSecond * bm('thief') + graveLootGoldPerSec * bm('necromancer'), 2),
-    xp:      roundTo(fighterJacks * xpPerBounty * bm('fighter') + rangerJacks * bm('ranger') + apothecaryJacks * bm('apothecary') + culinarianJacks * bm('culinarian') + effectiveThiefRate * bm('thief') + artisanXpPerSec * bm('artisan') + necroXpGain * bm('necromancer') - wardXpDrain, 2),
+    xp:      roundTo(fighterJacks * xpPerBounty * bm('fighter') + rangerJacks * bm('ranger') + apothecaryJacks * bm('apothecary') + culinarianJacks * bm('culinarian') + effectiveThiefRate * bm('thief') + artisanXpPerSec * bm('artisan') + necroXpGain * bm('necromancer') - wardXpDrain + merchantJacks * MERCHANT_MG.XP_REWARD * bm('merchant'), 2),
     herb:    roundTo(herbProduced * bm('ranger') - herbConsumed, 2),
     beast:   roundTo((rangerJacks * catsEyeFactor * (beastChance / 100) * (expectedMeatYield + rangerBeastBonus) + baitedTrapsRate) * bm('ranger'), 2),
     potion:  roundTo((apothecaryJacks * potionPerBrew + vatPotionGain) * bm('apothecary'), 2),
@@ -221,6 +229,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
     jewelry:          roundTo(graveLootJewelryPerSec * bm('necromancer'), 2),
     bone:             roundTo(bonePerSec * bm('necromancer'), 2),
     brimstone:        roundTo(brimstonePerSec * bm('necromancer'), 2),
+    'illicit-goods':  roundTo(-merchantGoodsDrain * bm('merchant'), 2),
   };
 }
 
@@ -240,6 +249,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const hasCulinarianRelic = (rl['culinarian'] ?? 0) >= 1;
   const hasThiefRelic      = (rl['thief']      ?? 0) >= 1;
   const hasArtisanRelic    = (rl['artisan']    ?? 0) >= 1;
+  const hasMerchantRelic   = (rl['merchant']   ?? 0) >= 1;
 
   // ── Jack counts: split into regular jacks vs familiar jacks ──
   // Both are subject to starvation / stun checks and relic doubling.
@@ -257,6 +267,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const cJacks   = (ctx.jackStarved['culinarian'] ? 0 : (ctx.jacksAllocations['culinarian'] ?? 0)) * relicMul(hasCulinarianRelic) * jackdUpSpeedMult2;
   const tJacks   = (ctx.jacksAllocations['thief']      ?? 0) * relicMul(hasThiefRelic)      * jackdUpSpeedMult2;
   const artJacks = (ctx.jackStarved['artisan'] ? 0 : (ctx.jacksAllocations['artisan'] ?? 0)) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2;
+  const mJacks   = (ctx.jackStarved['merchant'] ? 0 : (ctx.jacksAllocations['merchant']  ?? 0)) * relicMul(hasMerchantRelic) * jackdUpSpeedMult2;
 
   // Familiar jacks (separate line in breakdown)
   const fFam   = famRaw('fighter')    * relicMul(hasFighterRelic)    * jackdUpSpeedMult2;
@@ -265,6 +276,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const cFam   = (ctx.jackStarved['culinarian'] ? 0 : famRaw('culinarian')) * relicMul(hasCulinarianRelic) * jackdUpSpeedMult2;
   const tFam   = famRaw('thief')      * relicMul(hasThiefRelic)      * jackdUpSpeedMult2;
   const artFam = (ctx.jackStarved['artisan'] ? 0 : famRaw('artisan')) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2;
+  const mFam   = (ctx.jackStarved['merchant'] ? 0 : famRaw('merchant')) * relicMul(hasMerchantRelic) * jackdUpSpeedMult2;
 
   // Combined totals (needed for thief uptime fraction)
   const thiefJacks      = tJacks   + tFam;
@@ -470,6 +482,15 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
       add('jewelry', 'Familiar (Exhume)', defFam * graveLootChance2 * glJewelry * bm('necromancer'));
     }
   }
+
+  // ── Merchant ────────────────────────────────────────────────
+  // Merchant jacks now consume illicit goods to open crates.
+  const merchantRelicMult     = hasMerchantRelic ? 2 : 1;
+  const mGoodsDrainPerJack    = MERCHANT_MG.GOODS_COST * merchantRelicMult;
+  if (mJacks > 0) add('illicit-goods', 'Merchant', -mJacks * mGoodsDrainPerJack * bm('merchant'));
+  if (mFam   > 0) add('illicit-goods', 'Familiar (Merchant)', -mFam * mGoodsDrainPerJack * bm('merchant'));
+  if (mJacks > 0) add('xp', 'Merchant', mJacks * MERCHANT_MG.XP_REWARD * bm('merchant'));
+  if (mFam   > 0) add('xp', 'Familiar (Merchant)', mFam * MERCHANT_MG.XP_REWARD * bm('merchant'));
 
   return bd;
 }

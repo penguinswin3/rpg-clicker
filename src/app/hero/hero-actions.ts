@@ -11,8 +11,8 @@ import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { StatisticsService } from '../statistics/statistics.service';
-import { YIELDS, BEADS } from '../game-config';
-import { CURRENCY_FLAVOR, cur, LOG_MSG } from '../flavor-text';
+import { YIELDS, BEADS, MERCHANT_MG } from '../game-config';
+import { cur, LOG_MSG, CURRENCY_FLAVOR } from '../flavor-text';
 import { rollChance, rollMultiChance, randInt } from '../utils/mathUtils';
 import {
   calcGoldPerClick, calcXpPerBounty,
@@ -24,6 +24,8 @@ import {
   calcAutoGoldPerSecond,
   calcNecromancerBoneYield, calcNecromancerWardXpCost,
   calcNecromancerBrimstoneYield, calcGraveLootingChance,
+  calcMerchantGoodsPerClick, calcMerchantDoubleChance,
+  rollIllicitLootTable, calcMerchantFencedGold,
 } from './yield-helpers';
 
 // ── Contexts ────────────────────────────────────────────────
@@ -104,6 +106,7 @@ export function dispatchHeroClick(charId: string, ctx: HeroActionContext): void 
     case 'thief':      clickThief(ctx); break;
     case 'artisan':    clickArtisan(ctx); break;
     case 'necromancer': clickNecromancer(ctx); break;
+    case 'merchant':   clickMerchant(ctx); break;
   }
   // Roll for blue bead discovery
   if (ctx.hasUnfoundBlueBead?.(charId) && Math.random() < BEADS.BLUE_CHANCE) {
@@ -357,6 +360,7 @@ export function performJackAutoClick(charId: string, ctx: JackAutoClickContext):
     case 'artisan':            break;
     case 'necromancer-defile': jackNecromancerDefile(ctx); break;
     case 'necromancer-ward':   jackNecromancerWard(ctx); break;
+    case 'merchant':           jackMerchant(ctx); break;
   }
   // Roll for right blue bead (blue-2) discovery via jack/familiar clicks
   const baseCharId = charId.startsWith('necromancer') ? 'necromancer' : charId;
@@ -615,3 +619,139 @@ function jackNecromancerWard(ctx: JackAutoClickContext): void {
   // Only count toward the switch when ward is the active button.
   if (ctx.necromancerActiveButton() === 'ward') ctx.necromancerDecrementClick();
 }
+
+// ── Merchant click ──────────────────────────────────────────
+
+function clickMerchant(ctx: HeroActionContext): void {
+  const u = ctx.upgrades;
+  const bm = ctx.beadMultiplier?.('merchant') ?? 1;
+
+  // Must have enough illicit goods to open a crate
+  if (!ctx.wallet.canAfford('illicit-goods', MERCHANT_MG.GOODS_COST)) {
+    const have = Math.floor(ctx.wallet.get('illicit-goods'));
+    ctx.log.log(LOG_MSG.HERO.MERCHANT.NOT_ENOUGH_GOODS(
+      cur('illicit-goods', MERCHANT_MG.GOODS_COST, ''),
+      cur('illicit-goods', have, ''),
+    ), 'warn');
+    return;
+  }
+
+  ctx.wallet.remove('illicit-goods', MERCHANT_MG.GOODS_COST);
+
+  const contrabandLevel = u.level('CONTRABAND_EXPERTISE');
+  const shadyLevel      = u.level('SHADY_CONNECTIONS');
+  const fencedLevel     = u.level('FENCED_GOODS');
+
+  // Roll loot table
+  let rolls = MERCHANT_MG.BASE_ROLLS;
+  const bonusChance = shadyLevel * MERCHANT_MG.SHADY_CONNECTIONS_BONUS_PER_LEVEL;
+  if (bonusChance > 0 && rollChance(bonusChance)) rolls++;
+
+  const lootMap = new Map<string, number>();
+  for (let i = 0; i < rolls; i++) {
+    const result = rollIllicitLootTable(contrabandLevel);
+    if (result) {
+      const amount = Math.round(result.amount * bm);
+      lootMap.set(result.currencyId, (lootMap.get(result.currencyId) ?? 0) + amount);
+    }
+  }
+
+  // Award loot
+  const parts: string[] = [];
+  for (const [currencyId, amount] of lootMap) {
+    ctx.wallet.add(currencyId, amount);
+    ctx.stats.trackCurrencyGain(currencyId, amount);
+    parts.push(cur(currencyId, amount));
+
+    // Unlock rare currencies on first discovery
+    if (currencyId === 'monster-trophy' && !ctx.wallet.isCurrencyUnlocked('monster-trophy')) {
+      ctx.wallet.unlockCurrency('monster-trophy');
+      ctx.log.log(LOG_MSG.MG_MERCHANT.TROPHY_UNLOCKED, 'rare');
+    }
+    if (currencyId === 'forbidden-tome' && !ctx.wallet.isCurrencyUnlocked('forbidden-tome')) {
+      ctx.wallet.unlockCurrency('forbidden-tome');
+      ctx.log.log(LOG_MSG.MG_MERCHANT.TOME_UNLOCKED, 'rare');
+    }
+    if (currencyId === 'magical-implement' && !ctx.wallet.isCurrencyUnlocked('magical-implement')) {
+      ctx.wallet.unlockCurrency('magical-implement');
+      ctx.log.log(LOG_MSG.MG_MERCHANT.IMPLEMENT_UNLOCKED, 'rare');
+    }
+  }
+
+  // XP reward
+  const xp = MERCHANT_MG.XP_REWARD * bm;
+  ctx.wallet.add('xp', xp);
+  ctx.stats.trackCurrencyGain('xp', xp);
+  parts.push(cur('xp', xp));
+
+  // Fenced Goods — bonus gold
+  const fencedGold = calcMerchantFencedGold(fencedLevel) * bm;
+  if (fencedGold > 0) {
+    ctx.wallet.add('gold', fencedGold);
+    ctx.stats.trackCurrencyGain('gold', fencedGold);
+    parts.push(cur('gold', fencedGold));
+  }
+
+  if (parts.length > 0) {
+    ctx.log.log(LOG_MSG.MG_MERCHANT.OPEN_RESULT(parts.join(', ')));
+  } else {
+    ctx.log.log(LOG_MSG.MG_MERCHANT.OPEN_NOTHING);
+  }
+}
+
+// ── Merchant jack ───────────────────────────────────────────
+
+function jackMerchant(ctx: JackAutoClickContext): void {
+  const u = ctx.upgrades;
+  const bm = ctx.beadMultiplier?.('merchant') ?? 1;
+  const hasRelic = ctx.relicLevel('merchant') >= 1;
+
+  // Must have enough illicit goods to open a crate
+  if (!ctx.wallet.canAfford('illicit-goods', MERCHANT_MG.GOODS_COST)) {
+    if (!ctx.isJackStarved('merchant')) {
+      ctx.setJackStarved('merchant', true);
+      ctx.onPerSecondUpdate();
+    }
+    return;
+  }
+  if (ctx.isJackStarved('merchant')) {
+    ctx.setJackStarved('merchant', false);
+    ctx.onPerSecondUpdate();
+  }
+
+  ctx.wallet.remove('illicit-goods', MERCHANT_MG.GOODS_COST);
+
+  const contrabandLevel = u.level('CONTRABAND_EXPERTISE');
+  const shadyLevel      = u.level('SHADY_CONNECTIONS');
+  const fencedLevel     = u.level('FENCED_GOODS');
+
+  // Roll loot table
+  let rolls = MERCHANT_MG.BASE_ROLLS;
+  const bonusChance = shadyLevel * MERCHANT_MG.SHADY_CONNECTIONS_BONUS_PER_LEVEL;
+  if (bonusChance > 0 && rollChance(bonusChance)) rolls++;
+
+  // Relic: Ledger of Infinite Commerce — double loot rolls
+  if (hasRelic) rolls *= 2;
+
+  for (let i = 0; i < rolls; i++) {
+    const result = rollIllicitLootTable(contrabandLevel);
+    if (result) {
+      const amount = Math.round(result.amount * bm);
+      ctx.wallet.add(result.currencyId, amount);
+      ctx.stats.trackCurrencyGain(result.currencyId, amount);
+    }
+  }
+
+  // XP reward
+  const xp = MERCHANT_MG.XP_REWARD * bm;
+  ctx.wallet.add('xp', xp);
+  ctx.stats.trackCurrencyGain('xp', xp);
+
+  // Fenced Goods — bonus gold
+  const fencedGold = calcMerchantFencedGold(fencedLevel) * bm;
+  if (fencedGold > 0) {
+    ctx.wallet.add('gold', fencedGold);
+    ctx.stats.trackCurrencyGain('gold', fencedGold);
+  }
+}
+

@@ -27,6 +27,8 @@ export interface UpgradeGates {
   readonly requiresArtisan?: boolean;
   /** Hide until the Necromancer character is unlocked. */
   readonly requiresNecromancer?: boolean;
+  /** Hide until the Merchant character is unlocked. */
+  readonly requiresMerchant?: boolean;
   /** Hide until the Bubbling Brew minigame upgrade has been purchased. */
   readonly requiresBubblingBrew?: boolean;
   /** Hide until the Potion Dilution minigame upgrade has been purchased. */
@@ -144,6 +146,10 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'brimstone',          base: 1000,   fromCount: 22, untilCount: 23 },  // Jack 23
       { currency: 'xp',                 base: 150000,   fromCount: 23, untilCount: 24 },  // Jack 24
       { currency: 'soul-stone',         base: 250,   fromCount: 24, untilCount: 25 },  // Jack 25
+      { currency: 'illicit-goods',       base: 500,   fromCount: 25, untilCount: 26 },  // Jack 26
+      { currency: 'monster-trophy',      base: 50,    fromCount: 26, untilCount: 27 },  // Jack 27
+      { currency: 'forbidden-tome',      base: 50,    fromCount: 27, untilCount: 28 },  // Jack 28
+      { currency: 'magical-implement',   base: 50,    fromCount: 28, untilCount: 29 },  // Jack 29
     ],
   },
 
@@ -191,6 +197,15 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'gold',           base: 400_000 },
       { currency: 'precious-metal', base: 2000     },
       { currency: 'gemstone',       base: 2000     },
+    ],
+  },
+  {
+    id: 'UNLOCK_MERCHANT', kind: 'character-unlock', xpMin: 2_000_000,
+    costs: [
+      { currency: 'gold',        base: 1_500_000 },
+      { currency: 'soul-stone',  base: 500     },
+      { currency: 'jewelry',     base: 500     },
+      { currency: 'spice',       base: 50000    },
     ],
   },
 
@@ -250,6 +265,7 @@ export const XP_THRESHOLDS = {
   THIEF_UNLOCK:      getGlobalDef('UNLOCK_THIEF')!.xpMin!,
   ARTISAN_UNLOCK:    getGlobalDef('UNLOCK_ARTISAN')!.xpMin!,
   NECROMANCER_UNLOCK:getGlobalDef('UNLOCK_NECROMANCER')!.xpMin!,
+  MERCHANT_UNLOCK:   getGlobalDef('UNLOCK_MERCHANT')!.xpMin!,
   JACKD_UP_UNLOCK:   getGlobalDef('JACKD_UP')!.xpMin!,
 } as const;
 
@@ -493,6 +509,11 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'brimstone',           base: 15000,  scale: 1.0, fromLevel: 6, untilLevel: 7 },
       { currency: 'soul-stone',          base: 500,    scale: 1.0, fromLevel: 6, untilLevel: 7 },
       { currency: 'xp',                  base: 50000,  scale: 1.0, fromLevel: 6, untilLevel: 7 },
+      // Level 8 only: Merchant
+      { currency: 'illicit-goods',       base: 5000,   scale: 1.0, fromLevel: 7, untilLevel: 8 },
+      { currency: 'monster-trophy',      base: 500,    scale: 1.0, fromLevel: 7, untilLevel: 8 },
+      { currency: 'forbidden-tome',      base: 500,    scale: 1.0, fromLevel: 7, untilLevel: 8 },
+      { currency: 'magical-implement',   base: 500,    scale: 1.0, fromLevel: 7, untilLevel: 8 },
     ] },
   { id: 'GEM_HUNTER', characterId: 'thief', category: 'standard', max: 1,
     costs: [
@@ -640,6 +661,54 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'soul-stone',     base: 30,  scale: 1.4 },
     ] },
 
+  // ── Merchant — standard ──────────────────────────────────────
+  { id: 'BACK_ALLEY_DEALS', characterId: 'merchant', category: 'standard', max: 999,
+    costs: [{ currency: 'gold', base: 500_000, scale: 1.12 }] },
+  { id: 'SHADY_CONNECTIONS', characterId: 'merchant', category: 'standard', max: 20,
+    costs: [
+      { currency: 'illicit-goods', base: 50,  scale: 1.3 },
+      { currency: 'dossier',      base: 5000, scale: 1.3 },
+    ] },
+  { id: 'BLACK_MARKET_ACCESS', characterId: 'merchant', category: 'standard', max: 10,
+    costs: [
+      { currency: 'gold',          base: 1_000_000, scale: 1.5 },
+      { currency: 'illicit-goods', base: 200,       scale: 1.5 },
+    ] },
+  { id: 'SMUGGLER_NETWORK', characterId: 'merchant', category: 'standard', max: 25,
+    costs: [
+      { currency: 'illicit-goods',   base: 100, scale: 1.3 },
+      { currency: 'monster-trophy',  base: 10,  scale: 1.3 },
+    ] },
+
+  // ── Merchant — minigame ──────────────────────────────────────
+  { id: 'CONTRABAND_EXPERTISE', characterId: 'merchant', category: 'minigame', max: 10,
+    costs: [
+      { currency: 'illicit-goods',     base: 300,  scale: 1.4 },
+      { currency: 'forbidden-tome',    base: 10,   scale: 1.4 },
+    ] },
+  { id: 'FENCED_GOODS', characterId: 'merchant', category: 'minigame', max: 999,
+    costs: [
+      { currency: 'illicit-goods', base: 50,  scale: 1.15 },
+      { currency: 'treasure',     base: 100, scale: 1.15 },
+    ] },
+  { id: 'TROPHY_COLLECTOR', characterId: 'merchant', category: 'minigame', max: 10,
+    costs: [
+      { currency: 'monster-trophy',    base: 20, scale: 1.5 },
+      { currency: 'bone',             base: 500, scale: 1.3 },
+    ] },
+  { id: 'FORBIDDEN_KNOWLEDGE', characterId: 'merchant', category: 'minigame', max: 5,
+    gates: { requiresMerchant: true },
+    costs: [
+      { currency: 'forbidden-tome',       base: 25,  scale: 1.6 },
+      { currency: 'synaptical-potion',    base: 10,  scale: 1.6 },
+    ] },
+  { id: 'ARCANE_APPRAISAL', characterId: 'merchant', category: 'minigame', max: 5,
+    gates: { requiresMerchant: true },
+    costs: [
+      { currency: 'magical-implement', base: 25,  scale: 1.6 },
+      { currency: 'gemstone',          base: 50,  scale: 1.6 },
+    ] },
+
   // ── Apothecary — minigame ────────────────────────────────────
   { id: 'BUBBLING_BREW', characterId: 'apothecary', category: 'minigame', max: 1,
     costs: [
@@ -714,6 +783,10 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
             { currency: 'jewelry', base: 10, scale: 1.0 }] },
   { id: 'RELIC_NECROMANCER', characterId: 'necromancer', category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
+            { currency: 'jewelry', base: 10, scale: 1.0 }] },
+  { id: 'RELIC_MERCHANT', characterId: 'merchant', category: 'relic', max: 1,
     gates: { requiresRelic: true },
     costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
             { currency: 'jewelry', base: 10, scale: 1.0 }] },
@@ -1033,6 +1106,108 @@ export const NECROMANCER_MG = {
   XP_REWARD: 10,
 } as const;
 
+// ── Merchant Minigame ────────────────────────────────────────
+
+/** Loot table entry for opening Illicit Goods. */
+export interface IllicitLootEntry {
+  /** Currency ID awarded when this row is selected. */
+  readonly currencyId: string;
+  /** Relative weight — higher = more likely to be picked. */
+  readonly weight: number;
+  /** Minimum amount rolled (inclusive). */
+  readonly min: number;
+  /** Maximum amount rolled (inclusive). */
+  readonly max: number;
+}
+
+export const MERCHANT_MG = {
+  /** Illicit Goods cost to open one crate in the sidequest. */
+  GOODS_COST: 10,
+  /** XP awarded per successful opening. */
+  XP_REWARD: 1,
+  /** Number of loot rolls per opening (base). */
+  BASE_ROLLS: 1,
+
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   *  ILLICIT GOODS LOOT TABLE
+   *  Configurable — add/remove/reweight entries here.
+   *  The roll picks one entry by weight, then awards a random
+   *  amount in [min, max].
+   * ═══════════════════════════════════════════════════════════════
+   */
+  LOOT_TABLE: [
+    // ── Common (previous currencies) ────────────────────────────
+    { currencyId: 'gold',                weight: 25,  min: 100,   max: 500   },
+    { currencyId: 'herb',                weight: 15,  min: 5,    max: 20    },
+    { currencyId: 'beast',               weight: 15,  min: 5,    max: 20    },
+    { currencyId: 'potion',              weight: 12,  min: 2,    max: 10    },
+    { currencyId: 'spice',               weight: 12,  min: 5,    max: 30    },
+    { currencyId: 'dossier',             weight: 10,  min: 5,    max: 30    },
+    { currencyId: 'treasure',            weight: 8,   min: 1,    max: 5     },
+    { currencyId: 'precious-metal',      weight: 6,   min: 1,    max: 5     },
+    { currencyId: 'gemstone',            weight: 5,   min: 5,     max: 10     },
+    { currencyId: 'bone',                weight: 8,   min: 5,    max: 30    },
+    { currencyId: 'brimstone',           weight: 8,   min: 5,    max: 30    },
+    { currencyId: 'concentrated-potion', weight: 5,   min: 2,     max: 10     },
+    { currencyId: 'xp',                  weight: 10,  min: 1,   max: 100   },
+
+    // ── Uncommon ────────────────────────────────────────────────
+    { currencyId: 'pixie-dust',          weight: 3,   min: 5,     max: 20     },
+    { currencyId: 'hearty-meal',         weight: 3,   min: 2,     max: 10     },
+    { currencyId: 'jewelry',             weight: 2,   min: 1,     max: 5      },
+    { currencyId: 'synaptical-potion',   weight: 2,   min: 1,     max: 5      },
+    { currencyId: 'soul-stone',          weight: 2,   min: 5,     max: 25     },
+
+    // ── Rare (new Merchant currencies) ──────────────────────────
+    { currencyId: 'monster-trophy',      weight: 4,   min: 1,     max: 3      },
+    { currencyId: 'forbidden-tome',      weight: 3,   min: 1,     max: 2      },
+    { currencyId: 'magical-implement',   weight: 2,   min: 1,     max: 2      },
+  ] as readonly IllicitLootEntry[],
+
+  /** Extra % chance per Shady Connections level to roll an additional loot entry. */
+  SHADY_CONNECTIONS_BONUS_PER_LEVEL: 3,
+  /** Extra % chance per Contraband Expertise level to shift weight toward rare rows. */
+  CONTRABAND_EXPERTISE_RARE_BONUS_PER_LEVEL: 2,
+  /** Gold awarded per level of Fenced Goods when opening a crate. */
+  FENCED_GOODS_GOLD_PER_LEVEL: 50,
+
+  // ── Stock Market (minigame) ─────────────────────────────────
+  /** How often prices re-roll (ms). */
+  STOCK_MARKET_TICK_MS: 5000,
+  /** Purchase increment options. */
+  STOCK_MARKET_INCREMENTS: [1, 5, 10, 100] as readonly number[],
+  /** Auto-buyer purchases this many items per tick. */
+  AUTO_BUY_AMOUNT: 100,
+  /** Auto-buyer tick interval (ms). */
+  AUTO_BUY_INTERVAL_MS: 1000,
+  /**
+   * Stock market price table — each entry maps to a currency that can
+   * be purchased with gold.  Prices randomly fluctuate within [min, max].
+   */
+  STOCK_MARKET_TABLE: [
+    { currencyId: 'illicit-goods',       basePrice: 5000,   minPrice: 100,   maxPrice: 10000   },
+    { currencyId: 'herb',                basePrice: 50,    minPrice: 20,    maxPrice: 120    },
+    { currencyId: 'beast',               basePrice: 80,    minPrice: 30,    maxPrice: 150    },
+    { currencyId: 'potion',              basePrice: 150,   minPrice: 50,    maxPrice: 300    },
+    { currencyId: 'spice',               basePrice: 60,    minPrice: 20,    maxPrice: 140    },
+    { currencyId: 'dossier',             basePrice: 60,    minPrice: 20,    maxPrice: 140    },
+    { currencyId: 'treasure',            basePrice: 400,   minPrice: 150,   maxPrice: 800    },
+    { currencyId: 'precious-metal',      basePrice: 500,   minPrice: 200,   maxPrice: 1000   },
+    { currencyId: 'gemstone',            basePrice: 800,   minPrice: 300,   maxPrice: 1500   },
+    { currencyId: 'bone',                basePrice: 60,    minPrice: 20,    maxPrice: 140    },
+    { currencyId: 'brimstone',           basePrice: 60,    minPrice: 20,    maxPrice: 140    },
+    { currencyId: 'concentrated-potion', basePrice: 600,   minPrice: 250,   maxPrice: 1200   },
+    { currencyId: 'pixie-dust',          basePrice: 1000,  minPrice: 400,   maxPrice: 2000   },
+    { currencyId: 'hearty-meal',         basePrice: 1500,  minPrice: 600,   maxPrice: 3000   },
+    { currencyId: 'jewelry',             basePrice: 3000,  minPrice: 1000,  maxPrice: 6000   },
+    { currencyId: 'soul-stone',          basePrice: 800,   minPrice: 300,   maxPrice: 1600   },
+    { currencyId: 'monster-trophy',      basePrice: 5000,  minPrice: 2000,  maxPrice: 10000  },
+    { currencyId: 'forbidden-tome',      basePrice: 7500,  minPrice: 3000,  maxPrice: 15000  },
+    { currencyId: 'magical-implement',   basePrice: 10000, minPrice: 4000,  maxPrice: 20000  },
+  ] as const,
+} as const;
+
 // ── Familiar (Find Familiar upgrade) ─────────────────────────
 export const FAMILIAR = {
   /** Seconds of familiar time granted per Soul Stone spent (base). */
@@ -1077,6 +1252,8 @@ export const AUTO_SOLVE = {
   ARTISAN_TICK_MS:      1000,
   /** Necromancer: one node selection per this many ms. */
   NECROMANCER_TICK_MS:  750,
+  /** Merchant: one goods opening per this many ms. */
+  MERCHANT_TICK_MS:     1200,
 } as const;
 
 /** Ordered bead slot IDs as displayed left-to-right around the relic socket. */
@@ -1141,6 +1318,9 @@ export const GOLD2_CONDITIONS = {
 
   /** Necromancer: complete 3 consecutive games without ever selecting an adjacent node. */
   NECROMANCER_NO_ADJACENT_STREAK: 3,
+
+  /** Merchant: open goods and receive all 3 rare currencies in a single crate 5 times in a row. */
+  MERCHANT_ALL_RARE_STREAK: 5,
 } as const;
 
 /**
@@ -1151,5 +1331,7 @@ export const GOOD_AUTO_SOLVE = {
   FIGHTER_TICK_MS:     500,
   /** Apothecary: ultra-fast tick (ms) when upgraded. */
   APOTHECARY_TICK_MS:  50,
+  /** Merchant: faster goods opening (ms) when upgraded. */
+  MERCHANT_TICK_MS:    600,
 } as const;
 

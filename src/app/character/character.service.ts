@@ -94,6 +94,14 @@ export class CharacterService {
       unlocked: false,
       ...charUnlock('necromancer'),
     },
+    {
+      id: 'merchant',
+      name: CHARACTER_FLAVOR.MERCHANT.name,
+      color: '#b87333',
+      description: CHARACTER_FLAVOR.MERCHANT.desc,
+      unlocked: false,
+      ...charUnlock('merchant'),
+    },
   ];
 
   private readonly charactersSource = new BehaviorSubject<Character[]>(

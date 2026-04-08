@@ -34,12 +34,16 @@ export const CURRENCY_FLAVOR = {
   'brimstone':           { name: 'Brimstone',                 symbol: '🜏',  color: '#ffbd2b' },
   'soul-stone':          { name: 'Soul Stone',                symbol: '◈',  color: '#8f4fff' },
   'mana':                { name: 'Mana',                      symbol: 'ᳱ',  color: '#40a3e1' },
+  'illicit-goods':       { name: 'Illicit Goods',              symbol: '⌺',  color: '#8f5a28' },
+  'monster-trophy':      { name: 'Monster Trophy',             symbol: 'ᛃ',  color: '#c94444' },
+  'forbidden-tome':      { name: 'Forbidden Tome',             symbol: '⍯',  color: '#3e2e24' },
+  'magical-implement':   { name: 'Magical Implement',          symbol: 'ᛗ',  color: '#3eafc9' },
 
   /**
   Ideas for new Symbols
-   - Relics: ᛤ  ᛥ  ᛯ ᛰ ᛗ ᛃ ᚸ ⸎
+   - Relics: ᛤ  ᛥ  ᛯ ᛰ ᚸ ⸎
    - Kobold Nose: ᴥ
-   - scroll: ⍯ ⌺ ꖸ
+   - scroll: ꖸ
 
    */
 
@@ -167,6 +171,20 @@ export const UPGRADE_FLAVOR = {
   RELIC_THIEF:      { name: 'Ring of Shadows',                    desc: 'Jacks double their dossier yield range and steal 2 bonus treasure per successful action' },
   RELIC_ARTISAN:    { name: 'Masterwork Monocle of Perfection',   desc: 'Jacks always salvage maximum metal and double the minimum gemstone yield' },
   RELIC_NECROMANCER:{ name: 'Jeweled Hand of the Night',         desc: 'Defile and Ward Jacks each act regardless of which button is active, and produce double the yield' },
+
+  // Merchant
+  BACK_ALLEY_DEALS:     { name: 'Back Alley Deals',            desc: '+1 illicit goods per click' },
+  SHADY_CONNECTIONS:     { name: 'Shady Connections',           desc: '+3% chance to find bonus loot when opening goods' },
+  BLACK_MARKET_ACCESS:   { name: 'Black Market Access',         desc: '+1 illicit goods per click and double rare currency rolls' },
+  SMUGGLER_NETWORK:      { name: "Smuggler's Network",          desc: '+1% chance per level to receive double illicit goods' },
+  CONTRABAND_EXPERTISE:  { name: 'Contraband Expertise',        desc: 'Higher tier loot becomes more common' },
+  FENCED_GOODS:          { name: 'Fenced Goods',                desc: 'Opening illicit goods also yields bonus gold' },
+  TROPHY_COLLECTOR:      { name: 'Trophy Collector',            desc: 'Monster Trophies yield bonus XP when acquired' },
+  FORBIDDEN_KNOWLEDGE:   { name: 'Forbidden Knowledge',         desc: 'Forbidden Tomes have a chance to award Synaptical Potions' },
+  ARCANE_APPRAISAL:      { name: 'Arcane Appraisal',            desc: 'Magical Implements have a chance to award Gemstones' },
+
+  // ── Relic upgrades (one per character) ──────────────────────────
+  RELIC_MERCHANT:   { name: 'Ledger of Infinite Commerce',      desc: 'Jacks open goods automatically and always roll the rarest tier first' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
@@ -314,6 +332,11 @@ export const CHARACTER_FLAVOR = {
     questBtnExhume: 'Exhume',
     questBtnWard: 'Ward',
   },
+  MERCHANT: {
+    name: 'Merchant',
+    desc: 'A cunning dealer who trades in goods others dare not touch. His connections span every dark corner of the realm.',
+    questBtn: 'Fence Goods',
+  },
 } as const;
 
 // ── Minigames ─────────────────────────────────────────────────
@@ -345,6 +368,10 @@ export const MINIGAME_FLAVOR = {
   NECROMANCER: {
     name: 'Well of Souls',
     desc: 'Draw the binding circle.\nShortest path wins.',
+  },
+  MERCHANT: {
+    name: 'Black Market Exchange',
+    desc: 'Buy low, sell never.\nPrices shift every few seconds.',
   },
 } as const;
 
@@ -433,6 +460,11 @@ export const HERO_STATS_FLAVOR = {
     SWITCH_RANGE:     'Switch Range   :',
     GRAVE_LOOT_CHANCE:'Grave Loot     :',
   },
+  MERCHANT: {
+    GOODS_COST:       'Goods Per Crate  :',
+    BONUS_LOOT:       'Bonus Roll       :',
+    FENCED_GOLD:      'Fenced Gold      :',
+  },
 } as const;
 
 // ── Minigame Messages ─────────────────────────────────────────
@@ -496,6 +528,13 @@ export const MINIGAME_MSG = {
     PERFECT:      'Perfect binding! The spirits are yours!',
   },
 
+  MERCHANT: {
+    IDLE:         'Prices fluctuate every few seconds.\nBuy low!',
+    ROUND_START:  (count: number) => `${count} items available on the exchange.`,
+    OPEN:         'Purchase confirmed.',
+    RARE_FIND:    'A rare deal appears on the exchange!',
+  },
+
 };
 
 // ── Bead System ───────────────────────────────────────────────
@@ -557,6 +596,12 @@ export const BEAD_FLAVOR: Record<string, Record<string, BeadSlotFlavor>> = {
     'gold-2': { name: 'Bead of Dominion',       lore: 'Pulses with the promise of absolute control.',                                                                       effect: 'Always follows the optimal ritual path.' },
     'blue-2': { name: 'Bead of the Thrall',     lore: 'Bound to an undying servant, it channels the tireless labor of those who cannot rest.',                               effect: '2× resource yields from this character (stacks).' },
   },
+  merchant: {
+    'blue-1': { name: 'Bead of Fortune',         lore: 'Minted from the first coin of a merchant prince, it doubles the yield of every illicit deal.',                        effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of the Broker',      lore: 'Passed through a thousand secret transactions, it enables a tireless buyer on the exchange.',                           effect: 'Unlocks 1 auto-buyer on the stock market.' },
+    'gold-2': { name: 'Bead of the Kingpin',     lore: 'Only the most connected trader can reveal its secrets.',                                                               effect: 'Unlocks a 2nd auto-buyer on the stock market.' },
+    'blue-2': { name: 'Bead of the Cartel',      lore: 'Forged in the fires of a vast smuggling empire, it amplifies every underground operation.',                            effect: '2× resource yields from this character (stacks).' },
+  },
 };
 
 /**
@@ -572,6 +617,7 @@ export const GOLD2_STEP_MESSAGES: Record<string, string[]> = {
   thief:       ['The tumblers shift…',            'A click in the dark.',          'The mechanism yields.',              'Pins fall into place.',          'The vault trembles.',        'Almost free…',        'One final turn.'],
   artisan:     ['The gem glimmers knowingly.',    'A facet catches the light.',    'The jewel responds to your touch.',  'Crystalline whispers grow.',     'The pattern sharpens.',      'Cut after cut, the gem obeys.', 'Brilliance takes shape.', 'The stone sings.', 'One final selection.'],
   necromancer: ['The spirits fall silent.',        'The circle holds.',             'Dominion approaches.'],
+  merchant:    ['The ledger grows heavy…',        'A deal is struck in the dark.', 'The network expands.',          'Profits beyond measure.',    'The final shipment arrives.'],
 };
 
 
@@ -622,6 +668,11 @@ export const LOG_MSG = {
       DEFILE:                (bone: string, xp: string) => `You defiled the earth and unearthed bones. (${bone}, ${xp})`,
       NOT_ENOUGH_XP:         (need: string, have: string) => `Not enough XP to ward. Need ${need}, have ${have}.`,
       WARD:                  (xp: string, brimstone: string) => `You warded the veil and conjured brimstone. (${xp}, ${brimstone})`,
+    },
+    MERCHANT: {
+      GOODS_ACQUIRED:        (goods: string, xp: string) => `You acquired illicit goods from your contacts. (${goods}, ${xp})`,
+      GOODS_DOUBLE:          (goods: string, xp: string) => `Double shipment! Extra illicit goods acquired! (${goods}, ${xp})`,
+      NOT_ENOUGH_GOODS:      (need: string, have: string) => `Not enough illicit goods to open. Need ${need}, have ${have}.`,
     },
   },
 
@@ -690,6 +741,18 @@ export const LOG_MSG = {
     SOUL_STONE_UNLOCKED:     'Soul Stones discovered! A new currency!',
     RITUAL_PERFECT:          (bonus: string, stones: string, xp: string) => `Ritual complete — PERFECT!${bonus} (${stones}, ${xp})`,
     RITUAL_COMPLETE:         (pct: number, stones: string, xp: string) => `Ritual complete — ${pct}% efficiency. (${stones}, ${xp})`,
+  },
+
+  MG_MERCHANT: {
+    OPEN_START:              (cost: string) => `Opening illicit goods… (${cost})`,
+    TROPHY_UNLOCKED:         'A Monster Trophy emerged! New currency unlocked!',
+    TOME_UNLOCKED:           'A Forbidden Tome discovered! New currency unlocked!',
+    IMPLEMENT_UNLOCKED:      'A Magical Implement found! New currency unlocked!',
+    OPEN_RESULT:             (parts: string) => `Goods opened! (${parts})`,
+    OPEN_NOTHING:            'Opened goods but found nothing of value.',
+    FENCED_GOLD:             (gold: string) => `Fenced the goods for bonus gold! (${gold})`,
+    PURCHASE:                (item: string, qty: number, cost: string) => `Purchased ${qty}× ${item} from the exchange. (${cost})`,
+    AUTO_BUY:                (item: string, qty: number, cost: string) => `Auto-buy: ${qty}× ${item}. (${cost})`,
   },
 
   // ── System messages ───────────────────────────────────────────

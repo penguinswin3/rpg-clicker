@@ -1,0 +1,62 @@
+<div class="merchant-mg">
+
+  <!-- ── Gold balance ─────────────────────── -->
+  <div class="gold-row">
+    <span class="gold-label">GOLD</span>
+    <span class="gold-val">{{ goldBalance | number }}</span>
+  </div>
+
+  <!-- ── Message ──────────────────────────── -->
+  <div class="status-msg">{{ message }}</div>
+
+  <!-- ── Stock exchange list ──────────────── -->
+  <div class="exchange-list">
+    <div class="item-row" *ngFor="let item of items">
+      <!-- Row 1: symbol, name, price, auto-buy checkboxes -->
+      <div class="item-head">
+        <span class="item-sym" [style.color]="item.color">{{ item.symbol }}</span>
+        <span class="item-name">{{ item.name }}</span>
+        <span class="item-price" [style.color]="priceColor(item)">{{ item.currentPrice }}g</span>
+        <!-- Inline auto-buy toggles -->
+        <label class="ab-check"
+               [class.ab-check-active]="isAutoBuyTarget(0, item.currencyId)"
+               *ngIf="maxAutoBuyers === 1"
+               title="Auto-buy ×100/s">
+          <input type="checkbox"
+                 [checked]="isAutoBuyTarget(0, item.currencyId)"
+                 (change)="toggleAutoBuyItem(0, item.currencyId)" />
+          <span class="ab-label">AUTO</span>
+        </label>
+        <label class="ab-check"
+               [class.ab-check-active]="isAutoBuyTarget(0, item.currencyId)"
+               *ngIf="maxAutoBuyers >= 2"
+               title="Auto-buy ×100/s (buyer 1)">
+          <input type="checkbox"
+                 [checked]="isAutoBuyTarget(0, item.currencyId)"
+                 (change)="toggleAutoBuyItem(0, item.currencyId)" />
+          <span class="ab-label">A·1</span>
+        </label>
+        <label class="ab-check ab-check-2"
+               [class.ab-check-active]="isAutoBuyTarget(1, item.currencyId)"
+               *ngIf="maxAutoBuyers >= 2"
+               title="Auto-buy ×100/s (buyer 2)">
+          <input type="checkbox"
+                 [checked]="isAutoBuyTarget(1, item.currencyId)"
+                 (change)="toggleAutoBuyItem(1, item.currencyId)" />
+          <span class="ab-label">A·2</span>
+        </label>
+      </div>
+      <!-- Row 2: buy buttons -->
+      <div class="item-btns">
+        <button *ngFor="let qty of increments"
+                class="buy-btn"
+                [disabled]="!canAfford(item, qty)"
+                (click)="buy(item, qty)">
+          ×{{ qty }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+

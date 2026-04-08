@@ -6,7 +6,7 @@
  * ════════════════════════════════════════════════════════════
  */
 
-import { YIELDS, ARTISAN_MG } from '../game-config';
+import { YIELDS, ARTISAN_MG, MERCHANT_MG } from '../game-config';
 import { clamp, rollChance, randInt } from '../utils/mathUtils';
 
 // ── Fighter ─────────────────────────────────────────────────
@@ -260,4 +260,58 @@ export function calcNecromancerSwitchMax(extendedRitualLevel: number): number {
 /** Roll a random switch-click threshold for the necromancer. */
 export function rollNecromancerSwitchClicks(extendedRitualLevel: number): number {
   return randInt(calcNecromancerSwitchMin(extendedRitualLevel), calcNecromancerSwitchMax(extendedRitualLevel));
+}
+
+// ── Merchant ────────────────────────────────────────────────
+
+/** Illicit Goods earned per Merchant hero-button click. */
+export function calcMerchantGoodsPerClick(backAlleyDealsLevel: number, blackMarketLevel: number): number {
+  return 1 + backAlleyDealsLevel + blackMarketLevel;
+}
+
+/** Percent chance to double illicit goods per click (Smuggler's Network). */
+export function calcMerchantDoubleChance(smugglerNetworkLevel: number): number {
+  return smugglerNetworkLevel;
+}
+
+/** Gold awarded per crate opening from Fenced Goods upgrade. */
+export function calcMerchantFencedGold(fencedGoodsLevel: number): number {
+  return fencedGoodsLevel * MERCHANT_MG.FENCED_GOODS_GOLD_PER_LEVEL;
+}
+
+/**
+ * Roll the illicit goods loot table once.
+ * Returns { currencyId, amount } or null if nothing.
+ * contrabandLevel shifts weight toward rare entries.
+ */
+export function rollIllicitLootTable(
+  contrabandLevel: number = 0,
+): { currencyId: string; amount: number } | null {
+  const table = MERCHANT_MG.LOOT_TABLE;
+  if (table.length === 0) return null;
+
+  // Rare currency IDs
+  const rareCurrencies = new Set(['monster-trophy', 'forbidden-tome', 'magical-implement']);
+
+  // Compute effective weights — contraband expertise boosts rare rows
+  const rareBonus = contrabandLevel * MERCHANT_MG.CONTRABAND_EXPERTISE_RARE_BONUS_PER_LEVEL;
+  const effectiveWeights = table.map(e =>
+    rareCurrencies.has(e.currencyId) ? e.weight + rareBonus : e.weight
+  );
+  const totalWeight = effectiveWeights.reduce((sum, w) => sum + w, 0);
+  if (totalWeight <= 0) return null;
+
+  let roll = Math.random() * totalWeight;
+  for (let i = 0; i < table.length; i++) {
+    roll -= effectiveWeights[i];
+    if (roll <= 0) {
+      const entry = table[i];
+      const amount = randInt(entry.min, entry.max);
+      return { currencyId: entry.currencyId, amount };
+    }
+  }
+
+  // Fallback (should not happen)
+  const last = table[table.length - 1];
+  return { currencyId: last.currencyId, amount: randInt(last.min, last.max) };
 }
