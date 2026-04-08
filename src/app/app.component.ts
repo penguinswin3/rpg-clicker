@@ -133,6 +133,10 @@ export class AppComponent implements OnInit, OnDestroy {
   koboldBaitEnabled       = false;
   ancientCookbookEnabled  = true;
 
+  // ── Multi-buy state ──────────────────────────────────────────
+  /** How many upgrade levels to purchase per click: 1, 5, 10, or 'max'. */
+  buyQuantity: 1 | 5 | 10 | 'max' = 1;
+
   // ── Character shine state (new content notification) ────────
   /**
    * Set of character IDs that have pending "new content" shine.
@@ -417,6 +421,38 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Format large numbers as shorthand. */
   formatNumber(num: number): string {
     return fmtNumber(num);
+  }
+
+  // ── Multi-buy helpers ──────────────────────────────────────────
+
+  /** Effective number of levels that will be purchased for the given upgrade. */
+  effectiveBuyCount(id: string): number {
+    if (this.buyQuantity === 'max') return Math.max(1, this.upgrades.maxAffordable(id));
+    const remaining = this.upgrades.maxLevel(id) - this.upgrades.level(id);
+    return Math.min(this.buyQuantity, remaining);
+  }
+
+  /** Summed costs for the current buy quantity on an upgrade. */
+  getMultiCosts(id: string): Array<{ currency: string; amount: number }> {
+    const count = this.effectiveBuyCount(id);
+    return this.upgrades.allCostsMulti(id, count);
+  }
+
+  /** Whether the player can afford the current buy-quantity purchase. */
+  canAffordMultiBuy(id: string): boolean {
+    const count = this.effectiveBuyCount(id);
+    return this.upgrades.canAffordMulti(id, count);
+  }
+
+  /** Buy the current buy-quantity of levels for an upgrade. */
+  buyUpgrade(id: string): void {
+    if (this.buyQuantity === 'max') {
+      const max = this.upgrades.maxAffordable(id);
+      if (max > 0) this.upgrades.buyMulti(id, max);
+    } else {
+      const count = this.effectiveBuyCount(id);
+      this.upgrades.buyMulti(id, count);
+    }
   }
 
   // ── Relic popup ────────────────────────────────────────────────

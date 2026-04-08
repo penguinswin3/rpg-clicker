@@ -131,10 +131,10 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <div class="upgrade-btn-wrap">
               <button class="upgrade-btn"
                 [class.upgrade-maxed]="upgrades.isMaxed(id)"
-                [disabled]="upgrades.isMaxed(id) || !upgrades.canAfford(id)"
-                (click)="upgrades.buy(id)">
+                [disabled]="upgrades.isMaxed(id) || !canAffordMultiBuy(id)"
+                (click)="buyUpgrade(id)">
                 <ng-container *ngIf="upgrades.isMaxed(id); else costTpl">[MAXED]</ng-container>
-                <ng-template #costTpl>[BUY: <ng-container *ngFor="let c of upgrades.allCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container><span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></span></ng-container>]</ng-template>
+                <ng-template #costTpl>[BUY<ng-container *ngIf="buyQuantity !== 1"> x{{ effectiveBuyCount(id) }}</ng-container>: <ng-container *ngFor="let c of getMultiCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container><span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></span></ng-container>]</ng-template>
               </button>
               <span class="upgrade-level">Lv.{{ upgrades.level(id) }}/{{ upgrades.maxLevel(id) }}</span>
             </div>
@@ -420,6 +420,13 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
       <section class="upgrades">
         <div class="divider">+===============================================================================================+</div>
 
+        <!-- Buy-quantity toggle — only shown after sidequests are unlocked -->
+        <div class="buy-quantity-bar" *ngIf="minigameShown">
+          <button class="buy-qty-btn" [class.buy-qty-active]="buyQuantity === 1"    (click)="buyQuantity = 1">x1</button>
+          <button class="buy-qty-btn" [class.buy-qty-active]="buyQuantity === 5"    (click)="buyQuantity = 5">x5</button>
+          <button class="buy-qty-btn" [class.buy-qty-active]="buyQuantity === 10"   (click)="buyQuantity = 10">x10</button>
+          <button class="buy-qty-btn" [class.buy-qty-active]="buyQuantity === 'max'" (click)="buyQuantity = 'max'">MAX</button>
+        </div>
 
         <div class="upgrades-columns">
 
@@ -433,9 +440,9 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             </div>
           </div><!-- /upgrades-col standard -->
 
-          <!-- ══ Minigame upgrades ══════════════════════════════════ -->
+          <!-- ══ Sidequest upgrades ══════════════════════════════════ -->
           <div class="upgrades-col" *ngIf="minigameShown && !hideMinigameUpgrades">
-            <div class="section-title">[ MINIGAME ]</div>
+            <div class="section-title">[ SIDEQUEST ]</div>
             <div class="upgrades-scroll">
               <ng-container *ngFor="let id of getVisibleUpgrades('minigame')">
                 <ng-container *ngTemplateOutlet="upgradeCard; context: { $implicit: id }"></ng-container>

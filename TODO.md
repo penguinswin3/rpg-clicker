@@ -58,7 +58,7 @@
 
 
 ## Bug Fixes
-- tool tips are not correctly adding to the per seconds 
+
 
 ## Code Refactors
 

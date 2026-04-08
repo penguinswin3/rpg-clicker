@@ -150,6 +150,84 @@ export class UpgradeService {
     return this.defs.get(id)?.characterId;
   }
 
+  // ── Multi-buy queries ──────────────────────────────────────────
+
+  /**
+   * Sum of all costs for buying `count` levels starting from the current level.
+   * Returns an array of { currency, amount } in definition order, with amounts
+   * representing the total across all levels.
+   */
+  allCostsMulti(id: string, count: number): Array<{ currency: string; amount: number }> {
+    const def = this.defs.get(id);
+    const rt = this.runtime.get(id);
+    if (!def || !rt) return [];
+    const currentLevel = rt.level;
+    const effectiveMax = this.maxLevel(id);
+    const effectiveCount = Math.min(count, effectiveMax - currentLevel);
+    if (effectiveCount <= 0) return [];
+
+    const totals: Record<string, number> = {};
+    for (let i = 0; i < effectiveCount; i++) {
+      const lvl = currentLevel + i;
+      for (const c of def.costs) {
+        if (!this.isCostActive(c, lvl)) continue;
+        const cost = scaledCost(c.base, c.scale, lvl);
+        totals[c.currency] = (totals[c.currency] ?? 0) + cost;
+      }
+    }
+
+    // Return in definition order, deduplicated by currency
+    const seen = new Set<string>();
+    return def.costs
+      .filter(c => c.currency in totals && !seen.has(c.currency) && (seen.add(c.currency), true))
+      .map(c => ({ currency: c.currency, amount: totals[c.currency] }));
+  }
+
+  /** Whether the player can afford to buy `count` levels of an upgrade. */
+  canAffordMulti(id: string, count: number): boolean {
+    const costs = this.allCostsMulti(id, count);
+    return costs.length > 0 && costs.every(c => this.wallet.canAfford(c.currency, c.amount));
+  }
+
+  /**
+   * Maximum number of levels the player can currently afford for this upgrade.
+   * Simulates successive purchases, deducting from a copy of the wallet.
+   */
+  maxAffordable(id: string): number {
+    const def = this.defs.get(id);
+    const rt = this.runtime.get(id);
+    if (!def || !rt) return 0;
+
+    const remaining = this.maxLevel(id) - rt.level;
+    if (remaining <= 0) return 0;
+
+    // Snapshot available funds
+    const available: Record<string, number> = {};
+    for (const c of def.costs) {
+      if (!(c.currency in available)) {
+        available[c.currency] = this.wallet.get(c.currency);
+      }
+    }
+
+    let count = 0;
+    for (let i = 0; i < remaining; i++) {
+      const lvl = rt.level + i;
+      let canAfford = true;
+      const levelCosts: { currency: string; amount: number }[] = [];
+
+      for (const c of def.costs) {
+        if (!this.isCostActive(c, lvl)) continue;
+        const cost = scaledCost(c.base, c.scale, lvl);
+        levelCosts.push({ currency: c.currency, amount: cost });
+        if (available[c.currency] < cost) { canAfford = false; break; }
+      }
+      if (!canAfford) break;
+      for (const lc of levelCosts) available[lc.currency] -= lc.amount;
+      count++;
+    }
+    return count;
+  }
+
   // ── Mutation ──────────────────────────────────────────────────
 
   /**
@@ -189,6 +267,20 @@ export class UpgradeService {
     this.syncRelicCosts();
     this.changed$.next(id);
     return true;
+  }
+
+  /**
+   * Attempt to purchase up to `count` levels of the given upgrade.
+   * Buys one at a time; stops when the player can no longer afford or hits max.
+   * Returns the number of levels actually purchased.
+   */
+  buyMulti(id: string, count: number): number {
+    let bought = 0;
+    for (let i = 0; i < count; i++) {
+      if (!this.buy(id)) break;
+      bought++;
+    }
+    return bought;
   }
 
   // ── Save / load ───────────────────────────────────────────────

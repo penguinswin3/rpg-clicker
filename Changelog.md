@@ -24,6 +24,8 @@
 
 
 ## Bugfixes
+- Fixed per seconds not adding up properly 
+
 
 ----------------------------
 # Version Alpha 1.2.2
