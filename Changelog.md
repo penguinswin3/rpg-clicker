@@ -7,7 +7,7 @@
 - Gold Bead has a 1/100 chance to drop on any successful sidequest completion, after 100 manual clears of that sidequest
 - Gold Bead 2 is unlocked through secret patterns in sidequests
 - The character menu will display a shine when something new is 
-
+- Buy quantity buttons 
 
 ## Removed
 
