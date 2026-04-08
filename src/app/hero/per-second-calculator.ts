@@ -17,7 +17,6 @@ import {
   calcExpectedDossierYield, expectedHerbPerRangerClick,
   calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick,
   calcArtisanTreasureCost, calcArtisanTimerMs,
-  expectedGemstonePerAppraisal, expectedMetalPerAppraisal,
   expectedGemstonePerAppraisalJack, expectedMetalPerAppraisalJack,
   calcNecromancerBoneYield, calcNecromancerWardXpCost,
   calcNecromancerBrimstoneYield, calcGraveLootingChance,
@@ -267,13 +266,8 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const tFam   = famRaw('thief')      * relicMul(hasThiefRelic)      * jackdUpSpeedMult2;
   const artFam = (ctx.jackStarved['artisan'] ? 0 : famRaw('artisan')) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2;
 
-  // Combined totals (same as calculatePerSecondRates uses)
-  const fighterJacks    = fJacks   + fFam;
-  const rangerJacks     = rJacks   + rFam;
-  const apothecaryJacks = aJacks   + aFam;
-  const culinarianJacks = cJacks   + cFam;
+  // Combined totals (needed for thief uptime fraction)
   const thiefJacks      = tJacks   + tFam;
-  const artisanJacks    = artJacks + artFam;
 
   // ── Derived values ────────────────────────────────────────
   const goldPerClick    = calcGoldPerClick(u.level('BETTER_BOUNTIES'));
@@ -306,7 +300,6 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const catsEyeFactor2 = 0.5 * (1 + (catsEyeLevel2 * 5) / 100);
 
   // ── Ranger relic ──────────────────────────────────────────
-  const rangerHerbBonusPerJack = hasRangerRelic ? 1 : 0;
   const rangerBeastBonus       = hasRangerRelic ? 1 : 0;
 
   // ── Herb rates ────────────────────────────────────────────
@@ -328,6 +321,9 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const potionPerBrew      = hasApothecaryRelic ? 2 : 1;
   const culSpiceMultiplier = hasCulinarianRelic ? 2 : 1;
 
+  // ── Bead multipliers (must match calculatePerSecondRates) ──
+  const bm = (charId: string) => ctx.beadMultipliers?.[charId] ?? 1;
+
   // ── Build breakdown ───────────────────────────────────────
   const bd: PerSecondBreakdown = {};
 
@@ -339,62 +335,71 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   }
 
   // ── Gold ──────────────────────────────────────────────────
-  if (autoGoldPerSec > 0) add('gold', 'Passive', autoGoldPerSec);
-  if (fJacks > 0) add('gold', 'Fighter', roundTo(fJacks * goldPerClick + (hasFighterRelic ? fJacks * autoGoldPerSec : 0), 2));
-  if (fFam   > 0) add('gold', 'Familiar (Fighter)', roundTo(fFam * goldPerClick + (hasFighterRelic ? fFam * autoGoldPerSec : 0), 2));
-  if (aJacks > 0 && goldPerBrew > 0) add('gold', 'Apothecary', roundTo(aJacks * goldPerBrew, 2));
-  if (aFam   > 0 && goldPerBrew > 0) add('gold', 'Familiar (Apothecary)', roundTo(aFam * goldPerBrew, 2));
-  if (cJacks > 0) add('gold', 'Culinarian', roundTo(-cJacks * culGoldCost, 2));
-  if (cFam   > 0) add('gold', 'Familiar (Culinarian)', roundTo(-cFam * culGoldCost, 2));
-  if (effectiveThiefRate > 0 && ppLevel > 0) add('gold', 'Thief', roundTo(effectiveThiefRate * avgDossierYield * ppLevel, 2));
-  if (effectiveThiefFam  > 0 && ppLevel > 0) add('gold', 'Familiar (Thief)', roundTo(effectiveThiefFam * avgDossierYield * ppLevel, 2));
-  if (vatGoldGain2 > 0) add('gold', 'Passive', vatGoldGain2);
+  // Rates: (autoGoldPerSec + fighterRelicGold + fighterJacks*goldPerClick) * bm('fighter')
+  //      + (apothecaryJacks*goldPerBrew + vatGoldGain) * bm('apothecary')
+  //      - culinarianJacks*culGoldCost   (no bead on cost)
+  //      + ppGoldPerSecond * bm('thief')
+  //      + graveLootGoldPerSec * bm('necromancer')
+  if (autoGoldPerSec > 0) add('gold', 'Passive', autoGoldPerSec * bm('fighter'));
+  if (fJacks > 0) add('gold', 'Fighter', (fJacks * goldPerClick + (hasFighterRelic ? fJacks * autoGoldPerSec : 0)) * bm('fighter'));
+  if (fFam   > 0) add('gold', 'Familiar (Fighter)', (fFam * goldPerClick + (hasFighterRelic ? fFam * autoGoldPerSec : 0)) * bm('fighter'));
+  if (aJacks > 0 && goldPerBrew > 0) add('gold', 'Apothecary', aJacks * goldPerBrew * bm('apothecary'));
+  if (aFam   > 0 && goldPerBrew > 0) add('gold', 'Familiar (Apothecary)', aFam * goldPerBrew * bm('apothecary'));
+  if (cJacks > 0) add('gold', 'Culinarian', -cJacks * culGoldCost);
+  if (cFam   > 0) add('gold', 'Familiar (Culinarian)', -cFam * culGoldCost);
+  if (effectiveThiefRate > 0 && ppLevel > 0) add('gold', 'Thief', effectiveThiefRate * avgDossierYield * ppLevel * bm('thief'));
+  if (effectiveThiefFam  > 0 && ppLevel > 0) add('gold', 'Familiar (Thief)', effectiveThiefFam * avgDossierYield * ppLevel * bm('thief'));
+  if (vatGoldGain2 > 0) add('gold', 'Passive', vatGoldGain2 * bm('apothecary'));
 
   // ── XP ────────────────────────────────────────────────────
-  if (fJacks > 0) add('xp', 'Fighter', roundTo(fJacks * xpPerBounty, 2));
-  if (fFam   > 0) add('xp', 'Familiar (Fighter)', roundTo(fFam * xpPerBounty, 2));
-  if (rJacks > 0) add('xp', 'Ranger', roundTo(rJacks, 2));
-  if (rFam   > 0) add('xp', 'Familiar (Ranger)', roundTo(rFam, 2));
-  if (aJacks > 0) add('xp', 'Apothecary', roundTo(aJacks, 2));
-  if (aFam   > 0) add('xp', 'Familiar (Apothecary)', roundTo(aFam, 2));
-  if (cJacks > 0) add('xp', 'Culinarian', roundTo(cJacks, 2));
-  if (cFam   > 0) add('xp', 'Familiar (Culinarian)', roundTo(cFam, 2));
-  if (effectiveThiefRate > 0) add('xp', 'Thief', roundTo(effectiveThiefRate, 2));
-  if (effectiveThiefFam  > 0) add('xp', 'Familiar (Thief)', roundTo(effectiveThiefFam, 2));
+  if (fJacks > 0) add('xp', 'Fighter', fJacks * xpPerBounty * bm('fighter'));
+  if (fFam   > 0) add('xp', 'Familiar (Fighter)', fFam * xpPerBounty * bm('fighter'));
+  if (rJacks > 0) add('xp', 'Ranger', rJacks * bm('ranger'));
+  if (rFam   > 0) add('xp', 'Familiar (Ranger)', rFam * bm('ranger'));
+  if (aJacks > 0) add('xp', 'Apothecary', aJacks * bm('apothecary'));
+  if (aFam   > 0) add('xp', 'Familiar (Apothecary)', aFam * bm('apothecary'));
+  if (cJacks > 0) add('xp', 'Culinarian', cJacks * bm('culinarian'));
+  if (cFam   > 0) add('xp', 'Familiar (Culinarian)', cFam * bm('culinarian'));
+  if (effectiveThiefRate > 0) add('xp', 'Thief', effectiveThiefRate * bm('thief'));
+  if (effectiveThiefFam  > 0) add('xp', 'Familiar (Thief)', effectiveThiefFam * bm('thief'));
 
   // ── Herb ──────────────────────────────────────────────────
-  const rJackHerb = roundTo(rJacks * herbPerRanger + (hasRangerRelic ? rJacks : 0) * catsEyeFactor2, 2);
-  const rFamHerb  = roundTo(rFam   * herbPerRanger + (hasRangerRelic ? rFam   : 0) * catsEyeFactor2, 2);
+  // Rates: herbProduced * bm('ranger') - herbConsumed  (no bead on consumption)
+  const rJackHerb = (rJacks * herbPerRanger + (hasRangerRelic ? rJacks : 0) * catsEyeFactor2) * bm('ranger');
+  const rFamHerb  = (rFam   * herbPerRanger + (hasRangerRelic ? rFam   : 0) * catsEyeFactor2) * bm('ranger');
   if (rJackHerb !== 0) add('herb', 'Ranger', rJackHerb);
   if (rFamHerb  !== 0) add('herb', 'Familiar (Ranger)', rFamHerb);
-  if (hovelGardenRate2 !== 0) add('herb', 'Passive', roundTo(hovelGardenRate2, 2));
-  if (aJacks > 0) add('herb', 'Apothecary', roundTo(-aJacks * herbCostPerJack, 2));
-  if (aFam   > 0) add('herb', 'Familiar (Apothecary)', roundTo(-aFam * herbCostPerJack, 2));
-  if (vatHerbDrain > 0) add('herb', 'Passive', roundTo(-vatHerbDrain, 2));
+  if (hovelGardenRate2 !== 0) add('herb', 'Passive', hovelGardenRate2 * bm('ranger'));
+  if (aJacks > 0) add('herb', 'Apothecary', -aJacks * herbCostPerJack);
+  if (aFam   > 0) add('herb', 'Familiar (Apothecary)', -aFam * herbCostPerJack);
+  if (vatHerbDrain > 0) add('herb', 'Passive', -vatHerbDrain);
 
   // ── Beast ─────────────────────────────────────────────────
-  const rJackBeast = roundTo(rJacks * beastPerRanger, 2);
-  const rFamBeast  = roundTo(rFam   * beastPerRanger, 2);
+  // Rates: (rangerJacks*beastPerRanger + baitedTrapsRate) * bm('ranger')
+  const rJackBeast = rJacks * beastPerRanger * bm('ranger');
+  const rFamBeast  = rFam   * beastPerRanger * bm('ranger');
   if (rJackBeast !== 0) add('beast', 'Ranger', rJackBeast);
   if (rFamBeast  !== 0) add('beast', 'Familiar (Ranger)', rFamBeast);
-  if (baitedTrapsRate !== 0) add('beast', 'Passive', roundTo(baitedTrapsRate, 2));
+  if (baitedTrapsRate !== 0) add('beast', 'Passive', baitedTrapsRate * bm('ranger'));
 
   // ── Potion ────────────────────────────────────────────────
-  if (aJacks > 0) add('potion', 'Apothecary', roundTo(aJacks * potionPerBrew, 2));
-  if (aFam   > 0) add('potion', 'Familiar (Apothecary)', roundTo(aFam * potionPerBrew, 2));
-  if (vatPotionGain > 0) add('potion', 'Passive', roundTo(vatPotionGain, 2));
+  // Rates: (apothecaryJacks*potionPerBrew + vatPotionGain) * bm('apothecary')
+  if (aJacks > 0) add('potion', 'Apothecary', aJacks * potionPerBrew * bm('apothecary'));
+  if (aFam   > 0) add('potion', 'Familiar (Apothecary)', aFam * potionPerBrew * bm('apothecary'));
+  if (vatPotionGain > 0) add('potion', 'Passive', vatPotionGain * bm('apothecary'));
 
   // ── Spice ─────────────────────────────────────────────────
-  if (cJacks > 0) add('spice', 'Culinarian', roundTo(cJacks * spicePerClick * culSpiceMultiplier, 2));
-  if (cFam   > 0) add('spice', 'Familiar (Culinarian)', roundTo(cFam * spicePerClick * culSpiceMultiplier, 2));
+  if (cJacks > 0) add('spice', 'Culinarian', cJacks * spicePerClick * culSpiceMultiplier * bm('culinarian'));
+  if (cFam   > 0) add('spice', 'Familiar (Culinarian)', cFam * spicePerClick * culSpiceMultiplier * bm('culinarian'));
 
   // ── Dossier ───────────────────────────────────────────────
-  if (effectiveThiefRate > 0) add('dossier', 'Thief', roundTo(effectiveThiefRate * avgDossierYield, 2));
-  if (effectiveThiefFam  > 0) add('dossier', 'Familiar (Thief)', roundTo(effectiveThiefFam * avgDossierYield, 2));
+  if (effectiveThiefRate > 0) add('dossier', 'Thief', effectiveThiefRate * avgDossierYield * bm('thief'));
+  if (effectiveThiefFam  > 0) add('dossier', 'Familiar (Thief)', effectiveThiefFam * avgDossierYield * bm('thief'));
 
   // ── Treasure ──────────────────────────────────────────────
-  if (effectiveThiefRate > 0 && thiefTreasurePerJack > 0) add('treasure', 'Thief', roundTo(effectiveThiefRate * thiefTreasurePerJack, 2));
-  if (effectiveThiefFam  > 0 && thiefTreasurePerJack > 0) add('treasure', 'Familiar (Thief)', roundTo(effectiveThiefFam * thiefTreasurePerJack, 2));
+  // Rates: thiefTreasurePerSec * bm('thief') - artisanTreasurePerSec  (no bead on artisan cost)
+  if (effectiveThiefRate > 0 && thiefTreasurePerJack > 0) add('treasure', 'Thief', effectiveThiefRate * thiefTreasurePerJack * bm('thief'));
+  if (effectiveThiefFam  > 0 && thiefTreasurePerJack > 0) add('treasure', 'Familiar (Thief)', effectiveThiefFam * thiefTreasurePerJack * bm('thief'));
 
   // ── Artisan ───────────────────────────────────────────────
   const artTimerSec      = calcArtisanTimerMs(u.level('FASTER_APPRAISING')) / 1000;
@@ -403,16 +408,16 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const artFamCycles     = artFam   > 0 ? 1 / artTimerSec : 0;
 
   if (artJacks > 0) {
-    add('treasure',       'Artisan', roundTo(-artJacks * artTreasureCost * artJackCycles, 2));
-    add('gemstone',       'Artisan', roundTo(artJacks * expectedGemstonePerAppraisalJack(u.level('POTION_CATS_PAW'), hasArtisanRelic) * artJackCycles, 2));
-    add('precious-metal', 'Artisan', roundTo(artJacks * expectedMetalPerAppraisalJack(u.level('POTION_CATS_PAW'), hasArtisanRelic) * artJackCycles, 2));
-    add('xp',             'Artisan', roundTo(artJacks * artJackCycles, 2));
+    add('treasure',       'Artisan', -artJacks * artTreasureCost * artJackCycles);
+    add('gemstone',       'Artisan', artJacks * expectedGemstonePerAppraisalJack(u.level('POTION_CATS_PAW'), hasArtisanRelic) * artJackCycles * bm('artisan'));
+    add('precious-metal', 'Artisan', artJacks * expectedMetalPerAppraisalJack(u.level('POTION_CATS_PAW'), hasArtisanRelic) * artJackCycles * bm('artisan'));
+    add('xp',             'Artisan', artJacks * artJackCycles * bm('artisan'));
   }
   if (artFam > 0) {
-    add('treasure',       'Familiar (Artisan)', roundTo(-artFam * artTreasureCost * artFamCycles, 2));
-    add('gemstone',       'Familiar (Artisan)', roundTo(artFam * expectedGemstonePerAppraisalJack(u.level('POTION_CATS_PAW'), hasArtisanRelic) * artFamCycles, 2));
-    add('precious-metal', 'Familiar (Artisan)', roundTo(artFam * expectedMetalPerAppraisalJack(u.level('POTION_CATS_PAW'), hasArtisanRelic) * artFamCycles, 2));
-    add('xp',             'Familiar (Artisan)', roundTo(artFam * artFamCycles, 2));
+    add('treasure',       'Familiar (Artisan)', -artFam * artTreasureCost * artFamCycles);
+    add('gemstone',       'Familiar (Artisan)', artFam * expectedGemstonePerAppraisalJack(u.level('POTION_CATS_PAW'), hasArtisanRelic) * artFamCycles * bm('artisan'));
+    add('precious-metal', 'Familiar (Artisan)', artFam * expectedMetalPerAppraisalJack(u.level('POTION_CATS_PAW'), hasArtisanRelic) * artFamCycles * bm('artisan'));
+    add('xp',             'Familiar (Artisan)', artFam * artFamCycles * bm('artisan'));
   }
 
   // ── Necromancer ───────────────────────────────────────────
@@ -436,17 +441,17 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const brimstoneMax2     = calcNecromancerBrimstoneYield(u.level('FORTIFIED_CHALK'));
   const avgBrimstoneYield2 = (1 + brimstoneMax2) / 2;
 
-  if (defJacks > 0) add('bone', 'Necromancer', roundTo(defJacks * avgBoneYield2 * necRelicYieldMul, 2));
-  if (defFam   > 0) add('bone', 'Familiar (Necromancer)', roundTo(defFam * avgBoneYield2 * necRelicYieldMul, 2));
-  if (wrdJacks > 0) add('brimstone', 'Necromancer', roundTo(wrdJacks * avgBrimstoneYield2 * necRelicYieldMul, 2));
-  if (wrdFam   > 0) add('brimstone', 'Familiar (Necromancer)', roundTo(wrdFam * avgBrimstoneYield2 * necRelicYieldMul, 2));
+  if (defJacks > 0) add('bone', 'Necromancer', defJacks * avgBoneYield2 * necRelicYieldMul * bm('necromancer'));
+  if (defFam   > 0) add('bone', 'Familiar (Necromancer)', defFam * avgBoneYield2 * necRelicYieldMul * bm('necromancer'));
+  if (wrdJacks > 0) add('brimstone', 'Necromancer', wrdJacks * avgBrimstoneYield2 * necRelicYieldMul * bm('necromancer'));
+  if (wrdFam   > 0) add('brimstone', 'Familiar (Necromancer)', wrdFam * avgBrimstoneYield2 * necRelicYieldMul * bm('necromancer'));
 
-  // XP from Defile / Ward
-  if (defJacks > 0) add('xp', 'Necromancer (Defile)', roundTo(defJacks, 2));
-  if (defFam   > 0) add('xp', 'Familiar (Defile)',    roundTo(defFam, 2));
+  // XP from Defile (production — beaded) / Ward (cost — not beaded)
+  if (defJacks > 0) add('xp', 'Necromancer (Defile)', defJacks * bm('necromancer'));
+  if (defFam   > 0) add('xp', 'Familiar (Defile)',    defFam   * bm('necromancer'));
   const wardXpCost = calcNecromancerWardXpCost(u.level('DARK_PACT'));
-  if (wrdJacks > 0) add('xp', 'Necromancer (Ward)', roundTo(-wrdJacks * wardXpCost, 2));
-  if (wrdFam   > 0) add('xp', 'Familiar (Ward)',    roundTo(-wrdFam   * wardXpCost, 2));
+  if (wrdJacks > 0) add('xp', 'Necromancer (Ward)', -wrdJacks * wardXpCost);
+  if (wrdFam   > 0) add('xp', 'Familiar (Ward)',    -wrdFam   * wardXpCost);
 
   // Grave Looting bonus loot
   const graveLootChance2 = calcGraveLootingChance(u.level('GRAVE_LOOTING')) / 100;
@@ -455,14 +460,14 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
     const glGem     = YIELDS.GRAVE_LOOTING_GEM_WEIGHT     * YIELDS.GRAVE_LOOTING_GEM_AMOUNT     * necRelicYieldMul;
     const glJewelry = YIELDS.GRAVE_LOOTING_JEWELRY_WEIGHT * YIELDS.GRAVE_LOOTING_JEWELRY_AMOUNT * necRelicYieldMul;
     if (defJacks > 0) {
-      add('gold',    'Necromancer (Exhume)', roundTo(defJacks * graveLootChance2 * glGold, 2));
-      add('gemstone','Necromancer (Exhume)', roundTo(defJacks * graveLootChance2 * glGem, 2));
-      add('jewelry', 'Necromancer (Exhume)', roundTo(defJacks * graveLootChance2 * glJewelry, 2));
+      add('gold',    'Necromancer (Exhume)', defJacks * graveLootChance2 * glGold * bm('necromancer'));
+      add('gemstone','Necromancer (Exhume)', defJacks * graveLootChance2 * glGem * bm('necromancer'));
+      add('jewelry', 'Necromancer (Exhume)', defJacks * graveLootChance2 * glJewelry * bm('necromancer'));
     }
     if (defFam > 0) {
-      add('gold',    'Familiar (Exhume)', roundTo(defFam * graveLootChance2 * glGold, 2));
-      add('gemstone','Familiar (Exhume)', roundTo(defFam * graveLootChance2 * glGem, 2));
-      add('jewelry', 'Familiar (Exhume)', roundTo(defFam * graveLootChance2 * glJewelry, 2));
+      add('gold',    'Familiar (Exhume)', defFam * graveLootChance2 * glGold * bm('necromancer'));
+      add('gemstone','Familiar (Exhume)', defFam * graveLootChance2 * glGem * bm('necromancer'));
+      add('jewelry', 'Familiar (Exhume)', defFam * graveLootChance2 * glJewelry * bm('necromancer'));
     }
   }
 

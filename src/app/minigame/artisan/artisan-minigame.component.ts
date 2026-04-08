@@ -5,7 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { ARTISAN_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES, LOG_MSG } from '../../flavor-text';
 import {randInt} from "../../utils/mathUtils";
 
 /** Internal representation of one gemstone in the Faceting minigame. */
@@ -312,7 +312,7 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
       if (!this.wallet.isCurrencyUnlocked('jewelry')) {
         this.wallet.unlockCurrency('jewelry');
         this.log.log(
-          `A perfect jewel! ${cur('jewelry', 1)} Jewelry unlocked!`,
+          LOG_MSG.MG_ARTISAN.JEWELRY_UNLOCKED(cur('jewelry', 1)),
           'rare'
         );
       }
@@ -363,26 +363,26 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
         this.closeEnoughPickIndex = this.secondBestGemIndex;
         this.lastMsg = MINIGAME_MSG.ARTISAN.CLOSE_ENOUGH_WIN;
         this.log.log(
-          `Faceting success (Close Enough)! (${cur('jewelry', totalJewelry)}, ${cur('xp', totalXp)})`,
+          LOG_MSG.MG_ARTISAN.FACET_CLOSE_ENOUGH(cur('jewelry', totalJewelry), cur('xp', totalXp)),
           'success'
         );
       } else if (picked2ndBest) {
         this.lastMsg = MINIGAME_MSG.ARTISAN.DOUBLE_DIP_HIT;
         this.log.log(
-          `Faceting success + Double Dip! (${cur('jewelry', totalJewelry)}, ${cur('xp', totalXp)})`,
+          LOG_MSG.MG_ARTISAN.FACET_DOUBLE_DIP(cur('jewelry', totalJewelry), cur('xp', totalXp)),
           'success'
         );
       } else if (this.doubleDipLevel >= 1) {
         // Picked best but missed the 2nd-best
         this.lastMsg = MINIGAME_MSG.ARTISAN.DOUBLE_DIP_MISS;
         this.log.log(
-          `Faceting success! (${cur('jewelry', totalJewelry)}, ${cur('xp', totalXp)})`,
+          LOG_MSG.MG_ARTISAN.FACET_SUCCESS(cur('jewelry', totalJewelry), cur('xp', totalXp)),
           'success'
         );
       } else {
         this.lastMsg = MINIGAME_MSG.ARTISAN.CORRECT;
         this.log.log(
-          `Faceting success! (${cur('jewelry', totalJewelry)}, ${cur('xp', totalXp)})`,
+          LOG_MSG.MG_ARTISAN.FACET_SUCCESS(cur('jewelry', totalJewelry), cur('xp', totalXp)),
           'success'
         );
       }
@@ -393,7 +393,7 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
       this.resultParts = [];
       this.resultXp = 0;
 
-      this.log.log('Faceting failed — wrong gemstone selected.', 'warn');
+      this.log.log(LOG_MSG.MG_ARTISAN.FACET_FAILED, 'warn');
     }
 
     this.cdr.markForCheck();

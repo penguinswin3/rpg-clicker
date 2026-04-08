@@ -15,7 +15,7 @@ import { SaveService, UpgradeState, FighterCombatState } from './options/save.se
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
 import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE } from './game-config';
-import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR, BEAD_FLAVOR, BEAD_COLORS, BEAD_SYMBOL, HERO_PRESS_PULSE_COLOR } from './flavor-text';
+import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR, BEAD_FLAVOR, BEAD_COLORS, BEAD_SYMBOL, HERO_PRESS_PULSE_COLOR, LOG_MSG } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
 // ── Extracted hero helpers ─────────────────────────────────────
@@ -133,6 +133,23 @@ export class AppComponent implements OnInit, OnDestroy {
   koboldBaitEnabled       = false;
   ancientCookbookEnabled  = true;
 
+  // ── Character shine state (new content notification) ────────
+  /**
+   * Set of character IDs that have pending "new content" shine.
+   * Cleared when the player selects the character.
+   */
+  charShine = new Set<string>();
+
+  /** Tracks previously known unlocked character IDs so we only shine *newly* unlocked ones. */
+  private _prevUnlockedCharIds = new Set<string>(['fighter']);
+
+  /** Mark a character as having new content — adds a shine to its sidebar button. */
+  addCharShine(charId: string): void {
+    if (charId === this.activeCharacterId) return; // no shine for the current character
+    this.charShine.add(charId);
+    this.charShine = new Set(this.charShine); // trigger change detection
+  }
+
   // ── Relic popup state ─────────────────────────────────────────
   /** ID of the relic upgrade whose popup is currently shown, or null. */
   relicPopupId: string | null = null;
@@ -188,8 +205,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.beadState[charId]['gold-1'].found = true;
     this.beadState = { ...this.beadState };
     this._refreshDerived();
+    this.addCharShine(charId);
     const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
-    this.log.log(`★ ${charName} discovered a golden bead from their sidequest! Check the crown above.`, 'rare');
+    this.log.log(LOG_MSG.SYSTEM.BEAD_GOLD_MG(charName), 'rare');
     this.statsService.recordMilestone(`bead_gold_mg_${charId}`, `${charName}: Gold Bead Found (Sidequest)`);
   }
 
@@ -200,8 +218,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.beadState[charId]['gold-2'].found = true;
     this.beadState = { ...this.beadState };
     this._refreshDerived();
+    this.addCharShine(charId);
     const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
-    this.log.log(`★ ${charName} unlocked a golden bead of mastery! Check the crown above.`, 'rare');
+    this.log.log(LOG_MSG.SYSTEM.BEAD_GOLD2(charName), 'rare');
     this.statsService.recordMilestone(`bead_gold2_${charId}`, `${charName}: Gold Bead Found (Challenge)`);
   }
 
@@ -453,8 +472,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.beadState[charId]['blue-1'].found = true;
     this.beadState = { ...this.beadState };
     this._refreshDerived();
+    this.addCharShine(charId);
     const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
-    this.log.log(`★ ${charName} discovered a mysterious bead! Check the crown above.`, 'rare');
+    this.log.log(LOG_MSG.SYSTEM.BEAD_BLUE(charName), 'rare');
     this.statsService.recordMilestone(`bead_blue_${charId}`, `${charName}: Blue Bead Found`);
   }
 
@@ -465,8 +485,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.beadState[charId]['blue-2'].found = true;
     this.beadState = { ...this.beadState };
     this._refreshDerived();
+    this.addCharShine(charId);
     const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
-    this.log.log(`★ ${charName}'s Jacks discovered a mysterious bead! Check the crown above.`, 'rare');
+    this.log.log(LOG_MSG.SYSTEM.BEAD_JACK(charName), 'rare');
     this.statsService.recordMilestone(`bead_jack_${charId}`, `${charName}: Jack Bead Found`);
   }
 
@@ -484,7 +505,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.updateAllPerSecond();
       const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
       const beadName = BEAD_FLAVOR[charId]?.[slotId]?.name ?? 'Bead';
-      this.log.log(`★ ${beadName} socketed for ${charName}!${type === 'blue' ? ' Resource yields doubled!' : ''}`, 'rare');
+      this.log.log(LOG_MSG.SYSTEM.BEAD_SOCKETED(beadName, charName, type === 'blue'), 'rare');
     }
   }
 
@@ -569,6 +590,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.charService.activeId$.subscribe(id => {
       this.activeCharacterId = id;
+      // Clear shine when the player selects this character
+      if (this.charShine.has(id)) {
+        this.charShine.delete(id);
+        this.charShine = new Set(this.charShine);
+      }
       if (id === 'thief' && this.isThiefStunned) this.refreshThiefStunAnimStyle();
       if (id === 'artisan' && this.isArtisanTimerActive) this.refreshArtisanTimerAnimStyle();
       this._refreshDerived();
@@ -581,6 +607,13 @@ export class AppComponent implements OnInit, OnDestroy {
       this.necromancerUnlocked = chars.find(c => c.id === 'necromancer')?.unlocked ?? false;
       this.unlockedCharacters = chars.filter(c => c.unlocked).map(c => ({ id: c.id, name: c.name, color: c.color }));
       this.updateRelicHunterMax(chars);
+      // Shine newly unlocked characters (skip ones already known from save restore)
+      for (const c of chars) {
+        if (c.unlocked && !this._prevUnlockedCharIds.has(c.id)) {
+          this.addCharShine(c.id);
+        }
+      }
+      this._prevUnlockedCharIds = new Set(chars.filter(c => c.unlocked).map(c => c.id));
       // Track character unlock milestones
       for (const c of chars) {
         if (c.unlocked && c.id !== 'fighter') {
@@ -600,6 +633,9 @@ export class AppComponent implements OnInit, OnDestroy {
         const flavorName = (UPGRADE_FLAVOR as any)[id]?.name ?? id;
         this.statsService.recordMilestone(`relic_${id}`, `Relic: ${flavorName}`);
       }
+      // Shine the character button when something new happens for a non-active character
+      const charId = this.upgrades.charIdFor(id);
+      if (charId) this.addCharShine(charId);
       this._refreshDerived();
     });
 
@@ -728,6 +764,8 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     if (this.saveService.hasSave()) this.saveService.loadFromLocalStorage();
+    // After save restore, clear any shine that was triggered by loading previously-unlocked state
+    this.charShine = new Set<string>();
     this.sidequestCollapsed = this.saveService.sidequestCollapsed;
     this.saveService.startAutoSave();
   }
@@ -1151,7 +1189,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     if (!isJack) {
       this.log.log(
-        `Appraisal complete! (${cur('gemstone', totalGemstones)}, ${cur('precious-metal', totalMetals)}, ${cur('xp', xpAwarded)})`,
+        LOG_MSG.SYSTEM.APPRAISAL_COMPLETE(cur('gemstone', totalGemstones), cur('precious-metal', totalMetals), cur('xp', xpAwarded)),
         'success',
       );
     }
@@ -1233,14 +1271,14 @@ export class AppComponent implements OnInit, OnDestroy {
   buyJack(): void {
     if (this.jacksToPurchase <= 0) return;
     if (!this.canAffordJack) {
-      this.log.log('Not enough resources to hire a Jack.', 'warn');
+      this.log.log(LOG_MSG.SYSTEM.JACK_CANT_AFFORD, 'warn');
       return;
     }
     for (const c of this.jackCurrentCosts) {
       this.wallet.remove(c.currency, c.amount);
     }
     this.jacksOwned++;
-    this.log.log(`A Jack of All Trades has been hired! (Total: ${this.jacksOwned})`, 'success');
+    this.log.log(LOG_MSG.SYSTEM.JACK_HIRED(this.jacksOwned), 'success');
   }
 
   allocateJack(charId: string): void {
@@ -1410,12 +1448,14 @@ export class AppComponent implements OnInit, OnDestroy {
         .filter(c => !this.wallet.canAfford(c.currency, c.amount))
         .map(c => cur(c.currency, c.amount, ''))
         .join(', ');
-      this.log.log(`Not enough resources to unlock Sidequests. Need ${missing}.`, 'warn');
+      this.log.log(LOG_MSG.SYSTEM.MINIGAME_CANT_AFFORD(missing), 'warn');
       return;
     }
     for (const c of costs) this.wallet.remove(c.currency, c.amount);
     this.minigameUnlocked = true;
-    this.log.log('★ SIDEQUESTS UNLOCKED! Character-specific challenges are now available.', 'rare');
+    // Shine all unlocked characters since they each gain a new sidequest
+    for (const c of this.unlockedCharacters) this.addCharShine(c.id);
+    this.log.log(LOG_MSG.SYSTEM.MINIGAME_UNLOCKED, 'rare');
     this.statsService.recordMilestone('minigame_unlocked', 'Sidequests Unlocked');
   }
 
@@ -1427,13 +1467,13 @@ export class AppComponent implements OnInit, OnDestroy {
         .filter(c => !this.wallet.canAfford(c.currency, c.amount))
         .map(c => cur(c.currency, c.amount, ''))
         .join(', ');
-      this.log.log(`Not enough resources for Jack'd Up. Need ${missing}.`, 'warn');
+      this.log.log(LOG_MSG.SYSTEM.JACKDUP_CANT_AFFORD(missing), 'warn');
       return;
     }
     for (const c of costs) this.wallet.remove(c.currency, c.amount);
     this.jackdUpUnlocked = true;
     this.updateAllPerSecond();
-    this.log.log("★ JACK'D UP! Your Jacks now click 50% faster!", 'rare');
+    this.log.log(LOG_MSG.SYSTEM.JACKDUP_UNLOCKED, 'rare');
     this.statsService.recordMilestone('jackdup_unlocked', "Jack'd Up Unlocked");
   }
 
@@ -1444,23 +1484,23 @@ export class AppComponent implements OnInit, OnDestroy {
 
   devGrant(): void {
     for (const c of this.wallet.currencies) this.wallet.add(c.id, 1_000_000);
-    this.log.log('[DEV] +1M granted to all resources.', 'warn');
+    this.log.log(LOG_MSG.DEV.GRANT, 'warn');
   }
 
   devZero(): void {
     for (const c of this.wallet.currencies) this.wallet.set(c.id, 0);
-    this.log.log('[DEV] All resources set to 0.', 'warn');
+    this.log.log(LOG_MSG.DEV.ZERO, 'warn');
   }
 
   devMaxXp(): void {
     this.wallet.set('xp', 2_000_000_000);
-    this.log.log('[DEV] XP set to 2,000,000,000.', 'warn');
+    this.log.log(LOG_MSG.DEV.MAX_XP, 'warn');
   }
 
   devHalfMaxUpgrades(): void {
     this.upgrades.setAllToHalfMax();
     this.updateAllPerSecond();
-    this.log.log('[DEV] All upgrades set to half of their maximum level.', 'warn');
+    this.log.log(LOG_MSG.DEV.HALF_MAX, 'warn');
   }
 
   devZeroUpgrades(): void {
@@ -1479,13 +1519,13 @@ export class AppComponent implements OnInit, OnDestroy {
     this._refreshDerived();
 
     this.updateAllPerSecond();
-    this.log.log('[DEV] All upgrades set to level 0. All beads unsocketed.', 'warn');
+    this.log.log(LOG_MSG.DEV.ZERO_UPGRADES, 'warn');
   }
 
   devMaxUpgrades(): void {
     this.upgrades.setAllToMax();
     this.updateAllPerSecond();
-    this.log.log('[DEV] All upgrades set to maximum level.', 'warn');
+    this.log.log(LOG_MSG.DEV.MAX_UPGRADES, 'warn');
   }
 
   devClearSave(): void {
@@ -1527,7 +1567,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.updateAllPerSecond();
 
-    this.log.log('[DEV] Everything unlocked.', 'warn');
+    this.log.log(LOG_MSG.DEV.UNLOCK_ALL, 'warn');
   }
 
   // ── Private context builders ───────────────────────────────────

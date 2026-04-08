@@ -9,7 +9,7 @@ import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { UpgradeService } from '../../upgrade/upgrade.service';
 import { NECROMANCER_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES, LOG_MSG } from '../../flavor-text';
 
 // ── Helpers ─────────────────────────────────────────────────
 
@@ -289,7 +289,7 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
     this.buildHintLines();
 
     const costStr = this.costs.map(c => cur(c.id, c.amount, '-')).join(', ');
-    this.log.log(`Well of Souls begun! (${costStr})`);
+    this.log.log(LOG_MSG.MG_NECROMANCER.RITUAL_START(costStr));
     this.cdr.markForCheck();
   }
 
@@ -753,7 +753,7 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
       this.stats.trackCurrencyGain('soul-stone', this.soulStonesAwarded);
       if (!this.wallet.isCurrencyUnlocked('soul-stone')) {
         this.wallet.unlockCurrency('soul-stone');
-        this.log.log('Soul Stones discovered! A new currency!', 'rare');
+        this.log.log(LOG_MSG.MG_NECROMANCER.SOUL_STONE_UNLOCKED, 'rare');
       }
     }
     this.wallet.add('xp', this.xpAwarded);
@@ -766,14 +766,14 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
       this.msgClass = 'msg-good';
       const bonusNote = transmutationBonus > 0 ? ` (+${transmutationBonus} transmutation)` : '';
       this.log.log(
-        `Ritual complete — PERFECT!${bonusNote} (${cur('soul-stone', this.soulStonesAwarded)}, ${cur('xp', this.xpAwarded)})`,
+        LOG_MSG.MG_NECROMANCER.RITUAL_PERFECT(bonusNote, cur('soul-stone', this.soulStonesAwarded), cur('xp', this.xpAwarded)),
         'success',
       );
     } else {
       this.lastMsg = MINIGAME_MSG.NECROMANCER.COMPLETE(this.efficiencyPct);
       this.msgClass = this.efficiencyPct >= 80 ? 'msg-good' : 'msg-neutral';
       this.log.log(
-        `Ritual complete — ${this.efficiencyPct}% efficiency. (${cur('soul-stone', this.soulStonesAwarded)}, ${cur('xp', this.xpAwarded)})`,
+        LOG_MSG.MG_NECROMANCER.RITUAL_COMPLETE(this.efficiencyPct, cur('soul-stone', this.soulStonesAwarded), cur('xp', this.xpAwarded)),
         this.efficiencyPct >= 90 ? 'success' : 'default',
       );
     }

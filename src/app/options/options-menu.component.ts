@@ -6,6 +6,7 @@ import { SaveService } from './save.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { CharacterService } from '../character/character.service';
 import { UPGRADE_DEFS, VERSION } from '../game-config';
+import { LOG_MSG } from '../flavor-text';
 
 /** px width of the character sidebar in each state (must match character-sidebar.component.scss) */
 const SIDEBAR_EXPANDED  = 220;
@@ -69,27 +70,27 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
 
   saveToCache(): void {
     this.saveService.saveToLocalStorage();
-    this.log.log('Game saved to browser cache.', 'success');
+    this.log.log(LOG_MSG.SAVE.MANUAL_SAVED, 'success');
   }
 
   async copyToClipboard(): Promise<void> {
     try {
       await this.saveService.copyToClipboard();
-      this.log.log('Save data copied to clipboard.', 'success');
+      this.log.log(LOG_MSG.SAVE.COPIED, 'success');
     } catch {
-      this.log.log('Failed to copy save data — check browser permissions.', 'error');
+      this.log.log(LOG_MSG.SAVE.COPY_FAILED, 'error');
     }
   }
 
   exportFile(): void {
     this.saveService.exportFile();
-    this.log.log('Save file exported.', 'success');
+    this.log.log(LOG_MSG.SAVE.EXPORTED, 'success');
   }
 
   importSave(): void {
     const trimmed = this.importString.trim();
     if (!trimmed) {
-      this.log.log('Paste a save string into the import box first.', 'error');
+      this.log.log(LOG_MSG.SAVE.IMPORT_EMPTY, 'error');
       return;
     }
     // this.saveService.suppressNextSave();
@@ -97,9 +98,9 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
     const ok = this.saveService.importFromBase64(trimmed);
     if (ok) {
       this.importString = '';
-      this.log.log('Save data imported and applied.', 'success');
+      this.log.log(LOG_MSG.SAVE.IMPORTED, 'success');
     } else {
-      this.log.log('Invalid save data — could not import.', 'error');
+      this.log.log(LOG_MSG.SAVE.IMPORT_INVALID, 'error');
     }
   }
 
@@ -122,7 +123,7 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
     this.saveService.suppressNextSave();
     this.saveService.deleteSave();
     document.body.classList.add('screen-shake');
-    this.log.log('[SAVE] Browser save data erased. Reloading…', 'warn');
+    this.log.log(LOG_MSG.SAVE.CLEARED, 'warn');
     setTimeout(() => window.location.reload(), 800);
   }
 

@@ -5,7 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { CULINARIAN_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES, LOG_MSG } from '../../flavor-text';
 
 /** Feedback per slot after a guess is submitted. */
 export type PegColor = 'green' | 'yellow' | 'miss';
@@ -188,7 +188,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
       // Check for the (very unlikely) case that the annotation is a perfect match
       if (annotationPegs.every(p => p === 'green')) {
         this.onWin();
-        this.log.log('Cookbook Annotations: the annotated guess was a perfect match!', 'success');
+        this.log.log(LOG_MSG.MG_CULINARIAN.ANNOTATION_MATCH, 'success');
         this.cdr.markForCheck();
         return;
       }
@@ -202,7 +202,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
 
     this.lastMsg  = MINIGAME_MSG.CULINARIAN.ROUND_START(this.MAX_GUESSES);
     this.msgClass = 'msg-neutral';
-    this.log.log(`Culinarian begins experimenting. (${cur('herb', this.INGREDIENT_COST, '-')}, ${cur('beast', this.INGREDIENT_COST, '-')}, ${cur('kobold-tongue', this.INGREDIENT_COST, '-')}, ${cur('spice', this.INGREDIENT_COST, '-')})`);
+    this.log.log(LOG_MSG.MG_CULINARIAN.EXPERIMENT_START(`${cur('herb', this.INGREDIENT_COST, '-')}, ${cur('beast', this.INGREDIENT_COST, '-')}, ${cur('kobold-tongue', this.INGREDIENT_COST, '-')}, ${cur('spice', this.INGREDIENT_COST, '-')}`));
   }
 
   submitGuess(): void {
@@ -656,11 +656,11 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
 
     if (!this.wallet.isCurrencyUnlocked('hearty-meal')) {
       this.wallet.unlockCurrency('hearty-meal');
-      this.log.log(`The Culinarian perfects a Hearty Meal! New currency unlocked!`, 'rare');
+      this.log.log(LOG_MSG.MG_CULINARIAN.MEAL_UNLOCKED, 'rare');
     } else if (wasteNotBonus > 0) {
-      this.log.log(`Hearty Meal crafted! (${cur('hearty-meal', this.MEAL_REWARD * bm)} base ${cur('hearty-meal', wasteNotBonus * bm)} Waste Not!)`, 'success');
+      this.log.log(LOG_MSG.MG_CULINARIAN.MEAL_WITH_WASTE_NOT(cur('hearty-meal', this.MEAL_REWARD * bm), cur('hearty-meal', wasteNotBonus * bm)), 'success');
     } else {
-      this.log.log(`Hearty Meal crafted! (${cur('hearty-meal', totalReward)})`, 'success');
+      this.log.log(LOG_MSG.MG_CULINARIAN.MEAL_CRAFTED(cur('hearty-meal', totalReward)), 'success');
     }
 
     this.lastMsg  = wasteNotBonus > 0
@@ -673,7 +673,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
     this.lost = true;
     this.roundActive = false;
     this.stats.trackCulinarianResult(false, this.guessesUsed);
-    this.log.log('The Culinarian failed to find the recipe.', 'warn');
+    this.log.log(LOG_MSG.MG_CULINARIAN.RECIPE_FAILED, 'warn');
     this.lastMsg  = MINIGAME_MSG.CULINARIAN.LOSE;
     this.msgClass = 'msg-bad';
   }

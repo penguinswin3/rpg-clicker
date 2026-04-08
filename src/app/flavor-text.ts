@@ -291,7 +291,7 @@ export const CHARACTER_FLAVOR = {
   APOTHECARY: {
     name: 'Apothecary',
     desc: 'The proud owner of a small potion shop. He is quite good at his craft, and specializes in versatile potion bases.',
-    questBtn: 'Alchemize',
+    questBtn: 'Distill',
   },
   CULINARIAN: {
     name: 'Culinarian',
@@ -336,7 +336,7 @@ export const MINIGAME_FLAVOR = {
   },
   THIEF: {
     name: 'Big Heist',
-    desc: 'Crack the safe before you\nare detected.',
+    desc: 'Crack the safe before you\nare detected. Perhaps you may find an epic relic...',
   },
   ARTISAN: {
     name: 'Faceting',
@@ -472,7 +472,7 @@ export const MINIGAME_MSG = {
   },
 
   THIEF: {
-    IDLE:     'Find the sweet spot on the dial!',
+    IDLE:     'Find the sweet spot on the dial!\nMaybe you will find a rare relic...',
     MISS:     'Miss!',
     HIT:      'Sweet spot found!',
     BUSTED:   'DETECTED! Heist failed.',
@@ -573,4 +573,182 @@ export const GOLD2_STEP_MESSAGES: Record<string, string[]> = {
   artisan:     ['The gem glimmers knowingly.',    'A facet catches the light.',    'The jewel responds to your touch.',  'Crystalline whispers grow.',     'The pattern sharpens.',      'Cut after cut, the gem obeys.', 'Brilliance takes shape.', 'The stone sings.', 'One final selection.'],
   necromancer: ['The spirits fall silent.',        'The circle holds.',             'Dominion approaches.'],
 };
+
+
+// ── Activity Log Messages ─────────────────────────────────────
+/**
+ * All activity-log messages in one place.
+ * Static messages are plain strings; messages with dynamic
+ * values are arrow functions that accept pre-formatted `cur()`
+ * tokens or computed numbers.
+ */
+export const LOG_MSG = {
+
+  // ── Hero-button click messages ────────────────────────────────
+
+  HERO: {
+    FIGHTER: {
+      BOUNTY:                (gold: string, xp: string) => `You ventured forth and found gold. (${gold}, ${xp})`,
+    },
+    RANGER: {
+      CATS_EYE_BOTH:         (herb: string, beast: string, xp: string) => `Cat's Eye! You foraged herbs AND hunted a beast! (${herb}, ${beast}, ${xp})`,
+      CATS_EYE_HERB_ONLY:    (herb: string, xp: string) => `Cat's Eye! You foraged herbs, but the beast escaped. (${herb}, ${xp})`,
+      FORAGE_HERB:           (herb: string, xp: string) => `You targeted herbs and foraged some. (${herb}, ${xp})`,
+      HUNT_BEAST:            (beast: string, xp: string) => `You tracked a beast and claimed its meat. (${beast}, ${xp})`,
+      BEAST_ESCAPED:         (xp: string) => `You targeted a beast but it escaped. (${xp})`,
+    },
+    APOTHECARY: {
+      NOT_ENOUGH_HERBS:      (need: string, have: string) => `Not enough herbs to brew. Need ${need}, have ${have}.`,
+      BREW_RECOVERED:        (potion: string, herb: string, xp: string) => `You brewed a potion and recovered herbs! (${potion}, ${herb}, ${xp})`,
+      BREW:                  (potion: string, xp: string) => `You brewed a potion. (${potion}, ${xp})`,
+    },
+    CULINARIAN: {
+      NOT_ENOUGH_GOLD:       (need: string, have: string) => `Not enough gold to gather spices. Need ${need}, have ${have}.`,
+      SOURCED:               (gold: string, spice: string, xp: string) => `You sourced exotic spices. (${gold}, ${spice}, ${xp})`,
+    },
+    THIEF: {
+      SUCCESS_WITH_GOLD:     (dossier: string, xp: string, gold: string) => `You slipped in undetected and secured some dossier. (${dossier}, ${xp}, ${gold})`,
+      SUCCESS:               (dossier: string, xp: string) => `You slipped in undetected and secured some dossier. (${dossier}, ${xp})`,
+      SPOTTED:               (seconds: number) => `You were spotted! Retreating for ${seconds} seconds...`,
+    },
+    ARTISAN: {
+      NOT_ENOUGH_TREASURE:   (need: string, have: string) => `Not enough treasure to appraise. Need ${need}, have ${have}.`,
+      APPRAISAL_STARTED:     (cost: string) => `Appraisal started... (${cost})`,
+    },
+    NECROMANCER: {
+      DEFILE_GOLD:           (bone: string, gold: string, xp: string) => `You defiled the earth and unearthed bones — and found buried gold! (${bone}, ${gold}, ${xp})`,
+      DEFILE_GEM:            (bone: string, gem: string, xp: string) => `You defiled the earth and unearthed bones — adorned with gemstones! (${bone}, ${gem}, ${xp})`,
+      DEFILE_JEWELRY:        (bone: string, jewelry: string, xp: string) => `You defiled the earth and unearthed bones — and uncovered jewelry! (${bone}, ${jewelry}, ${xp})`,
+      DEFILE:                (bone: string, xp: string) => `You defiled the earth and unearthed bones. (${bone}, ${xp})`,
+      NOT_ENOUGH_XP:         (need: string, have: string) => `Not enough XP to ward. Need ${need}, have ${have}.`,
+      WARD:                  (xp: string, brimstone: string) => `You warded the veil and conjured brimstone. (${xp}, ${brimstone})`,
+    },
+  },
+
+  // ── Sidequest (minigame) activity-log messages ────────────────
+
+  MG_FIGHTER: {
+    SLAIN:                   (enemy: string) => `The Fighter was slain by a ${enemy}!`,
+    FLED:                    'The Fighter fled from combat.',
+    SHORT_REST:              (potions: string) => `Chugged some potions during a short rest. (${potions})`,
+    NEW_TROPHY:              (enemy: string, drop: string) => `The ${enemy} drops a ${drop}! A new trophy!`,
+    FIRST_EAR:               (mutual: boolean, enemy: string, drops: string) => `${mutual ? 'Mutual kill!' : 'Victory!'} The ${enemy} drops a Kobold Ear! (${drops})`,
+    MUTUAL_KILL:             (drops: string) => `Mutual kill! Loot still collected. (${drops})`,
+    VICTORY:                 (enemy: string, drops: string) => `Victory! ${enemy} defeated. (${drops})`,
+  },
+
+  MG_RANGER: {
+    SCOUT_START:             (cost: string) => `Ranger sets out to scout the area. (${cost})`,
+    PIXIE_UNLOCKED:          'A Pixie emerged from the undergrowth! Pixie Dust unlocked!',
+    TREASURE_UNLOCKED:       'A treasure chest! Treasure unlocked!',
+    SCOUT_RESULT:            (multiplier: string, parts: string) => `${multiplier} Ranger scouted the area. (${parts})`,
+    SCOUT_NOTHING:           'Ranger scouted the area: found nothing useful.',
+  },
+
+  MG_APOTHECARY: {
+    BREW_START:              (costs: string) => `Apothecary begins brewing. (${costs})`,
+    SYNAPTICAL_UNLOCKED:     'A Synaptical Potion has been crafted! New currency unlocked!',
+    SYNAPTICAL_SUCCESS:      (potion: string) => `Synaptical dilution success! (${potion})`,
+    SYNAPTICAL_PARTIAL:      (potion: string, base: string) => `Synaptical dilution partial! (${potion}, ${base})`,
+    SYNAPTICAL_FAIL:         (base: string) => `Synaptical dilution failed! (${base})`,
+    SYNAPTICAL_CRAFTED:      (potion: string) => `Synaptical Potion crafted! (${potion})`,
+    CONCENTRATED_UNLOCKED:   'A Concentrated Potion has been crafted! New currency unlocked!',
+    DILUTION_SUCCESS:        (potion: string) => `Dilution success! (${potion})`,
+    DILUTION_PARTIAL:        (potion: string, base: string) => `Dilution partial! (${potion}, ${base})`,
+    DILUTION_FAIL:           (base: string) => `Dilution failed! (${base})`,
+    CONCENTRATED_CRAFTED:    (potion: string) => `Concentrated Potion crafted! (${potion})`,
+  },
+
+  MG_CULINARIAN: {
+    ANNOTATION_MATCH:        'Cookbook Annotations: the annotated guess was a perfect match!',
+    EXPERIMENT_START:        (costs: string) => `Culinarian begins experimenting. (${costs})`,
+    MEAL_UNLOCKED:           'The Culinarian perfects a Hearty Meal! New currency unlocked!',
+    MEAL_WITH_WASTE_NOT:     (base: string, bonus: string) => `Hearty Meal crafted! (${base} base ${bonus} Waste Not!)`,
+    MEAL_CRAFTED:            (meal: string) => `Hearty Meal crafted! (${meal})`,
+    RECIPE_FAILED:           'The Culinarian failed to find the recipe.',
+  },
+
+  MG_THIEF: {
+    HEIST_START:             (cost: string) => `Heist started! (${cost})`,
+    HEIST_DETECTED:          'Heist failed — you were detected!',
+    TREASURE_UNLOCKED:       'Treasure discovered! New currency unlocked!',
+    RELIC_FOUND:             'A Relic has been unearthed! Incredibly rare!',
+    SAFE_CRACKED_RELIC:      (treasure: string, gold: string, relic: string, xp: string) => `Safe cracked! (${treasure}, ${gold}, ${relic}, ${xp})`,
+    SAFE_CRACKED:            (treasure: string, gold: string, xp: string) => `Safe cracked! (${treasure}, ${gold}, ${xp})`,
+  },
+
+  MG_ARTISAN: {
+    JEWELRY_UNLOCKED:        (jewelry: string) => `A perfect jewel! ${jewelry} Jewelry unlocked!`,
+    FACET_CLOSE_ENOUGH:      (jewelry: string, xp: string) => `Faceting success (Close Enough)! (${jewelry}, ${xp})`,
+    FACET_DOUBLE_DIP:        (jewelry: string, xp: string) => `Faceting success + Double Dip! (${jewelry}, ${xp})`,
+    FACET_SUCCESS:           (jewelry: string, xp: string) => `Faceting success! (${jewelry}, ${xp})`,
+    FACET_FAILED:            'Faceting failed — wrong gemstone selected.',
+  },
+
+  MG_NECROMANCER: {
+    RITUAL_START:            (costs: string) => `Well of Souls begun! (${costs})`,
+    SOUL_STONE_UNLOCKED:     'Soul Stones discovered! A new currency!',
+    RITUAL_PERFECT:          (bonus: string, stones: string, xp: string) => `Ritual complete — PERFECT!${bonus} (${stones}, ${xp})`,
+    RITUAL_COMPLETE:         (pct: number, stones: string, xp: string) => `Ritual complete — ${pct}% efficiency. (${stones}, ${xp})`,
+  },
+
+  // ── System messages ───────────────────────────────────────────
+
+  SYSTEM: {
+    // Upgrades
+    UPGRADE_CANT_AFFORD:     (name: string, needs: string) => `Not enough resources for ${name}. Need: ${needs}.`,
+    UPGRADE_SUCCESS:         (name: string, level: number) => `${name} upgraded to Lv.${level}.`,
+
+    // Jacks
+    JACK_CANT_AFFORD:        'Not enough resources to hire a Jack.',
+    JACK_HIRED:              (total: number) => `A Jack of All Trades has been hired! (Total: ${total})`,
+
+    // Minigame / global unlocks
+    MINIGAME_CANT_AFFORD:    (missing: string) => `Not enough resources to unlock Sidequests. Need ${missing}.`,
+    MINIGAME_UNLOCKED:       '★ SIDEQUESTS UNLOCKED! Character-specific challenges are now available.',
+    JACKDUP_CANT_AFFORD:     (missing: string) => `Not enough resources for Jack'd Up. Need ${missing}.`,
+    JACKDUP_UNLOCKED:        "★ JACK'D UP! Your Jacks now click 50% faster!",
+
+    // Artisan appraisal timer
+    APPRAISAL_COMPLETE:      (gems: string, metal: string, xp: string) => `Appraisal complete! (${gems}, ${metal}, ${xp})`,
+
+    // Character unlock
+    CHAR_CANT_AFFORD:        (name: string, missing: string) => `Can't unlock ${name} — still need: ${missing}.`,
+    CHAR_UNLOCKED:           (name: string) => `${name} has been unlocked! Welcome to the party.`,
+
+    // Beads
+    BEAD_GOLD_MG:            (charName: string) => `★ ${charName} discovered a golden bead from their sidequest! Check the crown above.`,
+    BEAD_GOLD2:              (charName: string) => `★ ${charName} unlocked a golden bead of mastery! Check the crown above.`,
+    BEAD_BLUE:               (charName: string) => `★ ${charName} discovered a mysterious bead! Check the crown above.`,
+    BEAD_JACK:               (charName: string) => `★ ${charName}'s Jacks discovered a mysterious bead! Check the crown above.`,
+    BEAD_SOCKETED:           (beadName: string, charName: string, isBlue: boolean) => `★ ${beadName} socketed for ${charName}!${isBlue ? ' Resource yields doubled!' : ''}`,
+  },
+
+  // ── Save / Options ────────────────────────────────────────────
+
+  SAVE: {
+    AUTO_SAVED:              '[AUTO-SAVE] Game state saved to browser cache.',
+    MANUAL_SAVED:            '[SAVE] Game saved to browser cache.',
+    COPIED:                  '[SAVE] Save data copied to clipboard.',
+    COPY_FAILED:             'Failed to copy save data — check browser permissions.',
+    EXPORTED:                '[SAVE] Save file exported.',
+    IMPORT_EMPTY:            'Paste a save string into the import box first.',
+    IMPORTED:                '[SAVE] Save data imported and applied.',
+    IMPORT_INVALID:          'Invalid save data — could not import.',
+    CLEARED:                 '[SAVE] Browser save data erased. Reloading…',
+  },
+
+  // ── Dev tools ─────────────────────────────────────────────────
+
+  DEV: {
+    GRANT:                   '[DEV] +1M granted to all resources.',
+    ZERO:                    '[DEV] All resources set to 0.',
+    MAX_XP:                  '[DEV] XP set to 2,000,000,000.',
+    HALF_MAX:                '[DEV] All upgrades set to half of their maximum level.',
+    ZERO_UPGRADES:           '[DEV] All upgrades set to level 0. All beads unsocketed.',
+    MAX_UPGRADES:            '[DEV] All upgrades set to maximum level.',
+    UNLOCK_ALL:              '[DEV] Everything unlocked.',
+  },
+
+} as const;
 

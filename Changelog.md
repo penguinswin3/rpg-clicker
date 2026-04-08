@@ -2,16 +2,13 @@
 
 ## Added
 - Bead System
-- Auto-Solve system for all sidequests, unlocked by socketing a Gold Bead (gold-1)
-  - Fighter: Automatically attacks once per second. Will not heal and can die.
-  - Ranger: Randomly picks 3 squares, one per second.
-  - Apothecary: Clicks within the sweet spot with a 0.5s cooldown. Does not target inner/synaptic zones.
-  - Culinarian: Brute-force approach — submits all-herb, all-meat guesses, then builds a smart combined guess on the 3rd try. Sometimes solves on guess 3, otherwise deduces the answer on the 4th.
-  - Thief: Evenly distributes crack attempts across the dial based on available detection.
-  - Artisan: 50% chance to pick the best gem (75% best / 50% second-best with multiple picks). One pick per second.
-  - Necromancer: Starts at a random node and selects the next clockwise valid node. 0.5s per click.
-- Gold Bead has a 1/50 chance to drop on any successful sidequest completion, after 100 manual clears of that sidequest
+- Blue bead 1 and 2 are unlcoked by manual clicking and jacks clicking
+- Auto-Solve system for all sidequests, unlocked by socketing a Gold Bead
+- Gold Bead has a 1/100 chance to drop on any successful sidequest completion, after 100 manual clears of that sidequest
 - Gold Bead 2 is unlocked through secret patterns in sidequests
+- The character menu will display a shine when something new is 
+
+
 ## Removed
 
 ## Changed
@@ -21,6 +18,11 @@
 - The UNLOCK dev button now finds all four bead types (not just blue)
 - Hero button border pulses when clicked (color is configurable in flavor-text.ts)
 - Thief gold-2 "good" auto-solve now probes at 0° and 30° then targets the sweet spot directly, instead of cycling through 90° intervals
+- Necromancer costs more XP 
+- Artisan costs more XP 
+- Renamed Alchemist hero button to Distill
+
+
 ## Bugfixes
 
 ----------------------------

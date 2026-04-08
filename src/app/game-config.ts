@@ -178,7 +178,7 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
     ],
   },
   {
-    id: 'UNLOCK_ARTISAN', kind: 'character-unlock', xpMin: 250_000,
+    id: 'UNLOCK_ARTISAN', kind: 'character-unlock', xpMin: 400_000,
     costs: [
       { currency: 'gold',     base: 100_000 },
       { currency: 'dossier',  base: 10_000  },
@@ -186,7 +186,7 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
     ],
   },
   {
-    id: 'UNLOCK_NECROMANCER', kind: 'character-unlock', xpMin: 750_000,
+    id: 'UNLOCK_NECROMANCER', kind: 'character-unlock', xpMin: 1_000_000,
     costs: [
       { currency: 'gold',           base: 400_000 },
       { currency: 'precious-metal', base: 2000     },
@@ -288,9 +288,9 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'SHORT_REST', characterId: 'fighter', category: 'minigame', max: 1,
     gates: { requiresCulinarian: true },
     costs: [
-      { currency: 'gold',        base: 75_000, scale: 1.0 },
-      { currency: 'kobold-ear',  base: 250,    scale: 1.0 },
-      { currency: 'hearty-meal', base: 30,     scale: 1.0 },
+      { currency: 'gold',                 base: 75_000, scale: 1.0 },
+      { currency: 'concentrated-potion',  base: 250,    scale: 1.0 },
+      { currency: 'hearty-meal',          base: 30,     scale: 1.0 },
     ] },
   // Dynamic max: (SHARPER_SWORDS level + 1) - 5 = SHARPER_SWORDS - 4.
   // The actual max is enforced via UpgradeService.setMaxOverride in app.component.

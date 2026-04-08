@@ -31,6 +31,9 @@
         [class.is-active]="c.id === activeId"
         (click)="setActive(c.id)">
 
+        <!-- New-content shine overlay -->
+        <div class="char-shine" *ngIf="charShine.has(c.id) && c.id !== activeId"></div>
+
         <!-- State indicator overlays (visual only) -->
         <div class="state-fill thief-stun-fill" *ngIf="c.id === 'thief' && isThiefStunned" [ngStyle]="thiefStunAnimStyle"></div>
         <div class="state-fill artisan-timer-fill" *ngIf="c.id === 'artisan' && isArtisanTimerActive" [ngStyle]="artisanTimerAnimStyle"></div>
@@ -70,6 +73,8 @@
       [class.compact-timer]="c.id === 'artisan' && isArtisanTimerActive"
       [title]="c.name + (c.id === activeId ? ' (active)' : ' — click to switch')"
       (click)="setActive(c.id)">
+      <!-- New-content shine overlay (collapsed) -->
+      <div class="char-shine compact-shine" *ngIf="charShine.has(c.id) && c.id !== activeId"></div>
       <!-- Necromancer half-shade overlays in collapsed view -->
       <div class="necro-half-compact necro-defile-compact" *ngIf="c.id === 'necromancer'" [class.necro-active-half]="necromancerActiveButton === 'defile'"></div>
       <div class="necro-half-compact necro-ward-compact" *ngIf="c.id === 'necromancer'" [class.necro-active-half]="necromancerActiveButton === 'ward'"></div>

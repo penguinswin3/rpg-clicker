@@ -246,9 +246,18 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
   /** Resolve a source label to the matching character color, or a neutral grey for "Passive". */
   private getSourceColor(source: string): string {
     if (source === 'Passive') return '#888';
+    const lower = source.toLowerCase();
+    // Try to find a character whose name appears anywhere in the source label
+    // (handles "Familiar (Fighter)", "Necromancer (Defile)", etc.)
     const char = this.unlockedCharacters.find(
-      c => c.name.toLowerCase() === source.toLowerCase()
+      c => lower.includes(c.name.toLowerCase())
     );
-    return char?.color ?? '#aaa';
+    if (char) return char.color;
+    // Necromancer sub-sources that don't include "Necromancer" in the label
+    if (['defile', 'ward', 'exhume'].some(k => lower.includes(k))) {
+      const necro = this.unlockedCharacters.find(c => c.id === 'necromancer');
+      if (necro) return necro.color;
+    }
+    return '#aaa';
   }
 }

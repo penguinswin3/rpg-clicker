@@ -37,6 +37,8 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   @Input() artisanTimerAnimStyle: Record<string, string> = {};
   /** Which necromancer button is currently active ('defile' or 'ward'). */
   @Input() necromancerActiveButton: 'defile' | 'ward' = 'defile';
+  /** Set of character IDs that should display a "new content" shine effect. */
+  @Input() charShine: Set<string> = new Set();
 
   getJackCount(charId: string): number {
     if (charId === 'necromancer') {

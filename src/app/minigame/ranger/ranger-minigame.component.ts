@@ -5,7 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { RANGER_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES, LOG_MSG } from '../../flavor-text';
 import { shuffleInPlace, randInt } from '../../utils/mathUtils';
 
 type PrizeType = 'meat' | 'herb' | 'pixie' | 'chest' | 'blank';
@@ -196,7 +196,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
     this.currentRoundClicks = [];
 
     this.wallet.remove('beast', this.SCOUT_COST);
-    this.log.log(`Ranger sets out to scout the area. (${cur('beast', this.SCOUT_COST, '-')})`);
+    this.log.log(LOG_MSG.MG_RANGER.SCOUT_START(cur('beast', this.SCOUT_COST, '-')));
 
     // Prize cells + blank cells, all shuffled.
     // Bountiful Lands: each level adds +1 guaranteed prize node (up to all blanks converted).
@@ -413,7 +413,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
         this.xpGained += RANGER_MG.PIXIE_XP * bm;
         if (!this.wallet.isCurrencyUnlocked('pixie-dust')) {
           this.wallet.unlockCurrency('pixie-dust');
-          this.log.log('A Pixie emerged from the undergrowth! Pixie Dust unlocked!', 'rare');
+          this.log.log(LOG_MSG.MG_RANGER.PIXIE_UNLOCKED, 'rare');
         }
         break;
 
@@ -428,7 +428,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
         this.chestGems     += randInt(RANGER_MG.CHEST_GEM_MIN, RANGER_MG.CHEST_GEM_MAX);
         if (!this.wallet.isCurrencyUnlocked('treasure')) {
           this.wallet.unlockCurrency('treasure');
-          this.log.log('A treasure chest! Treasure unlocked!', 'rare');
+          this.log.log(LOG_MSG.MG_RANGER.TREASURE_UNLOCKED, 'rare');
         }
         break;
 
@@ -509,9 +509,9 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
     const type: 'default' | 'success' = (this.pixieFound > 0 || this.chestFound > 0) ? 'success' : 'default';
 
     if (parts.length > 0) {
-      this.log.log(`${multiplierStr} Ranger scouted the area. (${parts.join(', ')})`, type);
+      this.log.log(LOG_MSG.MG_RANGER.SCOUT_RESULT(multiplierStr, parts.join(', ')), type);
     } else {
-      this.log.log(`Ranger scouted the area: found nothing useful.`);
+      this.log.log(LOG_MSG.MG_RANGER.SCOUT_NOTHING);
     }
 
     this.lastMsg  = successCount === 0 ? 'Found: Nothing...' : 'Found:';

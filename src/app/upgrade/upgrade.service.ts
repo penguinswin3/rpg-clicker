@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { UPGRADE_DEFS, UpgradeDef, UpgradeCategory, UpgradeGates, CostDef, RELIC_COSTS } from '../game-config';
-import { UPGRADE_FLAVOR, cur } from '../flavor-text';
+import { UPGRADE_FLAVOR, cur, LOG_MSG } from '../flavor-text';
 import { scaledCost } from '../utils/mathUtils';
 
 // Re-export types consumed by other components
@@ -145,6 +145,11 @@ export class UpgradeService {
     return this.defs.get(id)?.gates;
   }
 
+  /** Returns the character ID that owns a given upgrade, or undefined. */
+  charIdFor(id: string): string | undefined {
+    return this.defs.get(id)?.characterId;
+  }
+
   // ── Mutation ──────────────────────────────────────────────────
 
   /**
@@ -164,7 +169,7 @@ export class UpgradeService {
         .map(c => `${cur(c.currency, rt.currentCosts[c.currency], '')} (have ${cur(c.currency, Math.floor(this.wallet.get(c.currency)), '')})`)
         .join(', ');
       const name = (UPGRADE_FLAVOR as Record<string, { name: string }>)[id]?.name ?? id;
-      this.log.log(`Not enough resources for ${name}. Need: ${needs}.`, 'warn');
+      this.log.log(LOG_MSG.SYSTEM.UPGRADE_CANT_AFFORD(name, needs), 'warn');
       return false;
     }
 
@@ -180,7 +185,7 @@ export class UpgradeService {
     }
 
     const name = (UPGRADE_FLAVOR as Record<string, { name: string }>)[id]?.name ?? id;
-    this.log.log(`${name} upgraded to Lv.${rt.level}.`, 'success');
+    this.log.log(LOG_MSG.SYSTEM.UPGRADE_SUCCESS(name, rt.level), 'success');
     this.syncRelicCosts();
     this.changed$.next(id);
     return true;

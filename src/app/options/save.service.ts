@@ -7,6 +7,7 @@ import { StatisticsService, StatisticsSnapshot } from '../statistics/statistics.
 import { UPGRADE_DEFS, VERSION } from '../game-config';
 import { UpgradesSnapshot } from '../upgrade/upgrade.service';
 import { scaledCost } from '../utils/mathUtils';
+import { LOG_MSG } from '../flavor-text';
 
 /** Persistent snapshot of the Fighter's in-progress combat. */
 export interface FighterCombatState {
@@ -276,7 +277,7 @@ export class SaveService {
     this.stopAutoSave();
     this.autoSaveTimer = setInterval(() => {
       this.saveToLocalStorage();
-      this.log.log('[ AUTO-SAVE ] Game state saved to browser cache.', 'success');
+      this.log.log(LOG_MSG.SAVE.AUTO_SAVED, 'success');
     }, AUTO_SAVE_MS);
   }
 

@@ -5,7 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { FIGHTER_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
+import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES, LOG_MSG } from '../../flavor-text';
 import { FighterCombatState } from '../../options/save.service';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 import { AUTO_SOLVE, BEADS, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE } from '../../game-config';
@@ -343,7 +343,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       this.lastMsg   = `!! DEFEATED by ${this.enemy.name} !!`;
       this.msgLine2  = '';
       this.msgClass  = 'msg-bad';
-      this.log.log(`The Fighter was slain by a ${this.enemy.name}!`, 'warn');
+      this.log.log(LOG_MSG.MG_FIGHTER.SLAIN(this.enemy.name), 'warn');
       this.startRest();
     }
     this.emitState();
@@ -412,7 +412,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
         this.lastMsg  = MINIGAME_MSG.FIGHTER.ESCAPED;
         this.msgLine2 = '';
         this.msgClass = 'msg-neutral';
-        this.log.log('The Fighter fled from combat.', 'default');
+        this.log.log(LOG_MSG.MG_FIGHTER.FLED, 'default');
         this.emitState();
       }
       this.cdr.markForCheck();
@@ -471,7 +471,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount*this.potionHealEfficiency);
     }
     if (potionsConsumed > 0) {
-      this.log.log(`Chugged some potions during a short rest. (${cur('potion', potionsConsumed, '-')})`, "default")
+      this.log.log(LOG_MSG.MG_FIGHTER.SHORT_REST(cur('potion', potionsConsumed, '-')), "default")
       this.stats.trackFighterPotionDrank(potionsConsumed);
     }
 
@@ -485,7 +485,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       this.lastMsg   = `!! DEFEATED by ${this.enemy.name} !!`;
       this.msgLine2  = '';
       this.msgClass  = 'msg-bad';
-      this.log.log(`The Fighter was slain by a ${this.enemy.name}!`, 'warn');
+      this.log.log(LOG_MSG.MG_FIGHTER.SLAIN(this.enemy.name), 'warn');
       this.startRest();
     }
     this.emitState();
@@ -548,7 +548,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
           const dropFlavor = (CURRENCY_FLAVOR as Record<string, { name: string; symbol: string; color: string }>)[drop.currencyId];
           const dropName = dropFlavor?.name ?? drop.currencyId;
           this.log.log(
-            `The ${this.enemy.name} drops a ${dropName}! A new trophy!`,
+            LOG_MSG.MG_FIGHTER.NEW_TROPHY(this.enemy.name, dropName),
             'rare'
           );
         }
@@ -563,18 +563,18 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
 
     if (isFirstEar) {
       this.log.log(
-        `${isMutualKill ? 'Mutual kill!' : 'Victory!'} The ${this.enemy.name} drops a Kobold Ear! (${dropsText})`,
+        LOG_MSG.MG_FIGHTER.FIRST_EAR(isMutualKill, this.enemy.name, dropsText),
         'rare'
       );
     } else if (isMutualKill) {
       this.log.log(
-        `Mutual kill! Loot still collected. (${dropsText})`,
+        LOG_MSG.MG_FIGHTER.MUTUAL_KILL(dropsText),
         'warn'
       );
     } else {
       const logType = gotSecondaryDrop ? 'success' : 'default';
       this.log.log(
-        `Victory! ${this.enemy.name} defeated. (${dropsText})`,
+        LOG_MSG.MG_FIGHTER.VICTORY(this.enemy.name, dropsText),
         logType
       );
     }

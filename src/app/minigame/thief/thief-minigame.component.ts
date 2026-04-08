@@ -5,7 +5,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { THIEF_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES } from '../../flavor-text';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES, LOG_MSG } from '../../flavor-text';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 
 @Component({
@@ -209,7 +209,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
     this.lastMsg  = MINIGAME_MSG.THIEF.IDLE;
     this.msgClass = 'msg-neutral';
     this.lastTime = undefined;
-    this.log.log(`Heist started! (${cur('dossier', this.DOSSIER_COST, '-')})`);
+    this.log.log(LOG_MSG.MG_THIEF.HEIST_START(cur('dossier', this.DOSSIER_COST, '-')));
     this.startAnimation();
   }
 
@@ -253,7 +253,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
         this.stats.trackThiefHeist(false);
         this.lastMsg  = MINIGAME_MSG.THIEF.BUSTED;
         this.msgClass = 'msg-bad';
-        this.log.log('Heist failed — you were detected!', 'warn');
+        this.log.log(LOG_MSG.MG_THIEF.HEIST_DETECTED, 'warn');
       } else {
         this.lastMsg  = MINIGAME_MSG.THIEF.MISS;
         this.msgClass = 'msg-bad';
@@ -360,7 +360,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
 
     if (!this.wallet.isCurrencyUnlocked('treasure')) {
       this.wallet.unlockCurrency('treasure');
-      this.log.log('Treasure discovered! New currency unlocked!', 'rare');
+      this.log.log(LOG_MSG.MG_THIEF.TREASURE_UNLOCKED, 'rare');
     }
 
     this.resultParts = [
@@ -379,7 +379,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
       this.stats.trackCurrencyGain('relic', THIEF_MG.RELIC_AMOUNT);
       if (!this.wallet.isCurrencyUnlocked('relic')) {
         this.wallet.unlockCurrency('relic');
-        this.log.log('A Relic has been unearthed! Incredibly rare!', 'rare');
+        this.log.log(LOG_MSG.MG_THIEF.RELIC_FOUND, 'rare');
         this.stats.recordMilestone('first_relic', 'First Relic Found');
       }
       this.resultParts.push({
@@ -387,9 +387,9 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
         symbol: CURRENCY_FLAVOR['relic'].symbol,
         color:  CURRENCY_FLAVOR['relic'].color,
       });
-      this.log.log(`Safe cracked! (${cur('treasure', treasure)}, ${cur('gold', gold)}, ${cur('relic', THIEF_MG.RELIC_AMOUNT)}, ${cur('xp', xp)})`, 'rare');
+      this.log.log(LOG_MSG.MG_THIEF.SAFE_CRACKED_RELIC(cur('treasure', treasure), cur('gold', gold), cur('relic', THIEF_MG.RELIC_AMOUNT), cur('xp', xp)), 'rare');
     } else {
-      this.log.log(`Safe cracked! (${cur('treasure', treasure)}, ${cur('gold', gold)}, ${cur('xp', xp)})`, 'success');
+      this.log.log(LOG_MSG.MG_THIEF.SAFE_CRACKED(cur('treasure', treasure), cur('gold', gold), cur('xp', xp)), 'success');
     }
 
     this.lastMsg  = MINIGAME_MSG.THIEF.SUCCESS;

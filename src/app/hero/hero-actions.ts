@@ -12,7 +12,7 @@ import { ActivityLogService } from '../activity-log/activity-log.service';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { StatisticsService } from '../statistics/statistics.service';
 import { YIELDS, BEADS } from '../game-config';
-import { CURRENCY_FLAVOR, cur } from '../flavor-text';
+import { CURRENCY_FLAVOR, cur, LOG_MSG } from '../flavor-text';
 import { rollChance, rollMultiChance, randInt } from '../utils/mathUtils';
 import {
   calcGoldPerClick, calcXpPerBounty,
@@ -121,7 +121,7 @@ function clickFighter(ctx: HeroActionContext): void {
   ctx.wallet.add('xp',   xpPerBounty);
   ctx.stats.trackCurrencyGain('gold', goldPerClick);
   ctx.stats.trackCurrencyGain('xp', xpPerBounty);
-  ctx.log.log(`You ventured forth and found gold. (${cur('gold', goldPerClick)}, ${cur('xp', xpPerBounty)})`);
+  ctx.log.log(LOG_MSG.HERO.FIGHTER.BOUNTY(cur('gold', goldPerClick), cur('xp', xpPerBounty)));
 }
 
 function clickRanger(ctx: HeroActionContext): void {
@@ -145,9 +145,9 @@ function clickRanger(ctx: HeroActionContext): void {
       const meat = computeMeatYield(biggerGameLevel) * bm;
       ctx.wallet.add('beast', meat);
       ctx.stats.trackCurrencyGain('beast', meat);
-      ctx.log.log(`Cat's Eye! You foraged herbs AND hunted a beast! (${cur('herb', herbs)}, ${cur('beast', meat)}, ${cur('xp', 1 * bm)})`, 'success');
+      ctx.log.log(LOG_MSG.HERO.RANGER.CATS_EYE_BOTH(cur('herb', herbs), cur('beast', meat), cur('xp', 1 * bm)), 'success');
     } else {
-      ctx.log.log(`Cat's Eye! You foraged herbs, but the beast escaped. (${cur('herb', herbs)}, ${cur('xp', 1 * bm)})`, 'success');
+      ctx.log.log(LOG_MSG.HERO.RANGER.CATS_EYE_HERB_ONLY(cur('herb', herbs), cur('xp', 1 * bm)), 'success');
     }
   } else {
     const targetHerb = rollChance(50);
@@ -155,16 +155,16 @@ function clickRanger(ctx: HeroActionContext): void {
       const herbs = computeHerbYield(moreHerbsLevel) * bm;
       ctx.wallet.add('herb', herbs);
       ctx.stats.trackCurrencyGain('herb', herbs);
-      ctx.log.log(`You targeted herbs and foraged some. (${cur('herb', herbs)}, ${cur('xp', 1 * bm)})`);
+      ctx.log.log(LOG_MSG.HERO.RANGER.FORAGE_HERB(cur('herb', herbs), cur('xp', 1 * bm)));
     } else {
       const gotBeast = rollChance(beastChance);
       if (gotBeast) {
         const meat = computeMeatYield(biggerGameLevel) * bm;
         ctx.wallet.add('beast', meat);
         ctx.stats.trackCurrencyGain('beast', meat);
-        ctx.log.log(`You tracked a beast and claimed its meat. (${cur('beast', meat)}, ${cur('xp', 1 * bm)})`);
+        ctx.log.log(LOG_MSG.HERO.RANGER.HUNT_BEAST(cur('beast', meat), cur('xp', 1 * bm)));
       } else {
-        ctx.log.log(`You targeted a beast but it escaped. (${cur('xp', 1 * bm)})`);
+        ctx.log.log(LOG_MSG.HERO.RANGER.BEAST_ESCAPED(cur('xp', 1 * bm)));
       }
     }
   }
@@ -179,7 +179,7 @@ function clickApothecary(ctx: HeroActionContext): void {
 
   if (!ctx.wallet.canAfford('herb', herbCost)) {
     const have = Math.floor(ctx.wallet.get('herb'));
-    ctx.log.log(`Not enough herbs to brew. Need ${cur('herb', herbCost, '')}, have ${cur('herb', have, '')}.`, 'warn');
+    ctx.log.log(LOG_MSG.HERO.APOTHECARY.NOT_ENOUGH_HERBS(cur('herb', herbCost, ''), cur('herb', have, '')), 'warn');
     return;
   }
   ctx.wallet.remove('herb', herbCost);
@@ -199,9 +199,9 @@ function clickApothecary(ctx: HeroActionContext): void {
   if (herbsSaved > 0) {
     ctx.wallet.add('herb', herbsSaved);
     ctx.stats.trackCurrencyGain('herb', herbsSaved);
-    ctx.log.log(`You brewed a potion and recovered herbs! (${cur('potion', potionYield)}, ${cur('herb', herbsSaved)}, ${cur('xp', xpYield)})`, 'success');
+    ctx.log.log(LOG_MSG.HERO.APOTHECARY.BREW_RECOVERED(cur('potion', potionYield), cur('herb', herbsSaved), cur('xp', xpYield)), 'default');
   } else {
-    ctx.log.log(`You brewed a potion. (${cur('potion', potionYield)}, ${cur('xp', xpYield)})`);
+    ctx.log.log(LOG_MSG.HERO.APOTHECARY.BREW(cur('potion', potionYield), cur('xp', xpYield)));
   }
 }
 
@@ -213,7 +213,7 @@ function clickCulinarian(ctx: HeroActionContext): void {
 
   if (!ctx.wallet.canAfford('gold', goldCost)) {
     const have = Math.floor(ctx.wallet.get('gold'));
-    ctx.log.log(`Not enough gold to gather spices. Need ${cur('gold', goldCost, '')}, have ${cur('gold', have, '')}.`, 'warn');
+    ctx.log.log(LOG_MSG.HERO.CULINARIAN.NOT_ENOUGH_GOLD(cur('gold', goldCost, ''), cur('gold', have, '')), 'warn');
     return;
   }
   ctx.wallet.remove('gold', goldCost);
@@ -222,7 +222,7 @@ function clickCulinarian(ctx: HeroActionContext): void {
   ctx.wallet.add('xp', xpYield);
   ctx.stats.trackCurrencyGain('spice', spiceYield);
   ctx.stats.trackCurrencyGain('xp', xpYield);
-  ctx.log.log(`You sourced exotic spices. (${cur('gold', goldCost, '-')}, ${cur('spice', spiceYield)}, ${cur('xp', xpYield)})`);
+  ctx.log.log(LOG_MSG.HERO.CULINARIAN.SOURCED(cur('gold', goldCost, '-'), cur('spice', spiceYield), cur('xp', xpYield)));
 }
 
 function clickThief(ctx: HeroActionContext): void {
@@ -250,18 +250,18 @@ function clickThief(ctx: HeroActionContext): void {
         ctx.stats.trackCurrencyGain('gold', bonus);
       }
       ctx.log.log(
-        `You slipped in undetected and secured some dossier. (${cur('dossier', dossierYield)}, ${cur('xp', xpYield)}, ${cur('gold', bonus)})`,
+        LOG_MSG.HERO.THIEF.SUCCESS_WITH_GOLD(cur('dossier', dossierYield), cur('xp', xpYield), cur('gold', bonus)),
         'default',
       );
     } else {
       ctx.log.log(
-        `You slipped in undetected and secured some dossier. (${cur('dossier', dossierYield)}, ${cur('xp', xpYield)})`,
+        LOG_MSG.HERO.THIEF.SUCCESS(cur('dossier', dossierYield), cur('xp', xpYield)),
         'default',
       );
     }
   } else {
     ctx.applyThiefStun();
-    ctx.log.log(`You were spotted! Retreating for ${YIELDS.THIEF_STUN_DURATION_MS / 1000} seconds...`, 'warn');
+    ctx.log.log(LOG_MSG.HERO.THIEF.SPOTTED(YIELDS.THIEF_STUN_DURATION_MS / 1000), 'warn');
   }
 }
 
@@ -271,12 +271,12 @@ function clickArtisan(ctx: HeroActionContext): void {
   const treasureCost = calcArtisanTreasureCost();
   if (!ctx.wallet.canAfford('treasure', treasureCost)) {
     const have = Math.floor(ctx.wallet.get('treasure'));
-    ctx.log.log(`Not enough treasure to appraise. Need ${cur('treasure', treasureCost, '')}, have ${cur('treasure', have, '')}.`, 'warn');
+    ctx.log.log(LOG_MSG.HERO.ARTISAN.NOT_ENOUGH_TREASURE(cur('treasure', treasureCost, ''), cur('treasure', have, '')), 'warn');
     return;
   }
   ctx.wallet.remove('treasure', treasureCost);
   ctx.startArtisanTimer(1);
-  ctx.log.log(`Appraisal started... (${cur('treasure', treasureCost, '-')})`);
+  ctx.log.log(LOG_MSG.HERO.ARTISAN.APPRAISAL_STARTED(cur('treasure', treasureCost, '-')));
 }
 
 function clickNecromancer(ctx: HeroActionContext): void {
@@ -306,20 +306,20 @@ function clickNecromancerDefile(ctx: HeroActionContext): void {
       const gold = YIELDS.GRAVE_LOOTING_GOLD_AMOUNT * bm;
       ctx.wallet.add('gold', gold);
       ctx.stats.trackCurrencyGain('gold', gold);
-      ctx.log.log(`You defiled the earth and unearthed bones — and found buried gold! (${cur('bone', boneYield)}, ${cur('gold', gold)}, ${cur('xp', xpYield)})`, 'success');
+      ctx.log.log(LOG_MSG.HERO.NECROMANCER.DEFILE_GOLD(cur('bone', boneYield), cur('gold', gold), cur('xp', xpYield)), 'success');
     } else if (roll < YIELDS.GRAVE_LOOTING_GOLD_WEIGHT + YIELDS.GRAVE_LOOTING_GEM_WEIGHT) {
       const gems = YIELDS.GRAVE_LOOTING_GEM_AMOUNT * bm;
       ctx.wallet.add('gemstone', gems);
       ctx.stats.trackCurrencyGain('gemstone', gems);
-      ctx.log.log(`You defiled the earth and unearthed bones — adorned with gemstones! (${cur('bone', boneYield)}, ${cur('gemstone', gems)}, ${cur('xp', xpYield)})`, 'success');
+      ctx.log.log(LOG_MSG.HERO.NECROMANCER.DEFILE_GEM(cur('bone', boneYield), cur('gemstone', gems), cur('xp', xpYield)), 'success');
     } else {
       const jewelry = YIELDS.GRAVE_LOOTING_JEWELRY_AMOUNT * bm;
       ctx.wallet.add('jewelry', jewelry);
       ctx.stats.trackCurrencyGain('jewelry', jewelry);
-      ctx.log.log(`You defiled the earth and unearthed bones — and uncovered jewelry! (${cur('bone', boneYield)}, ${cur('jewelry', jewelry)}, ${cur('xp', xpYield)})`, 'success');
+      ctx.log.log(LOG_MSG.HERO.NECROMANCER.DEFILE_JEWELRY(cur('bone', boneYield), cur('jewelry', jewelry), cur('xp', xpYield)), 'success');
     }
   } else {
-    ctx.log.log(`You defiled the earth and unearthed bones. (${cur('bone', boneYield)}, ${cur('xp', xpYield)})`);
+    ctx.log.log(LOG_MSG.HERO.NECROMANCER.DEFILE(cur('bone', boneYield), cur('xp', xpYield)));
   }
 }
 
@@ -329,7 +329,7 @@ function clickNecromancerWard(ctx: HeroActionContext): void {
   const xpCost = calcNecromancerWardXpCost(u.level('DARK_PACT'));
   if (!ctx.wallet.canAfford('xp', xpCost)) {
     const have = Math.floor(ctx.wallet.get('xp'));
-    ctx.log.log(`Not enough XP to ward. Need ${cur('xp', xpCost, '')}, have ${cur('xp', have, '')}.`, 'warn');
+    ctx.log.log(LOG_MSG.HERO.NECROMANCER.NOT_ENOUGH_XP(cur('xp', xpCost, ''), cur('xp', have, '')), 'warn');
     return;
   }
   const brimstoneMax   = calcNecromancerBrimstoneYield(u.level('FORTIFIED_CHALK'));
@@ -337,7 +337,7 @@ function clickNecromancerWard(ctx: HeroActionContext): void {
   ctx.wallet.remove('xp', xpCost);
   ctx.wallet.add('brimstone', brimstoneYield);
   ctx.stats.trackCurrencyGain('brimstone', brimstoneYield);
-  ctx.log.log(`You warded the veil and conjured brimstone. (${cur('xp', xpCost, '-')}, ${cur('brimstone', brimstoneYield)})`);
+  ctx.log.log(LOG_MSG.HERO.NECROMANCER.WARD(cur('xp', xpCost, '-'), cur('brimstone', brimstoneYield)));
 }
 
 // ── Jack auto-click dispatch ────────────────────────────────
