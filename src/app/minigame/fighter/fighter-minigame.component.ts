@@ -502,7 +502,8 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     const gildedBonus = this.gildedBladeLevel > 0 ? Math.floor(baseGold * this.gildedBladeLevel / 100) : 0;
     const gold = (baseGold + gildedBonus) * bm;
     const xpReward  = this.enemy.xpReward * bm;
-    const earReward = this.enemy.earReward * bm;
+    // Kobold ears are intentionally exempt from the bead multiplier
+    const earReward = this.enemy.earReward;
 
     this.wallet.add('gold',       gold);
     this.wallet.add('xp',         xpReward);
@@ -579,6 +580,9 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     // Roll for gold bead drop on successful kill
+    if (!this.autoSolveEnabled) {
+      this.stats.trackManualSidequestClear('fighter');
+    }
     this.rollMinigameGoldBead();
 
     if (isMutualKill) {
@@ -690,6 +694,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   // ── Gold bead roll helper ──────────────
 
   private rollMinigameGoldBead(): void {
+    if (this.stats.getManualSidequestClears('fighter') < BEADS.GOLD_BEAD_MIN_MANUAL_CLEARS) return;
     if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
       this.goldBeadFound.emit();
     }

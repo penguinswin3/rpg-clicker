@@ -398,10 +398,12 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
     }
   }
 
-  /** Bad auto-solve: brute force with 3 all-same guesses then deduced 4th. */
+  /** Bad auto-solve: 2 all-same guesses, then a smart combined guess, then fully deduced 4th. */
   private autoSolveTickBad(): void {
-    // Submit the next brute-force guess
-    if (this.roundActive && this.autoSolveStep < 3 && this.autoSolveStep < this.autoSolveGuesses.length) {
+    const offset = this.cookbookAnnotationsLevel >= 1 ? 1 : 0;
+
+    // Steps 0–1: submit all-herb, all-beast
+    if (this.roundActive && this.autoSolveStep < 2 && this.autoSolveStep < this.autoSolveGuesses.length) {
       const guess = this.autoSolveGuesses[this.autoSolveStep];
       this.currentGuess = [...guess];
       this.submitGuess();
@@ -410,26 +412,52 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
       return;
     }
 
-    // On the 4th guess, deduce the solution from the first 3 all-same-ingredient guesses
+    // Step 2: build a smart guess — fill known herb/beast positions, kobold-tongue elsewhere.
+    // If all unknowns are kobold-tongue, this solves on the 3rd guess.
+    if (this.roundActive && this.autoSolveStep === 2) {
+      const smart = this.buildSmartGuess(offset);
+      this.currentGuess = [...smart];
+      this.submitGuess();
+      this.autoSolveStep++;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // Step 3: any position that was kobold-tongue in the smart guess but didn't go green
+    // must be spice. Submit the fully deduced solution.
     if (this.roundActive && this.autoSolveStep === 3) {
-      const deduced: string[] = Array(this.SOLUTION_LENGTH).fill('spice');
-      const testIngredients = ['herb', 'beast', 'kobold-tongue'];
-      const offset = this.cookbookAnnotationsLevel >= 1 ? 1 : 0;
-      for (let g = 0; g < 3; g++) {
-        const historyIdx = offset + g;
-        if (historyIdx >= this.guessHistory.length) break;
-        const row = this.guessHistory[historyIdx];
-        for (let s = 0; s < this.SOLUTION_LENGTH; s++) {
-          if (row.pegs[s] === 'green') {
-            deduced[s] = testIngredients[g];
-          }
-        }
-      }
+      const smart = this.buildSmartGuess(offset);
+      const smartRow = this.guessHistory[offset + 2];
+      const deduced = smart.map((ing, s) => {
+        if (ing === 'kobold-tongue' && smartRow && smartRow.pegs[s] !== 'green') return 'spice';
+        return ing;
+      });
       this.currentGuess = [...deduced];
       this.submitGuess();
       this.autoSolveStep++;
       this.cdr.markForCheck();
     }
+  }
+
+  /**
+   * Build a partially-deduced guess from the first two all-same results.
+   * Known herb/beast positions are filled in; unknowns get kobold-tongue.
+   */
+  private buildSmartGuess(offset: number): string[] {
+    const smart: string[] = Array(this.SOLUTION_LENGTH).fill('kobold-tongue');
+    const herbRow  = this.guessHistory[offset];
+    const beastRow = this.guessHistory[offset + 1];
+    if (herbRow) {
+      for (let s = 0; s < this.SOLUTION_LENGTH; s++) {
+        if (herbRow.pegs[s] === 'green') smart[s] = 'herb';
+      }
+    }
+    if (beastRow) {
+      for (let s = 0; s < this.SOLUTION_LENGTH; s++) {
+        if (beastRow.pegs[s] === 'green') smart[s] = 'beast';
+      }
+    }
+    return smart;
   }
 
   /**
@@ -564,6 +592,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
   }
 
   private rollMinigameGoldBead(): void {
+    if (this.stats.getManualSidequestClears('culinarian') < BEADS.GOLD_BEAD_MIN_MANUAL_CLEARS) return;
     if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
       this.goldBeadFound.emit();
     }
@@ -609,6 +638,9 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
     this.roundActive = false;
 
     // Roll for gold bead on successful recipe
+    if (!this.autoSolveEnabled) {
+      this.stats.trackManualSidequestClear('culinarian');
+    }
     this.rollMinigameGoldBead();
 
     const bm = this.wallet.getBeadMultiplier('culinarian');

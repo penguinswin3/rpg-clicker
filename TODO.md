@@ -59,7 +59,8 @@
 - Rename Alchemize to Concoct
 - make a lot of things not highlightable 
 - Add some sort of reference to relics that the thief can get from the minigame 
-
+- pulse the border of the hero button whne pressed
+- recovered herbs can be info level
 ## Statistics
 - Statistics culinarian minigame histogram or count %s
 
@@ -71,10 +72,16 @@
 - Each level of relic hunter should give +1% of finding a relic 
 - Ranger, apoth, and culi relic rewards are bad
 - thieving relic might be too good 
-
+- Kobold ears (not other parts) should be exempt from the bead doubling 
+- two new gems, that allow the minigames to operate behind the scenes at 50% and then 100% capacity. You can purchase these
+- short rest should cost potions not ears
+- Bea unlock notif should say that you need to socket it 
+- necromancer xp req can go up 
+- make g1 of the culinarian auto solve slightly smarter
 ## Bug Fixes
 - fighter gold2 checks the selected level not the level of the kobold being killed. its easier to input the code when it is like it is now, but you arent actually killing the right thing 
-
+- thief2 zones are bugged 
+- thief 2 logic is bugged 
 
 ## Code Refactors
 

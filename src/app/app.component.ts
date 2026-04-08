@@ -15,7 +15,7 @@ import { SaveService, UpgradeState, FighterCombatState } from './options/save.se
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
 import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE } from './game-config';
-import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR, BEAD_FLAVOR, BEAD_COLORS, BEAD_SYMBOL } from './flavor-text';
+import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR, BEAD_FLAVOR, BEAD_COLORS, BEAD_SYMBOL, HERO_PRESS_PULSE_COLOR } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
 // ── Extracted hero helpers ─────────────────────────────────────
@@ -995,7 +995,20 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // ── Hero click actions ─────────────────────────────────────────
 
+  heroPressAnim = false;
+  private heroPressTimeout?: ReturnType<typeof setTimeout>;
+  readonly heroPulseColor = HERO_PRESS_PULSE_COLOR;
+
   clickHero(): void {
+    // Trigger border pulse animation
+    this.heroPressAnim = false;
+    clearTimeout(this.heroPressTimeout);
+    // Force a reflow so re-adding the class restarts the animation
+    requestAnimationFrame(() => {
+      this.heroPressAnim = true;
+      this.heroPressTimeout = setTimeout(() => this.heroPressAnim = false, 300);
+    });
+
     dispatchHeroClick(this.activeCharacterId, this.buildHeroActionCtx());
     if (this.activeCharacterId === 'necromancer') {
       this._refreshDerived();
@@ -1452,8 +1465,21 @@ export class AppComponent implements OnInit, OnDestroy {
 
   devZeroUpgrades(): void {
     this.upgrades.setAllToZero();
+
+    // Unsocket all beads (keep found status, just remove socketed)
+    for (const charId of Object.keys(this.beadState)) {
+      for (const slotId of BEAD_SLOT_ORDER) {
+        if (this.beadState[charId]?.[slotId]) {
+          this.beadState[charId][slotId].socketed = false;
+        }
+      }
+    }
+    this.beadState = { ...this.beadState };
+    this.syncBeadMultipliers();
+    this._refreshDerived();
+
     this.updateAllPerSecond();
-    this.log.log('[DEV] All upgrades set to level 0.', 'warn');
+    this.log.log('[DEV] All upgrades set to level 0. All beads unsocketed.', 'warn');
   }
 
   devMaxUpgrades(): void {
@@ -1489,12 +1515,12 @@ export class AppComponent implements OnInit, OnDestroy {
     // Max out all jacks
     this.jacksOwned = getJacksMax();
 
-    // Find all blue beads (but don't socket — let the player do that)
-    // Gold beads are not droppable yet — left as locked placeholders.
+    // Find all beads (but don't socket — let the player do that)
     for (const char of this.charService.getCharacters()) {
       this.ensureBeadState(char.id);
-      this.beadState[char.id]['blue-1'].found = true;
-      this.beadState[char.id]['blue-2'].found = true;
+      for (const slotId of BEAD_SLOT_ORDER) {
+        this.beadState[char.id][slotId].found = true;
+      }
     }
     this.beadState = { ...this.beadState };
     this._refreshDerived();

@@ -487,6 +487,7 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
   }
 
   private rollMinigameGoldBead(): void {
+    if (this.stats.getManualSidequestClears('necromancer') < BEADS.GOLD_BEAD_MIN_MANUAL_CLEARS) return;
     if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
       this.goldBeadFound.emit();
     }
@@ -701,6 +702,9 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
     this.ritualActive = false;
 
     // Roll for gold bead on successful ritual
+    if (!this.autoSolveEnabled) {
+      this.stats.trackManualSidequestClear('necromancer');
+    }
     this.rollMinigameGoldBead();
 
     // Gold-2: track no-adjacent streak

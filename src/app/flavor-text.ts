@@ -371,6 +371,9 @@ export const JACK_FLAVOR = {
 } as const;
 
 // ── Hero Stats Box ────────────────────────────────────────────
+/** The color used for the hero button border pulse on click. */
+export const HERO_PRESS_PULSE_COLOR = '#000';
+
 export const HERO_STATS_FLAVOR = {
   BOX_TITLE: '[ CHARACTER STATS ]',
 

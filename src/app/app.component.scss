@@ -804,11 +804,20 @@
     border-color: rgba(255, 255, 255, 0.5);
     animation: hero-hold-pulse 0.5s ease-in-out infinite;
   }
+
+  &.hero-pressed:not(:disabled) {
+    animation: hero-press-pulse 0.3s ease-out;
+  }
 }
 
 @keyframes hero-hold-pulse {
   0%, 100% { border-color: rgba(255, 255, 255, 0.35); }
   50%       { border-color: rgba(255, 255, 255, 0.75); }
+}
+
+@keyframes hero-press-pulse {
+  0%   { border-color: var(--hero-pulse-color, #000); box-shadow: 0 0 6px 3px var(--hero-pulse-color, #000); }
+  100% { border-color: #fff; box-shadow: 0 0 0 0 transparent; }
 }
 
 // Label sits above the fill bar so text is always readable.

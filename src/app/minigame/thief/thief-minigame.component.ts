@@ -70,13 +70,6 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
   // ── Good auto-solve state ────────────────
   /** Phase of the good auto-solve: 'probe1' → 'probe2' → 'crack'. */
   private goodAutoPhase: 'probe1' | 'probe2' | 'crack' = 'probe1';
-  /** The two probe angles used by good auto-solve. */
-  private goodProbeAngle1 = 0;
-  private goodProbeAngle2 = 0;
-  /** Whether the first probe was a hit or miss. */
-  private goodProbe1Hit = false;
-  /** The deduced sweet spot center angle. */
-  private goodDeducedAngle = 0;
 
   toggleAutoSolve(): void {
     this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
@@ -293,11 +286,9 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
       if (this.canStart) {
         this.startHeist();
         if (this.autoSolveGoodMode) {
-          // Good auto-solve: two quick probes at 0° and 180° to deduce direction
+          // Good auto-solve: probe at 0° and 30° quickly, then crack at the sweet spot
           this.goodAutoPhase = 'probe1';
-          this.goodProbeAngle1 = 0;
-          this.goodProbeAngle2 = 180;
-          this.autoSolveAngles = [this.goodProbeAngle1, this.goodProbeAngle2];
+          this.autoSolveAngles = [0, 30];
           this.autoSolveAngleIdx = 0;
         } else {
           // Pre-compute evenly spaced angles based on maxDetection
@@ -329,6 +320,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private rollMinigameGoldBead(): void {
+    if (this.stats.getManualSidequestClears('thief') < BEADS.GOLD_BEAD_MIN_MANUAL_CLEARS) return;
     if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
       this.goldBeadFound.emit();
     }
@@ -404,6 +396,9 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
     this.msgClass = 'msg-good';
 
     // Roll for gold bead on successful heist
+    if (!this.autoSolveEnabled) {
+      this.stats.trackManualSidequestClear('thief');
+    }
     this.rollMinigameGoldBead();
   }
 
@@ -462,34 +457,17 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
   // ── Good auto-solve helpers ─────────────
 
   /**
-   * After a probe attempt in good auto-solve, determine the sweet spot location.
-   * Probe1 at 0°, Probe2 at 180°. Based on which hit, deduce the center.
-   * If neither hit, use the miss feedback to narrow down; pick the midpoint of
-   * the remaining arc and go for it.
+   * After a probe attempt in good auto-solve, schedule the next action.
+   * Probe1 at 0°, Probe2 at 30°. If both miss, target the sweet spot center directly.
    */
   private handleGoodAutoProbeResult(): void {
     if (this.goodAutoPhase === 'probe1') {
-      // First probe was at goodProbeAngle1
-      this.goodProbe1Hit = this.heistWon; // If heist is won, probe1 was a hit
-      if (!this.heistWon) {
-        this.goodAutoPhase = 'probe2';
-        // probe2 angle is already scheduled
-      }
+      // First probe missed — continue to probe2 (already scheduled)
+      this.goodAutoPhase = 'probe2';
     } else if (this.goodAutoPhase === 'probe2') {
-      // Both probes done — deduce the sweet spot
-      // If probe2 hit, great. If not, the sweet spot is somewhere else.
-      // Use angular distance: sweet spot is closer to whichever probe had a closer miss.
-      // Since we have failedAngles from Locked In, we can use the Flow State proximity info.
-      // Simple heuristic: pick 90° (between 0° and 180°) or 270° as our guess.
-      // More sophisticated: use the two misses to bracket the sweet spot to a 180° arc,
-      // then guess the midpoint.
+      // Both probes missed — schedule a crack at the actual sweet spot
       this.goodAutoPhase = 'crack';
-      // The sweet spot is NOT near 0° and NOT near 180°, so it's near 90° or 270°.
-      // Pick 90° as the crack target.
-      this.goodDeducedAngle = 90;
-      this.autoSolveAngles.push(this.goodDeducedAngle);
-      // If that also misses, try 270°
-      this.autoSolveAngles.push(270);
+      this.autoSolveAngles.push(this.sweetSpotCenter);
     }
   }
 

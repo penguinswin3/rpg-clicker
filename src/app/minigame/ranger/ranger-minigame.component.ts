@@ -368,6 +368,7 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private rollMinigameGoldBead(): void {
+    if (this.stats.getManualSidequestClears('ranger') < BEADS.GOLD_BEAD_MIN_MANUAL_CLEARS) return;
     if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
       this.goldBeadFound.emit();
     }
@@ -518,6 +519,9 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
 
     // Roll for gold bead on successful round
     if (successCount > 0) {
+      if (!this.autoSolveEnabled) {
+        this.stats.trackManualSidequestClear('ranger');
+      }
       this.rollMinigameGoldBead();
     }
   }

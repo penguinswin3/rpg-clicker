@@ -97,6 +97,8 @@ export interface StatisticsSnapshot {
   manualHeroPresses: Record<string, number>;
   /** Jack auto-click presses per character. */
   jackHeroPresses: Record<string, number>;
+  /** Manual (non-auto-solve) sidequest completions per character. */
+  manualSidequestClears: Record<string, number>;
   /** @deprecated Kept for backward-compatible save loading. */
   heroButtonPresses?: Record<string, number>;
   /** Fighter minigame kill stats. */
@@ -121,6 +123,7 @@ function defaultSnapshot(): StatisticsSnapshot {
     milestones:         {},
     manualHeroPresses:  {},
     jackHeroPresses:    {},
+    manualSidequestClears: {},
     fighterMinigame:    { totalKills: 0, killsByType: {}, potionsDrank: 0, timesDefeated: 0, firstStrikeUnlocked: false, longestKillChain: 0 },
     rangerMinigame:     { successful: 0, unsuccessful: 0, treasureChestsFound: 0 },
     apothecaryMinigame: { minigamesComplete: 0, potionHits: 0, perfectHits: 0, potionMisses: 0, dilutionSuccesses: 0, dilutionFailures: 0 },
@@ -195,6 +198,20 @@ export class StatisticsService {
     const snap = this.source.getValue();
     snap.jackHeroPresses[charId] = (snap.jackHeroPresses[charId] ?? 0) + 1;
     this._scheduleFlush();
+  }
+
+  // ── Sidequest completions ────────────────────────────────────
+
+  /** Record a manual (non-auto-solve) sidequest clear for a character. */
+  trackManualSidequestClear(charId: string): void {
+    const snap = this.source.getValue();
+    snap.manualSidequestClears[charId] = (snap.manualSidequestClears[charId] ?? 0) + 1;
+    this._scheduleFlush();
+  }
+
+  /** Get the number of manual sidequest clears for a character. */
+  getManualSidequestClears(charId: string): number {
+    return this.source.getValue().manualSidequestClears[charId] ?? 0;
   }
 
   // ── Fighter minigame ───────────────────────────────────────
@@ -363,6 +380,7 @@ export class StatisticsService {
       ...snap,
       manualHeroPresses:  { ...manualPresses },
       jackHeroPresses:    { ...jackPresses },
+      manualSidequestClears: { ...(snap.manualSidequestClears ?? {}) },
       fighterMinigame:    { ...defaultSnapshot().fighterMinigame,    ...snap.fighterMinigame },
       rangerMinigame:     { ...defaultSnapshot().rangerMinigame,     ...snap.rangerMinigame },
       apothecaryMinigame: { ...defaultSnapshot().apothecaryMinigame, ...snap.apothecaryMinigame },

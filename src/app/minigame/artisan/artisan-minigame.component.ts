@@ -303,6 +303,9 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
 
     if (won) {
       // Roll for gold bead on successful faceting
+      if (!this.autoSolveEnabled) {
+        this.stats.trackManualSidequestClear('artisan');
+      }
       this.rollMinigameGoldBead();
 
       // Award jewelry — unlock it on first acquisition
@@ -473,6 +476,7 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private rollMinigameGoldBead(): void {
+    if (this.stats.getManualSidequestClears('artisan') < BEADS.GOLD_BEAD_MIN_MANUAL_CLEARS) return;
     if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
       this.goldBeadFound.emit();
     }

@@ -1056,7 +1056,9 @@ export const BEADS = {
   /** Resource yield multiplier per socketed blue bead. */
   BLUE_YIELD_MULT: 2,
   /** Chance (0–1) per successful minigame completion to discover a gold bead. */
-  MINIGAME_GOLD_BEAD_CHANCE: 1 / 40,
+  MINIGAME_GOLD_BEAD_CHANCE: 1 / 100,
+  /** Minimum manual (non-auto-solve) sidequest clears before gold-1 bead can drop. */
+  GOLD_BEAD_MIN_MANUAL_CLEARS: 100,
 } as const;
 
 // ── Auto-Solve Timings ──────────────────────────────────────
@@ -1066,7 +1068,7 @@ export const AUTO_SOLVE = {
   /** Ranger: one cell pick per this many ms. */
   RANGER_TICK_MS:       1000,
   /** Apothecary: one brew click per this many ms. */
-  APOTHECARY_TICK_MS:   200,
+  APOTHECARY_TICK_MS:   280,
   /** Culinarian: one guess action per this many ms. */
   CULINARIAN_TICK_MS:   1500,
   /** Thief: one crack attempt per this many ms. */
@@ -1148,6 +1150,6 @@ export const GOOD_AUTO_SOLVE = {
   /** Fighter: faster tick (ms) when upgraded. */
   FIGHTER_TICK_MS:     500,
   /** Apothecary: ultra-fast tick (ms) when upgraded. */
-  APOTHECARY_TICK_MS:  20,
+  APOTHECARY_TICK_MS:  50,
 } as const;
 

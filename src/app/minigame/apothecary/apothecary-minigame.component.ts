@@ -386,6 +386,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
   }
 
   private rollMinigameGoldBead(): void {
+    if (this.stats.getManualSidequestClears('apothecary') < BEADS.GOLD_BEAD_MIN_MANUAL_CLEARS) return;
     if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
       this.goldBeadFound.emit();
     }
@@ -489,6 +490,9 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
     this.potionActive = false;
 
     // Roll for gold bead on successful brew
+    if (!this.autoSolveEnabled) {
+      this.stats.trackManualSidequestClear('apothecary');
+    }
     this.rollMinigameGoldBead();
 
     // Gold-2 check: if we completed in the 'inner' phase, award the bead
