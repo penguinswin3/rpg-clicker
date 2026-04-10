@@ -8,7 +8,7 @@
 
 import { HeroStat } from '../character/character-sidebar.component';
 import { HERO_STATS_FLAVOR, CHARACTER_FLAVOR } from '../flavor-text';
-import { YIELDS, APOTH_MG, THIEF_MG, ARTISAN_MG, MERCHANT_MG } from '../game-config';
+import { YIELDS, APOTH_MG, THIEF_MG, ARTISAN_MG, MERCHANT_MG, CHIMERAMANCER_YIELDS } from '../game-config';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { WalletService } from '../wallet/wallet.service';
 import { roundTo } from '../utils/mathUtils';
@@ -62,6 +62,7 @@ export function getQuestBtnLabel(charId: string): string {
     necromancer: CHARACTER_FLAVOR.NECROMANCER.questBtnExhume,
     merchant:   CHARACTER_FLAVOR.MERCHANT.questBtn,
     artificer:  CHARACTER_FLAVOR.ARTIFICER.questBtnStudy,
+    chimeramancer: CHARACTER_FLAVOR.CHIMERAMANCER.questBtn,
   };
   return map[charId] ?? CHARACTER_FLAVOR.FIGHTER.questBtn;
 }
@@ -77,6 +78,7 @@ export function buildHeroStats(charId: string, ctx: HeroStatsContext): HeroStat[
     case 'necromancer': return buildNecromancerStats(ctx);
     case 'merchant':    return buildMerchantStats(ctx);
     case 'artificer':   return buildArtificerStats(ctx);
+    case 'chimeramancer': return buildChimeramancerStats(ctx);
     default:            return buildFighterStats(ctx);
   }
 }
@@ -310,3 +312,8 @@ function buildArtificerStats(ctx: HeroStatsContext): HeroStat[] {
   return stats;
 }
 
+function buildChimeramancerStats(ctx: HeroStatsContext): HeroStat[] {
+  return [
+    { label: HERO_STATS_FLAVOR.CHIMERAMANCER.THREAD_PER_CLICK, value: `${CHIMERAMANCER_YIELDS.THREAD_PER_CLICK}` },
+  ];
+}

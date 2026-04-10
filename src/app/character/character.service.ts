@@ -110,6 +110,14 @@ export class CharacterService {
       unlocked: false,
       ...charUnlock('artificer'),
     },
+    {
+      id: 'chimeramancer',
+      name: CHARACTER_FLAVOR.CHIMERAMANCER.name,
+      color: '#c44d8e',
+      description: CHARACTER_FLAVOR.CHIMERAMANCER.desc,
+      unlocked: false,
+      ...charUnlock('chimeramancer'),
+    },
   ];
 
   private readonly charactersSource = new BehaviorSubject<Character[]>(

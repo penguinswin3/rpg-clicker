@@ -41,6 +41,7 @@ export const CURRENCY_FLAVOR = {
   'forbidden-tome':      { name: 'Forbidden Tome',             symbol: '⍯',  color: '#3e2e24' },
   'magical-implement':   { name: 'Magical Implement',          symbol: 'ᛗ',  color: '#3eafc9' },
   'construct':           { name: 'Construct',                   symbol: '⚙',  color: '#7eb8d4' },
+  'life-thread':         { name: 'Life Thread',                  symbol: '⌇',  color: '#8bea93' },
 
   /**
   Ideas for new Symbols
@@ -405,6 +406,11 @@ export const CHARACTER_FLAVOR = {
     questBtnStudy: '>>> Study',
     questBtnReflect: 'Reflect <<<',
   },
+  CHIMERAMANCER: {
+    name: 'Chimeramancer',
+    desc: 'A mad visionary who stitches flesh, bone, and spirit into a single impossible form. Thread by thread, a chimeric horror takes shape.',
+    questBtn: 'Stitch',
+  },
 } as const;
 
 // ── Minigames ─────────────────────────────────────────────────
@@ -444,6 +450,10 @@ export const MINIGAME_FLAVOR = {
   ARTIFICER: {
     name: 'Etching',
     desc: 'Repeat the flashing symbol sequence.\nPerfect recall yields Constructs.',
+  },
+  CHIMERAMANCER: {
+    name: 'Chimeric Animation',
+    desc: 'Gather the pieces. Build the beast.\nAwaken the impossible.',
   },
 } as const;
 
@@ -547,6 +557,9 @@ export const HERO_STATS_FLAVOR = {
     AMPLIFIED_BONUS:  'Amplified Bonus:',
     EXCESS_INSIGHT:   'Excess Insight :',
   },
+  CHIMERAMANCER: {
+    THREAD_PER_CLICK: 'Thread / Stitch:',
+  },
 } as const;
 
 // ── Minigame Messages ─────────────────────────────────────────
@@ -625,6 +638,12 @@ export const MINIGAME_MSG = {
     RETRY:        'Second Chance! Try again...',
   },
 
+  CHIMERAMANCER: {
+    IDLE:         'Contribute resources to build\nthe chimera.',
+    CONTRIBUTE:   (currency: string, amount: number) => `Contributed ${amount}× ${currency}.`,
+    AWAKEN:       'THE CHIMERA AWAKENS!',
+  },
+
 };
 
 // ── Bead System ───────────────────────────────────────────────
@@ -698,6 +717,12 @@ export const BEAD_FLAVOR: Record<string, Record<string, BeadSlotFlavor>> = {
     'gold-2': { name: 'Bead of the Paradox',     lore: 'Born from deliberate failure, it bends the rules of creation.',                                                        effect: 'Auto-etch never fails and yields bonus constructs.' },
     'blue-2': { name: 'Bead of the Workshop',    lore: 'Hammered into shape by tireless familiars, it doubles the output of every workshop cycle.',                             effect: '2× resource yields from this character (stacks).' },
   },
+  chimeramancer: {
+    'blue-1': { name: 'Bead of Stitching',       lore: 'Woven from a hundred severed threads, it amplifies the output of every stitch.',                                        effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of Animation',       lore: 'Pulsing with stolen life, it drives the needle without mortal hands.',                                                  effect: 'Unlocks basic sidequest automation.' },
+    'gold-2': { name: 'Bead of the Chimera',     lore: 'Forged in the heart of an impossible creature.',                                                                        effect: 'Placeholder — future effect.' },
+    'blue-2': { name: 'Bead of the Abomination', lore: 'Harvested from the first chimera ever stitched, it doubles all yields from this grotesque art.',                         effect: '2× resource yields from this character (stacks).' },
+  },
 };
 
 /**
@@ -715,6 +740,7 @@ export const GOLD2_STEP_MESSAGES: Record<string, string[]> = {
   necromancer: ['The spirits fall silent.',        'The circle holds.',             'Dominion approaches.'],
   merchant:    ['The ledger grows heavy…',        'A deal is struck in the dark.', 'The network expands.',          'Profits beyond measure.',    'The final shipment arrives.'],
   artificer:   ['The construct hums…',            'Symbols align in memory.',      'The pattern crystallizes.',      'One final etching remains.'],
+  chimeramancer: ['The thread twitches…',          'Flesh remembers its purpose.',   'The chimera stirs in its sleep.'],
 };
 
 
@@ -776,6 +802,9 @@ export const LOG_MSG = {
       STUDY_MAX:             'Insight is already at maximum!',
       REFLECT:               (mana: string, insight: string) => `You reflected and converted insight into mana. (${mana}, ${insight})`,
       REFLECT_NO_INSIGHT:    'No insight to reflect upon!',
+    },
+    CHIMERAMANCER: {
+      STITCH:                (thread: string, xp: string) => `You stitched sinew and soul together. (${thread}, ${xp})`,
     },
   },
 
@@ -864,6 +893,12 @@ export const LOG_MSG = {
     ETCHING_SUCCESS:         (constructs: string, xp: string) => `Etching complete! (${constructs}, ${xp})`,
     ETCHING_FAIL:            'Etching failed — wrong symbol!',
     ETCHING_RETRY:           'Second Chance activated — try again!',
+  },
+
+  MG_CHIMERAMANCER: {
+    CONTRIBUTE:              (formatted: string) => `Contributed ${formatted} to the chimera.`,
+    CHIMERA_AWAKEN:          '★ THE CHIMERA AWAKENS! The impossible lives!',
+    LIFE_THREAD_UNLOCKED:    'Life Thread discovered! A new currency!',
   },
 
   // ── System messages ───────────────────────────────────────────

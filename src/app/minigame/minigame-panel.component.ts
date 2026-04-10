@@ -12,6 +12,7 @@ import { ArtisanMinigameComponent } from './artisan/artisan-minigame.component';
 import { NecromancerMinigameComponent } from './necromancer/necromancer-minigame.component';
 import { MerchantMinigameComponent, AutoBuyerInfo } from './merchant/merchant-minigame.component';
 import { ArtificerMinigameComponent } from './artificer/artificer-minigame.component';
+import { ChimeramancerMinigameComponent } from './chimeramancer/chimeramancer-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
 import { FighterCombatState } from '../options/save.service';
@@ -24,7 +25,7 @@ interface MinigameInfo {
 @Component({
   selector: 'app-minigame-panel',
   standalone: true,
-  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent, NecromancerMinigameComponent, MerchantMinigameComponent, ArtificerMinigameComponent],
+  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent, NecromancerMinigameComponent, MerchantMinigameComponent, ArtificerMinigameComponent, ChimeramancerMinigameComponent],
   templateUrl: './minigame-panel.component.html',
   styleUrls: ['./minigame-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -152,6 +153,11 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   /** Emitted when the player toggles dilution inside the apothecary minigame. */
   @Output() dilutionEnabledChange = new EventEmitter<boolean>();
 
+  /** Chimeramancer saved contribution state. */
+  @Input() chimeramancerContributions: Record<string, number> | null = null;
+  /** Emitted when chimeramancer contribution state changes. */
+  @Output() chimeramancerContributionsChange = new EventEmitter<Record<string, number>>();
+
   /** Per-character auto-solve unlock state (gold-1 bead socketed). */
   @Input() autoSolveUnlocked: Record<string, boolean> = {};
   /** Per-character "good" auto-solve mode (both gold beads socketed). */
@@ -220,6 +226,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     {
       characterId: 'artificer',
       title: MINIGAME_FLAVOR.ARTIFICER.name,
+    },
+    {
+      characterId: 'chimeramancer',
+      title: MINIGAME_FLAVOR.CHIMERAMANCER.name,
     },
   ];
 

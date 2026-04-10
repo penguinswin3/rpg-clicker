@@ -66,6 +66,8 @@ export interface UpgradeState {
   artificerInsight?: number;
   /** Currently-selected etching difficulty level (0 = base). */
   selectedEtchingLevel?: number;
+  /** Chimeramancer chimera-building contribution progress (currencyId → amount). */
+  chimeramancerContributions?: Record<string, number>;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

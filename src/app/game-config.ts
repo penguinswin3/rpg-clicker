@@ -29,6 +29,8 @@ export interface UpgradeGates {
   readonly requiresNecromancer?: boolean;
   /** Hide until the Artificer character is unlocked. */
   readonly requiresArtificer?: boolean;
+  /** Hide until the Chimeramancer character is unlocked. */
+  readonly requiresChimeramancer?: boolean;
   /** Hide until the Merchant character is unlocked. */
   readonly requiresMerchant?: boolean;
   /** Hide until the Bubbling Brew minigame upgrade has been purchased. */
@@ -156,6 +158,7 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'construct',          base: 50,    fromCount: 30, untilCount: 31 },  // Jack 31
       { currency: 'kobold-pebble',      base: 25,    fromCount: 31, untilCount: 32 },  // Jack 32
       { currency: 'kobold-heart',       base: 25,    fromCount: 32, untilCount: 33 },  // Jack 33
+      { currency: 'life-thread',        base: 50,    fromCount: 33, untilCount: 34 },  // Jack 34
     ],
   },
 
@@ -223,6 +226,15 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'forbidden-tome',    base: 300       },
     ],
   },
+  {
+    id: 'UNLOCK_CHIMERAMANCER', kind: 'character-unlock', xpMin: 10_000_000,
+    costs: [
+      { currency: 'gold',        base: 10_000_000 },
+      { currency: 'construct',   base: 500        },
+      { currency: 'mana',        base: 5000       },
+      { currency: 'soul-stone',  base: 1000       },
+    ],
+  },
 
   // ── Global unlock ────────────────────────────────────────────
   {
@@ -282,6 +294,7 @@ export const XP_THRESHOLDS = {
   NECROMANCER_UNLOCK:getGlobalDef('UNLOCK_NECROMANCER')!.xpMin!,
   MERCHANT_UNLOCK:   getGlobalDef('UNLOCK_MERCHANT')!.xpMin!,
   ARTIFICER_UNLOCK:  getGlobalDef('UNLOCK_ARTIFICER')!.xpMin!,
+  CHIMERAMANCER_UNLOCK: getGlobalDef('UNLOCK_CHIMERAMANCER')!.xpMin!,
   JACKD_UP_UNLOCK:   getGlobalDef('JACKD_UP')!.xpMin!,
 } as const;
 
@@ -812,7 +825,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [
       { currency: 'construct', base: 75,  scale: 1.4 },
       { currency: 'mana',     base: 750, scale: 1.4 },
-      { currency: 'Magical Implement',     base: 100, scale: 1.4 },
+      { currency: 'magical-implement',     base: 100, scale: 1.4 },
     ] },
 
   // ── Relic upgrades (one per character) ──────────────────────────
@@ -1201,6 +1214,53 @@ export const ARTIFICER_MG = {
   MANA_COST: 250,
   /** XP awarded on a successful etching. */
   XP_REWARD: 5,
+} as const;
+
+// ── Chimeramancer ─────────────────────────────────────────────
+/** Base Life Thread per hero-button "Stitch" click. */
+export const CHIMERAMANCER_YIELDS = {
+  THREAD_PER_CLICK: 1,
+} as const;
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ *  CHIMERIC ANIMATION (Chimeramancer Minigame)
+ *  Configurable resource requirements to build the chimera.
+ *  Each entry defines a currency and how many units are needed.
+ * ═══════════════════════════════════════════════════════════════
+ */
+export interface ChimeraResourceReq {
+  readonly currencyId: string;
+  readonly required: number;
+}
+
+export const CHIMERAMANCER_MG = {
+  /**
+   * Resources required to complete the chimera.
+   * Order determines display order.  Quantities are fully configurable.
+   */
+  RESOURCE_REQUIREMENTS: [
+    { currencyId: 'beast',              required: 500   },
+    { currencyId: 'pixie-dust',         required: 200   },
+    { currencyId: 'synaptical-potion',  required: 100   },
+    { currencyId: 'kobold-ear',         required: 300   },
+    { currencyId: 'kobold-tongue',      required: 200   },
+    { currencyId: 'kobold-hair',        required: 200   },
+    { currencyId: 'hearty-meal',        required: 150   },
+    { currencyId: 'kobold-fang',        required: 150   },
+    { currencyId: 'kobold-feather',     required: 100   },
+    { currencyId: 'kobold-pebble',      required: 100   },
+    { currencyId: 'kobold-heart',       required: 50    },
+    { currencyId: 'bone',               required: 1000  },
+    { currencyId: 'soul-stone',         required: 500   },
+    { currencyId: 'mana',               required: 2000  },
+    { currencyId: 'construct',          required: 200   },
+    { currencyId: 'life-thread',        required: 500   },
+    { currencyId: 'xp',                 required: 500_000 },
+  ] as readonly ChimeraResourceReq[],
+
+  /** Amount of a resource contributed per click. */
+  CONTRIBUTE_AMOUNT: 1,
 } as const;
 
 // ── Merchant Minigame ────────────────────────────────────────

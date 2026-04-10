@@ -52,6 +52,40 @@ $red:     #f44;
   font-size: 11px;
 }
 
+// ── Auto-buy spend rate ───────────────────────
+
+.spend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 6px;
+  background: $bg-el;
+  border: 1px solid $border;
+  border-top: none;          // butts up against the gold-row above
+}
+
+.spend-label {
+  color: $muted;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.spend-val {
+  color: $muted;
+  font-size: 10px;
+  font-weight: bold;
+  transition: color 0.2s;
+
+  &.spend-active {
+    color: $red;
+  }
+}
+
+.spend-unit {
+  font-size: 8px;
+  opacity: 0.75;
+}
+
 // ── Status message ───────────────────────────
 
 .status-msg {
@@ -160,12 +194,24 @@ $red:     #f44;
   align-items: center;
   cursor: pointer;
   margin-left: 3px;
+  // Must be positioned so the absolutely-placed input anchors here,
+  // not at a distant ancestor. Without this the browser scroll-to-focus
+  // snaps the panel to the top when the checkbox receives focus.
+  position: relative;
 
-  // Hide the browser's native checkbox entirely
+  // Hide the browser's native checkbox entirely.
+  // clip + clip-path suppresses the browser's scroll-into-view behaviour
+  // that would otherwise kick in when the input receives focus.
   input {
     position: absolute;
     width: 1px;
     height: 1px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
     opacity: 0;
     pointer-events: none;
   }

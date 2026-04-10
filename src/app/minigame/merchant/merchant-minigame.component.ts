@@ -163,6 +163,23 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
     return Math.floor(this.wallet.get('gold'));
   }
 
+  /**
+   * Total gold drained per second by all active auto-buyers.
+   * Each buyer fires once per AUTO_BUY_INTERVAL_MS (1 s), spending
+   * currentPrice × AUTO_BUY_AMOUNT gold per tick.
+   */
+  get goldSpendPerSec(): number {
+    const ticksPerSec = 1000 / MERCHANT_MG.AUTO_BUY_INTERVAL_MS;
+    let total = 0;
+    for (const [currencyId, enabled] of Object.entries(this.autoBuySelections)) {
+      if (!enabled) continue;
+      const item = this.items.find(it => it.currencyId === currencyId);
+      if (!item) continue;
+      total += item.currentPrice * MERCHANT_MG.AUTO_BUY_AMOUNT * ticksPerSec;
+    }
+    return total;
+  }
+
   /** Items visible based on Diversified Portfolio level. */
   get visibleItems(): StockMarketItem[] {
     const portfolioLevel = this.upgrades.level('DIVERSIFIED_PORTFOLIO');

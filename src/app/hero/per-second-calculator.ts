@@ -6,7 +6,7 @@
  * ════════════════════════════════════════════════════════════
  */
 
-import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG, FIGHTER_MG } from '../game-config';
+import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG, FIGHTER_MG, CHIMERAMANCER_YIELDS } from '../game-config';
 import { KOBOLD_VARIANTS } from '../flavor-text';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { roundTo } from '../utils/mathUtils';
@@ -88,6 +88,7 @@ export interface PerSecondRates {
   'kobold-feather':  number;
   'kobold-pebble':   number;
   'kobold-heart':    number;
+  'life-thread':     number;
 }
 
 /**
@@ -132,6 +133,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const thiefJacks      = ((ctx.jacksAllocations['thief'] ?? 0) + fam('thief'))           * (hasThiefRelic ? 2 : 1) * jackdUpSpeedMult;
   const artisanJacks    = (ctx.jackStarved['artisan'] ? 0 : ((ctx.jacksAllocations['artisan'] ?? 0) + fam('artisan'))) * (hasArtisanRelic ? 2 : 1) * jackdUpSpeedMult;
   const merchantJacks   = (ctx.jackStarved['merchant'] ? 0 : ((ctx.jacksAllocations['merchant'] ?? 0) + fam('merchant'))) * jackdUpSpeedMult;
+  const chimeraJacks    = ((ctx.jacksAllocations['chimeramancer'] ?? 0) + fam('chimeramancer')) * jackdUpSpeedMult;
 
   // ── Derived values ────────────────────────────────────────
   const goldPerClick    = calcGoldPerClick(u.level('BETTER_BOUNTIES'));
@@ -298,7 +300,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
 
   return {
     gold:    roundTo((autoGoldPerSec + fighterRelicGold + fighterJacks * goldPerClick) * bm('fighter') + (apothecaryJacks * goldPerBrew + vatGoldGain) * bm('apothecary') - culinarianJacks * culGoldCost + ppGoldPerSecond * bm('thief') + graveLootGoldPerSec * bm('necromancer') - autoBuyGoldDrain, 2),
-    xp:      roundTo(fighterJacks * xpPerBounty * bm('fighter') + rangerJacks * bm('ranger') + apothecaryJacks * bm('apothecary') + culinarianJacks * bm('culinarian') + effectiveThiefRate * bm('thief') + artisanXpPerSec * bm('artisan') + necroXpGain * bm('necromancer') - wardXpDrain + merchantJacks * MERCHANT_MG.XP_REWARD * bm('merchant'), 2),
+    xp:      roundTo(fighterJacks * xpPerBounty * bm('fighter') + rangerJacks * bm('ranger') + apothecaryJacks * bm('apothecary') + culinarianJacks * bm('culinarian') + effectiveThiefRate * bm('thief') + artisanXpPerSec * bm('artisan') + necroXpGain * bm('necromancer') - wardXpDrain + merchantJacks * MERCHANT_MG.XP_REWARD * bm('merchant') + chimeraJacks * bm('chimeramancer'), 2),
     herb:    roundTo(herbProduced * bm('ranger') - herbConsumed + (autoBuyGains['herb'] ?? 0) + mrg('herb'), 2),
     beast:   roundTo((rangerJacks * catsEyeFactor * (beastChance / 100) * (expectedMeatYield + rangerBeastBonus) + baitedTrapsRate) * bm('ranger') + (autoBuyGains['beast'] ?? 0) + mrg('beast'), 2),
     potion:  roundTo((apothecaryJacks * potionPerBrew + vatPotionGain) * bm('apothecary') + (autoBuyGains['potion'] ?? 0) + mrg('potion'), 2),
@@ -328,6 +330,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
     'kobold-feather': roundTo((koboldSecondaryRates['kobold-feather'] ?? 0) + (autoBuyGains['kobold-feather'] ?? 0) + mrg('kobold-feather'), 2),
     'kobold-pebble':  roundTo((koboldSecondaryRates['kobold-pebble'] ?? 0) + (autoBuyGains['kobold-pebble'] ?? 0) + mrg('kobold-pebble'), 2),
     'kobold-heart':   roundTo((koboldSecondaryRates['kobold-heart'] ?? 0) + (autoBuyGains['kobold-heart'] ?? 0) + mrg('kobold-heart'), 2),
+    'life-thread':    roundTo(chimeraJacks * CHIMERAMANCER_YIELDS.THREAD_PER_CLICK * bm('chimeramancer'), 2),
   };
 }
 
@@ -368,6 +371,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const tJacks   = (ctx.jacksAllocations['thief']      ?? 0) * relicMul(hasThiefRelic)      * jackdUpSpeedMult2;
   const artJacks = (ctx.jackStarved['artisan'] ? 0 : (ctx.jacksAllocations['artisan'] ?? 0)) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2;
   const mJacks   = (ctx.jackStarved['merchant'] ? 0 : (ctx.jacksAllocations['merchant']  ?? 0)) * jackdUpSpeedMult2;
+  const chJacks  = (ctx.jacksAllocations['chimeramancer'] ?? 0) * jackdUpSpeedMult2;
 
   // Familiar jacks (separate line in breakdown)
   const fFam   = famRaw('fighter')    * relicMul(hasFighterRelic)    * jackdUpSpeedMult2;
@@ -377,6 +381,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const tFam   = famRaw('thief')      * relicMul(hasThiefRelic)      * jackdUpSpeedMult2;
   const artFam = (ctx.jackStarved['artisan'] ? 0 : famRaw('artisan')) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2;
   const mFam   = (ctx.jackStarved['merchant'] ? 0 : famRaw('merchant')) * jackdUpSpeedMult2;
+  const chFam  = famRaw('chimeramancer') * jackdUpSpeedMult2;
 
   // Combined totals (needed for thief uptime fraction)
   const thiefJacks      = tJacks   + tFam;
@@ -644,6 +649,13 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
     if (fJacks > 0) add(drop.currencyId, 'Fighter', fJacks * chance * drop.amount * bm('fighter'));
     if (fFam   > 0) add(drop.currencyId, 'Familiar (Fighter)', fFam * chance * drop.amount * bm('fighter'));
   }
+
+  // ── Chimeramancer ─────────────────────────────────────────────
+  const chThreadPerJack = CHIMERAMANCER_YIELDS.THREAD_PER_CLICK * bm('chimeramancer');
+  if (chJacks > 0) add('life-thread', 'Chimeramancer', chJacks * chThreadPerJack);
+  if (chFam   > 0) add('life-thread', 'Familiar (Chimeramancer)', chFam * chThreadPerJack);
+  if (chJacks > 0) add('xp', 'Chimeramancer', chJacks * bm('chimeramancer'));
+  if (chFam   > 0) add('xp', 'Familiar (Chimeramancer)', chFam * bm('chimeramancer'));
 
   return bd;
 }

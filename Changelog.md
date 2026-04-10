@@ -10,6 +10,7 @@
 - Buy quantity buttons 
 - New Character: The Merchant! Fence illicit goods and buy all sorts of items on the black market
 - New Character: The Artificer! Study up to discover secrets and generate mana to create some particular enhancements to familiars
+- New Character: Chimeramancer! Create a horror beyond comprehension using the parts of your fallen enemies and the resources you've gathered
 - Two new kobolds! 
 ## Removed
 

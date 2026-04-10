@@ -6,6 +6,14 @@
     <span class="gold-val">{{ goldBalance | number }}</span>
   </div>
 
+  <!-- ── Auto-buy gold spend rate ─────────── -->
+  <div class="spend-row" *ngIf="autoSolveUnlocked">
+    <span class="spend-label">AUTO-SPEND</span>
+    <span class="spend-val" [class.spend-active]="goldSpendPerSec > 0">
+      {{ goldSpendPerSec | number:'1.0-0' }}<span class="spend-unit">/s</span>
+    </span>
+  </div>
+
   <!-- ── Message ──────────────────────────── -->
   <div class="status-msg">{{ message }}</div>
 

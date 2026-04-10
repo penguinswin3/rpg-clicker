@@ -11,7 +11,7 @@ import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { StatisticsService } from '../statistics/statistics.service';
-import { YIELDS, BEADS, MERCHANT_MG } from '../game-config';
+import { YIELDS, BEADS, MERCHANT_MG, CHIMERAMANCER_YIELDS } from '../game-config';
 import { cur, LOG_MSG, CURRENCY_FLAVOR } from '../flavor-text';
 import { rollChance, rollMultiChance, randInt } from '../utils/mathUtils';
 import {
@@ -120,6 +120,7 @@ export function dispatchHeroClick(charId: string, ctx: HeroActionContext): void 
     case 'necromancer': clickNecromancer(ctx); break;
     case 'merchant':   clickMerchant(ctx); break;
     case 'artificer':  clickArtificer(ctx); break;
+    case 'chimeramancer': clickChimeramancer(ctx); break;
   }
   // Roll for blue bead discovery
   if (ctx.hasUnfoundBlueBead?.(charId) && Math.random() < BEADS.BLUE_CHANCE) {
@@ -376,6 +377,7 @@ export function performJackAutoClick(charId: string, ctx: JackAutoClickContext):
     case 'merchant':           jackMerchant(ctx); break;
     case 'artificer-study':    jackArtificerStudy(ctx); break;
     case 'artificer-reflect':  jackArtificerReflect(ctx); break;
+    case 'chimeramancer':      jackChimeramancer(ctx); break;
   }
   // Roll for right blue bead (blue-2) discovery via jack/familiar clicks
   const baseCharId = charId.startsWith('necromancer') ? 'necromancer' : charId.startsWith('artificer') ? 'artificer' : charId;
@@ -684,9 +686,6 @@ function clickArtificerReflect(ctx: HeroActionContext): void {
   ctx.setArtificerInsight(currentInsight - consumed);
   ctx.wallet.add('mana', manaYield);
   ctx.stats.trackCurrencyGain('mana', manaYield);
-  const remaining = currentInsight - consumed;
-  const suffix = remaining > 0 ? `, Insight -${consumed} (${remaining} remaining)` : `, Insight -${consumed}`;
-  ctx.log.log(LOG_MSG.HERO.ARTIFICER.REFLECT(cur('mana', manaYield), suffix));
 }
 
 function clickMerchant(ctx: HeroActionContext): void {
@@ -897,5 +896,29 @@ function jackArtificerReflect(ctx: JackAutoClickContext): void {
   ctx.setArtificerInsight(current - consumed);
   ctx.wallet.add('mana', manaYield);
   ctx.stats.trackCurrencyGain('mana', manaYield);
+}
+
+// ── Chimeramancer ───────────────────────────────────────────
+
+function clickChimeramancer(ctx: HeroActionContext): void {
+  const bm = ctx.beadMultiplier?.('chimeramancer') ?? 1;
+  const threadYield = CHIMERAMANCER_YIELDS.THREAD_PER_CLICK * bm;
+  const xpYield = 1 * bm;
+  ctx.wallet.add('life-thread', threadYield);
+  ctx.wallet.add('xp', xpYield);
+  ctx.stats.trackCurrencyGain('life-thread', threadYield);
+  ctx.stats.trackCurrencyGain('xp', xpYield);
+  ctx.log.log(LOG_MSG.HERO.CHIMERAMANCER.STITCH(cur('life-thread', threadYield), cur('xp', xpYield)));
+}
+
+function jackChimeramancer(ctx: JackAutoClickContext): void {
+  const bm = ctx.beadMultiplier?.('chimeramancer') ?? 1;
+  const threadYield = CHIMERAMANCER_YIELDS.THREAD_PER_CLICK * bm;
+  const xpYield = 1 * bm;
+  ctx.wallet.add('life-thread', threadYield);
+  ctx.wallet.add('xp', xpYield);
+  ctx.stats.trackCurrencyGain('life-thread', threadYield);
+  ctx.stats.trackCurrencyGain('xp', xpYield);
+  if (ctx.isJackStarved('chimeramancer')) ctx.setJackStarved('chimeramancer', false);
 }
 

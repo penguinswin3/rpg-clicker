@@ -1,0 +1,48 @@
+<div class="chimeramancer-minigame">
+
+  <!-- ── ASCII chimera art ──────────────── -->
+  <div class="ascii-frame">
+    <pre class="minigame-ascii chimera-art">{{ chimeraLines.join('\n') }}</pre>
+  </div>
+
+  <!-- ── Status / Progress ──────────────── -->
+  <div class="mg-status">
+    <pre class="mg-message" *ngIf="!chimeraAwakened">{{ overallProgress | percent:'1.0-0' }} assembled</pre>
+    <pre class="mg-message awaken" *ngIf="chimeraAwakened">★ THE CHIMERA AWAKENS! ★</pre>
+  </div>
+
+  <div class="mg-divider">+----------+</div>
+
+  <!-- ── Resource bars ──────────────────── -->
+  <div class="resource-bars">
+    <div class="res-row" *ngFor="let bar of bars">
+      <span class="res-symbol"
+            [style.color]="bar.color"
+            [title]="bar.displayName">{{ bar.symbol }}</span>
+      <div class="bar-track">
+        <div class="bar-fill"
+             [style.width.%]="barPercent(bar)"
+             [style.background]="bar.color"
+             [class.complete]="barComplete(bar)">
+        </div>
+      </div>
+      <span class="res-count">{{ shortNum(bar.contributed) }}/{{ shortNum(bar.required) }}</span>
+      <button class="contribute-btn"
+              [disabled]="!canContribute(bar)"
+              [style.borderColor]="bar.color"
+              (click)="contribute(bar)">
+        +1
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Awakened placeholder ────────────── -->
+  <div class="awaken-placeholder" *ngIf="chimeraAwakened">
+    <div class="mg-divider">+----------+</div>
+    <span class="cs-label">&gt;&gt; TO BE CONTINUED &lt;&lt;</span>
+    <span class="cs-sub">[ The chimera stirs… ]</span>
+    <span class="cs-hint">// ending coming soon //</span>
+  </div>
+
+</div>
+

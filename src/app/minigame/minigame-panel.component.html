@@ -205,8 +205,26 @@
       />
     </ng-container>
 
+    <!-- ── Chimeramancer: Chimeric Animation minigame ─── -->
+    <ng-container *ngIf="activeCharacterId === 'chimeramancer'">
+      <app-chimeramancer-minigame
+        [savedContributions]="chimeramancerContributions"
+        (contributionsChange)="chimeramancerContributionsChange.emit($event)"
+        [autoSolveUnlocked]="!!autoSolveUnlocked['chimeramancer']"
+        [autoSolveEnabled]="!!autoSolveEnabled['chimeramancer']"
+        [autoSolveGoodMode]="!!autoSolveGoodMode['chimeramancer']"
+        (autoSolveEnabledChange)="onAutoSolveToggle('chimeramancer', $event)"
+        (goldBeadFound)="goldBeadFound.emit('chimeramancer')"
+        [gold2Progress]="gold2Progress['chimeramancer']"
+        (gold2ProgressChange)="onGold2Progress('chimeramancer', $event)"
+        (gold2BeadFound)="gold2BeadFound.emit('chimeramancer')"
+        [gemHunterLevel]="gemHunterLevel"
+        [gold2BeadAlreadyFound]="!!gold2BeadFoundState['chimeramancer']"
+      />
+    </ng-container>
+
     <!-- ── Other characters: placeholder ── -->
-    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian' && activeCharacterId !== 'thief' && activeCharacterId !== 'artisan' && activeCharacterId !== 'necromancer' && activeCharacterId !== 'merchant' && activeCharacterId !== 'artificer'">
+    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian' && activeCharacterId !== 'thief' && activeCharacterId !== 'artisan' && activeCharacterId !== 'necromancer' && activeCharacterId !== 'merchant' && activeCharacterId !== 'artificer' && activeCharacterId !== 'chimeramancer'">
 
       <div class="mg-divider">+----------+</div>
 

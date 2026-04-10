@@ -88,6 +88,7 @@ export class AppComponent implements OnInit, OnDestroy {
   necromancerUnlocked = false;
   merchantUnlocked    = false;
   artificerUnlocked   = false;
+  chimeramancerUnlocked = false;
   unlockedCharacters: { id: string; name: string; color: string }[] = [];
 
   // ── Necromancer state ────────────────────────────────────────────
@@ -198,6 +199,14 @@ export class AppComponent implements OnInit, OnDestroy {
   merchantAutoBuySelections: Record<string, boolean> = {};
   /** Current merchant auto-buyer info for per-second calculation. */
   merchantAutoBuyerInfo: { currencyId: string; goldCostPerTick: number; qtyPerTick: number }[] = [];
+
+  /** Chimeramancer chimera-building contribution progress (currencyId → amount). */
+  chimeramancerContributions: Record<string, number> | null = null;
+
+  /** Called when chimeramancer contribution progress changes. */
+  onChimeramancerContributionsChange(contributions: Record<string, number>): void {
+    this.chimeramancerContributions = { ...contributions };
+  }
 
   /** Called when merchant auto-buyer selections change. */
   onMerchantAutoBuySelectionsChange(selections: Record<string, boolean>): void {
@@ -394,6 +403,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresNecromancer   && !this.necromancerUnlocked)                     return false;
     if (gates.requiresMerchant      && !this.merchantUnlocked)                        return false;
     if (gates.requiresArtificer     && !this.artificerUnlocked)                       return false;
+    if (gates.requiresChimeramancer && !this.chimeramancerUnlocked)                    return false;
     if (gates.requiresRelic         && !this.wallet.isCurrencyUnlocked('relic'))     return false;
     if (gates.requiresFang          && !this.wallet.isCurrencyUnlocked('kobold-fang')) return false;
     if (gates.requiresFeather       && !this.wallet.isCurrencyUnlocked('kobold-feather')) return false;
@@ -671,6 +681,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.necromancerUnlocked = chars.find(c => c.id === 'necromancer')?.unlocked ?? false;
       this.merchantUnlocked   = chars.find(c => c.id === 'merchant')?.unlocked   ?? false;
       this.artificerUnlocked  = chars.find(c => c.id === 'artificer')?.unlocked  ?? false;
+      this.chimeramancerUnlocked = chars.find(c => c.id === 'chimeramancer')?.unlocked ?? false;
       this.unlockedCharacters = chars.filter(c => c.unlocked).map(c => ({ id: c.id, name: c.name, color: c.color }));
       this.updateRelicHunterMax(chars);
       // Shine newly unlocked characters (skip ones already known from save restore)
@@ -888,6 +899,7 @@ export class AppComponent implements OnInit, OnDestroy {
       artificerActiveButton:       this.artificerActiveButton,
       artificerInsight:            this.artificerInsight,
       selectedEtchingLevel:        this.selectedEtchingLevel,
+      chimeramancerContributions:  this.chimeramancerContributions ?? undefined,
     };
   }
 
@@ -940,6 +952,10 @@ export class AppComponent implements OnInit, OnDestroy {
       0,
       this.upgrades.level('EXTENDED_ETCHING'),
     );
+    // Restore chimeramancer contributions
+    this.chimeramancerContributions = s.chimeramancerContributions
+      ? { ...s.chimeramancerContributions }
+      : null;
     // Restore artisan timer — if still in the future, reschedule the completion callback
     this.artisanTimerUntil     = s.artisanTimerUntil     ?? 0;
     this.artisanTimerBatchSize = s.artisanTimerBatchSize  ?? 0;
@@ -997,6 +1013,7 @@ export class AppComponent implements OnInit, OnDestroy {
         necromancer: this.wallet.getBeadMultiplier('necromancer'),
         merchant:    this.wallet.getBeadMultiplier('merchant'),
         artificer:   this.wallet.getBeadMultiplier('artificer'),
+        chimeramancer: this.wallet.getBeadMultiplier('chimeramancer'),
       },
       merchantAutoBuyers: this.merchantAutoBuyerInfo,
       artificerActiveButton: this.artificerActiveButton,
@@ -1034,6 +1051,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.setPerSecond('kobold-feather',    rates['kobold-feather']);
       this.wallet.setPerSecond('kobold-pebble',     rates['kobold-pebble']);
       this.wallet.setPerSecond('kobold-heart',      rates['kobold-heart']);
+      this.wallet.setPerSecond('life-thread',       rates['life-thread']);
       this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
     });
   }
