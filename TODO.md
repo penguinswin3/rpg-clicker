@@ -53,3 +53,6 @@
 - Merchant options are getting shifted up randomly sometimes
 - expand the dragon ascii so it fits the whole thing 
 
+# v1.3.0 Playtest 
+- Per seconds should split out fermentation vats passive gold 
+- the entire game broke as soon as i bought sidequests 

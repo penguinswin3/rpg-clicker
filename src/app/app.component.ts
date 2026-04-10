@@ -178,7 +178,7 @@ export class AppComponent implements OnInit, OnDestroy {
    * Bead state per character. Each character has 4 slots:
    * 'blue-1', 'gold-1', 'gold-2', 'blue-2' (displayed left to right).
    */
-  beadState: Record<string, Record<string, { found: boolean; socketed: boolean }>> = {};
+  beadState: Record<string, Record<string, { found: boolean; socketed: boolean }> | undefined> = {};
 
   /** Info about the bead popup currently open, or null. */
   beadPopupInfo: { charId: string; slotId: string; type: BeadType } | null = null;
@@ -235,14 +235,14 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Whether the character's first gold bead (gold-1, awarded by minigame success) is undiscovered. */
   hasUnfoundMinigameGoldBead(charId: string): boolean {
     this.ensureBeadState(charId);
-    return !this.beadState[charId]['gold-1'].found;
+    return !this.beadState[charId]!['gold-1'].found;
   }
 
   /** Award the first gold bead (gold-1) for a character via minigame success. */
   findMinigameGoldBead(charId: string): void {
     this.ensureBeadState(charId);
-    if (this.beadState[charId]['gold-1'].found) return;
-    this.beadState[charId]['gold-1'].found = true;
+    if (this.beadState[charId]!['gold-1'].found) return;
+    this.beadState[charId]!['gold-1'].found = true;
     this.beadState = { ...this.beadState };
     this._refreshDerived();
     this.addCharShine(charId);
@@ -254,8 +254,8 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Award the gold-2 bead for a character via the deterministic unlock challenge. */
   findGold2Bead(charId: string): void {
     this.ensureBeadState(charId);
-    if (this.beadState[charId]['gold-2'].found) return;
-    this.beadState[charId]['gold-2'].found = true;
+    if (this.beadState[charId]!['gold-2'].found) return;
+    this.beadState[charId]!['gold-2'].found = true;
     this.beadState = { ...this.beadState };
     this._refreshDerived();
     this.addCharShine(charId);
@@ -518,9 +518,10 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!this.beadState[charId]) {
       this.beadState[charId] = {};
     }
+    const slots = this.beadState[charId]!;
     for (const slotId of BEAD_SLOT_ORDER) {
-      if (!this.beadState[charId][slotId]) {
-        this.beadState[charId][slotId] = { found: false, socketed: false };
+      if (!slots[slotId]) {
+        slots[slotId] = { found: false, socketed: false };
       }
     }
   }
@@ -533,20 +534,20 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Whether the character's LEFT blue bead (blue-1, awarded by manual clicks) is undiscovered. */
   hasUnfoundBlueBead(charId: string): boolean {
     this.ensureBeadState(charId);
-    return !this.beadState[charId]['blue-1'].found;
+    return !this.beadState[charId]!['blue-1'].found;
   }
 
   /** Whether the character's RIGHT blue bead (blue-2, awarded by jacks) is undiscovered. */
   hasUnfoundJackBead(charId: string): boolean {
     this.ensureBeadState(charId);
-    return !this.beadState[charId]['blue-2'].found;
+    return !this.beadState[charId]!['blue-2'].found;
   }
 
   /** Award the left blue bead (blue-1) for a character via manual clicks. */
   findBlueBead(charId: string): void {
     this.ensureBeadState(charId);
-    if (this.beadState[charId]['blue-1'].found) return;
-    this.beadState[charId]['blue-1'].found = true;
+    if (this.beadState[charId]!['blue-1'].found) return;
+    this.beadState[charId]!['blue-1'].found = true;
     this.beadState = { ...this.beadState };
     this._refreshDerived();
     this.addCharShine(charId);
@@ -558,8 +559,8 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Award the right blue bead (blue-2) for a character via jack/familiar auto-clicks. */
   findJackBead(charId: string): void {
     this.ensureBeadState(charId);
-    if (this.beadState[charId]['blue-2'].found) return;
-    this.beadState[charId]['blue-2'].found = true;
+    if (this.beadState[charId]!['blue-2'].found) return;
+    this.beadState[charId]!['blue-2'].found = true;
     this.beadState = { ...this.beadState };
     this._refreshDerived();
     this.addCharShine(charId);
@@ -573,7 +574,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!this.beadPopupInfo) return;
     const { charId, slotId, type } = this.beadPopupInfo;
     this.ensureBeadState(charId);
-    const slot = this.beadState[charId][slotId];
+    const slot = this.beadState[charId]![slotId];
     if (slot?.found && !slot?.socketed) {
       slot.socketed = true;
       this.beadState = { ...this.beadState };
@@ -1804,7 +1805,7 @@ export class AppComponent implements OnInit, OnDestroy {
     for (const charId of Object.keys(this.beadState)) {
       for (const slotId of BEAD_SLOT_ORDER) {
         if (this.beadState[charId]?.[slotId]) {
-          this.beadState[charId][slotId].socketed = false;
+          this.beadState[charId]![slotId].socketed = false;
         }
       }
     }
@@ -1853,7 +1854,7 @@ export class AppComponent implements OnInit, OnDestroy {
     for (const char of this.charService.getCharacters()) {
       this.ensureBeadState(char.id);
       for (const slotId of BEAD_SLOT_ORDER) {
-        this.beadState[char.id][slotId].found = true;
+        this.beadState[char.id]![slotId].found = true;
       }
     }
     this.beadState = { ...this.beadState };
