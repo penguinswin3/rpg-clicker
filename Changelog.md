@@ -10,7 +10,7 @@
 - Buy quantity buttons 
 - New Character: The Merchant! Fence illicit goods and buy all sorts of items on the black market
 - New Character: The Artificer! Study up to discover secrets and generate mana to create some particular enhancements to familiars
-
+- Two new kobolds! 
 ## Removed
 
 ## Changed

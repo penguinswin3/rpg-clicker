@@ -43,6 +43,8 @@ export class WalletService {
     { id: 'kobold-fang',          ...CURRENCY_FLAVOR['kobold-fang'],           requiredCharacterId: 'fighter',   manualUnlock: true },
     { id: 'kobold-brain',         ...CURRENCY_FLAVOR['kobold-brain'],          requiredCharacterId: 'fighter',   manualUnlock: true },
     { id: 'kobold-feather',       ...CURRENCY_FLAVOR['kobold-feather'],        requiredCharacterId: 'fighter',   manualUnlock: true },
+    { id: 'kobold-pebble',        ...CURRENCY_FLAVOR['kobold-pebble'],         requiredCharacterId: 'fighter',   manualUnlock: true },
+    { id: 'kobold-heart',         ...CURRENCY_FLAVOR['kobold-heart'],          requiredCharacterId: 'fighter',   manualUnlock: true },
 
     // ── Ranger ───────────────────────────────────────────────────────────────
     { id: 'herb',                 ...CURRENCY_FLAVOR['herb'],                  requiredCharacterId: 'ranger'       },

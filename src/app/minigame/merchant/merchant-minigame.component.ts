@@ -354,7 +354,7 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
       this.log.log(LOG_MSG.MG_MERCHANT.IMPLEMENT_UNLOCKED, 'rare');
     }
     // Kobold parts: unlock on first purchase via merchant if not already unlocked
-    const koboldParts = ['kobold-ear', 'kobold-tongue', 'kobold-hair', 'kobold-fang', 'kobold-brain', 'kobold-feather'];
+    const koboldParts = ['kobold-ear', 'kobold-tongue', 'kobold-hair', 'kobold-fang', 'kobold-brain', 'kobold-feather', 'kobold-pebble', 'kobold-heart'];
     if (koboldParts.includes(currencyId) && !this.wallet.isCurrencyUnlocked(currencyId)) {
       this.wallet.unlockCurrency(currencyId);
     }

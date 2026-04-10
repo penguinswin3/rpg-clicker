@@ -154,6 +154,8 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'magical-implement',  base: 50,    fromCount: 28, untilCount: 29 },  // Jack 29
       { currency: 'mana',               base: 500,    fromCount: 29, untilCount: 30 },  // Jack 30
       { currency: 'construct',          base: 50,    fromCount: 30, untilCount: 31 },  // Jack 31
+      { currency: 'kobold-pebble',      base: 25,    fromCount: 31, untilCount: 32 },  // Jack 32
+      { currency: 'kobold-heart',       base: 25,    fromCount: 32, untilCount: 33 },  // Jack 33
     ],
   },
 
@@ -339,6 +341,8 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'kobold-hair',   base: 50, scale: 1.0, fromLevel: 2, untilLevel: 3 },           // tier 3 only
       { currency: 'kobold-fang',   base: 50, scale: 1.0, fromLevel: 3, untilLevel: 4 },           // tier 4 only
       { currency: 'kobold-brain',  base: 50, scale: 1.0, fromLevel: 4, untilLevel: 5 },           // tier 5 only (Winged Kobold)
+      { currency: 'kobold-feather',base: 50, scale: 1.0, fromLevel: 5, untilLevel: 6 },           // tier 6 only (Kobold Grotesque)
+      { currency: 'kobold-pebble', base: 50, scale: 1.0, fromLevel: 6, untilLevel: 7 },           // tier 7 only (Kobold Leader)
     ] },
   { id: 'FIRST_STRIKE', characterId: 'fighter', category: 'minigame', max: 1,
     gates: { requiresFang: true },
@@ -772,13 +776,13 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Artificer — standard ──────────────────────────────────────
   { id: 'DEEP_STUDY', characterId: 'artificer', category: 'standard', max: 1,
     costs: [
-      { currency: 'mana',      base: 500,  scale: 1.0 },
-      { currency: 'construct', base: 25,   scale: 1.0 },
+      { currency: 'gold',      base: 50000,  scale: 1.0 },
+      { currency: 'gemstone', base: 2500,   scale: 1.0 },
     ] },
   { id: 'FOCUSED_REFLECTION', characterId: 'artificer', category: 'standard', max: 7,
     costs: [
-      { currency: 'mana',      base: 200,  scale: 1.3 },
-      { currency: 'construct', base: 10,   scale: 1.3 },
+      { currency: 'gold',      base: 200,  scale: 1.3 },
+      { currency: 'magical-implement', base: 10,   scale: 1.3 },
     ] },
   { id: 'AMPLIFIED_INSIGHT', characterId: 'artificer', category: 'standard', max: 24,
     costs: [
@@ -788,7 +792,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'POTION_ARCANE_INTELLECT', characterId: 'artificer', category: 'standard', max: 3,
     costs: [
       { currency: 'mana',               base: 1000,  scale: 2.0 },
-      { currency: 'construct',           base: 100,   scale: 2.0 },
+      { currency: 'monster-trophy',           base: 100,   scale: 2.0 },
       { currency: 'synaptical-potion',   base: 10,    scale: 1.5 },
     ] },
 
@@ -802,11 +806,13 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [
       { currency: 'construct', base: 100,  scale: 1.0 },
       { currency: 'mana',     base: 1000, scale: 1.0 },
+      { currency: 'synaptical-potion',     base: 1000, scale: 1.0 },
     ] },
   { id: 'ETCHING_MASTERY', characterId: 'artificer', category: 'minigame', max: 999,
     costs: [
       { currency: 'construct', base: 75,  scale: 1.4 },
       { currency: 'mana',     base: 750, scale: 1.4 },
+      { currency: 'Magical Implement',     base: 100, scale: 1.4 },
     ] },
 
   // ── Relic upgrades (one per character) ──────────────────────────
@@ -1249,6 +1255,8 @@ export const MERCHANT_MG = {
     { currencyId: 'kobold-fang',         weight: 2,   min: 1,     max: 2      },
     { currencyId: 'kobold-brain',        weight: 2,   min: 1,     max: 2      },
     { currencyId: 'kobold-feather',      weight: 2,   min: 1,     max: 2      },
+    { currencyId: 'kobold-pebble',       weight: 2,   min: 1,     max: 2      },
+    { currencyId: 'kobold-heart',        weight: 1,   min: 1,     max: 1      },
 
     // ── Uncommon ────────────────────────────────────────────────
     { currencyId: 'pixie-dust',          weight: 3,   min: 5,     max: 20     },
@@ -1285,7 +1293,7 @@ export const MERCHANT_MG = {
     'spice': 3, 'hearty-meal': 3, 'kobold-hair': 3,
     'dossier': 4, 'treasure': 4, 'kobold-fang': 4,
     'precious-metal': 5, 'gemstone': 5, 'jewelry': 5, 'kobold-brain': 5,
-    'bone': 6, 'brimstone': 6, 'soul-stone': 6, 'kobold-feather': 6,
+    'bone': 6, 'brimstone': 6, 'soul-stone': 6, 'kobold-feather': 6, 'kobold-pebble': 6, 'kobold-heart': 6,
   } as Record<string, number>,
 
   // ── Stock Market (minigame) ─────────────────────────────────
@@ -1306,7 +1314,7 @@ export const MERCHANT_MG = {
     'treasure', 'precious-metal', 'gemstone', 'bone', 'brimstone',
     'concentrated-potion', 'pixie-dust', 'hearty-meal', 'jewelry',
     'soul-stone', 'synaptical-potion',
-    'kobold-ear', 'kobold-tongue', 'kobold-hair', 'kobold-fang', 'kobold-brain', 'kobold-feather',
+    'kobold-ear', 'kobold-tongue', 'kobold-hair', 'kobold-fang', 'kobold-brain', 'kobold-feather', 'kobold-pebble', 'kobold-heart',
   ] as readonly string[],
   /** Auto-buyer tick interval (ms). */
   AUTO_BUY_INTERVAL_MS: 1000,
@@ -1338,6 +1346,8 @@ export const MERCHANT_MG = {
     { currencyId: 'kobold-fang',         basePrice: 250,   minPrice: 100,   maxPrice: 500    },
     { currencyId: 'kobold-brain',        basePrice: 600,   minPrice: 250,   maxPrice: 1200   },
     { currencyId: 'kobold-feather',      basePrice: 300,   minPrice: 120,   maxPrice: 600    },
+    { currencyId: 'kobold-pebble',       basePrice: 350,   minPrice: 140,   maxPrice: 700    },
+    { currencyId: 'kobold-heart',        basePrice: 500,   minPrice: 200,   maxPrice: 1000   },
   ] as const,
 } as const;
 

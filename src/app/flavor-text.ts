@@ -30,6 +30,8 @@ export const CURRENCY_FLAVOR = {
   jewelry:               { name: 'Jewelry',                   symbol: 'Ő',  color: '#97dfc8' },
   'synaptical-potion':   { name: 'Synaptical Potion Base',    symbol: '⚗',  color: '#5b67eb' },
   'kobold-feather':      { name: 'Kobold Feather',            symbol: '⸙',  color: '#c5b3aa' },
+  'kobold-pebble':       { name: 'Kobold Pebble',             symbol: '\u25CB',  color: '#8a9a7b' },
+  'kobold-heart':        { name: '"Kobold" Heart',            symbol: '♥',  color: '#8b1a1a' },
   'bone':                { name: 'Bones',                     symbol: '🕱',  color: '#d7d8e6' },
   'brimstone':           { name: 'Brimstone',                 symbol: '🜏',  color: '#ffbd2b' },
   'soul-stone':          { name: 'Soul Stone',                symbol: '◈',  color: '#8f4fff' },
@@ -302,6 +304,54 @@ export const KOBOLD_VARIANTS: readonly KoboldVariant[] = [
       currencyId: 'kobold-feather',
       amount: 1,
       chance: 33,
+    },
+  },
+  // Level 7 — Kobold Grotesque
+  {
+    name: 'Kobold Grotesque',
+    ascii:
+      '   ____       ____\n' +
+      '  /    )     (    \\\n' +
+      ' /    (  ^_^  )    \\\n' +
+      '|  {   \\(\'v\')/   }  |\n' +
+      '|   {   /   \\   }   |\n' +
+      '|_)(   /\\   /\\   )(_|\n' +
+      '|)  (_ | \\|/  |_)  (|\n' +
+      '\'     "--^^^^--"    \'',
+    secondaryDrop: {
+      currencyId: 'kobold-pebble',
+      amount: 1,
+      chance: 25,
+    },
+  },
+  // Level 8 — Kobold Leader
+  {
+    name: 'Kobold Leader',
+    ascii:
+      '       \\(______     ______)/\n' +
+      '       /`.----.\\   /.----.`\\\n' +
+      '      } /      :} {:      \\ {\n' +
+      '     / {        } {        } \\\n' +
+      '     } }      ) } { (      { {\n' +
+      '    / {      /|\\}!{/|\\      } \\\n' +
+      '    } }     ( (."^".) )     { {\n' +
+      '   / {       (d\\   /b)       } \\\n' +
+      '   } }       |\\~   ~/|       { {\n' +
+      '  / /        | )   ( |        \\ \\\n' +
+      ' { {        _)(,   ,)(_        } }\n' +
+      '  } }      //  `";"`  \\\\      { {\n' +
+      ' / /      //     (     \\\\      \\ \\\n' +
+      '{ {      {(     -=)     )}      } }\n' +
+      ' \\ \\     /)    -=(=-     (\\    / /\n' +
+      '  `\\\\  /\'/    /-=|\\-\\    \\`\\  //\'\n' +
+      '    `\\{  |   ( -===- )   |  }/\'\n' +
+      '      `  _\\   \\-===-/   /_  \'\n' +
+      '        (_(_(_)\'-=-\'(_)_)_)\n' +
+      '        `"`"`"       "`"`"`',
+    secondaryDrop: {
+      currencyId: 'kobold-heart',
+      amount: 1,
+      chance: 20,
     },
   },
 ];

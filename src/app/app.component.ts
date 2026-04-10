@@ -1032,6 +1032,8 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.setPerSecond('kobold-fang',       rates['kobold-fang']);
       this.wallet.setPerSecond('kobold-brain',      rates['kobold-brain']);
       this.wallet.setPerSecond('kobold-feather',    rates['kobold-feather']);
+      this.wallet.setPerSecond('kobold-pebble',     rates['kobold-pebble']);
+      this.wallet.setPerSecond('kobold-heart',      rates['kobold-heart']);
       this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
     });
   }

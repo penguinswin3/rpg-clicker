@@ -51,6 +51,6 @@
 
 ## Bug Fixes
 - Merchant options are getting shifted up randomly sometimes
-
+- expand the dragon ascii so it fits the whole thing 
 ## Code Refactors
 

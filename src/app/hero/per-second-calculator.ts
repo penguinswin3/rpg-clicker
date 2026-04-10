@@ -86,6 +86,8 @@ export interface PerSecondRates {
   'kobold-fang':     number;
   'kobold-brain':    number;
   'kobold-feather':  number;
+  'kobold-pebble':   number;
+  'kobold-heart':    number;
 }
 
 /**
@@ -324,6 +326,8 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
     'kobold-fang':    roundTo((koboldSecondaryRates['kobold-fang'] ?? 0) + (autoBuyGains['kobold-fang'] ?? 0) + mrg('kobold-fang'), 2),
     'kobold-brain':   roundTo((koboldSecondaryRates['kobold-brain'] ?? 0) + (autoBuyGains['kobold-brain'] ?? 0) + mrg('kobold-brain'), 2),
     'kobold-feather': roundTo((koboldSecondaryRates['kobold-feather'] ?? 0) + (autoBuyGains['kobold-feather'] ?? 0) + mrg('kobold-feather'), 2),
+    'kobold-pebble':  roundTo((koboldSecondaryRates['kobold-pebble'] ?? 0) + (autoBuyGains['kobold-pebble'] ?? 0) + mrg('kobold-pebble'), 2),
+    'kobold-heart':   roundTo((koboldSecondaryRates['kobold-heart'] ?? 0) + (autoBuyGains['kobold-heart'] ?? 0) + mrg('kobold-heart'), 2),
   };
 }
 
