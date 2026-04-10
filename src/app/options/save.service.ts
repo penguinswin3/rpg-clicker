@@ -58,6 +58,14 @@ export interface UpgradeState {
   autoSolveEnabled?: Record<string, boolean>;
   /** Gold-2 bead unlock progress per character — shape varies by character. */
   gold2Progress?: Record<string, unknown>;
+  /** Merchant stock market auto-buyer selections — { currencyId: true/false }. */
+  merchantAutoBuySelections?: Record<string, boolean>;
+  /** Which artificer button is currently active ('study' or 'reflect'). */
+  artificerActiveButton?: 'study' | 'reflect';
+  /** Current insight level of the Artificer (0–max). */
+  artificerInsight?: number;
+  /** Currently-selected etching difficulty level (0 = base). */
+  selectedEtchingLevel?: number;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

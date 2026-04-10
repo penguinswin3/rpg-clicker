@@ -8,6 +8,8 @@
 - Gold Bead 2 is unlocked through secret patterns in sidequests
 - The character menu will display a shine when something new is 
 - Buy quantity buttons 
+- New Character: The Merchant! Fence illicit goods and buy all sorts of items on the black market
+- New Character: The Artificer! Study up to discover secrets and generate mana to create some particular enhancements to familiars
 
 ## Removed
 

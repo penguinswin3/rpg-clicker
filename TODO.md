@@ -3,27 +3,10 @@
 - kobold paw
 
 ###
--Add the flavor lore
-
+- Add the flavor lore
+- More Kobolds
 ### More characters
 
-- Merchant
-  - Hero button opens illicit packages
-  - Illicit packages are purchased as part of the stock trading minigame
-  - Opening illicit packages can yield a handful of other random resources, as well as three new ones
-    - Monster Trophy
-    - Forbidden Tome
-    - Magical Implements
-
-- Artificer
-  - Reads pages from the forbidden tomes to gain insight
-    - insight gives a temporary buff to mana generation
-    - you must have insight to generate mana
-    - Having more insight makes more mana
-  - Minigame creates Spell Scrolls
-    - Memory matching / Simon Says
-    - Spell Scrolls can be used to buff familiars
-      - Makes them act as +1 familiar, max +5, lasts some minutes
 
 - Chimeramancer
   - Final main minigame, hero button prepares the parts, which in turn you have to add to the flesh construct
@@ -67,7 +50,7 @@
 
 
 ## Bug Fixes
-
+- Merchant options are getting shifted up randomly sometimes
 
 ## Code Refactors
 

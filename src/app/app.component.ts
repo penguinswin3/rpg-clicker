@@ -87,6 +87,7 @@ export class AppComponent implements OnInit, OnDestroy {
   artisanUnlocked    = false;
   necromancerUnlocked = false;
   merchantUnlocked    = false;
+  artificerUnlocked   = false;
   unlockedCharacters: { id: string; name: string; color: string }[] = [];
 
   // ── Necromancer state ────────────────────────────────────────────
@@ -94,6 +95,14 @@ export class AppComponent implements OnInit, OnDestroy {
   necromancerActiveButton: 'defile' | 'ward' = 'defile';
   /** How many clicks remain before the active ability switches. */
   necromancerClicksRemaining = 10;
+
+  // ── Artificer state ────────────────────────────────────────────
+  /** Which artificer ability is currently enabled. */
+  artificerActiveButton: 'study' | 'reflect' = 'study';
+  /** Current insight level (0–max). */
+  artificerInsight = 0;
+  /** Currently-selected etching difficulty level (0 = base, max = EXTENDED_ETCHING level). */
+  selectedEtchingLevel = 0;
 
   // ── Minigame state ─────────────────────────────────────────────
   minigameUnlocked = false;
@@ -184,6 +193,22 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Per-character gold-2 bead unlock progress (shape varies per character). */
   gold2Progress: Record<string, unknown> = {};
+
+  /** Merchant auto-buyer selections (currencyId → enabled). Persisted. */
+  merchantAutoBuySelections: Record<string, boolean> = {};
+  /** Current merchant auto-buyer info for per-second calculation. */
+  merchantAutoBuyerInfo: { currencyId: string; goldCostPerTick: number; qtyPerTick: number }[] = [];
+
+  /** Called when merchant auto-buyer selections change. */
+  onMerchantAutoBuySelectionsChange(selections: Record<string, boolean>): void {
+    this.merchantAutoBuySelections = { ...selections };
+  }
+
+  /** Called when merchant auto-buyer state changes (prices update, selections toggle). */
+  onMerchantAutoBuyerStateChange(infos: { currencyId: string; goldCostPerTick: number; qtyPerTick: number }[]): void {
+    this.merchantAutoBuyerInfo = infos;
+    this.updateAllPerSecond();
+  }
 
   /** Whether auto-solve is unlocked for a character (either gold bead socketed). */
   isAutoSolveUnlocked(charId: string): boolean {
@@ -368,6 +393,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresArtisan       && !this.artisanUnlocked)                        return false;
     if (gates.requiresNecromancer   && !this.necromancerUnlocked)                     return false;
     if (gates.requiresMerchant      && !this.merchantUnlocked)                        return false;
+    if (gates.requiresArtificer     && !this.artificerUnlocked)                       return false;
     if (gates.requiresRelic         && !this.wallet.isCurrencyUnlocked('relic'))     return false;
     if (gates.requiresFang          && !this.wallet.isCurrencyUnlocked('kobold-fang')) return false;
     if (gates.requiresFeather       && !this.wallet.isCurrencyUnlocked('kobold-feather')) return false;
@@ -593,7 +619,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Sync all bead multipliers to the wallet service. */
   private syncBeadMultipliers(): void {
-    const allChars = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief', 'artisan', 'necromancer', 'merchant'];
+    const allChars = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief', 'artisan', 'necromancer', 'merchant', 'artificer'];
     for (const charId of allChars) {
       const blueCount = this.getSocketedBlueCount(charId);
       this.wallet.setBeadMultiplier(charId, Math.pow(BEADS.BLUE_YIELD_MULT, blueCount));
@@ -644,6 +670,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.artisanUnlocked    = chars.find(c => c.id === 'artisan')?.unlocked    ?? false;
       this.necromancerUnlocked = chars.find(c => c.id === 'necromancer')?.unlocked ?? false;
       this.merchantUnlocked   = chars.find(c => c.id === 'merchant')?.unlocked   ?? false;
+      this.artificerUnlocked  = chars.find(c => c.id === 'artificer')?.unlocked  ?? false;
       this.unlockedCharacters = chars.filter(c => c.unlocked).map(c => ({ id: c.id, name: c.name, color: c.color }));
       this.updateRelicHunterMax(chars);
       // Shine newly unlocked characters (skip ones already known from save restore)
@@ -737,9 +764,18 @@ export class AppComponent implements OnInit, OnDestroy {
     setInterval(() => {
       const ctx = this.buildJackAutoClickCtx();
       const jackdUpMult = this.jackdUpUnlocked ? JACKD_UP_SPEED_MULT : 1;
-      for (const [charId, count] of Object.entries(this.jacksAllocations)) {
-        // Normalize compound keys (e.g. 'necromancer-defile' → 'necromancer') for relic lookup
-        const baseCharId = charId.startsWith('necromancer') ? 'necromancer' : charId;
+
+      // Collect entries and ensure artificer-study fires before artificer-reflect
+      const entries = Object.entries(this.jacksAllocations);
+      entries.sort((a, b) => {
+        const order = (k: string) =>
+          k === 'artificer-study' ? 0 : k === 'artificer-reflect' ? 1 : -1;
+        return order(a[0]) - order(b[0]);
+      });
+
+      for (const [charId, count] of entries) {
+        // Normalize compound keys (e.g. 'necromancer-defile' → 'necromancer', 'artificer-study' → 'artificer') for relic lookup
+        const baseCharId = charId.startsWith('necromancer') ? 'necromancer' : charId.startsWith('artificer') ? 'artificer' : charId;
         const relicMult = this.upgrades.level(`RELIC_${baseCharId.toUpperCase()}`) >= 1 ? 2 : 1;
         const scaledRaw = count * relicMult * jackdUpMult;
         const effective = Math.floor(scaledRaw) + (Math.random() < (scaledRaw % 1) ? 1 : 0);
@@ -764,9 +800,11 @@ export class AppComponent implements OnInit, OnDestroy {
           // Skip clicks when familiars are paused
           if (this.familiarsPaused) continue;
 
-          const baseId = key.startsWith('necromancer') ? 'necromancer' : key;
+          const baseId = key.startsWith('necromancer') ? 'necromancer' : key.startsWith('artificer') ? 'artificer' : key;
           const relicMult = this.upgrades.level(`RELIC_${baseId.toUpperCase()}`) >= 1 ? 2 : 1;
-          const famScaledRaw = FAMILIAR.JACKS_PER_FAMILIAR * relicMult * jackdUpMult;
+          const mindAndSoul = this.upgrades.level('MIND_AND_SOUL');
+          const effectiveFamiliars = FAMILIAR.JACKS_PER_FAMILIAR + mindAndSoul * FAMILIAR.MIND_AND_SOUL_PER_LEVEL;
+          const famScaledRaw = effectiveFamiliars * relicMult * jackdUpMult;
           const clicks = Math.floor(famScaledRaw) + (Math.random() < (famScaledRaw % 1) ? 1 : 0);
           if (key === 'artisan') {
             this.handleArtisanJackBatch(clicks);
@@ -846,6 +884,10 @@ export class AppComponent implements OnInit, OnDestroy {
       beads:                       JSON.parse(JSON.stringify(this.beadState)),
       autoSolveEnabled:            { ...this.autoSolveEnabled },
       gold2Progress:               JSON.parse(JSON.stringify(this.gold2Progress)),
+      merchantAutoBuySelections:   { ...this.merchantAutoBuySelections },
+      artificerActiveButton:       this.artificerActiveButton,
+      artificerInsight:            this.artificerInsight,
+      selectedEtchingLevel:        this.selectedEtchingLevel,
     };
   }
 
@@ -888,6 +930,16 @@ export class AppComponent implements OnInit, OnDestroy {
     this.autoSolveEnabled = s.autoSolveEnabled ? { ...s.autoSolveEnabled } : {};
     // Restore gold-2 progress state
     this.gold2Progress = s.gold2Progress ? JSON.parse(JSON.stringify(s.gold2Progress)) : {};
+    // Restore merchant auto-buyer selections
+    this.merchantAutoBuySelections = s.merchantAutoBuySelections ? { ...s.merchantAutoBuySelections } : {};
+    // Restore artificer state
+    this.artificerActiveButton = s.artificerActiveButton ?? 'study';
+    this.artificerInsight      = s.artificerInsight      ?? 0;
+    this.selectedEtchingLevel  = clamp(
+      s.selectedEtchingLevel ?? this.upgrades.level('EXTENDED_ETCHING'),
+      0,
+      this.upgrades.level('EXTENDED_ETCHING'),
+    );
     // Restore artisan timer — if still in the future, reschedule the completion callback
     this.artisanTimerUntil     = s.artisanTimerUntil     ?? 0;
     this.artisanTimerBatchSize = s.artisanTimerBatchSize  ?? 0;
@@ -929,6 +981,7 @@ export class AppComponent implements OnInit, OnDestroy {
         artisan:    this.upgrades.level('RELIC_ARTISAN'),
         necromancer:this.upgrades.level('RELIC_NECROMANCER'),
         merchant:   this.upgrades.level('RELIC_MERCHANT'),
+        artificer:  this.upgrades.level('RELIC_ARTIFICER'),
       },
       necromancerActiveButton: this.necromancerActiveButton,
       familiarTimers: this.familiarTimers,
@@ -943,7 +996,12 @@ export class AppComponent implements OnInit, OnDestroy {
         artisan:     this.wallet.getBeadMultiplier('artisan'),
         necromancer: this.wallet.getBeadMultiplier('necromancer'),
         merchant:    this.wallet.getBeadMultiplier('merchant'),
+        artificer:   this.wallet.getBeadMultiplier('artificer'),
       },
+      merchantAutoBuyers: this.merchantAutoBuyerInfo,
+      artificerActiveButton: this.artificerActiveButton,
+      artificerInsight: this.artificerInsight,
+      selectedKoboldLevel: this.selectedKoboldLevel,
     };
     const rates = calculatePerSecondRates(ctx);
     this.wallet.batchUpdate(() => {
@@ -961,6 +1019,19 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.setPerSecond('bone',            rates.bone);
       this.wallet.setPerSecond('brimstone',       rates.brimstone);
       this.wallet.setPerSecond('illicit-goods',   rates['illicit-goods']);
+      this.wallet.setPerSecond('mana',             rates.mana);
+      this.wallet.setPerSecond('construct',        rates.construct);
+      this.wallet.setPerSecond('concentrated-potion', rates['concentrated-potion']);
+      this.wallet.setPerSecond('pixie-dust',       rates['pixie-dust']);
+      this.wallet.setPerSecond('hearty-meal',      rates['hearty-meal']);
+      this.wallet.setPerSecond('soul-stone',       rates['soul-stone']);
+      this.wallet.setPerSecond('synaptical-potion', rates['synaptical-potion']);
+      this.wallet.setPerSecond('kobold-ear',        rates['kobold-ear']);
+      this.wallet.setPerSecond('kobold-tongue',     rates['kobold-tongue']);
+      this.wallet.setPerSecond('kobold-hair',       rates['kobold-hair']);
+      this.wallet.setPerSecond('kobold-fang',       rates['kobold-fang']);
+      this.wallet.setPerSecond('kobold-brain',      rates['kobold-brain']);
+      this.wallet.setPerSecond('kobold-feather',    rates['kobold-feather']);
       this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
     });
   }
@@ -989,6 +1060,8 @@ export class AppComponent implements OnInit, OnDestroy {
       relicLifetimeCount:     this.statsService.current.lifetimeCurrency['relic'] ?? 0,
       necromancerActiveButton:     this.necromancerActiveButton,
       necromancerClicksRemaining:  this.necromancerClicksRemaining,
+      artificerActiveButton:       this.artificerActiveButton,
+      artificerInsight:            this.artificerInsight,
     });
 
     // Visible upgrades (per category)
@@ -1091,6 +1164,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
     dispatchHeroClick(this.activeCharacterId, this.buildHeroActionCtx());
     if (this.activeCharacterId === 'necromancer') {
+      this._refreshDerived();
+      this.updateAllPerSecond();
+    }
+    if (this.activeCharacterId === 'artificer') {
       this._refreshDerived();
       this.updateAllPerSecond();
     }
@@ -1399,6 +1476,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!this.activeCharacterInfo) return [];
     const charId = this.activeCharacterInfo.id;
     if (charId === 'necromancer') return ['necromancer-defile', 'necromancer-ward'];
+    if (charId === 'artificer') return ['artificer-study', 'artificer-reflect'];
     return [charId];
   }
 
@@ -1406,6 +1484,8 @@ export class AppComponent implements OnInit, OnDestroy {
   familiarLabel(key: string): string {
     if (key === 'necromancer-defile') return 'Exhume';
     if (key === 'necromancer-ward')   return 'Ward';
+    if (key === 'artificer-study')    return 'Study';
+    if (key === 'artificer-reflect')  return 'Reflect';
     return 'Familiar';
   }
 
@@ -1478,6 +1558,91 @@ export class AppComponent implements OnInit, OnDestroy {
     const curEnd = Math.max(now, this.familiarTimers[key] ?? 0);
     const maxEnd = now + this.familiarMaxTimeSec * 1000;
     return curEnd < maxEnd;
+  }
+
+  // ── Spreading Soul — Summon All ──────────────────────────────
+
+  /** Whether the Spreading Soul upgrade is purchased. */
+  get spreadingSoulUnlocked(): boolean {
+    return this.upgrades.level('SPREADING_SOUL') >= 1;
+  }
+
+  /**
+   * All jack allocation keys across all unlocked characters.
+   * Used by Summon All to fill all familiar bars.
+   */
+  private get allFamiliarKeys(): string[] {
+    const keys: string[] = [];
+    for (const char of this.unlockedCharacters) {
+      if (char.id === 'necromancer') {
+        keys.push('necromancer-defile', 'necromancer-ward');
+      } else if (char.id === 'artificer') {
+        keys.push('artificer-study', 'artificer-reflect');
+      } else {
+        keys.push(char.id);
+      }
+    }
+    return keys;
+  }
+
+  /** Whether SUMMON ALL can be used — has upgrade, familiar unlocked, has stones, and at least one familiar not maxed. */
+  get canSummonAll(): boolean {
+    if (!this.familiarUnlocked || !this.spreadingSoulUnlocked) return false;
+    if (!this.wallet.canAfford('soul-stone', 1)) return false;
+    const now = Date.now();
+    const maxEndMs = this.familiarMaxTimeSec * 1000;
+    return this.allFamiliarKeys.some(key => {
+      const curEnd = Math.max(now, this.familiarTimers[key] ?? 0);
+      return curEnd < now + maxEndMs;
+    });
+  }
+
+  /**
+   * Distribute soul stones across all familiar bars, prioritizing
+   * the ones with the lowest remaining time to keep them balanced.
+   * Spends one stone at a time to the neediest familiar until
+   * all are full or stones run out.
+   */
+  summonAll(): void {
+    if (!this.familiarUnlocked || !this.spreadingSoulUnlocked) return;
+
+    const now = Date.now();
+    const maxEndMs = now + this.familiarMaxTimeSec * 1000;
+    const timePerStoneMs = this.familiarTimePerStoneSec * 1000;
+
+    // Build a working copy of familiar end times
+    const keys = this.allFamiliarKeys;
+    const endTimes: Record<string, number> = {};
+    for (const key of keys) {
+      endTimes[key] = Math.max(now, this.familiarTimers[key] ?? 0);
+    }
+
+    let stonesAvailable = Math.floor(this.wallet.get('soul-stone'));
+    let stonesSpent = 0;
+
+    while (stonesAvailable > 0) {
+      // Find the familiar with the lowest remaining time that isn't full
+      let lowestKey: string | null = null;
+      let lowestEnd = Infinity;
+      for (const key of keys) {
+        if (endTimes[key] < maxEndMs && endTimes[key] < lowestEnd) {
+          lowestEnd = endTimes[key];
+          lowestKey = key;
+        }
+      }
+      if (!lowestKey) break; // all familiars are full
+
+      // Feed one stone to the neediest familiar
+      endTimes[lowestKey] = Math.min(endTimes[lowestKey] + timePerStoneMs, maxEndMs);
+      stonesAvailable--;
+      stonesSpent++;
+    }
+
+    if (stonesSpent > 0) {
+      this.wallet.remove('soul-stone', stonesSpent);
+      this.familiarTimers = { ...endTimes };
+      this.updateAllPerSecond();
+    }
   }
 
   // ── Minigame unlock ────────────────────────────────────────────
@@ -1628,6 +1793,9 @@ export class AppComponent implements OnInit, OnDestroy {
       startArtisanTimer:      (batchSize) => this.startArtisanTimer(batchSize),
       necromancerActiveButton: this.necromancerActiveButton,
       necromancerDecrementClick: () => this.necromancerDecrementClick(),
+      artificerActiveButton: this.artificerActiveButton,
+      artificerInsight: this.artificerInsight,
+      setArtificerInsight: (v: number) => { this.artificerInsight = v; },
       beadMultiplier: (charId: string) => this.wallet.getBeadMultiplier(charId),
       hasUnfoundBlueBead: (charId: string) => this.minigameUnlocked && this.hasUnfoundBlueBead(charId),
       onBlueBeadFound: (charId: string) => this.findBlueBead(charId),
@@ -1657,6 +1825,9 @@ export class AppComponent implements OnInit, OnDestroy {
       relicLevel:             (charId) => this.upgrades.level(`RELIC_${charId.toUpperCase()}`),
       necromancerActiveButton: () => this.necromancerActiveButton,
       necromancerDecrementClick: () => this.necromancerDecrementClick(),
+      artificerActiveButton: () => this.artificerActiveButton,
+      artificerInsight: () => this.artificerInsight,
+      setArtificerInsight: (v: number) => { this.artificerInsight = v; },
       beadMultiplier: (charId: string) => this.wallet.getBeadMultiplier(charId),
       hasUnfoundJackBead: (charId: string) => this.minigameUnlocked && this.hasUnfoundJackBead(charId),
       onJackBeadFound: (charId: string) => this.findJackBead(charId),

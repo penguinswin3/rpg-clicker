@@ -75,6 +75,10 @@ export class WalletService {
     { id: 'forbidden-tome',      ...CURRENCY_FLAVOR['forbidden-tome'],         requiredCharacterId: 'merchant',  manualUnlock: true },
     { id: 'magical-implement',   ...CURRENCY_FLAVOR['magical-implement'],      requiredCharacterId: 'merchant',  manualUnlock: true },
 
+    // ── Artificer ────────────────────────────────────────────────────
+    { id: 'mana',                ...CURRENCY_FLAVOR['mana'],                  requiredCharacterId: 'artificer'      },
+    { id: 'construct',           ...CURRENCY_FLAVOR['construct'],              requiredCharacterId: 'artificer', manualUnlock: true },
+
   ];
 
   private readonly stateSource = new BehaviorSubject<WalletState>(

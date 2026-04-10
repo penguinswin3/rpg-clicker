@@ -264,28 +264,23 @@ export function rollNecromancerSwitchClicks(extendedRitualLevel: number): number
 
 // ── Merchant ────────────────────────────────────────────────
 
-/** Illicit Goods earned per Merchant hero-button click. */
-export function calcMerchantGoodsPerClick(backAlleyDealsLevel: number, blackMarketLevel: number): number {
-  return 1 + backAlleyDealsLevel + blackMarketLevel;
+/** Number of illicit goods opened per Merchant hero-button click (1 base + Boxing Day). */
+export function calcMerchantOpensPerClick(boxingDayLevel: number): number {
+  return 1 + boxingDayLevel;
 }
 
-/** Percent chance to double illicit goods per click (Smuggler's Network). */
+/** Percent chance to double the goods opened per click (Smuggler's Network, 4% per level). */
 export function calcMerchantDoubleChance(smugglerNetworkLevel: number): number {
-  return smugglerNetworkLevel;
-}
-
-/** Gold awarded per crate opening from Fenced Goods upgrade. */
-export function calcMerchantFencedGold(fencedGoodsLevel: number): number {
-  return fencedGoodsLevel * MERCHANT_MG.FENCED_GOODS_GOLD_PER_LEVEL;
+  return smugglerNetworkLevel * MERCHANT_MG.SMUGGLER_NETWORK_CHANCE_PER_LEVEL;
 }
 
 /**
  * Roll the illicit goods loot table once.
  * Returns { currencyId, amount } or null if nothing.
- * contrabandLevel shifts weight toward rare entries.
+ * blackMarketLevel shifts weight toward rare entries.
  */
 export function rollIllicitLootTable(
-  contrabandLevel: number = 0,
+  blackMarketLevel: number = 0,
 ): { currencyId: string; amount: number } | null {
   const table = MERCHANT_MG.LOOT_TABLE;
   if (table.length === 0) return null;
@@ -293,8 +288,8 @@ export function rollIllicitLootTable(
   // Rare currency IDs
   const rareCurrencies = new Set(['monster-trophy', 'forbidden-tome', 'magical-implement']);
 
-  // Compute effective weights — contraband expertise boosts rare rows
-  const rareBonus = contrabandLevel * MERCHANT_MG.CONTRABAND_EXPERTISE_RARE_BONUS_PER_LEVEL;
+  // Compute effective weights — Black Market Connections boosts rare rows
+  const rareBonus = blackMarketLevel * MERCHANT_MG.BLACK_MARKET_RARE_BONUS_PER_LEVEL;
   const effectiveWeights = table.map(e =>
     rareCurrencies.has(e.currencyId) ? e.weight + rareBonus : e.weight
   );

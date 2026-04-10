@@ -63,7 +63,8 @@
       thief: isAutoSolveUnlocked('thief'),
       artisan: isAutoSolveUnlocked('artisan'),
       necromancer: isAutoSolveUnlocked('necromancer'),
-      merchant: isAutoSolveUnlocked('merchant')
+      merchant: isAutoSolveUnlocked('merchant'),
+      artificer: isAutoSolveUnlocked('artificer')
     }"
     [autoSolveGoodMode]="{
       fighter: isAutoSolveGood('fighter'),
@@ -73,7 +74,8 @@
       thief: isAutoSolveGood('thief'),
       artisan: isAutoSolveGood('artisan'),
       necromancer: isAutoSolveGood('necromancer'),
-      merchant: isAutoSolveGood('merchant')
+      merchant: isAutoSolveGood('merchant'),
+      artificer: isAutoSolveGood('artificer')
     }"
     [autoSolveEnabled]="autoSolveEnabled"
     (autoSolveEnabledChange)="autoSolveEnabled[$event.charId] = $event.enabled"
@@ -90,8 +92,15 @@
       thief: !!beadState['thief']?.['gold-2']?.found,
       artisan: !!beadState['artisan']?.['gold-2']?.found,
       necromancer: !!beadState['necromancer']?.['gold-2']?.found,
-      merchant: !!beadState['merchant']?.['gold-2']?.found
-    }" />
+      merchant: !!beadState['merchant']?.['gold-2']?.found,
+      artificer: !!beadState['artificer']?.['gold-2']?.found
+    }"
+    [merchantAutoBuySelections]="merchantAutoBuySelections"
+    (merchantAutoBuySelectionsChange)="onMerchantAutoBuySelectionsChange($event)"
+    (merchantAutoBuyerStateChange)="onMerchantAutoBuyerStateChange($event)"
+    [extendedEtchingLevel]="upgrades.level('EXTENDED_ETCHING')"
+    [selectedEtchingLevel]="selectedEtchingLevel"
+    (selectedEtchingLevelChange)="selectedEtchingLevel = $event" />
 
   <div class="game-wrapper">
 
@@ -237,7 +246,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
         <!-- ══ Hero button(s) — main focus ══ -->
         <div class="hero-area">
-          <ng-container *ngIf="activeCharacterId === 'necromancer'; else singleHeroButton">
+          <ng-container *ngIf="activeCharacterId === 'necromancer'; else checkArtificer">
             <div class="necro-buttons">
               <button class="hero-btn necro-btn"
                       [class.necro-active]="necromancerActiveButton === 'defile'"
@@ -271,6 +280,45 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
               </button>
             </div>
           </ng-container>
+          <ng-template #checkArtificer>
+            <ng-container *ngIf="activeCharacterId === 'artificer'; else singleHeroButton">
+              <div class="necro-buttons artificer-buttons">
+                <button class="hero-btn necro-btn artificer-btn"
+                        [class.necro-active]="artificerActiveButton === 'study'"
+                        [class.hero-holding]="heroHolding"
+                        [class.hero-pressed]="heroPressAnim"
+                        [style.--hero-pulse-color]="heroPulseColor"
+                        (click)="artificerActiveButton = 'study'; clickHero()"
+                        (mousedown)="artificerActiveButton = 'study'; heroHoldStart()"
+                        (mouseup)="heroHoldStop()"
+                        (mouseleave)="heroHoldStop()"
+                        (touchstart)="artificerActiveButton = 'study'; heroHoldStart()"
+                        (touchend)="heroHoldStop()"
+                        (touchcancel)="heroHoldStop()">
+                  <span class="hero-btn-label">[ >>> Study ]</span>
+                </button>
+                <div class="artificer-insight-bar">
+                  <div class="insight-fill" [style.width.%]="(artificerInsight / 8) * 100"></div>
+                  <span class="insight-text">{{ artificerInsight }} / 8</span>
+                </div>
+                <button class="hero-btn necro-btn artificer-btn"
+                        [class.necro-active]="artificerActiveButton === 'reflect'"
+                        [class.hero-holding]="heroHolding"
+                        [class.hero-pressed]="heroPressAnim"
+                        [style.--hero-pulse-color]="heroPulseColor"
+                        [disabled]="artificerInsight <= 0"
+                        (click)="artificerActiveButton = 'reflect'; clickHero()"
+                        (mousedown)="artificerActiveButton = 'reflect'; heroHoldStart()"
+                        (mouseup)="heroHoldStop()"
+                        (mouseleave)="heroHoldStop()"
+                        (touchstart)="artificerActiveButton = 'reflect'; heroHoldStart()"
+                        (touchend)="heroHoldStop()"
+                        (touchcancel)="heroHoldStop()">
+                  <span class="hero-btn-label">[ Reflect <<< ]</span>
+                </button>
+              </div>
+            </ng-container>
+          </ng-template>
           <ng-template #singleHeroButton>
             <button class="hero-btn"
                     [class.hero-holding]="heroHolding"
@@ -316,43 +364,27 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           <!-- ── Jacks ── -->
           <div class="jack-column">
 
-            <ng-container *ngIf="activeCharacterId === 'necromancer'; else singleJackColumn">
-              <!-- Necromancer: two side-by-side jack cards -->
+            <ng-container *ngIf="activeCharacterId === 'necromancer' || activeCharacterId === 'artificer'; else singleJackColumn">
+              <!-- Necromancer/Artificer: two side-by-side jack cards -->
               <div class="jack-row-necro">
-                <div class="jack-box">
-                  <div class="jack-box-label">Defile</div>
+                <div class="jack-box" *ngFor="let fk of familiarKeys">
+                  <div class="jack-box-label">{{ familiarLabel(fk) }}</div>
                   <div class="jack-controls">
-                    <button class="jack-alloc-btn" [disabled]="getJackCount('necromancer-defile') <= 0" (click)="deallocateJack('necromancer-defile')">[-]</button>
-                    <span class="jack-assigned-num">{{ getJackCount('necromancer-defile') }}</span>
-                    <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-defile')">[+]</button>
+                    <button class="jack-alloc-btn" [disabled]="getJackCount(fk) <= 0" (click)="deallocateJack(fk)">[-]</button>
+                    <span class="jack-assigned-num">{{ getJackCount(fk) }}</span>
+                    <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack(fk)">[+]</button>
                   </div>
                   <div class="jack-bulk-row" *ngIf="jacksOwned >= 5">
                     <button class="jack-bulk-btn"
-                            [disabled]="getJackCount('necromancer-defile') <= 0"
-                            (click)="deallocateAllJacks('necromancer-defile')">[NONE]</button>
+                            [disabled]="getJackCount(fk) <= 0"
+                            (click)="deallocateAllJacks(fk)">[NONE]</button>
                     <button class="jack-bulk-btn"
                             [disabled]="jacksPoolFree <= 0"
-                            (click)="allocateAllJacks('necromancer-defile')">[ALL]</button>
-                  </div>
-                </div>
-                <div class="jack-box">
-                  <div class="jack-box-label">Ward</div>
-                  <div class="jack-controls">
-                    <button class="jack-alloc-btn" [disabled]="getJackCount('necromancer-ward') <= 0" (click)="deallocateJack('necromancer-ward')">[-]</button>
-                    <span class="jack-assigned-num">{{ getJackCount('necromancer-ward') }}</span>
-                    <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-ward')">[+]</button>
-                  </div>
-                  <div class="jack-bulk-row" *ngIf="jacksOwned >= 5">
-                    <button class="jack-bulk-btn"
-                            [disabled]="getJackCount('necromancer-ward') <= 0"
-                            (click)="deallocateAllJacks('necromancer-ward')">[NONE]</button>
-                    <button class="jack-bulk-btn"
-                            [disabled]="jacksPoolFree <= 0"
-                            (click)="allocateAllJacks('necromancer-ward')">[ALL]</button>
+                            (click)="allocateAllJacks(fk)">[ALL]</button>
                   </div>
                 </div>
               </div>
-              <!-- Shared pool info for necromancer -->
+              <!-- Shared pool info -->
               <div class="jack-pool-info" [style.visibility]="jacksPoolFree > 0 ? 'visible' : 'hidden'">
                 Avail: <span class="jack-pool-count">{{ jacksPoolFree }}</span>
               </div>
@@ -386,11 +418,22 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           <!-- ── Familiars ── -->
           <div class="familiar-column" *ngIf="familiarUnlocked">
             <div class="familiar-panel" [class.familiars-paused]="familiarsPaused">
-              <button class="familiar-pause-btn"
-                      [class.paused]="familiarsPaused"
-                      (click)="toggleFamiliarsPaused()">
-                {{ familiarsPaused ? '[ RESUME ]' : '[ PAUSE ]' }}
-              </button>
+              <div class="familiar-top-row">
+                <button class="familiar-pause-btn"
+                        [class.paused]="familiarsPaused"
+                        (click)="toggleFamiliarsPaused()">
+                  {{ familiarsPaused ? '[ RESUME ]' : '[ PAUSE ]' }}
+                </button>
+                <span class="familiar-count-info" *ngIf="upgrades.level('MIND_AND_SOUL') > 0">
+                  ×{{ 1 + upgrades.level('MIND_AND_SOUL') }} each
+                </span>
+                <button class="familiar-btn summon-all-btn"
+                        *ngIf="(activeCharacterId === 'necromancer' || activeCharacterId === 'artificer') && spreadingSoulUnlocked"
+                        [disabled]="!canSummonAll"
+                        (click)="summonAll()">
+                  [ SUMMON ALL ]
+                </button>
+              </div>
               <div class="familiar-boxes-row">
                 <ng-container *ngFor="let fk of familiarKeys; let last = last">
                   <div class="familiar-box">

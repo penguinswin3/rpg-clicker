@@ -180,11 +180,33 @@
         (gold2BeadFound)="gold2BeadFound.emit('merchant')"
         [gemHunterLevel]="gemHunterLevel"
         [gold2BeadFoundState]="!!gold2BeadFoundState['merchant']"
+        [savedAutoBuySelections]="merchantAutoBuySelections"
+        (autoBuySelectionsChange)="merchantAutoBuySelectionsChange.emit($event)"
+        (autoBuyerStateChange)="merchantAutoBuyerStateChange.emit($event)"
+      />
+    </ng-container>
+
+    <!-- ── Artificer: Etching minigame ─── -->
+    <ng-container *ngIf="activeCharacterId === 'artificer'">
+      <app-artificer-minigame
+        [extendedEtchingLevel]="extendedEtchingLevel"
+        [selectedEtchingLevel]="selectedEtchingLevel"
+        (selectedEtchingLevelChange)="selectedEtchingLevelChange.emit($event)"
+        [autoSolveUnlocked]="!!autoSolveUnlocked['artificer']"
+        [autoSolveEnabled]="!!autoSolveEnabled['artificer']"
+        [autoSolveGoodMode]="!!autoSolveGoodMode['artificer']"
+        (autoSolveEnabledChange)="onAutoSolveToggle('artificer', $event)"
+        (goldBeadFound)="goldBeadFound.emit('artificer')"
+        [gold2Progress]="gold2Progress['artificer']"
+        (gold2ProgressChange)="onGold2Progress('artificer', $event)"
+        (gold2BeadFound)="gold2BeadFound.emit('artificer')"
+        [gemHunterLevel]="gemHunterLevel"
+        [gold2BeadAlreadyFound]="!!gold2BeadFoundState['artificer']"
       />
     </ng-container>
 
     <!-- ── Other characters: placeholder ── -->
-    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian' && activeCharacterId !== 'thief' && activeCharacterId !== 'artisan' && activeCharacterId !== 'necromancer' && activeCharacterId !== 'merchant'">
+    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian' && activeCharacterId !== 'thief' && activeCharacterId !== 'artisan' && activeCharacterId !== 'necromancer' && activeCharacterId !== 'merchant' && activeCharacterId !== 'artificer'">
 
       <div class="mg-divider">+----------+</div>
 

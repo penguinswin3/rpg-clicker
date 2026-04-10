@@ -24,7 +24,7 @@ import {
   calcNecromancerBoneYield, calcNecromancerWardXpCost,
   calcNecromancerBrimstoneYield, calcNecromancerSwitchMin,
   calcNecromancerSwitchMax, calcGraveLootingChance,
-  calcMerchantFencedGold,
+  calcMerchantOpensPerClick, calcMerchantDoubleChance,
 } from './yield-helpers';
 
 // ── Context required by the builder ──────────────────────────
@@ -42,6 +42,10 @@ export interface HeroStatsContext {
   necromancerActiveButton: 'defile' | 'ward';
   /** How many clicks remain before the necromancer button switches. */
   necromancerClicksRemaining: number;
+  /** Which artificer button is currently active. */
+  artificerActiveButton: 'study' | 'reflect';
+  /** Current insight level of the Artificer. */
+  artificerInsight: number;
 }
 
 // ── Public API ──────────────────────────────────────────────
@@ -57,6 +61,7 @@ export function getQuestBtnLabel(charId: string): string {
     artisan:    CHARACTER_FLAVOR.ARTISAN.questBtn,
     necromancer: CHARACTER_FLAVOR.NECROMANCER.questBtnExhume,
     merchant:   CHARACTER_FLAVOR.MERCHANT.questBtn,
+    artificer:  CHARACTER_FLAVOR.ARTIFICER.questBtnStudy,
   };
   return map[charId] ?? CHARACTER_FLAVOR.FIGHTER.questBtn;
 }
@@ -71,6 +76,7 @@ export function buildHeroStats(charId: string, ctx: HeroStatsContext): HeroStat[
     case 'artisan':     return buildArtisanStats(ctx);
     case 'necromancer': return buildNecromancerStats(ctx);
     case 'merchant':    return buildMerchantStats(ctx);
+    case 'artificer':   return buildArtificerStats(ctx);
     default:            return buildFighterStats(ctx);
   }
 }
@@ -249,17 +255,57 @@ function buildNecromancerStats(ctx: HeroStatsContext): HeroStat[] {
 
 function buildMerchantStats(ctx: HeroStatsContext): HeroStat[] {
   const u = ctx.upgrades;
-  const fencedGold    = calcMerchantFencedGold(u.level('FENCED_GOODS'));
+  const opensPerClick = calcMerchantOpensPerClick(u.level('BOXING_DAY'));
   const shadyBonus    = u.level('SHADY_CONNECTIONS') * MERCHANT_MG.SHADY_CONNECTIONS_BONUS_PER_LEVEL;
+  const rareChance    = u.level('BLACK_MARKET_CONNECTIONS') * MERCHANT_MG.BLACK_MARKET_RARE_BONUS_PER_LEVEL;
+  const doubleChance  = calcMerchantDoubleChance(u.level('SMUGGLER_NETWORK'));
 
   const stats: HeroStat[] = [
-    { label: HERO_STATS_FLAVOR.MERCHANT.GOODS_COST, value: `${MERCHANT_MG.GOODS_COST}` },
+    { label: HERO_STATS_FLAVOR.MERCHANT.GOODS_PER_CLICK, value: `${opensPerClick}` },
   ];
   if (shadyBonus > 0) {
     stats.push({ label: HERO_STATS_FLAVOR.MERCHANT.BONUS_LOOT, value: `+${shadyBonus}%` });
   }
-  if (fencedGold > 0) {
-    stats.push({ label: HERO_STATS_FLAVOR.MERCHANT.FENCED_GOLD, value: `${fencedGold}g` });
+  if (rareChance > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.MERCHANT.RARE_CHANCE, value: `+${rareChance}%` });
+  }
+  if (doubleChance > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.MERCHANT.DOUBLE_CHANCE, value: `${doubleChance}%` });
+  }
+  return stats;
+}
+
+function buildArtificerStats(ctx: HeroStatsContext): HeroStat[] {
+  const u = ctx.upgrades;
+  const deepStudy = u.level('DEEP_STUDY');
+  const focusedReflection = u.level('FOCUSED_REFLECTION');
+  const amplifiedInsight = u.level('AMPLIFIED_INSIGHT');
+  const arcaneIntellect = u.level('POTION_ARCANE_INTELLECT');
+  const maxInsight = YIELDS.ARTIFICER_MAX_INSIGHT + arcaneIntellect * YIELDS.ARTIFICER_ARCANE_INTELLECT_PER_LEVEL;
+  const maxConsume = YIELDS.ARTIFICER_MAX_CONSUME_PER_REFLECT;
+  const insightPerClick = YIELDS.ARTIFICER_INSIGHT_PER_CLICK + deepStudy;
+  const effectiveInsight = Math.min(32, maxInsight + amplifiedInsight * YIELDS.ARTIFICER_AMPLIFIED_INSIGHT_PER_LEVEL);
+  const maxMana = effectiveInsight * effectiveInsight;
+  const minConsume = Math.max(1, Math.min(maxConsume, maxInsight) - focusedReflection);
+  const activeLabel = ctx.artificerActiveButton === 'study' ? 'Study' : 'Reflect';
+
+  // Excess insight = how much remains after a reflect at max insight
+  const excessAfterReflect = maxInsight > maxConsume ? maxInsight - maxConsume : 0;
+
+  const stats: HeroStat[] = [
+    { label: HERO_STATS_FLAVOR.ARTIFICER.ACTIVE_BUTTON, value: activeLabel },
+    { label: HERO_STATS_FLAVOR.ARTIFICER.INSIGHT_LEVEL, value: `${ctx.artificerInsight} / ${maxInsight}` },
+    { label: HERO_STATS_FLAVOR.ARTIFICER.INSIGHT_PER_CLICK, value: `${insightPerClick}` },
+    { label: HERO_STATS_FLAVOR.ARTIFICER.MANA_PER_REFLECT, value: `${maxMana}` },
+  ];
+  if (focusedReflection > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.ARTIFICER.INSIGHT_CONSUMED, value: `${minConsume} - ${Math.min(maxConsume, maxInsight)}` });
+  }
+  if (amplifiedInsight > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.ARTIFICER.AMPLIFIED_BONUS, value: `+${amplifiedInsight}` });
+  }
+  if (arcaneIntellect > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.ARTIFICER.EXCESS_INSIGHT, value: `${excessAfterReflect}` });
   }
   return stats;
 }

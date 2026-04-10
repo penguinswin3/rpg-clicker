@@ -97,10 +97,18 @@ export class CharacterService {
     {
       id: 'merchant',
       name: CHARACTER_FLAVOR.MERCHANT.name,
-      color: '#b87333',
+      color: '#4c3a29',
       description: CHARACTER_FLAVOR.MERCHANT.desc,
       unlocked: false,
       ...charUnlock('merchant'),
+    },
+    {
+      id: 'artificer',
+      name: CHARACTER_FLAVOR.ARTIFICER.name,
+      color: '#7eb8d4',
+      description: CHARACTER_FLAVOR.ARTIFICER.desc,
+      unlocked: false,
+      ...charUnlock('artificer'),
     },
   ];
 

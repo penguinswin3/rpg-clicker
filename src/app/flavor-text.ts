@@ -38,6 +38,7 @@ export const CURRENCY_FLAVOR = {
   'monster-trophy':      { name: 'Monster Trophy',             symbol: 'ᛃ',  color: '#c94444' },
   'forbidden-tome':      { name: 'Forbidden Tome',             symbol: '⍯',  color: '#3e2e24' },
   'magical-implement':   { name: 'Magical Implement',          symbol: 'ᛗ',  color: '#3eafc9' },
+  'construct':           { name: 'Construct',                   symbol: '⚙',  color: '#7eb8d4' },
 
   /**
   Ideas for new Symbols
@@ -162,6 +163,18 @@ export const UPGRADE_FLAVOR = {
   FIND_FAMILIAR:            { name: 'Find Familiar',             desc: 'Summon a spectral familiar for each hero button. Feed it Soul Stones for temporary +1 jack power' },
   CONCENTRATED_SOULS:       { name: 'Concentrated Souls',        desc: 'Each Soul Stone fed to a familiar grants an additional +15s of familiar time per level' },
   VAULT_OF_SOULS:           { name: 'Vault of Souls',            desc: 'Increases the maximum familiar time cap by 5 minutes per level' },
+  SPREADING_SOUL:           { name: 'Spreading Soul',            desc: 'Summon familiars for all characters at once, distributing Soul Stones to the most needy first' },
+  MIND_AND_SOUL:            { name: 'Mind and Soul',             desc: 'Allows +1 additional active familiar per level, up to 20' },
+
+  // Artificer
+  DEEP_STUDY:               { name: 'Deep Study',               desc: '+1 insight per Study click (max insight bar reached in fewer clicks)' },
+  FOCUSED_REFLECTION:       { name: 'Focused Reflection',       desc: '-1 minimum insight consumed per Reflect (min 1)' },
+  AMPLIFIED_INSIGHT:        { name: 'Amplified Insight',         desc: '+1 level added to insight before squaring for mana (max 32 pre-square)' },
+  POTION_ARCANE_INTELLECT:  { name: 'Potion of Arcane Intellect', desc: '+8 maximum insight per level. Only 8 insight is consumed per Reflect; excess remains.' },
+
+  EXTENDED_ETCHING:         { name: 'Extended Etching',          desc: '+1 symbol to the Etching sequence, ×2 constructs per additional symbol' },
+  SECOND_CHANCE:            { name: 'Second Chance',             desc: 'Allows one retry on a failed Etching round' },
+  ETCHING_MASTERY:          { name: 'Etching Mastery',           desc: 'Awards bonus resources equal to (times selected × level) per Etching symbol' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
   RELIC_FIGHTER:    { name: 'Crown of Hireling Command',          desc: 'Each Jack hires hirelings, who in turn hire hirelings' },
@@ -173,18 +186,17 @@ export const UPGRADE_FLAVOR = {
   RELIC_NECROMANCER:{ name: 'Jeweled Hand of the Night',         desc: 'Defile and Ward Jacks each act regardless of which button is active, and produce double the yield' },
 
   // Merchant
-  BACK_ALLEY_DEALS:     { name: 'Back Alley Deals',            desc: '+1 illicit goods per click' },
+  BOXING_DAY:            { name: 'Boxing Day',                  desc: 'Opens 1 additional illicit goods per click' },
   SHADY_CONNECTIONS:     { name: 'Shady Connections',           desc: '+3% chance to find bonus loot when opening goods' },
-  BLACK_MARKET_ACCESS:   { name: 'Black Market Access',         desc: '+1 illicit goods per click and double rare currency rolls' },
-  SMUGGLER_NETWORK:      { name: "Smuggler's Network",          desc: '+1% chance per level to receive double illicit goods' },
-  CONTRABAND_EXPERTISE:  { name: 'Contraband Expertise',        desc: 'Higher tier loot becomes more common' },
-  FENCED_GOODS:          { name: 'Fenced Goods',                desc: 'Opening illicit goods also yields bonus gold' },
-  TROPHY_COLLECTOR:      { name: 'Trophy Collector',            desc: 'Monster Trophies yield bonus XP when acquired' },
-  FORBIDDEN_KNOWLEDGE:   { name: 'Forbidden Knowledge',         desc: 'Forbidden Tomes have a chance to award Synaptical Potions' },
-  ARCANE_APPRAISAL:      { name: 'Arcane Appraisal',            desc: 'Magical Implements have a chance to award Gemstones' },
+  BLACK_MARKET_CONNECTIONS: { name: 'Black Market Connections', desc: '+1% chance per level at rare rolls when opening goods' },
+  SMUGGLER_NETWORK:      { name: "Smuggler's Network",          desc: '+4% chance per level to double the goods opened per click' },
+  RIGGED_GAME:           { name: 'Rigged Game',                desc: '-1% cost on all stock market items per level' },
+  DIVERSIFIED_PORTFOLIO: { name: 'Diversified Portfolio',      desc: 'Unlocks a new set of purchaseable resources on the exchange per level' },
+  STABLE_MARKET:         { name: 'Stable Market',              desc: '-1% max price on all stock market items per level' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
-  RELIC_MERCHANT:   { name: 'Ledger of Infinite Commerce',      desc: 'Jacks open goods automatically and always roll the rarest tier first' },
+  RELIC_MERCHANT:   { name: 'Ledger of Infinite Commerce',      desc: 'Each assigned Jack purchases 10 of a random resource for free per hero button press' },
+  RELIC_ARTIFICER:  { name: 'Tome of Boundless Creation',       desc: 'Jacks double the mana produced by Reflect and gain +1 insight per Study' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
@@ -337,6 +349,12 @@ export const CHARACTER_FLAVOR = {
     desc: 'A cunning dealer who trades in goods others dare not touch. His connections span every dark corner of the realm.',
     questBtn: 'Fence Goods',
   },
+  ARTIFICER: {
+    name: 'Artificer',
+    desc: 'A scholar of arcane constructs. She reads the forbidden tomes to gain insight, then channels that knowledge into raw mana and wondrous constructs.',
+    questBtnStudy: '>>> Study',
+    questBtnReflect: 'Reflect <<<',
+  },
 } as const;
 
 // ── Minigames ─────────────────────────────────────────────────
@@ -372,6 +390,10 @@ export const MINIGAME_FLAVOR = {
   MERCHANT: {
     name: 'Black Market Exchange',
     desc: 'Buy low, sell never.\nPrices shift every few seconds.',
+  },
+  ARTIFICER: {
+    name: 'Etching',
+    desc: 'Repeat the flashing symbol sequence.\nPerfect recall yields Constructs.',
   },
 } as const;
 
@@ -461,9 +483,19 @@ export const HERO_STATS_FLAVOR = {
     GRAVE_LOOT_CHANCE:'Grave Loot     :',
   },
   MERCHANT: {
-    GOODS_COST:       'Goods Per Crate  :',
+    GOODS_PER_CLICK:  'Goods Per Click  :',
     BONUS_LOOT:       'Bonus Roll       :',
-    FENCED_GOLD:      'Fenced Gold      :',
+    RARE_CHANCE:      'Rare Chance      :',
+    DOUBLE_CHANCE:    'Double Chance    :',
+  },
+  ARTIFICER: {
+    ACTIVE_BUTTON:    'Active Ability :',
+    INSIGHT_LEVEL:    'Insight Level  :',
+    INSIGHT_PER_CLICK:'Insight / Click:',
+    MANA_PER_REFLECT: 'Max Mana / Ref :',
+    INSIGHT_CONSUMED: 'Consumed Range :',
+    AMPLIFIED_BONUS:  'Amplified Bonus:',
+    EXCESS_INSIGHT:   'Excess Insight :',
   },
 } as const;
 
@@ -535,6 +567,14 @@ export const MINIGAME_MSG = {
     RARE_FIND:    'A rare deal appears on the exchange!',
   },
 
+  ARTIFICER: {
+    IDLE:         'Repeat the flashing symbols!\nConcentrate...',
+    ROUND_START:  (len: number) => `${len}-symbol sequence. Watch carefully!`,
+    SUCCESS:      'Etching complete! Constructs forged.',
+    FAIL:         'Wrong symbol — Etching failed!',
+    RETRY:        'Second Chance! Try again...',
+  },
+
 };
 
 // ── Bead System ───────────────────────────────────────────────
@@ -599,8 +639,14 @@ export const BEAD_FLAVOR: Record<string, Record<string, BeadSlotFlavor>> = {
   merchant: {
     'blue-1': { name: 'Bead of Fortune',         lore: 'Minted from the first coin of a merchant prince, it doubles the yield of every illicit deal.',                        effect: '2× resource yields from this character.' },
     'gold-1': { name: 'Bead of the Broker',      lore: 'Passed through a thousand secret transactions, it enables a tireless buyer on the exchange.',                           effect: 'Unlocks 1 auto-buyer on the stock market.' },
-    'gold-2': { name: 'Bead of the Kingpin',     lore: 'Only the most connected trader can reveal its secrets.',                                                               effect: 'Unlocks a 2nd auto-buyer on the stock market.' },
+    'gold-2': { name: 'Bead of the Kingpin',     lore: 'Only the most connected trader can reveal its secrets.',                                                               effect: 'Unlocks unlimited auto-buyers on the stock market.' },
     'blue-2': { name: 'Bead of the Cartel',      lore: 'Forged in the fires of a vast smuggling empire, it amplifies every underground operation.',                            effect: '2× resource yields from this character (stacks).' },
+  },
+  artificer: {
+    'blue-1': { name: 'Bead of Arcana',          lore: 'Crystallized from raw insight, it amplifies every arcane construct forged.',                                           effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of the Automaton',   lore: 'Imbued with the memory of a thousand etchings, it traces the symbols without mortal guidance.',                         effect: 'Unlocks basic sidequest automation.' },
+    'gold-2': { name: 'Bead of the Paradox',     lore: 'Born from deliberate failure, it bends the rules of creation.',                                                        effect: 'Auto-etch never fails and yields bonus constructs.' },
+    'blue-2': { name: 'Bead of the Workshop',    lore: 'Hammered into shape by tireless familiars, it doubles the output of every workshop cycle.',                             effect: '2× resource yields from this character (stacks).' },
   },
 };
 
@@ -618,6 +664,7 @@ export const GOLD2_STEP_MESSAGES: Record<string, string[]> = {
   artisan:     ['The gem glimmers knowingly.',    'A facet catches the light.',    'The jewel responds to your touch.',  'Crystalline whispers grow.',     'The pattern sharpens.',      'Cut after cut, the gem obeys.', 'Brilliance takes shape.', 'The stone sings.', 'One final selection.'],
   necromancer: ['The spirits fall silent.',        'The circle holds.',             'Dominion approaches.'],
   merchant:    ['The ledger grows heavy…',        'A deal is struck in the dark.', 'The network expands.',          'Profits beyond measure.',    'The final shipment arrives.'],
+  artificer:   ['The construct hums…',            'Symbols align in memory.',      'The pattern crystallizes.',      'One final etching remains.'],
 };
 
 
@@ -673,6 +720,12 @@ export const LOG_MSG = {
       GOODS_ACQUIRED:        (goods: string, xp: string) => `You acquired illicit goods from your contacts. (${goods}, ${xp})`,
       GOODS_DOUBLE:          (goods: string, xp: string) => `Double shipment! Extra illicit goods acquired! (${goods}, ${xp})`,
       NOT_ENOUGH_GOODS:      (need: string, have: string) => `Not enough illicit goods to open. Need ${need}, have ${have}.`,
+    },
+    ARTIFICER: {
+      STUDY:                 (insight: string) => `You studied the forbidden tomes and gained insight. (${insight})`,
+      STUDY_MAX:             'Insight is already at maximum!',
+      REFLECT:               (mana: string, insight: string) => `You reflected and converted insight into mana. (${mana}, ${insight})`,
+      REFLECT_NO_INSIGHT:    'No insight to reflect upon!',
     },
   },
 
@@ -753,6 +806,14 @@ export const LOG_MSG = {
     FENCED_GOLD:             (gold: string) => `Fenced the goods for bonus gold! (${gold})`,
     PURCHASE:                (item: string, qty: number, cost: string) => `Purchased ${qty}× ${item} from the exchange. (${cost})`,
     AUTO_BUY:                (item: string, qty: number, cost: string) => `Auto-buy: ${qty}× ${item}. (${cost})`,
+  },
+
+  MG_ARTIFICER: {
+    ETCHING_START:           (cost: string) => `Etching begun! (${cost})`,
+    CONSTRUCT_UNLOCKED:      'Constructs discovered! A new currency!',
+    ETCHING_SUCCESS:         (constructs: string, xp: string) => `Etching complete! (${constructs}, ${xp})`,
+    ETCHING_FAIL:            'Etching failed — wrong symbol!',
+    ETCHING_RETRY:           'Second Chance activated — try again!',
   },
 
   // ── System messages ───────────────────────────────────────────

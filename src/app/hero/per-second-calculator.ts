@@ -6,7 +6,8 @@
  * ════════════════════════════════════════════════════════════
  */
 
-import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG } from '../game-config';
+import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG, FIGHTER_MG } from '../game-config';
+import { KOBOLD_VARIANTS } from '../flavor-text';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { roundTo } from '../utils/mathUtils';
 import {
@@ -20,6 +21,7 @@ import {
   expectedGemstonePerAppraisalJack, expectedMetalPerAppraisalJack,
   calcNecromancerBoneYield, calcNecromancerWardXpCost,
   calcNecromancerBrimstoneYield, calcGraveLootingChance,
+  calcMerchantOpensPerClick,
 } from './yield-helpers';
 
 // ── Context ─────────────────────────────────────────────────
@@ -44,6 +46,14 @@ export interface PerSecondContext {
   familiarsPaused: boolean;
   /** Per-character bead yield multipliers (2^N where N = socketed blue beads). */
   beadMultipliers?: Record<string, number>;
+  /** Active merchant auto-buyers — each entry represents a stock market auto-purchase. */
+  merchantAutoBuyers?: { currencyId: string; goldCostPerTick: number; qtyPerTick: number }[];
+  /** Which artificer button is currently active ('study' or 'reflect'). */
+  artificerActiveButton: 'study' | 'reflect';
+  /** Current insight level of the Artificer (used for mana output estimate). */
+  artificerInsight: number;
+  /** Currently-selected kobold level in the fighter minigame (for secondary drop rates). */
+  selectedKoboldLevel: number;
 }
 
 // ── Result ──────────────────────────────────────────────────
@@ -63,6 +73,19 @@ export interface PerSecondRates {
   bone:              number;
   brimstone:         number;
   'illicit-goods':   number;
+  mana:              number;
+  construct:         number;
+  'concentrated-potion': number;
+  'pixie-dust':      number;
+  'hearty-meal':     number;
+  'soul-stone':      number;
+  'synaptical-potion': number;
+  'kobold-ear':      number;
+  'kobold-tongue':   number;
+  'kobold-hair':     number;
+  'kobold-fang':     number;
+  'kobold-brain':    number;
+  'kobold-feather':  number;
 }
 
 /**
@@ -77,6 +100,9 @@ export type PerSecondBreakdown = Record<string, Record<string, number>>;
 /** Calculate display per-second rates for all currencies. */
 export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const u = ctx.upgrades;
+
+  // ── Bead multipliers ─────────────────────────────────────────
+  const bm = (charId: string) => ctx.beadMultipliers?.[charId] ?? 1;
 
   // ── Relic levels ──────────────────────────────────────────
   const rl = ctx.relicLevels;
@@ -94,14 +120,16 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   // Jack'd Up: all effective jack counts are multiplied by JACKD_UP_SPEED_MULT.
   const jackdUpSpeedMult = ctx.jackdUpUnlocked ? JACKD_UP_SPEED_MULT : 1;
   const now = Date.now();
-  const fam = (key: string) => ctx.familiarsPaused ? 0 : ((ctx.familiarTimers[key] ?? 0) > now ? FAMILIAR.JACKS_PER_FAMILIAR : 0);
+  const mindAndSoul = ctx.upgrades.level('MIND_AND_SOUL');
+  const effectiveFamiliars = FAMILIAR.JACKS_PER_FAMILIAR + mindAndSoul * FAMILIAR.MIND_AND_SOUL_PER_LEVEL;
+  const fam = (key: string) => ctx.familiarsPaused ? 0 : ((ctx.familiarTimers[key] ?? 0) > now ? effectiveFamiliars : 0);
   const fighterJacks    = ((ctx.jacksAllocations['fighter']    ?? 0) + fam('fighter'))    * (hasFighterRelic ? 2 : 1) * jackdUpSpeedMult;
   const rangerJacks     = ((ctx.jacksAllocations['ranger']     ?? 0) + fam('ranger'))     * (hasRangerRelic ? 2 : 1) * jackdUpSpeedMult;
   const apothecaryJacks = (ctx.jackStarved['apothecary'] ? 0 : ((ctx.jacksAllocations['apothecary'] ?? 0) + fam('apothecary'))) * (hasApothecaryRelic ? 2 : 1) * jackdUpSpeedMult;
   const culinarianJacks = (ctx.jackStarved['culinarian'] ? 0 : ((ctx.jacksAllocations['culinarian'] ?? 0) + fam('culinarian'))) * (hasCulinarianRelic ? 2 : 1) * jackdUpSpeedMult;
   const thiefJacks      = ((ctx.jacksAllocations['thief'] ?? 0) + fam('thief'))           * (hasThiefRelic ? 2 : 1) * jackdUpSpeedMult;
   const artisanJacks    = (ctx.jackStarved['artisan'] ? 0 : ((ctx.jacksAllocations['artisan'] ?? 0) + fam('artisan'))) * (hasArtisanRelic ? 2 : 1) * jackdUpSpeedMult;
-  const merchantJacks   = (ctx.jackStarved['merchant'] ? 0 : ((ctx.jacksAllocations['merchant'] ?? 0) + fam('merchant'))) * (hasMerchantRelic ? 2 : 1) * jackdUpSpeedMult;
+  const merchantJacks   = (ctx.jackStarved['merchant'] ? 0 : ((ctx.jacksAllocations['merchant'] ?? 0) + fam('merchant'))) * jackdUpSpeedMult;
 
   // ── Derived values ────────────────────────────────────────
   const goldPerClick    = calcGoldPerClick(u.level('BETTER_BOUNTIES'));
@@ -115,6 +143,20 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
 
   // ── Fighter relic: each jack also earns hireling gold ─────
   const fighterRelicGold = (hasFighterRelic && fighterJacks > 0) ? fighterJacks * autoGoldPerSec : 0;
+
+  // ── Kobold part rates from fighter jacks ─────────────────
+  // kobold-ear: 1 per kill, exempt from bead multiplier
+  const koboldEarPerSec = fighterJacks * FIGHTER_MG.KOBOLD_EAR_REWARD;
+  // Secondary drop: based on selected kobold level variant
+  const koboldVariantIdx = Math.min((ctx.selectedKoboldLevel ?? 1) - 1, KOBOLD_VARIANTS.length - 1);
+  const koboldVariant = KOBOLD_VARIANTS[koboldVariantIdx];
+  const gildedBladeLevel = u.level('GILDED_BLADE');
+  const koboldSecondaryRates: Record<string, number> = {};
+  if (koboldVariant.secondaryDrop && fighterJacks > 0) {
+    const drop = koboldVariant.secondaryDrop;
+    const effectiveChance = Math.min(100, drop.chance + gildedBladeLevel) / 100;
+    koboldSecondaryRates[drop.currencyId] = fighterJacks * effectiveChance * drop.amount * bm('fighter');
+  }
 
   // ── Thief rates ───────────────────────────────────────────
   // Instead of zeroing out while stunned (which causes flashing in the display),
@@ -208,28 +250,80 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const graveLootJewelryPerSec = defileJacks * graveLootChance * YIELDS.GRAVE_LOOTING_JEWELRY_WEIGHT * YIELDS.GRAVE_LOOTING_JEWELRY_AMOUNT * (hasNecromancerRelic ? 2 : 1);
 
   // ── Merchant rates ─────────────────────────────────────────
-  // Merchant jacks now consume illicit goods to open crates (like the old minigame).
-  // They consume GOODS_COST per click and produce loot-table rewards.
-  const merchantGoodsDrain = merchantJacks * MERCHANT_MG.GOODS_COST * (hasMerchantRelic ? 2 : 1);
+  // Merchant jacks now consume illicit goods to open crates.
+  // They consume opensPerClick goods per tick and produce loot-table rewards.
+  const merchantOpensPerClick = calcMerchantOpensPerClick(u.level('BOXING_DAY'));
+  const merchantGoodsDrain = merchantJacks * merchantOpensPerClick;
 
-  // ── Bead multipliers ─────────────────────────────────────────
-  const bm = (charId: string) => ctx.beadMultipliers?.[charId] ?? 1;
+  // ── Artificer rates ─────────────────────────────────────────
+  const hasArtificerRelic = (rl['artificer'] ?? 0) >= 1;
+  const rawStudyJacks   = ((ctx.jacksAllocations['artificer-study']   ?? 0) + fam('artificer-study'))   * jackdUpSpeedMult;
+  const rawReflectJacks = ((ctx.jacksAllocations['artificer-reflect'] ?? 0) + fam('artificer-reflect')) * jackdUpSpeedMult;
+  const studyJacks   = rawStudyJacks;
+  const reflectJacks = rawReflectJacks;
+  // Reflect mana estimate: uses current insight as proxy for average output
+  const amplifiedLevel = ctx.upgrades.level('AMPLIFIED_INSIGHT');
+  const arcaneIntellectLevel = ctx.upgrades.level('POTION_ARCANE_INTELLECT');
+  const maxInsight = YIELDS.ARTIFICER_MAX_INSIGHT + arcaneIntellectLevel * YIELDS.ARTIFICER_ARCANE_INTELLECT_PER_LEVEL;
+  const effInsight     = Math.min(32, maxInsight + amplifiedLevel * YIELDS.ARTIFICER_AMPLIFIED_INSIGHT_PER_LEVEL);
+  const avgManaPerReflect = effInsight > 0 ? effInsight * effInsight * (hasArtificerRelic ? 2 : 1) : 0;
+  const artificerManaPerSec = reflectJacks * avgManaPerReflect;
+
+  // ── Merchant auto-buyers ───────────────────────────────────
+  // Each active auto-buyer drains gold and produces its target resource every tick.
+  const autoBuyers = ctx.merchantAutoBuyers ?? [];
+  let autoBuyGoldDrain = 0;
+  const autoBuyGains: Record<string, number> = {};
+  for (const ab of autoBuyers) {
+    autoBuyGoldDrain += ab.goldCostPerTick;
+    autoBuyGains[ab.currencyId] = (autoBuyGains[ab.currencyId] ?? 0) + ab.qtyPerTick;
+  }
+
+
+  // Merchant relic: each jack also awards RELIC_FREE_PURCHASE_QTY of a random resource
+  // from the relic purchase pool, with equal weight across all items.
+  const merchantRelicGains: Record<string, number> = {};
+  if (hasMerchantRelic && merchantJacks > 0) {
+    const pool = MERCHANT_MG.RELIC_PURCHASE_POOL;
+    if (pool.length > 0) {
+      const perItem = merchantJacks * MERCHANT_MG.RELIC_FREE_PURCHASE_QTY / pool.length * bm('merchant');
+      for (const currencyId of pool) {
+        merchantRelicGains[currencyId] = (merchantRelicGains[currencyId] ?? 0) + perItem;
+      }
+    }
+  }
+  const mrg = (key: string) => merchantRelicGains[key] ?? 0;
 
   return {
-    gold:    roundTo((autoGoldPerSec + fighterRelicGold + fighterJacks * goldPerClick) * bm('fighter') + (apothecaryJacks * goldPerBrew + vatGoldGain) * bm('apothecary') - culinarianJacks * culGoldCost + ppGoldPerSecond * bm('thief') + graveLootGoldPerSec * bm('necromancer'), 2),
+    gold:    roundTo((autoGoldPerSec + fighterRelicGold + fighterJacks * goldPerClick) * bm('fighter') + (apothecaryJacks * goldPerBrew + vatGoldGain) * bm('apothecary') - culinarianJacks * culGoldCost + ppGoldPerSecond * bm('thief') + graveLootGoldPerSec * bm('necromancer') - autoBuyGoldDrain, 2),
     xp:      roundTo(fighterJacks * xpPerBounty * bm('fighter') + rangerJacks * bm('ranger') + apothecaryJacks * bm('apothecary') + culinarianJacks * bm('culinarian') + effectiveThiefRate * bm('thief') + artisanXpPerSec * bm('artisan') + necroXpGain * bm('necromancer') - wardXpDrain + merchantJacks * MERCHANT_MG.XP_REWARD * bm('merchant'), 2),
-    herb:    roundTo(herbProduced * bm('ranger') - herbConsumed, 2),
-    beast:   roundTo((rangerJacks * catsEyeFactor * (beastChance / 100) * (expectedMeatYield + rangerBeastBonus) + baitedTrapsRate) * bm('ranger'), 2),
-    potion:  roundTo((apothecaryJacks * potionPerBrew + vatPotionGain) * bm('apothecary'), 2),
-    spice:   roundTo(culinarianJacks * spicePerClick * culSpiceMultiplier * bm('culinarian'), 2),
-    dossier: roundTo(effectiveThiefRate * avgDossierYield * bm('thief'), 2),
-    treasure:         roundTo(thiefTreasurePerSec * bm('thief') - artisanTreasurePerSec, 2),
-    'precious-metal': roundTo(artisanMetalPerSec * bm('artisan'), 2),
-    gemstone:         roundTo(artisanGemstonePerSec * bm('artisan') + graveLootGemPerSec * bm('necromancer'), 2),
-    jewelry:          roundTo(graveLootJewelryPerSec * bm('necromancer'), 2),
-    bone:             roundTo(bonePerSec * bm('necromancer'), 2),
-    brimstone:        roundTo(brimstonePerSec * bm('necromancer'), 2),
-    'illicit-goods':  roundTo(-merchantGoodsDrain * bm('merchant'), 2),
+    herb:    roundTo(herbProduced * bm('ranger') - herbConsumed + (autoBuyGains['herb'] ?? 0) + mrg('herb'), 2),
+    beast:   roundTo((rangerJacks * catsEyeFactor * (beastChance / 100) * (expectedMeatYield + rangerBeastBonus) + baitedTrapsRate) * bm('ranger') + (autoBuyGains['beast'] ?? 0) + mrg('beast'), 2),
+    potion:  roundTo((apothecaryJacks * potionPerBrew + vatPotionGain) * bm('apothecary') + (autoBuyGains['potion'] ?? 0) + mrg('potion'), 2),
+    spice:   roundTo(culinarianJacks * spicePerClick * culSpiceMultiplier * bm('culinarian') + (autoBuyGains['spice'] ?? 0) + mrg('spice'), 2),
+    dossier: roundTo(effectiveThiefRate * avgDossierYield * bm('thief') + (autoBuyGains['dossier'] ?? 0) + mrg('dossier'), 2),
+    treasure:         roundTo(thiefTreasurePerSec * bm('thief') - artisanTreasurePerSec + (autoBuyGains['treasure'] ?? 0) + mrg('treasure'), 2),
+    'precious-metal': roundTo(artisanMetalPerSec * bm('artisan') + (autoBuyGains['precious-metal'] ?? 0) + mrg('precious-metal'), 2),
+    gemstone:         roundTo(artisanGemstonePerSec * bm('artisan') + graveLootGemPerSec * bm('necromancer') + (autoBuyGains['gemstone'] ?? 0) + mrg('gemstone'), 2),
+    jewelry:          roundTo(graveLootJewelryPerSec * bm('necromancer') + (autoBuyGains['jewelry'] ?? 0) + mrg('jewelry'), 2),
+    bone:             roundTo(bonePerSec * bm('necromancer') + (autoBuyGains['bone'] ?? 0) + mrg('bone'), 2),
+    brimstone:        roundTo(brimstonePerSec * bm('necromancer') + (autoBuyGains['brimstone'] ?? 0) + mrg('brimstone'), 2),
+    'illicit-goods':  roundTo(-merchantGoodsDrain * bm('merchant') + (autoBuyGains['illicit-goods'] ?? 0) + mrg('illicit-goods'), 2),
+    mana:             roundTo(artificerManaPerSec * bm('artificer') + (autoBuyGains['mana'] ?? 0) + mrg('mana'), 2),
+    construct:        roundTo((autoBuyGains['construct'] ?? 0) + mrg('construct'), 2),
+    'concentrated-potion': roundTo((autoBuyGains['concentrated-potion'] ?? 0) + mrg('concentrated-potion'), 2),
+    'pixie-dust':     roundTo((autoBuyGains['pixie-dust'] ?? 0) + mrg('pixie-dust'), 2),
+    'hearty-meal':    roundTo((autoBuyGains['hearty-meal'] ?? 0) + mrg('hearty-meal'), 2),
+    'soul-stone':     roundTo((autoBuyGains['soul-stone'] ?? 0) + mrg('soul-stone'), 2),
+    'synaptical-potion': roundTo(mrg('synaptical-potion'), 2),
+    // ── Kobold parts ─────────────────────────────────────────────
+    // kobold-ear: 1 per kill, exempt from bead multiplier; secondary drops get bead mult
+    'kobold-ear':     roundTo(koboldEarPerSec + (autoBuyGains['kobold-ear'] ?? 0) + mrg('kobold-ear'), 2),
+    'kobold-tongue':  roundTo((koboldSecondaryRates['kobold-tongue'] ?? 0) + (autoBuyGains['kobold-tongue'] ?? 0) + mrg('kobold-tongue'), 2),
+    'kobold-hair':    roundTo((koboldSecondaryRates['kobold-hair'] ?? 0) + (autoBuyGains['kobold-hair'] ?? 0) + mrg('kobold-hair'), 2),
+    'kobold-fang':    roundTo((koboldSecondaryRates['kobold-fang'] ?? 0) + (autoBuyGains['kobold-fang'] ?? 0) + mrg('kobold-fang'), 2),
+    'kobold-brain':   roundTo((koboldSecondaryRates['kobold-brain'] ?? 0) + (autoBuyGains['kobold-brain'] ?? 0) + mrg('kobold-brain'), 2),
+    'kobold-feather': roundTo((koboldSecondaryRates['kobold-feather'] ?? 0) + (autoBuyGains['kobold-feather'] ?? 0) + mrg('kobold-feather'), 2),
   };
 }
 
@@ -256,7 +350,9 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   // Jack'd Up: all effective jack counts are multiplied by JACKD_UP_SPEED_MULT.
   const jackdUpSpeedMult2 = ctx.jackdUpUnlocked ? JACKD_UP_SPEED_MULT : 1;
   const now2 = Date.now();
-  const famRaw = (key: string) => ctx.familiarsPaused ? 0 : ((ctx.familiarTimers[key] ?? 0) > now2 ? FAMILIAR.JACKS_PER_FAMILIAR : 0);
+  const mindAndSoul2 = ctx.upgrades.level('MIND_AND_SOUL');
+  const effectiveFamiliars2 = FAMILIAR.JACKS_PER_FAMILIAR + mindAndSoul2 * FAMILIAR.MIND_AND_SOUL_PER_LEVEL;
+  const famRaw = (key: string) => ctx.familiarsPaused ? 0 : ((ctx.familiarTimers[key] ?? 0) > now2 ? effectiveFamiliars2 : 0);
 
   const relicMul = (hasRelic: boolean) => hasRelic ? 2 : 1;
 
@@ -267,7 +363,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const cJacks   = (ctx.jackStarved['culinarian'] ? 0 : (ctx.jacksAllocations['culinarian'] ?? 0)) * relicMul(hasCulinarianRelic) * jackdUpSpeedMult2;
   const tJacks   = (ctx.jacksAllocations['thief']      ?? 0) * relicMul(hasThiefRelic)      * jackdUpSpeedMult2;
   const artJacks = (ctx.jackStarved['artisan'] ? 0 : (ctx.jacksAllocations['artisan'] ?? 0)) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2;
-  const mJacks   = (ctx.jackStarved['merchant'] ? 0 : (ctx.jacksAllocations['merchant']  ?? 0)) * relicMul(hasMerchantRelic) * jackdUpSpeedMult2;
+  const mJacks   = (ctx.jackStarved['merchant'] ? 0 : (ctx.jacksAllocations['merchant']  ?? 0)) * jackdUpSpeedMult2;
 
   // Familiar jacks (separate line in breakdown)
   const fFam   = famRaw('fighter')    * relicMul(hasFighterRelic)    * jackdUpSpeedMult2;
@@ -276,7 +372,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const cFam   = (ctx.jackStarved['culinarian'] ? 0 : famRaw('culinarian')) * relicMul(hasCulinarianRelic) * jackdUpSpeedMult2;
   const tFam   = famRaw('thief')      * relicMul(hasThiefRelic)      * jackdUpSpeedMult2;
   const artFam = (ctx.jackStarved['artisan'] ? 0 : famRaw('artisan')) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2;
-  const mFam   = (ctx.jackStarved['merchant'] ? 0 : famRaw('merchant')) * relicMul(hasMerchantRelic) * jackdUpSpeedMult2;
+  const mFam   = (ctx.jackStarved['merchant'] ? 0 : famRaw('merchant')) * jackdUpSpeedMult2;
 
   // Combined totals (needed for thief uptime fraction)
   const thiefJacks      = tJacks   + tFam;
@@ -484,13 +580,66 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   }
 
   // ── Merchant ────────────────────────────────────────────────
-  // Merchant jacks now consume illicit goods to open crates.
-  const merchantRelicMult     = hasMerchantRelic ? 2 : 1;
-  const mGoodsDrainPerJack    = MERCHANT_MG.GOODS_COST * merchantRelicMult;
+  // Merchant jacks consume illicit goods to open crates.
+  const merchantOpens         = calcMerchantOpensPerClick(u.level('BOXING_DAY'));
+  const mGoodsDrainPerJack    = merchantOpens;
   if (mJacks > 0) add('illicit-goods', 'Merchant', -mJacks * mGoodsDrainPerJack * bm('merchant'));
   if (mFam   > 0) add('illicit-goods', 'Familiar (Merchant)', -mFam * mGoodsDrainPerJack * bm('merchant'));
   if (mJacks > 0) add('xp', 'Merchant', mJacks * MERCHANT_MG.XP_REWARD * bm('merchant'));
   if (mFam   > 0) add('xp', 'Familiar (Merchant)', mFam * MERCHANT_MG.XP_REWARD * bm('merchant'));
+
+  // Merchant relic: each jack awards RELIC_FREE_PURCHASE_QTY of a random resource from pool
+  if (hasMerchantRelic) {
+    const pool = MERCHANT_MG.RELIC_PURCHASE_POOL;
+    if (pool.length > 0) {
+      const perItemJack = mJacks * MERCHANT_MG.RELIC_FREE_PURCHASE_QTY / pool.length * bm('merchant');
+      const perItemFam  = mFam   * MERCHANT_MG.RELIC_FREE_PURCHASE_QTY / pool.length * bm('merchant');
+      for (const currencyId of pool) {
+        if (perItemJack > 0) add(currencyId, 'Relic (Merchant)', perItemJack);
+        if (perItemFam  > 0) add(currencyId, 'Relic (Familiar)', perItemFam);
+      }
+    }
+  }
+
+  // ── Merchant auto-buyers ─────────────────────────────────────
+  const autoBuyers2 = ctx.merchantAutoBuyers ?? [];
+  for (const ab of autoBuyers2) {
+    add('gold', 'Auto-Buy (Merchant)', -ab.goldCostPerTick);
+    add(ab.currencyId, 'Auto-Buy (Merchant)', ab.qtyPerTick);
+  }
+
+  // ── Artificer ──────────────────────────────────────────────
+  const hasArtificerRelic2 = (rl['artificer'] ?? 0) >= 1;
+  const rawArtStudyJacks = (ctx.jacksAllocations['artificer-study']   ?? 0) * jackdUpSpeedMult2;
+  const rawArtStudyFam   = famRaw('artificer-study') * jackdUpSpeedMult2;
+  const rawArtRefJacks   = (ctx.jacksAllocations['artificer-reflect'] ?? 0) * jackdUpSpeedMult2;
+  const rawArtRefFam     = famRaw('artificer-reflect') * jackdUpSpeedMult2;
+  const artStudyJacks = rawArtStudyJacks;
+  const artStudyFam   = rawArtStudyFam;
+  const artRefJacks   = rawArtRefJacks;
+  const artRefFam     = rawArtRefFam;
+  const amplifiedLevel2 = ctx.upgrades.level('AMPLIFIED_INSIGHT');
+  const arcaneIntellectLevel2 = ctx.upgrades.level('POTION_ARCANE_INTELLECT');
+  const maxInsight2   = YIELDS.ARTIFICER_MAX_INSIGHT + arcaneIntellectLevel2 * YIELDS.ARTIFICER_ARCANE_INTELLECT_PER_LEVEL;
+  const effInsight2   = Math.min(32, maxInsight2 + amplifiedLevel2 * YIELDS.ARTIFICER_AMPLIFIED_INSIGHT_PER_LEVEL);
+  const avgMana2      = effInsight2 > 0 ? effInsight2 * effInsight2 * (hasArtificerRelic2 ? 2 : 1) : 0;
+  if (artRefJacks > 0) add('mana', 'Artificer', artRefJacks * avgMana2 * bm('artificer'));
+  if (artRefFam   > 0) add('mana', 'Familiar (Artificer)', artRefFam * avgMana2 * bm('artificer'));
+
+  // ── Kobold parts from fighter jacks ──────────────────────────
+  // kobold-ear: exempt from bead multiplier
+  if (fJacks > 0) add('kobold-ear', 'Fighter', fJacks * FIGHTER_MG.KOBOLD_EAR_REWARD);
+  if (fFam   > 0) add('kobold-ear', 'Familiar (Fighter)', fFam * FIGHTER_MG.KOBOLD_EAR_REWARD);
+  // Secondary drops: bead multiplied
+  const bdVariantIdx = Math.min((ctx.selectedKoboldLevel ?? 1) - 1, KOBOLD_VARIANTS.length - 1);
+  const bdVariant = KOBOLD_VARIANTS[bdVariantIdx];
+  const bdGildedLevel = u.level('GILDED_BLADE');
+  if (bdVariant.secondaryDrop) {
+    const drop = bdVariant.secondaryDrop;
+    const chance = Math.min(100, drop.chance + bdGildedLevel) / 100;
+    if (fJacks > 0) add(drop.currencyId, 'Fighter', fJacks * chance * drop.amount * bm('fighter'));
+    if (fFam   > 0) add(drop.currencyId, 'Familiar (Fighter)', fFam * chance * drop.amount * bm('fighter'));
+  }
 
   return bd;
 }

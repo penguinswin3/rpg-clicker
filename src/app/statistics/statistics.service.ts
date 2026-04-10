@@ -88,6 +88,13 @@ export interface NecromancerMinigameStats {
   totalEfficiency: number;
 }
 
+export interface ArtificerMinigameStats {
+  /** Total etchings completed successfully. */
+  etchingsCompleted: number;
+  /** Total etchings failed. */
+  etchingsFailed: number;
+}
+
 export interface StatisticsSnapshot {
   /** Lifetime totals of currency gained (only additions, never subtractions). */
   lifetimeCurrency: Record<string, number>;
@@ -115,6 +122,8 @@ export interface StatisticsSnapshot {
   artisanMinigame: ArtisanMinigameStats;
   /** Necromancer minigame ritual stats. */
   necromancerMinigame: NecromancerMinigameStats;
+  /** Artificer minigame etching stats. */
+  artificerMinigame: ArtificerMinigameStats;
 }
 
 function defaultSnapshot(): StatisticsSnapshot {
@@ -131,6 +140,7 @@ function defaultSnapshot(): StatisticsSnapshot {
     thiefMinigame:      { successfulHeists: 0, failedHeists: 0 },
     artisanMinigame:    { appraisalsCompleted: 0, facetingSuccesses: 0, facetingFailures: 0 },
     necromancerMinigame:{ ritualsCompleted: 0, perfectRituals: 0, totalEfficiency: 0 },
+    artificerMinigame:  { etchingsCompleted: 0, etchingsFailed: 0 },
   };
 }
 
@@ -358,6 +368,15 @@ export class StatisticsService {
     this._scheduleFlush();
   }
 
+  // ── Artificer minigame ──────────────────────────────────────
+
+  trackArtificerEtching(success: boolean): void {
+    const snap = this.source.getValue();
+    if (success) snap.artificerMinigame.etchingsCompleted++;
+    else         snap.artificerMinigame.etchingsFailed++;
+    this._scheduleFlush();
+  }
+
   // ── Persistence ────────────────────────────────────────────
 
   buildSnapshot(): StatisticsSnapshot {
@@ -388,6 +407,7 @@ export class StatisticsService {
       thiefMinigame:      { ...defaultSnapshot().thiefMinigame,      ...snap.thiefMinigame },
       artisanMinigame:    { ...defaultSnapshot().artisanMinigame,    ...snap.artisanMinigame },
       necromancerMinigame:{ ...defaultSnapshot().necromancerMinigame,...snap.necromancerMinigame },
+      artificerMinigame:  { ...defaultSnapshot().artificerMinigame, ...(snap.artificerMinigame ?? {}) },
     };
     // Remove deprecated field from live snapshot
     delete merged.heroButtonPresses;

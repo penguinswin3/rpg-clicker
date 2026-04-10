@@ -235,6 +235,20 @@
             </div>
           </div>
 
+          <div class="stats-section" *ngIf="snap.artificerMinigame && (snap.artificerMinigame.etchingsCompleted > 0 || snap.artificerMinigame.etchingsFailed > 0)">
+            <div class="section-label">// ETCHING</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Etchings Completed</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.artificerMinigame.etchingsCompleted) }}</span>
+              </div>
+              <div class="stats-row">
+                <span class="cur-name">Etchings Failed</span>
+                <span class="cur-amount stat-bad">{{ fmt(snap.artificerMinigame.etchingsFailed) }}</span>
+              </div>
+            </div>
+          </div>
+
         </div><!-- /col right -->
 
       </div><!-- /columns -->

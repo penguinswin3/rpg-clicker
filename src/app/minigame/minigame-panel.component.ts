@@ -10,7 +10,8 @@ import { CulinarianMinigameComponent } from './culinarian/culinarian-minigame.co
 import { ThiefMinigameComponent } from './thief/thief-minigame.component';
 import { ArtisanMinigameComponent } from './artisan/artisan-minigame.component';
 import { NecromancerMinigameComponent } from './necromancer/necromancer-minigame.component';
-import { MerchantMinigameComponent } from './merchant/merchant-minigame.component';
+import { MerchantMinigameComponent, AutoBuyerInfo } from './merchant/merchant-minigame.component';
+import { ArtificerMinigameComponent } from './artificer/artificer-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
 import { FighterCombatState } from '../options/save.service';
@@ -23,7 +24,7 @@ interface MinigameInfo {
 @Component({
   selector: 'app-minigame-panel',
   standalone: true,
-  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent, NecromancerMinigameComponent, MerchantMinigameComponent],
+  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent, NecromancerMinigameComponent, MerchantMinigameComponent, ArtificerMinigameComponent],
   templateUrl: './minigame-panel.component.html',
   styleUrls: ['./minigame-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -120,6 +121,18 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() gemHunterLevel = 0;
   /** Per-character gold-2 bead found status — used to suppress messages once bead is unlocked. */
   @Input() gold2BeadFoundState: Record<string, boolean> = {};
+  /** Merchant auto-buyer selections (persisted). */
+  @Input() merchantAutoBuySelections: Record<string, boolean> = {};
+  /** Emitted when merchant auto-buyer selections change. */
+  @Output() merchantAutoBuySelectionsChange = new EventEmitter<Record<string, boolean>>();
+  /** Emitted when merchant auto-buyer state changes (for per-second calc). */
+  @Output() merchantAutoBuyerStateChange = new EventEmitter<AutoBuyerInfo[]>();
+  /** Extended Etching upgrade level — forwarded to the artificer minigame. */
+  @Input() extendedEtchingLevel = 0;
+  /** Currently-selected etching difficulty level — forwarded to the artificer minigame. */
+  @Input() selectedEtchingLevel = 0;
+  /** Emitted when the player changes the etching level inside the artificer minigame. */
+  @Output() selectedEtchingLevelChange = new EventEmitter<number>();
   /** Lucky Gems level — forwarded to the artisan minigame. */
   @Input() luckyGemsLevel = 0;
   /** Double Dip level — forwarded to the artisan minigame. */
@@ -203,6 +216,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     {
       characterId: 'merchant',
       title: MINIGAME_FLAVOR.MERCHANT.name,
+    },
+    {
+      characterId: 'artificer',
+      title: MINIGAME_FLAVOR.ARTIFICER.name,
     },
   ];
 

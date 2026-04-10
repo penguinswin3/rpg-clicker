@@ -27,6 +27,8 @@ export interface UpgradeGates {
   readonly requiresArtisan?: boolean;
   /** Hide until the Necromancer character is unlocked. */
   readonly requiresNecromancer?: boolean;
+  /** Hide until the Artificer character is unlocked. */
+  readonly requiresArtificer?: boolean;
   /** Hide until the Merchant character is unlocked. */
   readonly requiresMerchant?: boolean;
   /** Hide until the Bubbling Brew minigame upgrade has been purchased. */
@@ -146,10 +148,12 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'brimstone',          base: 1000,   fromCount: 22, untilCount: 23 },  // Jack 23
       { currency: 'xp',                 base: 150000,   fromCount: 23, untilCount: 24 },  // Jack 24
       { currency: 'soul-stone',         base: 250,   fromCount: 24, untilCount: 25 },  // Jack 25
-      { currency: 'illicit-goods',       base: 500,   fromCount: 25, untilCount: 26 },  // Jack 26
-      { currency: 'monster-trophy',      base: 50,    fromCount: 26, untilCount: 27 },  // Jack 27
-      { currency: 'forbidden-tome',      base: 50,    fromCount: 27, untilCount: 28 },  // Jack 28
-      { currency: 'magical-implement',   base: 50,    fromCount: 28, untilCount: 29 },  // Jack 29
+      { currency: 'illicit-goods',      base: 500,   fromCount: 25, untilCount: 26 },  // Jack 26
+      { currency: 'monster-trophy',     base: 50,    fromCount: 26, untilCount: 27 },  // Jack 27
+      { currency: 'forbidden-tome',     base: 50,    fromCount: 27, untilCount: 28 },  // Jack 28
+      { currency: 'magical-implement',  base: 50,    fromCount: 28, untilCount: 29 },  // Jack 29
+      { currency: 'mana',               base: 500,    fromCount: 29, untilCount: 30 },  // Jack 30
+      { currency: 'construct',          base: 50,    fromCount: 30, untilCount: 31 },  // Jack 31
     ],
   },
 
@@ -206,6 +210,15 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'soul-stone',  base: 500     },
       { currency: 'jewelry',     base: 500     },
       { currency: 'spice',       base: 50000    },
+    ],
+  },
+  {
+    id: 'UNLOCK_ARTIFICER', kind: 'character-unlock', xpMin: 5_000_000,
+    costs: [
+      { currency: 'gold',              base: 5_000_000 },
+      { currency: 'precious-metal',    base: 5000       },
+      { currency: 'magical-implement', base: 300       },
+      { currency: 'forbidden-tome',    base: 300       },
     ],
   },
 
@@ -266,6 +279,7 @@ export const XP_THRESHOLDS = {
   ARTISAN_UNLOCK:    getGlobalDef('UNLOCK_ARTISAN')!.xpMin!,
   NECROMANCER_UNLOCK:getGlobalDef('UNLOCK_NECROMANCER')!.xpMin!,
   MERCHANT_UNLOCK:   getGlobalDef('UNLOCK_MERCHANT')!.xpMin!,
+  ARTIFICER_UNLOCK:  getGlobalDef('UNLOCK_ARTIFICER')!.xpMin!,
   JACKD_UP_UNLOCK:   getGlobalDef('JACKD_UP')!.xpMin!,
 } as const;
 
@@ -660,16 +674,29 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'brimstone',      base: 750,  scale: 1.4 },
       { currency: 'soul-stone',     base: 30,  scale: 1.4 },
     ] },
+  { id: 'SPREADING_SOUL', characterId: 'necromancer', category: 'minigame', max: 1,
+    gates: { requiresFindFamiliar: true },
+    costs: [
+      { currency: 'magical-implement', base: 50, scale: 1.0 },
+      { currency: 'forbidden-tome',    base: 50, scale: 1.0 },
+    ] },
+  { id: 'MIND_AND_SOUL', characterId: 'necromancer', category: 'minigame', max: 20,
+    gates: { requiresFindFamiliar: true, requiresArtificer: true },
+    costs: [
+      { currency: 'construct',   base: 50,  scale: 1.4 },
+      { currency: 'soul-stone',  base: 25,  scale: 1.4 },
+      { currency: 'mana',        base: 100, scale: 1.4 },
+    ] },
 
   // ── Merchant — standard ──────────────────────────────────────
-  { id: 'BACK_ALLEY_DEALS', characterId: 'merchant', category: 'standard', max: 999,
+  { id: 'BOXING_DAY', characterId: 'merchant', category: 'standard', max: 50,
     costs: [{ currency: 'gold', base: 500_000, scale: 1.12 }] },
   { id: 'SHADY_CONNECTIONS', characterId: 'merchant', category: 'standard', max: 20,
     costs: [
       { currency: 'illicit-goods', base: 50,  scale: 1.3 },
       { currency: 'dossier',      base: 5000, scale: 1.3 },
     ] },
-  { id: 'BLACK_MARKET_ACCESS', characterId: 'merchant', category: 'standard', max: 10,
+  { id: 'BLACK_MARKET_CONNECTIONS', characterId: 'merchant', category: 'standard', max: 10,
     costs: [
       { currency: 'gold',          base: 1_000_000, scale: 1.5 },
       { currency: 'illicit-goods', base: 200,       scale: 1.5 },
@@ -681,32 +708,20 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Merchant — minigame ──────────────────────────────────────
-  { id: 'CONTRABAND_EXPERTISE', characterId: 'merchant', category: 'minigame', max: 10,
+  { id: 'RIGGED_GAME', characterId: 'merchant', category: 'minigame', max: 25,
     costs: [
-      { currency: 'illicit-goods',     base: 300,  scale: 1.4 },
-      { currency: 'forbidden-tome',    base: 10,   scale: 1.4 },
+      { currency: 'illicit-goods', base: 100, scale: 1.3 },
+      { currency: 'gold',         base: 100_000, scale: 1.2 },
     ] },
-  { id: 'FENCED_GOODS', characterId: 'merchant', category: 'minigame', max: 999,
+  { id: 'DIVERSIFIED_PORTFOLIO', characterId: 'merchant', category: 'minigame', max: 6,
     costs: [
-      { currency: 'illicit-goods', base: 50,  scale: 1.15 },
-      { currency: 'treasure',     base: 100, scale: 1.15 },
+      { currency: 'illicit-goods', base: 200,  scale: 1.5 },
+      { currency: 'dossier',      base: 5000, scale: 1.5 },
     ] },
-  { id: 'TROPHY_COLLECTOR', characterId: 'merchant', category: 'minigame', max: 10,
+  { id: 'STABLE_MARKET', characterId: 'merchant', category: 'minigame', max: 20,
     costs: [
-      { currency: 'monster-trophy',    base: 20, scale: 1.5 },
-      { currency: 'bone',             base: 500, scale: 1.3 },
-    ] },
-  { id: 'FORBIDDEN_KNOWLEDGE', characterId: 'merchant', category: 'minigame', max: 5,
-    gates: { requiresMerchant: true },
-    costs: [
-      { currency: 'forbidden-tome',       base: 25,  scale: 1.6 },
-      { currency: 'synaptical-potion',    base: 10,  scale: 1.6 },
-    ] },
-  { id: 'ARCANE_APPRAISAL', characterId: 'merchant', category: 'minigame', max: 5,
-    gates: { requiresMerchant: true },
-    costs: [
-      { currency: 'magical-implement', base: 25,  scale: 1.6 },
-      { currency: 'gemstone',          base: 50,  scale: 1.6 },
+      { currency: 'gold',          base: 200_000, scale: 1.3 },
+      { currency: 'illicit-goods', base: 100,     scale: 1.3 },
     ] },
 
   // ── Apothecary — minigame ────────────────────────────────────
@@ -754,6 +769,46 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'kobold-brain',   base: 15,  scale: 1.5 },
     ] },
 
+  // ── Artificer — standard ──────────────────────────────────────
+  { id: 'DEEP_STUDY', characterId: 'artificer', category: 'standard', max: 1,
+    costs: [
+      { currency: 'mana',      base: 500,  scale: 1.0 },
+      { currency: 'construct', base: 25,   scale: 1.0 },
+    ] },
+  { id: 'FOCUSED_REFLECTION', characterId: 'artificer', category: 'standard', max: 7,
+    costs: [
+      { currency: 'mana',      base: 200,  scale: 1.3 },
+      { currency: 'construct', base: 10,   scale: 1.3 },
+    ] },
+  { id: 'AMPLIFIED_INSIGHT', characterId: 'artificer', category: 'standard', max: 24,
+    costs: [
+      { currency: 'mana',      base: 300,  scale: 1.25 },
+      { currency: 'construct', base: 15,   scale: 1.25 },
+    ] },
+  { id: 'POTION_ARCANE_INTELLECT', characterId: 'artificer', category: 'standard', max: 3,
+    costs: [
+      { currency: 'mana',               base: 1000,  scale: 2.0 },
+      { currency: 'construct',           base: 100,   scale: 2.0 },
+      { currency: 'synaptical-potion',   base: 10,    scale: 1.5 },
+    ] },
+
+  // ── Artificer — minigame ──────────────────────────────────────
+  { id: 'EXTENDED_ETCHING', characterId: 'artificer', category: 'minigame', max: 5,
+    costs: [
+      { currency: 'construct', base: 50,  scale: 1.5 },
+      { currency: 'mana',     base: 500, scale: 1.5 },
+    ] },
+  { id: 'SECOND_CHANCE', characterId: 'artificer', category: 'minigame', max: 1,
+    costs: [
+      { currency: 'construct', base: 100,  scale: 1.0 },
+      { currency: 'mana',     base: 1000, scale: 1.0 },
+    ] },
+  { id: 'ETCHING_MASTERY', characterId: 'artificer', category: 'minigame', max: 999,
+    costs: [
+      { currency: 'construct', base: 75,  scale: 1.4 },
+      { currency: 'mana',     base: 750, scale: 1.4 },
+    ] },
+
   // ── Relic upgrades (one per character) ──────────────────────────
   // Each costs exactly 1 relic + a dynamically-computed jewelry amount
   // (see RELIC_COSTS and UpgradeService.syncRelicCosts).
@@ -787,6 +842,10 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
             { currency: 'jewelry', base: 10, scale: 1.0 }] },
   { id: 'RELIC_MERCHANT', characterId: 'merchant', category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
+            { currency: 'jewelry', base: 10, scale: 1.0 }] },
+  { id: 'RELIC_ARTIFICER', characterId: 'artificer', category: 'relic', max: 1,
     gates: { requiresRelic: true },
     costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
             { currency: 'jewelry', base: 10, scale: 1.0 }] },
@@ -866,6 +925,18 @@ export const YIELDS = {
   GRAVE_LOOTING_GEM_AMOUNT:      1,
   /** Amount of Jewelry awarded when Grave Looting triggers */
   GRAVE_LOOTING_JEWELRY_AMOUNT:  1,
+
+  // ── Artificer ─────────────────────────────────────────────
+  /** Base insight steps gained per Study click (before Deep Study). */
+  ARTIFICER_INSIGHT_PER_CLICK: 1,
+  /** Maximum insight bar level. */
+  ARTIFICER_MAX_INSIGHT: 8,
+  /** Additional insight levels from Amplified Insight (added before squaring). */
+  ARTIFICER_AMPLIFIED_INSIGHT_PER_LEVEL: 1,
+  /** Additional max insight per Potion of Arcane Intellect level. */
+  ARTIFICER_ARCANE_INTELLECT_PER_LEVEL: 8,
+  /** Maximum insight that can be consumed per single Reflect action. */
+  ARTIFICER_MAX_CONSUME_PER_REFLECT: 8,
 
 } as const;
 
@@ -1106,8 +1177,27 @@ export const NECROMANCER_MG = {
   XP_REWARD: 10,
 } as const;
 
-// ── Merchant Minigame ────────────────────────────────────────
+// ── Artificer Minigame ───────────────────────────────────────
+export const ARTIFICER_MG = {
+  /** Symbols used for the Etching Simon Says sequence. */
+  SYMBOLS: ['potion', 'mana', 'relic', 'magical-implement', 'soul-stone'] as readonly string[],
+  /** Base sequence length (before Extended Etching). */
+  BASE_SEQUENCE_LENGTH: 5,
+  /** Flash duration per symbol in ms. */
+  FLASH_DURATION_MS: 600,
+  /** Pause between flashes in ms. */
+  FLASH_PAUSE_MS: 200,
+  /** Base constructs awarded on success. */
+  BASE_CONSTRUCT_REWARD: 1,
+  /** Multiplier per Extended Etching symbol added. */
+  EXTENDED_ETCHING_REWARD_MULTIPLIER: 2,
+  /** Constructs consumed to start an Etching round. */
+  MANA_COST: 250,
+  /** XP awarded on a successful etching. */
+  XP_REWARD: 5,
+} as const;
 
+// ── Merchant Minigame ────────────────────────────────────────
 /** Loot table entry for opening Illicit Goods. */
 export interface IllicitLootEntry {
   /** Currency ID awarded when this row is selected. */
@@ -1121,8 +1211,8 @@ export interface IllicitLootEntry {
 }
 
 export const MERCHANT_MG = {
-  /** Illicit Goods cost to open one crate in the sidequest. */
-  GOODS_COST: 10,
+  /** Illicit Goods consumed per single "open" action (hero button base). */
+  GOODS_COST: 1,
   /** XP awarded per successful opening. */
   XP_REWARD: 1,
   /** Number of loot rolls per opening (base). */
@@ -1152,6 +1242,14 @@ export const MERCHANT_MG = {
     { currencyId: 'concentrated-potion', weight: 5,   min: 2,     max: 10     },
     { currencyId: 'xp',                  weight: 10,  min: 1,   max: 100   },
 
+    // ── Kobold parts ────────────────────────────────────────────
+    { currencyId: 'kobold-ear',          weight: 5,   min: 1,     max: 5      },
+    { currencyId: 'kobold-tongue',       weight: 3,   min: 1,     max: 3      },
+    { currencyId: 'kobold-hair',         weight: 3,   min: 1,     max: 3      },
+    { currencyId: 'kobold-fang',         weight: 2,   min: 1,     max: 2      },
+    { currencyId: 'kobold-brain',        weight: 2,   min: 1,     max: 2      },
+    { currencyId: 'kobold-feather',      weight: 2,   min: 1,     max: 2      },
+
     // ── Uncommon ────────────────────────────────────────────────
     { currencyId: 'pixie-dust',          weight: 3,   min: 5,     max: 20     },
     { currencyId: 'hearty-meal',         weight: 3,   min: 2,     max: 10     },
@@ -1167,10 +1265,28 @@ export const MERCHANT_MG = {
 
   /** Extra % chance per Shady Connections level to roll an additional loot entry. */
   SHADY_CONNECTIONS_BONUS_PER_LEVEL: 3,
-  /** Extra % chance per Contraband Expertise level to shift weight toward rare rows. */
-  CONTRABAND_EXPERTISE_RARE_BONUS_PER_LEVEL: 2,
-  /** Gold awarded per level of Fenced Goods when opening a crate. */
-  FENCED_GOODS_GOLD_PER_LEVEL: 50,
+  /** Extra % chance per Black Market Connections level to shift weight toward rare rows. */
+  BLACK_MARKET_RARE_BONUS_PER_LEVEL: 1,
+  /** Percent chance per Smuggler's Network level to double the number of opens per click. */
+  SMUGGLER_NETWORK_CHANCE_PER_LEVEL: 4,
+  /** Discount per Rigged Game level applied to all stock market prices (0.01 = 1%). */
+  RIGGED_GAME_DISCOUNT_PER_LEVEL: 0.01,
+  /** Max price reduction per Stable Market level (0.01 = 1%). */
+  STABLE_MARKET_REDUCTION_PER_LEVEL: 0.01,
+
+  /**
+   * Maps each stock market currency to its Diversified Portfolio unlock tier.
+   * Tier 0 = always visible. Each DIVERSIFIED_PORTFOLIO level unlocks the next tier.
+   */
+  PORTFOLIO_TIER_MAP: {
+    'illicit-goods': 0,
+    'herb': 1, 'beast': 1, 'pixie-dust': 1, 'kobold-ear': 1,
+    'potion': 2, 'concentrated-potion': 2, 'kobold-tongue': 2,
+    'spice': 3, 'hearty-meal': 3, 'kobold-hair': 3,
+    'dossier': 4, 'treasure': 4, 'kobold-fang': 4,
+    'precious-metal': 5, 'gemstone': 5, 'jewelry': 5, 'kobold-brain': 5,
+    'bone': 6, 'brimstone': 6, 'soul-stone': 6, 'kobold-feather': 6,
+  } as Record<string, number>,
 
   // ── Stock Market (minigame) ─────────────────────────────────
   /** How often prices re-roll (ms). */
@@ -1179,6 +1295,19 @@ export const MERCHANT_MG = {
   STOCK_MARKET_INCREMENTS: [1, 5, 10, 100] as readonly number[],
   /** Auto-buyer purchases this many items per tick. */
   AUTO_BUY_AMOUNT: 100,
+  /** Quantity of a random stock-market resource awarded free per jack click by the Merchant relic. */
+  RELIC_FREE_PURCHASE_QTY: 10,
+  /**
+   * Pool of currency IDs the Merchant relic can randomly award.
+   * Includes the full stock-market table plus uncommon resources.
+   */
+  RELIC_PURCHASE_POOL: [
+    'illicit-goods', 'herb', 'beast', 'potion', 'spice', 'dossier',
+    'treasure', 'precious-metal', 'gemstone', 'bone', 'brimstone',
+    'concentrated-potion', 'pixie-dust', 'hearty-meal', 'jewelry',
+    'soul-stone', 'synaptical-potion',
+    'kobold-ear', 'kobold-tongue', 'kobold-hair', 'kobold-fang', 'kobold-brain', 'kobold-feather',
+  ] as readonly string[],
   /** Auto-buyer tick interval (ms). */
   AUTO_BUY_INTERVAL_MS: 1000,
   /**
@@ -1202,9 +1331,13 @@ export const MERCHANT_MG = {
     { currencyId: 'hearty-meal',         basePrice: 1500,  minPrice: 600,   maxPrice: 3000   },
     { currencyId: 'jewelry',             basePrice: 3000,  minPrice: 1000,  maxPrice: 6000   },
     { currencyId: 'soul-stone',          basePrice: 800,   minPrice: 300,   maxPrice: 1600   },
-    { currencyId: 'monster-trophy',      basePrice: 5000,  minPrice: 2000,  maxPrice: 10000  },
-    { currencyId: 'forbidden-tome',      basePrice: 7500,  minPrice: 3000,  maxPrice: 15000  },
-    { currencyId: 'magical-implement',   basePrice: 10000, minPrice: 4000,  maxPrice: 20000  },
+    // ── Kobold parts ────────────────────────────────────────────
+    { currencyId: 'kobold-ear',          basePrice: 80,    minPrice: 30,    maxPrice: 200    },
+    { currencyId: 'kobold-tongue',       basePrice: 200,   minPrice: 80,    maxPrice: 400    },
+    { currencyId: 'kobold-hair',         basePrice: 200,   minPrice: 80,    maxPrice: 400    },
+    { currencyId: 'kobold-fang',         basePrice: 250,   minPrice: 100,   maxPrice: 500    },
+    { currencyId: 'kobold-brain',        basePrice: 600,   minPrice: 250,   maxPrice: 1200   },
+    { currencyId: 'kobold-feather',      basePrice: 300,   minPrice: 120,   maxPrice: 600    },
   ] as const,
 } as const;
 
@@ -1218,8 +1351,10 @@ export const FAMILIAR = {
   MAX_TIME_SEC: 600,
   /** Additional seconds of max cap granted per level of Vault of Souls (5 minutes). */
   VAULT_OF_SOULS_BONUS_SEC: 300,
-  /** Effective jack count added by each active familiar. */
+  /** Effective jack count added by each active familiar (base, before Mind and Soul). */
   JACKS_PER_FAMILIAR: 1,
+  /** Additional effective familiars per Mind and Soul level. */
+  MIND_AND_SOUL_PER_LEVEL: 1,
 } as const;
 
 // ── Bead System ──────────────────────────────────────────────
@@ -1254,6 +1389,8 @@ export const AUTO_SOLVE = {
   NECROMANCER_TICK_MS:  750,
   /** Merchant: one goods opening per this many ms. */
   MERCHANT_TICK_MS:     1200,
+  /** Artificer: one etching step per this many ms. */
+  ARTIFICER_TICK_MS:    800,
 } as const;
 
 /** Ordered bead slot IDs as displayed left-to-right around the relic socket. */
@@ -1319,8 +1456,34 @@ export const GOLD2_CONDITIONS = {
   /** Necromancer: complete 3 consecutive games without ever selecting an adjacent node. */
   NECROMANCER_NO_ADJACENT_STREAK: 3,
 
-  /** Merchant: open goods and receive all 3 rare currencies in a single crate 5 times in a row. */
-  MERCHANT_ALL_RARE_STREAK: 5,
+  /**
+   * Merchant: purchase specific resources in this exact sequence on the stock market.
+   * Each step requires buying exactly the listed quantity of the listed resource.
+   * Any other purchase resets the sequence. Steps are matched in order.
+   */
+  MERCHANT_PURCHASE_SEQUENCE: [
+    { currencyId: 'herb',           qty: 10 },
+    { currencyId: 'beast',          qty: 10 },
+    { currencyId: 'potion',         qty: 5  },
+    { currencyId: 'spice',          qty: 10 },
+    { currencyId: 'dossier',        qty: 10 },
+    { currencyId: 'bone',           qty: 10 },
+    { currencyId: 'brimstone',      qty: 10 },
+    { currencyId: 'precious-metal', qty: 5  },
+    { currencyId: 'gemstone',       qty: 5  },
+    { currencyId: 'soul-stone',     qty: 5  },
+    { currencyId: 'kobold-ear',     qty: 10 },
+    { currencyId: 'kobold-tongue',  qty: 5  },
+    { currencyId: 'kobold-fang',    qty: 5  },
+    { currencyId: 'kobold-feather', qty: 5  },
+  ] as readonly { currencyId: string; qty: number }[],
+
+  /**
+   * Artificer: intentionally fail the Etching minigame 10 times in a row,
+   * selecting tile indices in this alternating pattern (0-based from the 5 symbols).
+   */
+  ARTIFICER_FAIL_SEQUENCE: [0, 2] as readonly number[],
+  ARTIFICER_FAIL_STREAK: 10,
 } as const;
 
 /**

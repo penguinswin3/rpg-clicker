@@ -24,8 +24,8 @@ import {
   calcAutoGoldPerSecond,
   calcNecromancerBoneYield, calcNecromancerWardXpCost,
   calcNecromancerBrimstoneYield, calcGraveLootingChance,
-  calcMerchantGoodsPerClick, calcMerchantDoubleChance,
-  rollIllicitLootTable, calcMerchantFencedGold,
+  calcMerchantOpensPerClick, calcMerchantDoubleChance,
+  rollIllicitLootTable,
 } from './yield-helpers';
 
 // ── Contexts ────────────────────────────────────────────────
@@ -49,6 +49,12 @@ export interface HeroActionContext {
   necromancerActiveButton: 'defile' | 'ward';
   /** Callback to decrement necromancer clicks and switch if needed. Returns true if button switched. */
   necromancerDecrementClick: () => boolean;
+  /** Which artificer button is currently active ('study' or 'reflect'). */
+  artificerActiveButton: 'study' | 'reflect';
+  /** Current insight level for the Artificer. */
+  artificerInsight: number;
+  /** Callback to set the Artificer's insight level. */
+  setArtificerInsight: (v: number) => void;
   /** Get the bead yield multiplier for a character. */
   beadMultiplier?: (charId: string) => number;
   /** Whether the character has an unfound blue bead slot. */
@@ -85,6 +91,12 @@ export interface JackAutoClickContext {
   necromancerActiveButton: () => 'defile' | 'ward';
   /** Decrement necromancer clicks remaining and switch if needed. Returns true if button switched. */
   necromancerDecrementClick: () => boolean;
+  /** Live check — which artificer button is currently active. */
+  artificerActiveButton: () => 'study' | 'reflect';
+  /** Current insight level for the Artificer (live). */
+  artificerInsight: () => number;
+  /** Callback to set the Artificer's insight level. */
+  setArtificerInsight: (v: number) => void;
   /** Get the bead yield multiplier for a character. */
   beadMultiplier?: (charId: string) => number;
   /** Whether the character's right blue bead (blue-2, awarded by jacks) is still undiscovered. */
@@ -107,6 +119,7 @@ export function dispatchHeroClick(charId: string, ctx: HeroActionContext): void 
     case 'artisan':    clickArtisan(ctx); break;
     case 'necromancer': clickNecromancer(ctx); break;
     case 'merchant':   clickMerchant(ctx); break;
+    case 'artificer':  clickArtificer(ctx); break;
   }
   // Roll for blue bead discovery
   if (ctx.hasUnfoundBlueBead?.(charId) && Math.random() < BEADS.BLUE_CHANCE) {
@@ -347,8 +360,8 @@ function clickNecromancerWard(ctx: HeroActionContext): void {
 
 /** Execute one jack auto-click for the given character. */
 export function performJackAutoClick(charId: string, ctx: JackAutoClickContext): void {
-  // Normalize necromancer sub-keys to 'necromancer' for stats tracking
-  const statsCharId = charId.startsWith('necromancer') ? 'necromancer' : charId;
+  // Normalize necromancer/artificer sub-keys for stats tracking
+  const statsCharId = charId.startsWith('necromancer') ? 'necromancer' : charId.startsWith('artificer') ? 'artificer' : charId;
   ctx.stats.trackJackHeroPress(statsCharId);
   switch (charId) {
     case 'fighter':            jackFighter(ctx); break;
@@ -361,9 +374,11 @@ export function performJackAutoClick(charId: string, ctx: JackAutoClickContext):
     case 'necromancer-defile': jackNecromancerDefile(ctx); break;
     case 'necromancer-ward':   jackNecromancerWard(ctx); break;
     case 'merchant':           jackMerchant(ctx); break;
+    case 'artificer-study':    jackArtificerStudy(ctx); break;
+    case 'artificer-reflect':  jackArtificerReflect(ctx); break;
   }
   // Roll for right blue bead (blue-2) discovery via jack/familiar clicks
-  const baseCharId = charId.startsWith('necromancer') ? 'necromancer' : charId;
+  const baseCharId = charId.startsWith('necromancer') ? 'necromancer' : charId.startsWith('artificer') ? 'artificer' : charId;
   if (ctx.hasUnfoundJackBead?.(baseCharId) && Math.random() < BEADS.GOLD_CHANCE) {
     ctx.onJackBeadFound?.(baseCharId);
   }
@@ -622,37 +637,100 @@ function jackNecromancerWard(ctx: JackAutoClickContext): void {
 
 // ── Merchant click ──────────────────────────────────────────
 
+function clickArtificer(ctx: HeroActionContext): void {
+  if (ctx.artificerActiveButton === 'study') {
+    clickArtificerStudy(ctx);
+  } else {
+    clickArtificerReflect(ctx);
+  }
+}
+
+function clickArtificerStudy(ctx: HeroActionContext): void {
+  const u = ctx.upgrades;
+  const arcaneIntellectLevel = u.level('POTION_ARCANE_INTELLECT');
+  const maxInsight = YIELDS.ARTIFICER_MAX_INSIGHT + arcaneIntellectLevel * YIELDS.ARTIFICER_ARCANE_INTELLECT_PER_LEVEL;
+  if (ctx.artificerInsight >= maxInsight) {
+    ctx.log.log(LOG_MSG.HERO.ARTIFICER.STUDY_MAX, 'warn');
+    return;
+  }
+  const deepStudy = u.level('DEEP_STUDY');
+  const gain = YIELDS.ARTIFICER_INSIGHT_PER_CLICK + deepStudy;
+  const newInsight = Math.min(maxInsight, ctx.artificerInsight + gain);
+  ctx.setArtificerInsight(newInsight);
+  ctx.log.log(LOG_MSG.HERO.ARTIFICER.STUDY(`Insight ${newInsight}/${maxInsight}`));
+}
+
+function clickArtificerReflect(ctx: HeroActionContext): void {
+  if (ctx.artificerInsight <= 0) {
+    ctx.log.log(LOG_MSG.HERO.ARTIFICER.REFLECT_NO_INSIGHT, 'warn');
+    return;
+  }
+  const u = ctx.upgrades;
+  const bm = ctx.beadMultiplier?.('artificer') ?? 1;
+  const currentInsight = ctx.artificerInsight;
+  const maxConsume = YIELDS.ARTIFICER_MAX_CONSUME_PER_REFLECT;
+
+  // Consume insight: capped at maxConsume (8), reduced by Focused Reflection
+  const consumePool = Math.min(maxConsume, currentInsight);
+  const focusedReflectionLevel = u.level('FOCUSED_REFLECTION');
+  const minConsume = Math.max(1, consumePool - focusedReflectionLevel);
+  const consumed = randInt(minConsume, consumePool);
+
+  // Amplified Insight adds levels before squaring
+  const amplifiedLevel = u.level('AMPLIFIED_INSIGHT');
+  const effectiveInsight = Math.min(32, currentInsight + amplifiedLevel * YIELDS.ARTIFICER_AMPLIFIED_INSIGHT_PER_LEVEL);
+  const manaYield = effectiveInsight * effectiveInsight * bm;
+
+  ctx.setArtificerInsight(currentInsight - consumed);
+  ctx.wallet.add('mana', manaYield);
+  ctx.stats.trackCurrencyGain('mana', manaYield);
+  const remaining = currentInsight - consumed;
+  const suffix = remaining > 0 ? `, Insight -${consumed} (${remaining} remaining)` : `, Insight -${consumed}`;
+  ctx.log.log(LOG_MSG.HERO.ARTIFICER.REFLECT(cur('mana', manaYield), suffix));
+}
+
 function clickMerchant(ctx: HeroActionContext): void {
   const u = ctx.upgrades;
   const bm = ctx.beadMultiplier?.('merchant') ?? 1;
 
-  // Must have enough illicit goods to open a crate
-  if (!ctx.wallet.canAfford('illicit-goods', MERCHANT_MG.GOODS_COST)) {
+  // Determine how many goods to open this click
+  let opensPerClick = calcMerchantOpensPerClick(u.level('BOXING_DAY'));
+
+  // Smuggler's Network: chance to double the opens
+  const doubleChance = calcMerchantDoubleChance(u.level('SMUGGLER_NETWORK'));
+  if (doubleChance > 0 && rollChance(doubleChance)) {
+    opensPerClick *= 2;
+  }
+
+  // Must have enough illicit goods
+  const totalCost = opensPerClick;
+  if (!ctx.wallet.canAfford('illicit-goods', totalCost)) {
     const have = Math.floor(ctx.wallet.get('illicit-goods'));
     ctx.log.log(LOG_MSG.HERO.MERCHANT.NOT_ENOUGH_GOODS(
-      cur('illicit-goods', MERCHANT_MG.GOODS_COST, ''),
+      cur('illicit-goods', totalCost, ''),
       cur('illicit-goods', have, ''),
     ), 'warn');
     return;
   }
 
-  ctx.wallet.remove('illicit-goods', MERCHANT_MG.GOODS_COST);
+  ctx.wallet.remove('illicit-goods', totalCost);
 
-  const contrabandLevel = u.level('CONTRABAND_EXPERTISE');
-  const shadyLevel      = u.level('SHADY_CONNECTIONS');
-  const fencedLevel     = u.level('FENCED_GOODS');
+  const blackMarketLevel = u.level('BLACK_MARKET_CONNECTIONS');
+  const shadyLevel       = u.level('SHADY_CONNECTIONS');
 
-  // Roll loot table
-  let rolls = MERCHANT_MG.BASE_ROLLS;
-  const bonusChance = shadyLevel * MERCHANT_MG.SHADY_CONNECTIONS_BONUS_PER_LEVEL;
-  if (bonusChance > 0 && rollChance(bonusChance)) rolls++;
-
+  // Roll loot table once per open
   const lootMap = new Map<string, number>();
-  for (let i = 0; i < rolls; i++) {
-    const result = rollIllicitLootTable(contrabandLevel);
-    if (result) {
-      const amount = Math.round(result.amount * bm);
-      lootMap.set(result.currencyId, (lootMap.get(result.currencyId) ?? 0) + amount);
+  for (let o = 0; o < opensPerClick; o++) {
+    let rolls = MERCHANT_MG.BASE_ROLLS;
+    const bonusChance = shadyLevel * MERCHANT_MG.SHADY_CONNECTIONS_BONUS_PER_LEVEL;
+    if (bonusChance > 0 && rollChance(bonusChance)) rolls++;
+
+    for (let i = 0; i < rolls; i++) {
+      const result = rollIllicitLootTable(blackMarketLevel);
+      if (result) {
+        const amount = Math.round(result.amount * bm);
+        lootMap.set(result.currencyId, (lootMap.get(result.currencyId) ?? 0) + amount);
+      }
     }
   }
 
@@ -684,13 +762,6 @@ function clickMerchant(ctx: HeroActionContext): void {
   ctx.stats.trackCurrencyGain('xp', xp);
   parts.push(cur('xp', xp));
 
-  // Fenced Goods — bonus gold
-  const fencedGold = calcMerchantFencedGold(fencedLevel) * bm;
-  if (fencedGold > 0) {
-    ctx.wallet.add('gold', fencedGold);
-    ctx.stats.trackCurrencyGain('gold', fencedGold);
-    parts.push(cur('gold', fencedGold));
-  }
 
   if (parts.length > 0) {
     ctx.log.log(LOG_MSG.MG_MERCHANT.OPEN_RESULT(parts.join(', ')));
@@ -706,8 +777,19 @@ function jackMerchant(ctx: JackAutoClickContext): void {
   const bm = ctx.beadMultiplier?.('merchant') ?? 1;
   const hasRelic = ctx.relicLevel('merchant') >= 1;
 
-  // Must have enough illicit goods to open a crate
-  if (!ctx.wallet.canAfford('illicit-goods', MERCHANT_MG.GOODS_COST)) {
+  // Determine how many goods to open this click
+  let opensPerClick = calcMerchantOpensPerClick(u.level('BOXING_DAY'));
+
+  // Smuggler's Network: chance to double the opens
+  const doubleChance = calcMerchantDoubleChance(u.level('SMUGGLER_NETWORK'));
+  if (doubleChance > 0 && rollChance(doubleChance)) {
+    opensPerClick *= 2;
+  }
+
+  const totalCost = opensPerClick;
+
+  // Must have enough illicit goods
+  if (!ctx.wallet.canAfford('illicit-goods', totalCost)) {
     if (!ctx.isJackStarved('merchant')) {
       ctx.setJackStarved('merchant', true);
       ctx.onPerSecondUpdate();
@@ -719,26 +801,35 @@ function jackMerchant(ctx: JackAutoClickContext): void {
     ctx.onPerSecondUpdate();
   }
 
-  ctx.wallet.remove('illicit-goods', MERCHANT_MG.GOODS_COST);
+  ctx.wallet.remove('illicit-goods', totalCost);
 
-  const contrabandLevel = u.level('CONTRABAND_EXPERTISE');
-  const shadyLevel      = u.level('SHADY_CONNECTIONS');
-  const fencedLevel     = u.level('FENCED_GOODS');
+  const blackMarketLevel = u.level('BLACK_MARKET_CONNECTIONS');
+  const shadyLevel       = u.level('SHADY_CONNECTIONS');
 
-  // Roll loot table
-  let rolls = MERCHANT_MG.BASE_ROLLS;
-  const bonusChance = shadyLevel * MERCHANT_MG.SHADY_CONNECTIONS_BONUS_PER_LEVEL;
-  if (bonusChance > 0 && rollChance(bonusChance)) rolls++;
+  // Roll loot table once per open
+  for (let o = 0; o < opensPerClick; o++) {
+    let rolls = MERCHANT_MG.BASE_ROLLS;
+    const bonusChance = shadyLevel * MERCHANT_MG.SHADY_CONNECTIONS_BONUS_PER_LEVEL;
+    if (bonusChance > 0 && rollChance(bonusChance)) rolls++;
 
-  // Relic: Ledger of Infinite Commerce — double loot rolls
-  if (hasRelic) rolls *= 2;
+    for (let i = 0; i < rolls; i++) {
+      const result = rollIllicitLootTable(blackMarketLevel);
+      if (result) {
+        const amount = Math.round(result.amount * bm);
+        ctx.wallet.add(result.currencyId, amount);
+        ctx.stats.trackCurrencyGain(result.currencyId, amount);
+      }
+    }
+  }
 
-  for (let i = 0; i < rolls; i++) {
-    const result = rollIllicitLootTable(contrabandLevel);
-    if (result) {
-      const amount = Math.round(result.amount * bm);
-      ctx.wallet.add(result.currencyId, amount);
-      ctx.stats.trackCurrencyGain(result.currencyId, amount);
+  // Relic: Ledger of Infinite Commerce — purchase 10 of a random resource for free
+  if (hasRelic) {
+    const pool = MERCHANT_MG.RELIC_PURCHASE_POOL;
+    if (pool.length > 0) {
+      const currencyId = pool[Math.floor(Math.random() * pool.length)];
+      const qty = MERCHANT_MG.RELIC_FREE_PURCHASE_QTY * bm;
+      ctx.wallet.add(currencyId, qty);
+      ctx.stats.trackCurrencyGain(currencyId, qty);
     }
   }
 
@@ -746,12 +837,65 @@ function jackMerchant(ctx: JackAutoClickContext): void {
   const xp = MERCHANT_MG.XP_REWARD * bm;
   ctx.wallet.add('xp', xp);
   ctx.stats.trackCurrencyGain('xp', xp);
+}
 
-  // Fenced Goods — bonus gold
-  const fencedGold = calcMerchantFencedGold(fencedLevel) * bm;
-  if (fencedGold > 0) {
-    ctx.wallet.add('gold', fencedGold);
-    ctx.stats.trackCurrencyGain('gold', fencedGold);
+// ── Artificer jacks ─────────────────────────────────────────
+
+function jackArtificerStudy(ctx: JackAutoClickContext): void {
+  const hasRelic = ctx.relicLevel('artificer') >= 1;
+
+  const u = ctx.upgrades;
+  const arcaneIntellectLevel = u.level('POTION_ARCANE_INTELLECT');
+  const maxInsight = YIELDS.ARTIFICER_MAX_INSIGHT + arcaneIntellectLevel * YIELDS.ARTIFICER_ARCANE_INTELLECT_PER_LEVEL;
+  const current = ctx.artificerInsight();
+  if (current >= maxInsight) return; // already full
+
+  const deepStudy = u.level('DEEP_STUDY');
+  const gain = YIELDS.ARTIFICER_INSIGHT_PER_CLICK + deepStudy + (hasRelic ? 1 : 0);
+  const newInsight = Math.min(maxInsight, current + gain);
+  ctx.setArtificerInsight(newInsight);
+
+  if (ctx.isJackStarved('artificer-study')) ctx.setJackStarved('artificer-study', false);
+}
+
+function jackArtificerReflect(ctx: JackAutoClickContext): void {
+  const hasRelic = ctx.relicLevel('artificer') >= 1;
+
+  const u = ctx.upgrades;
+  const arcaneIntellectLevel = u.level('POTION_ARCANE_INTELLECT');
+  const maxInsight = YIELDS.ARTIFICER_MAX_INSIGHT + arcaneIntellectLevel * YIELDS.ARTIFICER_ARCANE_INTELLECT_PER_LEVEL;
+  const current = ctx.artificerInsight();
+
+  // Optimization: only reflect when insight is at max — lets study jacks fill first
+  if (current < maxInsight) {
+    if (current <= 0) {
+      if (!ctx.isJackStarved('artificer-reflect')) {
+        ctx.setJackStarved('artificer-reflect', true);
+        ctx.onPerSecondUpdate();
+      }
+    }
+    return;
   }
+  if (ctx.isJackStarved('artificer-reflect')) {
+    ctx.setJackStarved('artificer-reflect', false);
+    ctx.onPerSecondUpdate();
+  }
+
+  const bm = ctx.beadMultiplier?.('artificer') ?? 1;
+  const maxConsume = YIELDS.ARTIFICER_MAX_CONSUME_PER_REFLECT;
+
+  // Consume at most maxConsume (8) insight, reduced by Focused Reflection
+  const consumePool = Math.min(maxConsume, current);
+  const focusedReflectionLevel = u.level('FOCUSED_REFLECTION');
+  const minConsume = Math.max(1, consumePool - focusedReflectionLevel);
+  const consumed = randInt(minConsume, consumePool);
+
+  const amplifiedLevel = u.level('AMPLIFIED_INSIGHT');
+  const effectiveInsight = Math.min(32, current + amplifiedLevel * YIELDS.ARTIFICER_AMPLIFIED_INSIGHT_PER_LEVEL);
+  const manaYield = effectiveInsight * effectiveInsight * (hasRelic ? 2 : 1) * bm;
+
+  ctx.setArtificerInsight(current - consumed);
+  ctx.wallet.add('mana', manaYield);
+  ctx.stats.trackCurrencyGain('mana', manaYield);
 }
 
