@@ -19,7 +19,7 @@ import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR,
 import { fmtNumber, clamp } from './utils/mathUtils';
 
 // ── Extracted hero helpers ─────────────────────────────────────
-import { calcAutoGoldPerSecond, calcBeastFindChance, calcCulinarianGoldCost, calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick, calcArtisanTreasureCost, calcArtisanTimerMs, calcArtisanGemstoneYield, calcArtisanMetalYield, calcArtisanGemstoneYieldJack, calcArtisanMetalYieldJack, rollNecromancerSwitchClicks } from './hero/yield-helpers';
+import { calcAutoGoldPerSecond, calcBeastFindChance, calcCulinarianGoldCost, calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick, calcArtisanTreasureCost, calcArtisanTimerMs, calcArtisanGemstoneYield, calcArtisanMetalYield, calcArtisanGemstoneYieldJack, calcArtisanMetalYieldJack, rollNecromancerSwitchClicks, calcSharperNeedlesThreadPerSec } from './hero/yield-helpers';
 import { buildHeroStats, getQuestBtnLabel } from './hero/hero-stats';
 import { dispatchHeroClick, performJackAutoClick, HeroActionContext, JackAutoClickContext } from './hero/hero-actions';
 import { calculatePerSecondRates, calculatePerSecondBreakdown } from './hero/per-second-calculator';
@@ -143,6 +143,7 @@ export class AppComponent implements OnInit, OnDestroy {
   fermentationVatsEnabled = true;
   koboldBaitEnabled       = false;
   ancientCookbookEnabled  = true;
+  chimeramancerRelicEnabled = true;
 
   // ── Multi-buy state ──────────────────────────────────────────
   /** How many upgrade levels to purchase per click: 1, 5, 10, or 'max'. */
@@ -414,6 +415,8 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresSynapticalPotions && this.upgrades.level('SYNAPTICAL_POTIONS') < 1) return false;
     if (gates.requiresDoubleDip     && this.upgrades.level('DOUBLE_DIP') < 1)        return false;
     if (gates.requiresFindFamiliar  && this.upgrades.level('FIND_FAMILIAR') < 1)     return false;
+    if (gates.requiresBiggerThreads && this.upgrades.level('BIGGER_THREADS') < 1)   return false;
+    if (gates.requiresSharperNeedles && this.upgrades.level('SHARPER_NEEDLES') < 1) return false;
     if (gates.xpMin != null && this.highestXp < gates.xpMin) return false;
     if (gates.requiresSharperSwordsMin != null && this.upgrades.level('SHARPER_SWORDS') < gates.requiresSharperSwordsMin) return false;
     if (gates.requiresTreasureChestMin != null && this.upgrades.level('TREASURE_CHEST') < gates.requiresTreasureChestMin) return false;
@@ -769,6 +772,18 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     }, 10000);
 
+    // Passive life-thread income: Sharper Needles + Loom of Life — every second
+    setInterval(() => {
+      const needlesYield = calcSharperNeedlesThreadPerSec(
+        this.upgrades.level('SHARPER_NEEDLES'),
+        this.upgrades.level('LOOM_OF_LIFE'),
+      ) * this.wallet.getBeadMultiplier('chimeramancer');
+      if (needlesYield > 0) {
+        this.wallet.add('life-thread', needlesYield);
+        this.statsService.trackCurrencyGain('life-thread', needlesYield);
+      }
+    }, 1000);
+
     // Jack auto-clicks: each allocated Jack fires once per second
     // Relic doubling: when a character's relic is active, each jack counts as two.
     // Jack'd Up: when purchased, jacks fire 50% faster (1.5× effective clicks per tick).
@@ -798,6 +813,27 @@ export class AppComponent implements OnInit, OnDestroy {
         for (let i = 0; i < effective; i++) performJackAutoClick(charId, ctx);
       }
 
+      // ── Chimeramancer Relic: Thread of Infinite Weaving ──────────
+      // Each chimeramancer jack also clicks every other hero button once.
+      if (this.chimeramancerRelicEnabled && this.upgrades.level('RELIC_CHIMERAMANCER') >= 1) {
+        const chimeraCount = this.jacksAllocations['chimeramancer'] ?? 0;
+        if (chimeraCount > 0) {
+          const chimeraRelicMult = this.upgrades.level('RELIC_CHIMERAMANCER') >= 1 ? 2 : 1;
+          const chimeraScaledRaw = chimeraCount * chimeraRelicMult * jackdUpMult;
+          const chimeraEffective = Math.floor(chimeraScaledRaw) + (Math.random() < (chimeraScaledRaw % 1) ? 1 : 0);
+          const otherCharIds = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief',
+            'necromancer-defile', 'necromancer-ward', 'merchant',
+            'artificer-study', 'artificer-reflect'];
+          for (let i = 0; i < chimeraEffective; i++) {
+            for (const otherId of otherCharIds) {
+              if (otherId === 'artisan') continue; // artisan handled via batch below
+              performJackAutoClick(otherId, ctx);
+            }
+            this.handleArtisanJackBatch(1);
+          }
+        }
+      }
+
       // Familiar auto-clicks: each active familiar fires JACKS_PER_FAMILIAR additional clicks
       if (this.familiarUnlocked) {
         const now = Date.now();
@@ -823,6 +859,28 @@ export class AppComponent implements OnInit, OnDestroy {
             for (let i = 0; i < clicks; i++) performJackAutoClick(key, ctx);
           }
         }
+
+        // ── Chimeramancer Relic (familiars): also click all other hero buttons ──
+        if (this.chimeramancerRelicEnabled && this.upgrades.level('RELIC_CHIMERAMANCER') >= 1) {
+          const chimeraFamExpiry = this.familiarTimers['chimeramancer'] ?? 0;
+          if (chimeraFamExpiry > Date.now() && !this.familiarsPaused) {
+            const chimeraRelicMult = 2; // relic is active → 2×
+            const mindAndSoul = this.upgrades.level('MIND_AND_SOUL');
+            const effectiveFamiliars = FAMILIAR.JACKS_PER_FAMILIAR + mindAndSoul * FAMILIAR.MIND_AND_SOUL_PER_LEVEL;
+            const famScaledRaw = effectiveFamiliars * chimeraRelicMult * jackdUpMult;
+            const famClicks = Math.floor(famScaledRaw) + (Math.random() < (famScaledRaw % 1) ? 1 : 0);
+            const otherCharIds = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief',
+              'necromancer-defile', 'necromancer-ward', 'merchant',
+              'artificer-study', 'artificer-reflect'];
+            for (let i = 0; i < famClicks; i++) {
+              for (const otherId of otherCharIds) {
+                performJackAutoClick(otherId, ctx);
+              }
+              this.handleArtisanJackBatch(1);
+            }
+          }
+        }
+
         // Prune expired timers and recalc rates
         if (anyExpired) {
           const cleaned: Record<string, number> = {};
@@ -900,6 +958,7 @@ export class AppComponent implements OnInit, OnDestroy {
       artificerInsight:            this.artificerInsight,
       selectedEtchingLevel:        this.selectedEtchingLevel,
       chimeramancerContributions:  this.chimeramancerContributions ?? undefined,
+      chimeramancerRelicEnabled:   this.chimeramancerRelicEnabled,
     };
   }
 
@@ -956,6 +1015,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.chimeramancerContributions = s.chimeramancerContributions
       ? { ...s.chimeramancerContributions }
       : null;
+    this.chimeramancerRelicEnabled = s.chimeramancerRelicEnabled ?? true;
     // Restore artisan timer — if still in the future, reschedule the completion callback
     this.artisanTimerUntil     = s.artisanTimerUntil     ?? 0;
     this.artisanTimerBatchSize = s.artisanTimerBatchSize  ?? 0;
@@ -989,15 +1049,16 @@ export class AppComponent implements OnInit, OnDestroy {
       wholesaleSpicesEnabled:  this.wholesaleSpicesEnabled,
       fermentationVatsEnabled: this.fermentationVatsEnabled,
       relicLevels: {
-        fighter:    this.upgrades.level('RELIC_FIGHTER'),
-        ranger:     this.upgrades.level('RELIC_RANGER'),
-        apothecary: this.upgrades.level('RELIC_APOTHECARY'),
-        culinarian: this.upgrades.level('RELIC_CULINARIAN'),
-        thief:      this.upgrades.level('RELIC_THIEF'),
-        artisan:    this.upgrades.level('RELIC_ARTISAN'),
-        necromancer:this.upgrades.level('RELIC_NECROMANCER'),
-        merchant:   this.upgrades.level('RELIC_MERCHANT'),
-        artificer:  this.upgrades.level('RELIC_ARTIFICER'),
+        fighter:       this.upgrades.level('RELIC_FIGHTER'),
+        ranger:        this.upgrades.level('RELIC_RANGER'),
+        apothecary:    this.upgrades.level('RELIC_APOTHECARY'),
+        culinarian:    this.upgrades.level('RELIC_CULINARIAN'),
+        thief:         this.upgrades.level('RELIC_THIEF'),
+        artisan:       this.upgrades.level('RELIC_ARTISAN'),
+        necromancer:   this.upgrades.level('RELIC_NECROMANCER'),
+        merchant:      this.upgrades.level('RELIC_MERCHANT'),
+        artificer:     this.upgrades.level('RELIC_ARTIFICER'),
+        chimeramancer: this.upgrades.level('RELIC_CHIMERAMANCER'),
       },
       necromancerActiveButton: this.necromancerActiveButton,
       familiarTimers: this.familiarTimers,
@@ -1019,6 +1080,7 @@ export class AppComponent implements OnInit, OnDestroy {
       artificerActiveButton: this.artificerActiveButton,
       artificerInsight: this.artificerInsight,
       selectedKoboldLevel: this.selectedKoboldLevel,
+      chimeramancerRelicEnabled: this.chimeramancerRelicEnabled,
     };
     const rates = calculatePerSecondRates(ctx);
     this.wallet.batchUpdate(() => {
@@ -1222,6 +1284,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   toggleFermentationVats(): void {
     this.fermentationVatsEnabled = !this.fermentationVatsEnabled;
+    this.updateAllPerSecond();
+  }
+
+  toggleChimeramancerRelic(): void {
+    this.chimeramancerRelicEnabled = !this.chimeramancerRelicEnabled;
     this.updateAllPerSecond();
   }
 

@@ -179,6 +179,13 @@ export const UPGRADE_FLAVOR = {
   SECOND_CHANCE:            { name: 'Second Chance',             desc: 'Allows one retry on a failed Etching round' },
   ETCHING_MASTERY:          { name: 'Etching Mastery',           desc: 'Awards bonus resources equal to (times selected × level) per Etching symbol' },
 
+  // Chimeramancer
+  BIGGER_THREADS:  { name: 'Bigger Threads',  desc: '+1 Life Thread per Stitch click per level' },
+  SHARPER_NEEDLES: { name: 'Sharper Needles', desc: '+1 Life Thread per second per level' },
+  LOOM_OF_LIFE:    { name: 'Loom of Life',    desc: 'Each Sharper Needle gets this many extra needles, each also generating +1 Life Thread/sec' },
+  QUICK_STITCHING: { name: 'Quick Stitching', desc: 'Doubles the amount of resources applied per contribution click per level' },
+  MINOR_TOUCH_UP:  { name: 'Minor Touch Up',  desc: '10% chance per level to also apply (level) of a resource to a random other unfinished bar' },
+
   // ── Relic upgrades (one per character) ──────────────────────────
   RELIC_FIGHTER:    { name: 'Crown of Hireling Command',          desc: 'Each Jack hires hirelings, who in turn hire hirelings' },
   RELIC_RANGER:     { name: 'Belt of the Woodlands',              desc: 'Each assigned Jack adds +1 to the base herb yield (before doubling) and +1 bonus beast meat per hunt' },
@@ -198,8 +205,9 @@ export const UPGRADE_FLAVOR = {
   STABLE_MARKET:         { name: 'Stable Market',              desc: '-1% max price on all stock market items per level' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
-  RELIC_MERCHANT:   { name: 'Ledger of Infinite Commerce',      desc: 'Each assigned Jack purchases 10 of a random resource for free per hero button press' },
-  RELIC_ARTIFICER:  { name: 'Tome of Boundless Creation',       desc: 'Jacks double the mana produced by Reflect and gain +1 insight per Study' },
+  RELIC_MERCHANT:      { name: 'Ledger of Infinite Commerce',      desc: 'Each assigned Jack purchases 10 of a random resource for free per hero button press' },
+  RELIC_ARTIFICER:     { name: 'Tome of Boundless Creation',       desc: 'Jacks double the mana produced by Reflect and gain +1 insight per Study' },
+  RELIC_CHIMERAMANCER: { name: 'Thread of Infinite Weaving',       desc: 'Jacks assigned to the Chimeramancer also click every other hero button (toggleable)' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
@@ -559,6 +567,7 @@ export const HERO_STATS_FLAVOR = {
   },
   CHIMERAMANCER: {
     THREAD_PER_CLICK: 'Thread / Stitch:',
+    NEEDLES_PER_SEC:  'Thread / Sec  :',
   },
 } as const;
 

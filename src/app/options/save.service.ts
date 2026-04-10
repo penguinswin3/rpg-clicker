@@ -68,6 +68,8 @@ export interface UpgradeState {
   selectedEtchingLevel?: number;
   /** Chimeramancer chimera-building contribution progress (currencyId → amount). */
   chimeramancerContributions?: Record<string, number>;
+  /** Whether the Chimeramancer relic "Thread of Infinite Weaving" is enabled. */
+  chimeramancerRelicEnabled?: boolean;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

@@ -45,6 +45,10 @@ export interface UpgradeGates {
   readonly requiresDoubleDip?: boolean;
   /** Hide until the Find Familiar minigame upgrade has been purchased. */
   readonly requiresFindFamiliar?: boolean;
+  /** Hide until Bigger Threads has at least one level purchased. */
+  readonly requiresBiggerThreads?: boolean;
+  /** Hide until Sharper Needles has at least one level purchased. */
+  readonly requiresSharperNeedles?: boolean;
   /** Hide until the player has received at least one Relic. */
   readonly requiresRelic?: boolean;
   /** Hide until the player has obtained at least one Kobold Fang. */
@@ -828,6 +832,40 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'magical-implement',     base: 100, scale: 1.4 },
     ] },
 
+  // ── Chimeramancer — standard ──────────────────────────────────
+  { id: 'BIGGER_THREADS', characterId: 'chimeramancer', category: 'standard', max: 999,
+    costs: [
+      { currency: 'life-thread', base: 50,  scale: 1.15 },
+      { currency: 'mana',        base: 100, scale: 1.15 },
+    ] },
+  { id: 'SHARPER_NEEDLES', characterId: 'chimeramancer', category: 'standard', max: 999,
+    gates: { requiresBiggerThreads: true },
+    costs: [
+      { currency: 'gold',      base: 10_000, scale: 1.15 },
+      { currency: 'brimstone', base: 25,     scale: 1.15 },
+    ] },
+  { id: 'LOOM_OF_LIFE', characterId: 'chimeramancer', category: 'standard', max: 999,
+    gates: { requiresSharperNeedles: true },
+    costs: [
+      { currency: 'magical-implement', base: 20,  scale: 1.2 },
+      { currency: 'monster-trophy',    base: 10,  scale: 1.2 },
+      { currency: 'kobold-pebble',     base: 50,  scale: 1.2 },
+    ] },
+
+  // ── Chimeramancer — minigame ──────────────────────────────────
+  { id: 'QUICK_STITCHING', characterId: 'chimeramancer', category: 'minigame', max: 8,
+    costs: [
+      { currency: 'construct',     base: 50,  scale: 2.0 },
+      { currency: 'life-thread',   base: 100, scale: 2.0 },
+      { currency: 'kobold-pebble', base: 200, scale: 1.8 },
+    ] },
+  { id: 'MINOR_TOUCH_UP', characterId: 'chimeramancer', category: 'minigame', max: 10,
+    costs: [
+      { currency: 'gold',  base: 100_000, scale: 1.6 },
+      { currency: 'herb',  base: 1_000,   scale: 1.6 },
+      { currency: 'spice', base: 500,     scale: 1.6 },
+    ] },
+
   // ── Relic upgrades (one per character) ──────────────────────────
   // Each costs exactly 1 relic + a dynamically-computed jewelry amount
   // (see RELIC_COSTS and UpgradeService.syncRelicCosts).
@@ -865,6 +903,10 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
             { currency: 'jewelry', base: 10, scale: 1.0 }] },
   { id: 'RELIC_ARTIFICER', characterId: 'artificer', category: 'relic', max: 1,
+    gates: { requiresRelic: true },
+    costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
+            { currency: 'jewelry', base: 10, scale: 1.0 }] },
+  { id: 'RELIC_CHIMERAMANCER', characterId: 'chimeramancer', category: 'relic', max: 1,
     gates: { requiresRelic: true },
     costs: [{ currency: 'relic',   base: 1,  scale: 1.0 },
             { currency: 'jewelry', base: 10, scale: 1.0 }] },
@@ -1240,22 +1282,22 @@ export const CHIMERAMANCER_MG = {
    * Order determines display order.  Quantities are fully configurable.
    */
   RESOURCE_REQUIREMENTS: [
-    { currencyId: 'beast',              required: 500   },
-    { currencyId: 'pixie-dust',         required: 200   },
-    { currencyId: 'synaptical-potion',  required: 100   },
-    { currencyId: 'kobold-ear',         required: 300   },
-    { currencyId: 'kobold-tongue',      required: 200   },
-    { currencyId: 'kobold-hair',        required: 200   },
-    { currencyId: 'hearty-meal',        required: 150   },
-    { currencyId: 'kobold-fang',        required: 150   },
-    { currencyId: 'kobold-feather',     required: 100   },
-    { currencyId: 'kobold-pebble',      required: 100   },
-    { currencyId: 'kobold-heart',       required: 50    },
-    { currencyId: 'bone',               required: 1000  },
-    { currencyId: 'soul-stone',         required: 500   },
-    { currencyId: 'mana',               required: 2000  },
-    { currencyId: 'construct',          required: 200   },
-    { currencyId: 'life-thread',        required: 500   },
+    { currencyId: 'beast',              required: 25_000   },
+    { currencyId: 'pixie-dust',         required: 10_000   },
+    { currencyId: 'synaptical-potion',  required: 10_000   },
+    { currencyId: 'kobold-ear',         required: 30_000   },
+    { currencyId: 'kobold-tongue',      required: 20_000   },
+    { currencyId: 'kobold-hair',        required: 20_000   },
+    { currencyId: 'hearty-meal',        required: 15_000   },
+    { currencyId: 'kobold-fang',        required: 15_000  },
+    { currencyId: 'kobold-feather',     required: 10_000   },
+    { currencyId: 'kobold-pebble',      required: 10_000   },
+    { currencyId: 'kobold-heart',       required: 5_000    },
+    { currencyId: 'bone',               required: 200_000  },
+    { currencyId: 'soul-stone',         required: 100_000   },
+    { currencyId: 'mana',               required: 200_000  },
+    { currencyId: 'construct',          required: 20_000   },
+    { currencyId: 'life-thread',        required: 500_000   },
     { currencyId: 'xp',                 required: 500_000 },
   ] as readonly ChimeraResourceReq[],
 
@@ -1461,6 +1503,8 @@ export const AUTO_SOLVE = {
   MERCHANT_TICK_MS:     1200,
   /** Artificer: one etching step per this many ms. */
   ARTIFICER_TICK_MS:    800,
+  /** Chimeramancer: one auto-stitch per this many ms. */
+  CHIMERAMANCER_TICK_MS: 1000,
 } as const;
 
 /** Ordered bead slot IDs as displayed left-to-right around the relic socket. */

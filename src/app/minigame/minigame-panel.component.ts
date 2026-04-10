@@ -157,6 +157,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() chimeramancerContributions: Record<string, number> | null = null;
   /** Emitted when chimeramancer contribution state changes. */
   @Output() chimeramancerContributionsChange = new EventEmitter<Record<string, number>>();
+  /** Quick Stitching level — forwarded to the chimeramancer minigame. */
+  @Input() quickStitchingLevel = 0;
+  /** Minor Touch Up level — forwarded to the chimeramancer minigame. */
+  @Input() minorTouchUpLevel = 0;
 
   /** Per-character auto-solve unlock state (gold-1 bead socketed). */
   @Input() autoSolveUnlocked: Record<string, boolean> = {};

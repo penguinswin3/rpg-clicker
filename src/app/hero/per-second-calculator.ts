@@ -22,6 +22,7 @@ import {
   calcNecromancerBoneYield, calcNecromancerWardXpCost,
   calcNecromancerBrimstoneYield, calcGraveLootingChance,
   calcMerchantOpensPerClick,
+  calcChimeramancerThreadPerClick, calcSharperNeedlesThreadPerSec,
 } from './yield-helpers';
 
 // ── Context ─────────────────────────────────────────────────
@@ -54,6 +55,8 @@ export interface PerSecondContext {
   artificerInsight: number;
   /** Currently-selected kobold level in the fighter minigame (for secondary drop rates). */
   selectedKoboldLevel: number;
+  /** Whether the Chimeramancer relic (Thread of Infinite Weaving) is enabled. */
+  chimeramancerRelicEnabled: boolean;
 }
 
 // ── Result ──────────────────────────────────────────────────
@@ -116,6 +119,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const hasThiefRelic      = (rl['thief']      ?? 0) >= 1;
   const hasArtisanRelic    = (rl['artisan']    ?? 0) >= 1;
   const hasMerchantRelic   = (rl['merchant']   ?? 0) >= 1;
+  const hasChimeramancerRelic = (rl['chimeramancer'] ?? 0) >= 1;
 
   // ── Jack counts (starved / stunned jacks produce nothing) ──
   // Relic doubling: when a character's relic is active, each jack counts as two.
@@ -126,14 +130,18 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const mindAndSoul = ctx.upgrades.level('MIND_AND_SOUL');
   const effectiveFamiliars = FAMILIAR.JACKS_PER_FAMILIAR + mindAndSoul * FAMILIAR.MIND_AND_SOUL_PER_LEVEL;
   const fam = (key: string) => ctx.familiarsPaused ? 0 : ((ctx.familiarTimers[key] ?? 0) > now ? effectiveFamiliars : 0);
-  const fighterJacks    = ((ctx.jacksAllocations['fighter']    ?? 0) + fam('fighter'))    * (hasFighterRelic ? 2 : 1) * jackdUpSpeedMult;
-  const rangerJacks     = ((ctx.jacksAllocations['ranger']     ?? 0) + fam('ranger'))     * (hasRangerRelic ? 2 : 1) * jackdUpSpeedMult;
-  const apothecaryJacks = (ctx.jackStarved['apothecary'] ? 0 : ((ctx.jacksAllocations['apothecary'] ?? 0) + fam('apothecary'))) * (hasApothecaryRelic ? 2 : 1) * jackdUpSpeedMult;
-  const culinarianJacks = (ctx.jackStarved['culinarian'] ? 0 : ((ctx.jacksAllocations['culinarian'] ?? 0) + fam('culinarian'))) * (hasCulinarianRelic ? 2 : 1) * jackdUpSpeedMult;
-  const thiefJacks      = ((ctx.jacksAllocations['thief'] ?? 0) + fam('thief'))           * (hasThiefRelic ? 2 : 1) * jackdUpSpeedMult;
-  const artisanJacks    = (ctx.jackStarved['artisan'] ? 0 : ((ctx.jacksAllocations['artisan'] ?? 0) + fam('artisan'))) * (hasArtisanRelic ? 2 : 1) * jackdUpSpeedMult;
-  const merchantJacks   = (ctx.jackStarved['merchant'] ? 0 : ((ctx.jacksAllocations['merchant'] ?? 0) + fam('merchant'))) * jackdUpSpeedMult;
-  const chimeraJacks    = ((ctx.jacksAllocations['chimeramancer'] ?? 0) + fam('chimeramancer')) * jackdUpSpeedMult;
+
+  // ── Chimeramancer relic: each chimera jack also clicks every other hero button ──
+  const chimeraJacks    = ((ctx.jacksAllocations['chimeramancer'] ?? 0) + fam('chimeramancer')) * (hasChimeramancerRelic ? 2 : 1) * jackdUpSpeedMult;
+  const chimeraRelicExtra = (hasChimeramancerRelic && ctx.chimeramancerRelicEnabled) ? chimeraJacks : 0;
+
+  const fighterJacks    = ((ctx.jacksAllocations['fighter']    ?? 0) + fam('fighter'))    * (hasFighterRelic ? 2 : 1) * jackdUpSpeedMult + chimeraRelicExtra;
+  const rangerJacks     = ((ctx.jacksAllocations['ranger']     ?? 0) + fam('ranger'))     * (hasRangerRelic ? 2 : 1) * jackdUpSpeedMult + chimeraRelicExtra;
+  const apothecaryJacks = ctx.jackStarved['apothecary'] ? 0 : (((ctx.jacksAllocations['apothecary'] ?? 0) + fam('apothecary')) * (hasApothecaryRelic ? 2 : 1) * jackdUpSpeedMult + chimeraRelicExtra);
+  const culinarianJacks = ctx.jackStarved['culinarian'] ? 0 : (((ctx.jacksAllocations['culinarian'] ?? 0) + fam('culinarian')) * (hasCulinarianRelic ? 2 : 1) * jackdUpSpeedMult + chimeraRelicExtra);
+  const thiefJacks      = ((ctx.jacksAllocations['thief'] ?? 0) + fam('thief'))           * (hasThiefRelic ? 2 : 1) * jackdUpSpeedMult + chimeraRelicExtra;
+  const artisanJacks    = ctx.jackStarved['artisan'] ? 0 : (((ctx.jacksAllocations['artisan'] ?? 0) + fam('artisan')) * (hasArtisanRelic ? 2 : 1) * jackdUpSpeedMult + chimeraRelicExtra);
+  const merchantJacks   = ctx.jackStarved['merchant'] ? 0 : (((ctx.jacksAllocations['merchant'] ?? 0) + fam('merchant')) * jackdUpSpeedMult + chimeraRelicExtra);
 
   // ── Derived values ────────────────────────────────────────
   const goldPerClick    = calcGoldPerClick(u.level('BETTER_BOUNTIES'));
@@ -229,8 +237,8 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const hasNecromancerRelic = (rl['necromancer'] ?? 0) >= 1;
   // With relic: both jack types always produce regardless of active button.
   // Without relic: only the active button's jacks produce.
-  const rawDefileJacks = ((ctx.jacksAllocations['necromancer-defile'] ?? 0) + fam('necromancer-defile')) * jackdUpSpeedMult;
-  const rawWardJacks   = ctx.jackStarved['necromancer-ward'] ? 0 : ((ctx.jacksAllocations['necromancer-ward'] ?? 0) + fam('necromancer-ward')) * jackdUpSpeedMult;
+  const rawDefileJacks = ((ctx.jacksAllocations['necromancer-defile'] ?? 0) + fam('necromancer-defile')) * jackdUpSpeedMult + chimeraRelicExtra;
+  const rawWardJacks   = ctx.jackStarved['necromancer-ward'] ? 0 : (((ctx.jacksAllocations['necromancer-ward'] ?? 0) + fam('necromancer-ward')) * jackdUpSpeedMult + chimeraRelicExtra);
   const defileJacks = hasNecromancerRelic ? rawDefileJacks
     : (ctx.necromancerActiveButton === 'defile' ? rawDefileJacks : 0);
   const wardJacks   = hasNecromancerRelic ? rawWardJacks
@@ -261,8 +269,8 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
 
   // ── Artificer rates ─────────────────────────────────────────
   const hasArtificerRelic = (rl['artificer'] ?? 0) >= 1;
-  const rawStudyJacks   = ((ctx.jacksAllocations['artificer-study']   ?? 0) + fam('artificer-study'))   * jackdUpSpeedMult;
-  const rawReflectJacks = ((ctx.jacksAllocations['artificer-reflect'] ?? 0) + fam('artificer-reflect')) * jackdUpSpeedMult;
+  const rawStudyJacks   = ((ctx.jacksAllocations['artificer-study']   ?? 0) + fam('artificer-study'))   * jackdUpSpeedMult + chimeraRelicExtra;
+  const rawReflectJacks = ((ctx.jacksAllocations['artificer-reflect'] ?? 0) + fam('artificer-reflect')) * jackdUpSpeedMult + chimeraRelicExtra;
   const studyJacks   = rawStudyJacks;
   const reflectJacks = rawReflectJacks;
   // Reflect mana estimate: uses current insight as proxy for average output
@@ -330,7 +338,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
     'kobold-feather': roundTo((koboldSecondaryRates['kobold-feather'] ?? 0) + (autoBuyGains['kobold-feather'] ?? 0) + mrg('kobold-feather'), 2),
     'kobold-pebble':  roundTo((koboldSecondaryRates['kobold-pebble'] ?? 0) + (autoBuyGains['kobold-pebble'] ?? 0) + mrg('kobold-pebble'), 2),
     'kobold-heart':   roundTo((koboldSecondaryRates['kobold-heart'] ?? 0) + (autoBuyGains['kobold-heart'] ?? 0) + mrg('kobold-heart'), 2),
-    'life-thread':    roundTo(chimeraJacks * CHIMERAMANCER_YIELDS.THREAD_PER_CLICK * bm('chimeramancer'), 2),
+    'life-thread':    roundTo(chimeraJacks * calcChimeramancerThreadPerClick(CHIMERAMANCER_YIELDS.THREAD_PER_CLICK, u.level('BIGGER_THREADS')) * bm('chimeramancer') + calcSharperNeedlesThreadPerSec(u.level('SHARPER_NEEDLES'), u.level('LOOM_OF_LIFE')) * bm('chimeramancer'), 2),
   };
 }
 
@@ -351,6 +359,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const hasThiefRelic      = (rl['thief']      ?? 0) >= 1;
   const hasArtisanRelic    = (rl['artisan']    ?? 0) >= 1;
   const hasMerchantRelic   = (rl['merchant']   ?? 0) >= 1;
+  const hasChimeramancerRelic2 = (rl['chimeramancer'] ?? 0) >= 1;
 
   // ── Jack counts: split into regular jacks vs familiar jacks ──
   // Both are subject to starvation / stun checks and relic doubling.
@@ -363,25 +372,33 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
 
   const relicMul = (hasRelic: boolean) => hasRelic ? 2 : 1;
 
+  // Chimeramancer relic: extra clicks per second to every other character
+  const chimeraRelicExtraJack = (hasChimeramancerRelic2 && ctx.chimeramancerRelicEnabled)
+    ? (ctx.jacksAllocations['chimeramancer'] ?? 0) * relicMul(hasChimeramancerRelic2) * jackdUpSpeedMult2
+    : 0;
+  const chimeraRelicExtraFam = (hasChimeramancerRelic2 && ctx.chimeramancerRelicEnabled)
+    ? famRaw('chimeramancer') * relicMul(hasChimeramancerRelic2) * jackdUpSpeedMult2
+    : 0;
+
   // Regular jacks (allocated from pool)
-  const fJacks   = (ctx.jacksAllocations['fighter']    ?? 0) * relicMul(hasFighterRelic)    * jackdUpSpeedMult2;
-  const rJacks   = (ctx.jacksAllocations['ranger']     ?? 0) * relicMul(hasRangerRelic)     * jackdUpSpeedMult2;
-  const aJacks   = (ctx.jackStarved['apothecary'] ? 0 : (ctx.jacksAllocations['apothecary'] ?? 0)) * relicMul(hasApothecaryRelic) * jackdUpSpeedMult2;
-  const cJacks   = (ctx.jackStarved['culinarian'] ? 0 : (ctx.jacksAllocations['culinarian'] ?? 0)) * relicMul(hasCulinarianRelic) * jackdUpSpeedMult2;
-  const tJacks   = (ctx.jacksAllocations['thief']      ?? 0) * relicMul(hasThiefRelic)      * jackdUpSpeedMult2;
-  const artJacks = (ctx.jackStarved['artisan'] ? 0 : (ctx.jacksAllocations['artisan'] ?? 0)) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2;
-  const mJacks   = (ctx.jackStarved['merchant'] ? 0 : (ctx.jacksAllocations['merchant']  ?? 0)) * jackdUpSpeedMult2;
-  const chJacks  = (ctx.jacksAllocations['chimeramancer'] ?? 0) * jackdUpSpeedMult2;
+  const fJacks   = (ctx.jacksAllocations['fighter']    ?? 0) * relicMul(hasFighterRelic)    * jackdUpSpeedMult2 + chimeraRelicExtraJack;
+  const rJacks   = (ctx.jacksAllocations['ranger']     ?? 0) * relicMul(hasRangerRelic)     * jackdUpSpeedMult2 + chimeraRelicExtraJack;
+  const aJacks   = ctx.jackStarved['apothecary'] ? 0 : ((ctx.jacksAllocations['apothecary'] ?? 0) * relicMul(hasApothecaryRelic) * jackdUpSpeedMult2 + chimeraRelicExtraJack);
+  const cJacks   = ctx.jackStarved['culinarian'] ? 0 : ((ctx.jacksAllocations['culinarian'] ?? 0) * relicMul(hasCulinarianRelic) * jackdUpSpeedMult2 + chimeraRelicExtraJack);
+  const tJacks   = (ctx.jacksAllocations['thief']      ?? 0) * relicMul(hasThiefRelic)      * jackdUpSpeedMult2 + chimeraRelicExtraJack;
+  const artJacks = ctx.jackStarved['artisan'] ? 0 : ((ctx.jacksAllocations['artisan'] ?? 0) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2 + chimeraRelicExtraJack);
+  const mJacks   = ctx.jackStarved['merchant'] ? 0 : ((ctx.jacksAllocations['merchant']  ?? 0) * jackdUpSpeedMult2 + chimeraRelicExtraJack);
+  const chJacks  = (ctx.jacksAllocations['chimeramancer'] ?? 0) * relicMul(hasChimeramancerRelic2) * jackdUpSpeedMult2;
 
   // Familiar jacks (separate line in breakdown)
-  const fFam   = famRaw('fighter')    * relicMul(hasFighterRelic)    * jackdUpSpeedMult2;
-  const rFam   = famRaw('ranger')     * relicMul(hasRangerRelic)     * jackdUpSpeedMult2;
-  const aFam   = (ctx.jackStarved['apothecary'] ? 0 : famRaw('apothecary')) * relicMul(hasApothecaryRelic) * jackdUpSpeedMult2;
-  const cFam   = (ctx.jackStarved['culinarian'] ? 0 : famRaw('culinarian')) * relicMul(hasCulinarianRelic) * jackdUpSpeedMult2;
-  const tFam   = famRaw('thief')      * relicMul(hasThiefRelic)      * jackdUpSpeedMult2;
-  const artFam = (ctx.jackStarved['artisan'] ? 0 : famRaw('artisan')) * relicMul(hasArtisanRelic) * jackdUpSpeedMult2;
-  const mFam   = (ctx.jackStarved['merchant'] ? 0 : famRaw('merchant')) * jackdUpSpeedMult2;
-  const chFam  = famRaw('chimeramancer') * jackdUpSpeedMult2;
+  const fFam   = famRaw('fighter')    * relicMul(hasFighterRelic)    * jackdUpSpeedMult2 + chimeraRelicExtraFam;
+  const rFam   = famRaw('ranger')     * relicMul(hasRangerRelic)     * jackdUpSpeedMult2 + chimeraRelicExtraFam;
+  const aFam   = ctx.jackStarved['apothecary'] ? 0 : (famRaw('apothecary') * relicMul(hasApothecaryRelic) * jackdUpSpeedMult2 + chimeraRelicExtraFam);
+  const cFam   = ctx.jackStarved['culinarian'] ? 0 : (famRaw('culinarian') * relicMul(hasCulinarianRelic) * jackdUpSpeedMult2 + chimeraRelicExtraFam);
+  const tFam   = famRaw('thief')      * relicMul(hasThiefRelic)      * jackdUpSpeedMult2 + chimeraRelicExtraFam;
+  const artFam = ctx.jackStarved['artisan'] ? 0 : (famRaw('artisan') * relicMul(hasArtisanRelic) * jackdUpSpeedMult2 + chimeraRelicExtraFam);
+  const mFam   = ctx.jackStarved['merchant'] ? 0 : (famRaw('merchant') * jackdUpSpeedMult2 + chimeraRelicExtraFam);
+  const chFam  = famRaw('chimeramancer') * relicMul(hasChimeramancerRelic2) * jackdUpSpeedMult2;
 
   // Combined totals (needed for thief uptime fraction)
   const thiefJacks      = tJacks   + tFam;
@@ -542,10 +559,10 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const necRelicYieldMul = hasNecromancerRelic2 ? 2 : 1;
 
   // Raw jack counts (before active-button gating)
-  const rawDefJacks = (ctx.jacksAllocations['necromancer-defile'] ?? 0) * jackdUpSpeedMult2;
-  const rawDefFam   = famRaw('necromancer-defile') * jackdUpSpeedMult2;
-  const rawWrdJacks = ctx.jackStarved['necromancer-ward'] ? 0 : (ctx.jacksAllocations['necromancer-ward'] ?? 0) * jackdUpSpeedMult2;
-  const rawWrdFam   = ctx.jackStarved['necromancer-ward'] ? 0 : famRaw('necromancer-ward') * jackdUpSpeedMult2;
+  const rawDefJacks = (ctx.jacksAllocations['necromancer-defile'] ?? 0) * jackdUpSpeedMult2 + chimeraRelicExtraJack;
+  const rawDefFam   = famRaw('necromancer-defile') * jackdUpSpeedMult2 + chimeraRelicExtraFam;
+  const rawWrdJacks = ctx.jackStarved['necromancer-ward'] ? 0 : ((ctx.jacksAllocations['necromancer-ward'] ?? 0) * jackdUpSpeedMult2 + chimeraRelicExtraJack);
+  const rawWrdFam   = ctx.jackStarved['necromancer-ward'] ? 0 : (famRaw('necromancer-ward') * jackdUpSpeedMult2 + chimeraRelicExtraFam);
 
   // Active-button gating (relic: always active)
   const defJacks = hasNecromancerRelic2 ? rawDefJacks : (ctx.necromancerActiveButton === 'defile' ? rawDefJacks : 0);
@@ -619,10 +636,10 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
 
   // ── Artificer ──────────────────────────────────────────────
   const hasArtificerRelic2 = (rl['artificer'] ?? 0) >= 1;
-  const rawArtStudyJacks = (ctx.jacksAllocations['artificer-study']   ?? 0) * jackdUpSpeedMult2;
-  const rawArtStudyFam   = famRaw('artificer-study') * jackdUpSpeedMult2;
-  const rawArtRefJacks   = (ctx.jacksAllocations['artificer-reflect'] ?? 0) * jackdUpSpeedMult2;
-  const rawArtRefFam     = famRaw('artificer-reflect') * jackdUpSpeedMult2;
+  const rawArtStudyJacks = (ctx.jacksAllocations['artificer-study']   ?? 0) * jackdUpSpeedMult2 + chimeraRelicExtraJack;
+  const rawArtStudyFam   = famRaw('artificer-study') * jackdUpSpeedMult2 + chimeraRelicExtraFam;
+  const rawArtRefJacks   = (ctx.jacksAllocations['artificer-reflect'] ?? 0) * jackdUpSpeedMult2 + chimeraRelicExtraJack;
+  const rawArtRefFam     = famRaw('artificer-reflect') * jackdUpSpeedMult2 + chimeraRelicExtraFam;
   const artStudyJacks = rawArtStudyJacks;
   const artStudyFam   = rawArtStudyFam;
   const artRefJacks   = rawArtRefJacks;
@@ -651,11 +668,14 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   }
 
   // ── Chimeramancer ─────────────────────────────────────────────
-  const chThreadPerJack = CHIMERAMANCER_YIELDS.THREAD_PER_CLICK * bm('chimeramancer');
+  const chThreadPerJack = calcChimeramancerThreadPerClick(CHIMERAMANCER_YIELDS.THREAD_PER_CLICK, u.level('BIGGER_THREADS')) * bm('chimeramancer');
   if (chJacks > 0) add('life-thread', 'Chimeramancer', chJacks * chThreadPerJack);
   if (chFam   > 0) add('life-thread', 'Familiar (Chimeramancer)', chFam * chThreadPerJack);
   if (chJacks > 0) add('xp', 'Chimeramancer', chJacks * bm('chimeramancer'));
   if (chFam   > 0) add('xp', 'Familiar (Chimeramancer)', chFam * bm('chimeramancer'));
+  // Sharper Needles: passive life-thread per second
+  const needlesRate = calcSharperNeedlesThreadPerSec(u.level('SHARPER_NEEDLES'), u.level('LOOM_OF_LIFE')) * bm('chimeramancer');
+  if (needlesRate > 0) add('life-thread', 'Passive (Needles)', needlesRate);
 
   return bd;
 }

@@ -159,6 +159,43 @@ $chimera-pink: #c44d8e;
   font-style: italic;
 }
 
+// ── Auto-stitch toggle (gold theme) ─────
+.auto-solve-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+.auto-solve-btn {
+  background: #0a0a0a;
+  color: #665200;
+  border: 1px solid #4d3d00;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+
+  &:hover {
+    border-color: #997a00;
+    color: #cca300;
+  }
+
+  &.as-on {
+    color: #ffcc00;
+    border-color: #997a00;
+    background: #1a1500;
+
+    &:hover {
+      background: #2a2200;
+      border-color: #ffcc00;
+    }
+  }
+}
+
 // ── Animations ──────────────────────────
 @keyframes pulse-glow {
   0%   { text-shadow: 0 0 4px $chimera-pink; }

@@ -25,6 +25,7 @@ import {
   calcNecromancerBrimstoneYield, calcNecromancerSwitchMin,
   calcNecromancerSwitchMax, calcGraveLootingChance,
   calcMerchantOpensPerClick, calcMerchantDoubleChance,
+  calcChimeramancerThreadPerClick, calcSharperNeedlesThreadPerSec,
 } from './yield-helpers';
 
 // ── Context required by the builder ──────────────────────────
@@ -313,7 +314,21 @@ function buildArtificerStats(ctx: HeroStatsContext): HeroStat[] {
 }
 
 function buildChimeramancerStats(ctx: HeroStatsContext): HeroStat[] {
-  return [
-    { label: HERO_STATS_FLAVOR.CHIMERAMANCER.THREAD_PER_CLICK, value: `${CHIMERAMANCER_YIELDS.THREAD_PER_CLICK}` },
+  const u = ctx.upgrades;
+  const threadPerClick = calcChimeramancerThreadPerClick(
+    CHIMERAMANCER_YIELDS.THREAD_PER_CLICK,
+    u.level('BIGGER_THREADS'),
+  );
+  const needlesPerSec = calcSharperNeedlesThreadPerSec(
+    u.level('SHARPER_NEEDLES'),
+    u.level('LOOM_OF_LIFE'),
+  );
+
+  const stats: HeroStat[] = [
+    { label: HERO_STATS_FLAVOR.CHIMERAMANCER.THREAD_PER_CLICK, value: `${threadPerClick}` },
   ];
+  if (needlesPerSec > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.CHIMERAMANCER.NEEDLES_PER_SEC, value: `${needlesPerSec}` });
+  }
+  return stats;
 }

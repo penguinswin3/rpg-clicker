@@ -310,3 +310,28 @@ export function rollIllicitLootTable(
   const last = table[table.length - 1];
   return { currencyId: last.currencyId, amount: randInt(last.min, last.max) };
 }
+
+// ── Chimeramancer ────────────────────────────────────────────
+
+/**
+ * Life Thread added per Stitch hero-button click (base + Bigger Threads bonus).
+ * Uses CHIMERAMANCER_YIELDS.THREAD_PER_CLICK as the base.
+ */
+export function calcChimeramancerThreadPerClick(
+  baseThreadPerClick: number,
+  biggerThreadsLevel: number,
+): number {
+  return baseThreadPerClick + biggerThreadsLevel;
+}
+
+/**
+ * Passive Life Thread per second from Sharper Needles × Loom of Life multiplier.
+ * Mirrors the Contracted Hirelings + Hireling's Hirelings formula:
+ *   base + base * multiplier = base * (1 + multiplier)
+ */
+export function calcSharperNeedlesThreadPerSec(
+  sharperNeedlesLevel: number,
+  loomOfLifeLevel: number,
+): number {
+  return sharperNeedlesLevel + sharperNeedlesLevel * loomOfLifeLevel;
+}

@@ -64,7 +64,8 @@
       artisan: isAutoSolveUnlocked('artisan'),
       necromancer: isAutoSolveUnlocked('necromancer'),
       merchant: isAutoSolveUnlocked('merchant'),
-      artificer: isAutoSolveUnlocked('artificer')
+      artificer: isAutoSolveUnlocked('artificer'),
+      chimeramancer: isAutoSolveUnlocked('chimeramancer')
     }"
     [autoSolveGoodMode]="{
       fighter: isAutoSolveGood('fighter'),
@@ -75,7 +76,8 @@
       artisan: isAutoSolveGood('artisan'),
       necromancer: isAutoSolveGood('necromancer'),
       merchant: isAutoSolveGood('merchant'),
-      artificer: isAutoSolveGood('artificer')
+      artificer: isAutoSolveGood('artificer'),
+      chimeramancer: isAutoSolveGood('chimeramancer')
     }"
     [autoSolveEnabled]="autoSolveEnabled"
     (autoSolveEnabledChange)="autoSolveEnabled[$event.charId] = $event.enabled"
@@ -103,7 +105,9 @@
     [selectedEtchingLevel]="selectedEtchingLevel"
     (selectedEtchingLevelChange)="selectedEtchingLevel = $event"
     [chimeramancerContributions]="chimeramancerContributions"
-    (chimeramancerContributionsChange)="onChimeramancerContributionsChange($event)" />
+    (chimeramancerContributionsChange)="onChimeramancerContributionsChange($event)"
+    [quickStitchingLevel]="upgrades.level('QUICK_STITCHING')"
+    [minorTouchUpLevel]="upgrades.level('MINOR_TOUCH_UP')" />
 
   <div class="game-wrapper">
 
@@ -355,6 +359,12 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                   [class.vat-on]="fermentationVatsEnabled"
                   (click)="toggleFermentationVats()">
             {{ fermentationVatsEnabled ? '[ Fermentation Vats: ON  ]' : '[ Fermentation Vats: OFF ]' }}
+          </button>
+          <button class="wholesale-toggle-btn"
+                  *ngIf="activeCharacterId === 'chimeramancer' && upgrades.level('RELIC_CHIMERAMANCER') >= 1"
+                  [class.wt-on]="chimeramancerRelicEnabled"
+                  (click)="toggleChimeramancerRelic()">
+            {{ chimeramancerRelicEnabled ? '[ Infinite Weaving: ON  ]' : '[ Infinite Weaving: OFF ]' }}
           </button>
           <div class="necro-clicks-remaining" *ngIf="activeCharacterId === 'necromancer' && upgrades.level('AUGURY') >= 1">
             Switches in: {{ necromancerClicksRemaining }} clicks

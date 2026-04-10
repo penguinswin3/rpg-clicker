@@ -15,7 +15,7 @@
 
   <!-- ── Resource bars ──────────────────── -->
   <div class="resource-bars">
-    <div class="res-row" *ngFor="let bar of bars">
+    <div class="res-row" *ngFor="let bar of bars; let i = index">
       <span class="res-symbol"
             [style.color]="bar.color"
             [title]="bar.displayName">{{ bar.symbol }}</span>
@@ -30,10 +30,19 @@
       <button class="contribute-btn"
               [disabled]="!canContribute(bar)"
               [style.borderColor]="bar.color"
-              (click)="contribute(bar)">
-        +1
+              (click)="contribute(bar, i)">
+        +{{ shortNum(contributeAmount) }}
       </button>
     </div>
+  </div>
+
+  <!-- ── Auto-stitch toggle ─────────────── -->
+  <div class="auto-solve-row" *ngIf="autoSolveUnlocked && !chimeraAwakened">
+    <button class="auto-solve-btn"
+            [class.as-on]="autoSolveEnabled"
+            (click)="toggleAutoSolve()">
+      {{ autoSolveEnabled ? '[ Auto-Stitch: ON  ]' : '[ Auto-Stitch: OFF ]' }}
+    </button>
   </div>
 
   <!-- ── Awakened placeholder ────────────── -->

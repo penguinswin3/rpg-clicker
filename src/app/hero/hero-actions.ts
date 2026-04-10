@@ -26,6 +26,7 @@ import {
   calcNecromancerBrimstoneYield, calcGraveLootingChance,
   calcMerchantOpensPerClick, calcMerchantDoubleChance,
   rollIllicitLootTable,
+  calcChimeramancerThreadPerClick,
 } from './yield-helpers';
 
 // ── Contexts ────────────────────────────────────────────────
@@ -902,7 +903,10 @@ function jackArtificerReflect(ctx: JackAutoClickContext): void {
 
 function clickChimeramancer(ctx: HeroActionContext): void {
   const bm = ctx.beadMultiplier?.('chimeramancer') ?? 1;
-  const threadYield = CHIMERAMANCER_YIELDS.THREAD_PER_CLICK * bm;
+  const threadYield = calcChimeramancerThreadPerClick(
+    CHIMERAMANCER_YIELDS.THREAD_PER_CLICK,
+    ctx.upgrades.level('BIGGER_THREADS'),
+  ) * bm;
   const xpYield = 1 * bm;
   ctx.wallet.add('life-thread', threadYield);
   ctx.wallet.add('xp', xpYield);
@@ -913,7 +917,10 @@ function clickChimeramancer(ctx: HeroActionContext): void {
 
 function jackChimeramancer(ctx: JackAutoClickContext): void {
   const bm = ctx.beadMultiplier?.('chimeramancer') ?? 1;
-  const threadYield = CHIMERAMANCER_YIELDS.THREAD_PER_CLICK * bm;
+  const threadYield = calcChimeramancerThreadPerClick(
+    CHIMERAMANCER_YIELDS.THREAD_PER_CLICK,
+    ctx.upgrades.level('BIGGER_THREADS'),
+  ) * bm;
   const xpYield = 1 * bm;
   ctx.wallet.add('life-thread', threadYield);
   ctx.wallet.add('xp', xpYield);
