@@ -43,6 +43,8 @@ export class WalletService {
     { id: 'kobold-fang',          ...CURRENCY_FLAVOR['kobold-fang'],           requiredCharacterId: 'fighter',   manualUnlock: true },
     { id: 'kobold-brain',         ...CURRENCY_FLAVOR['kobold-brain'],          requiredCharacterId: 'fighter',   manualUnlock: true },
     { id: 'kobold-feather',       ...CURRENCY_FLAVOR['kobold-feather'],        requiredCharacterId: 'fighter',   manualUnlock: true },
+    { id: 'kobold-pebble',        ...CURRENCY_FLAVOR['kobold-pebble'],         requiredCharacterId: 'fighter',   manualUnlock: true },
+    { id: 'kobold-heart',         ...CURRENCY_FLAVOR['kobold-heart'],          requiredCharacterId: 'fighter',   manualUnlock: true },
 
     // ── Ranger ───────────────────────────────────────────────────────────────
     { id: 'herb',                 ...CURRENCY_FLAVOR['herb'],                  requiredCharacterId: 'ranger'       },
@@ -69,6 +71,18 @@ export class WalletService {
     { id: 'brimstone',           ...CURRENCY_FLAVOR['brimstone'],              requiredCharacterId: 'necromancer'   },
     { id: 'soul-stone',          ...CURRENCY_FLAVOR['soul-stone'],             requiredCharacterId: 'necromancer', manualUnlock: true },
 
+    // ── Merchant ────────────────────────────────────────────────────
+    { id: 'illicit-goods',       ...CURRENCY_FLAVOR['illicit-goods'],          requiredCharacterId: 'merchant'      },
+    { id: 'monster-trophy',      ...CURRENCY_FLAVOR['monster-trophy'],         requiredCharacterId: 'merchant',  manualUnlock: true },
+    { id: 'forbidden-tome',      ...CURRENCY_FLAVOR['forbidden-tome'],         requiredCharacterId: 'merchant',  manualUnlock: true },
+    { id: 'magical-implement',   ...CURRENCY_FLAVOR['magical-implement'],      requiredCharacterId: 'merchant',  manualUnlock: true },
+
+    // ── Artificer ────────────────────────────────────────────────────
+    { id: 'mana',                ...CURRENCY_FLAVOR['mana'],                  requiredCharacterId: 'artificer'      },
+    { id: 'construct',           ...CURRENCY_FLAVOR['construct'],              requiredCharacterId: 'artificer', manualUnlock: true },
+
+    // ── Chimeramancer ────────────────────────────────────────────────
+    { id: 'life-thread',         ...CURRENCY_FLAVOR['life-thread'],           requiredCharacterId: 'chimeramancer'  },
   ];
 
   private readonly stateSource = new BehaviorSubject<WalletState>(
@@ -184,6 +198,20 @@ export class WalletService {
    */
   isCurrencyUnlocked(id: string): boolean {
     return this.manualUnlocksSource.getValue().has(id);
+  }
+
+  // ── Bead Multipliers ───────────────────────────────────────
+  /** Per-character bead yield multipliers. Updated when blue beads are socketed. */
+  private beadMultipliers = new Map<string, number>();
+
+  /** Set the bead yield multiplier for a character (2^N where N = socketed blue beads). */
+  setBeadMultiplier(charId: string, mult: number): void {
+    this.beadMultipliers.set(charId, mult);
+  }
+
+  /** Get the bead yield multiplier for a character (default 1). */
+  getBeadMultiplier(charId: string): number {
+    return this.beadMultipliers.get(charId) ?? 1;
   }
 
   // ── Private ───────────────────────────────────────────────────

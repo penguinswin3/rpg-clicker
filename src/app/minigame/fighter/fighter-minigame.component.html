@@ -3,7 +3,7 @@
   <!-- ── Kobold Level Selector ─────────── -->
   <div class="kobold-level-row" *ngIf="strongerKoboldsLevel > 0">
     <button class="klvl-btn" [disabled]="selectedKoboldLevel <= 1" (click)="decreaseKoboldLevel()">[-]</button>
-    <span class="klvl-label">Kobold Level: <span class="klvl-num">{{ selectedKoboldLevel }}</span></span>
+    <span class="klvl-label">Next Kobold Level: <span class="klvl-num">{{ selectedKoboldLevel }}</span></span>
     <button class="klvl-btn" [disabled]="selectedKoboldLevel >= maxKoboldLevel" (click)="increaseKoboldLevel()">[+]</button>
   </div>
 
@@ -50,14 +50,14 @@
     <div class="primary-slot">
       <button class="action-btn atk-btn"
               [class.slot-inactive]="defeated"
-              [disabled]="actionsDisabled"
+              [disabled]="actionsDisabled || autoSolveEnabled"
               (click)="attack()">
         [&gt; ATTACK ]
       </button>
       <button class="action-btn retry-btn"
               [class.slot-inactive]="!defeated"
               [class.resting]="restCountdown > 0"
-              [disabled]="restCountdown > 0"
+              [disabled]="restCountdown > 0 || autoSolveEnabled"
               (click)="retry()">
         {{ restCountdown > 0 ? '[ LONG REST: ' + restCountdown + 's ]' : '[ RETRY ]' }}
       </button>
@@ -95,10 +95,19 @@
   <!-- ── Flee button ─────────────────────── -->
   <button class="action-btn flee-btn"
           [class.slot-invisible]="defeated"
-          [disabled]="fleeDisabled"
+          [disabled]="fleeDisabled || autoSolveEnabled"
           (click)="flee()">
     {{ fleeing ? '[ FLEEING... ' + fleeCountdown + 's ]' : '[ FLEE ]' }}
   </button>
+
+  <!-- ── Auto-solve toggle ─────────────── -->
+  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
+    <button class="auto-solve-btn"
+            [class.as-on]="autoSolveEnabled"
+            (click)="toggleAutoSolve()">
+      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
+    </button>
+  </div>
 
 </div>
 

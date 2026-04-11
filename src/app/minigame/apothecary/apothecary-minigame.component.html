@@ -4,13 +4,14 @@
   <div class="primary-slot">
     <button class="action-btn start-btn"
             [class.slot-inactive]="potionActive"
-            [disabled]="!canStart || potionActive"
+            [disabled]="!canStart || potionActive || autoSolveEnabled"
             (click)="startPotion()">
       [ START POTION ]
     </button>
     <button class="action-btn brew-btn"
             [class.slot-inactive]="!potionActive"
             [class.btn-hot]="isInZone"
+            [disabled]="autoSolveEnabled"
             (click)="brew()">
       [ BREW ]
     </button>
@@ -127,6 +128,15 @@
   <!-- ── Last message ─────────────────── -->
   <div class="brew-msg" *ngIf="lastMsg" [ngClass]="msgClass">
     {{ lastMsg }}
+  </div>
+
+  <!-- ── Auto-solve toggle ─────────────── -->
+  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
+    <button class="auto-solve-btn"
+            [class.as-on]="autoSolveEnabled"
+            (click)="toggleAutoSolve()">
+      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
+    </button>
   </div>
 
 </div>

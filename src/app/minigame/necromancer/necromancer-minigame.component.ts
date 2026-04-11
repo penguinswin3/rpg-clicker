@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, OnDestroy, inject,
+  Component, OnInit, OnDestroy, OnChanges, SimpleChanges, inject, Input, Output, EventEmitter,
   ChangeDetectionStrategy, ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -8,8 +8,8 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { UpgradeService } from '../../upgrade/upgrade.service';
-import { NECROMANCER_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
+import { NECROMANCER_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES, LOG_MSG } from '../../flavor-text';
 
 // ── Helpers ─────────────────────────────────────────────────
 
@@ -102,7 +102,7 @@ function shortestCycle(
   styleUrls: ['./necromancer-minigame.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NecromancerMinigameComponent implements OnInit, OnDestroy {
+export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChanges {
   private wallet   = inject(WalletService);
   private log      = inject(ActivityLogService);
   private stats    = inject(StatisticsService);
@@ -152,6 +152,30 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
   lastMsg  = '';
   msgClass = 'msg-neutral';
 
+  // ── Auto-solve ──────────────────────────
+  @Input() autoSolveUnlocked = false;
+  @Input() autoSolveEnabled = false;
+  @Input() autoSolveGoodMode = false;
+  @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
+  @Output() goldBeadFound = new EventEmitter<void>();
+  private autoSolveInterval?: ReturnType<typeof setInterval>;
+
+  // ── Gold-2 bead tracking ─────────────────
+  @Input() gold2Progress: unknown;
+  @Output() gold2ProgressChange = new EventEmitter<unknown>();
+  @Output() gold2BeadFound = new EventEmitter<void>();
+  private gold2Awarded = false;
+  /** Level of the Gem Hunter upgrade — enables gold-2 log progress messages. */
+  @Input() gemHunterLevel = 0;
+  /** Whether the gold-2 bead has already been found for this character (suppresses log messages). */
+  @Input() gold2BeadAlreadyFound = false;
+  /** Whether the current ritual has ever selected a ring-adjacent node. */
+  private gold2AdjacentUsed = false;
+
+  toggleAutoSolve(): void {
+    this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
+
   // ── Costs ──────────────────────────────────
   readonly costs: { id: string; amount: number }[] = [
     { id: 'gemstone',   amount: NECROMANCER_MG.GEMSTONE_COST },
@@ -182,6 +206,29 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
       && this.xp         >= this.cfg.XP_COST;
   }
 
+  /** Build a message listing which resources are insufficient and by how much. */
+  get insufficientResourcesMsg(): string {
+    const walletAmounts: Record<string, number> = {
+      gemstone:  this.gemstones,
+      bone:      this.bones,
+      brimstone: this.brimstone,
+      beast:     this.beast,
+      xp:        this.xp,
+    };
+    const missing: string[] = [];
+    for (const c of this.costs) {
+      const have = walletAmounts[c.id] ?? 0;
+      if (have < c.amount) {
+        const need = c.amount - have;
+        const flavor = this.currencyFlavor[c.id];
+        missing.push(`${need}${flavor?.symbol ?? c.id}`);
+      }
+    }
+    return missing.length > 0
+      ? `Need ${missing.join(', ')}`
+      : 'Insufficient resources';
+  }
+
   /** Whether the player has completed the full cycle back to start. */
   get pathComplete(): boolean {
     return this.selectedPath.length > this.nodes.length && this.ritualDone;
@@ -200,6 +247,16 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ──────────────────────────────
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
+      if (this.autoSolveEnabled && this.autoSolveUnlocked) {
+        this.startAutoSolve();
+      } else {
+        this.stopAutoSolve();
+      }
+    }
+  }
+
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
@@ -215,6 +272,7 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+    this.stopAutoSolve();
   }
 
   // ── Actions ────────────────────────────────
@@ -239,6 +297,7 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
     this.optimalPath       = [];
     this.optimalPathLength = 0;
     this.hintLines         = [];
+    this.gold2AdjacentUsed = false;
     this.lastMsg  = MINIGAME_MSG.NECROMANCER.ROUND_START(this.cfg.NODE_COUNT);
     this.msgClass = 'msg-neutral';
 
@@ -253,7 +312,7 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
     this.buildHintLines();
 
     const costStr = this.costs.map(c => cur(c.id, c.amount, '-')).join(', ');
-    this.log.log(`Well of Souls begun! (${costStr})`);
+    this.log.log(LOG_MSG.MG_NECROMANCER.RITUAL_START(costStr));
     this.cdr.markForCheck();
   }
 
@@ -278,10 +337,25 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
 
     // Clicking the starting node again to close the loop
     if (idx === this.startNodeIdx && this.selectedPath.length === this.nodes.length) {
+      // Gold-2: check closing edge adjacency before completing
+      if (!this.autoSolveEnabled && !this.gold2Awarded) {
+        const lastIdx = this.selectedPath[this.selectedPath.length - 1];
+        if (this.areRingAdjacent(lastIdx, idx)) {
+          this.gold2AdjacentUsed = true;
+        }
+      }
       // All nodes visited — close the circuit
       this.selectedPath.push(idx); // add start again to close
       this.completeRitual();
       return;
+    }
+
+    // Gold-2: track whether this selection is ring-adjacent to the previous node
+    if (!this.autoSolveEnabled && !this.gold2Awarded && this.selectedPath.length > 0) {
+      const prevIdx = this.selectedPath[this.selectedPath.length - 1];
+      if (this.areRingAdjacent(prevIdx, idx)) {
+        this.gold2AdjacentUsed = true;
+      }
     }
 
     // Add to path
@@ -341,9 +415,148 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
     if (this.canStart) {
       this.startRitual();
     } else {
-      this.lastMsg = 'Insufficient resources to begin the ritual.';
+      this.lastMsg = this.insufficientResourcesMsg;
       this.msgClass = 'msg-bad';
       this.cdr.markForCheck();
+    }
+  }
+
+  // ── Auto-solve helpers ──────────────────
+
+  private startAutoSolve(): void {
+    this.stopAutoSolve();
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.NECROMANCER_TICK_MS);
+  }
+
+  private stopAutoSolve(): void {
+    if (this.autoSolveInterval) {
+      clearInterval(this.autoSolveInterval);
+      this.autoSolveInterval = undefined;
+    }
+  }
+
+  private autoSolveTick(): void {
+    if (!this.autoSolveEnabled || !this.autoSolveUnlocked) {
+      this.stopAutoSolve();
+      return;
+    }
+    // If ritual is done or not started, start a new one
+    if (!this.ritualActive || this.ritualDone) {
+      if (this.canStart) {
+        this.startRitual();
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // ── Good auto-solve: follow the optimal path exactly ──
+    if (this.autoSolveGoodMode) {
+      if (this.selectedPath.length === 0) {
+        // Start from the optimal path's first node
+        const startIdx = this.optimalPath[0];
+        if (this.isNodeSelectable(startIdx)) {
+          this.selectNode(startIdx);
+        }
+      } else if (this.selectedPath.length < this.nodes.length) {
+        // Follow the optimal path order
+        const nextOptIdx = this.optimalPath[this.selectedPath.length];
+        if (this.isNodeSelectable(nextOptIdx)) {
+          this.selectNode(nextOptIdx);
+        }
+      } else {
+        // Close the loop back to start
+        if (this.isNodeSelectable(this.startNodeIdx)) {
+          this.selectNode(this.startNodeIdx);
+        }
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // ── Basic auto-solve: next clockwise node ──
+    if (this.selectedPath.length === 0) {
+      // Pick a random starting node
+      const startIdx = Math.floor(Math.random() * this.nodes.length);
+      if (this.isNodeSelectable(startIdx)) {
+        this.selectNode(startIdx);
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+    // Select next valid node going clockwise
+    // Sort nodes by their angle from center, then find the next one clockwise from current
+    const lastIdx = this.selectedPath[this.selectedPath.length - 1];
+    const lastNode = this.nodes[lastIdx];
+    const lastAngle = Math.atan2(lastNode.pos.y - this.CY, lastNode.pos.x - this.CX) * 180 / Math.PI;
+
+    // Build list of selectable nodes with their angles
+    const candidates: { idx: number; angleDelta: number }[] = [];
+    for (let i = 0; i < this.nodes.length; i++) {
+      if (this.isNodeSelectable(i)) {
+        const node = this.nodes[i];
+        const angle = Math.atan2(node.pos.y - this.CY, node.pos.x - this.CX) * 180 / Math.PI;
+        let delta = angle - lastAngle;
+        if (delta <= 0) delta += 360; // Ensure clockwise direction
+        candidates.push({ idx: i, angleDelta: delta });
+      }
+    }
+
+    if (candidates.length > 0) {
+      // Sort by smallest positive clockwise angle delta
+      candidates.sort((a, b) => a.angleDelta - b.angleDelta);
+      this.selectNode(candidates[0].idx);
+    }
+    this.cdr.markForCheck();
+  }
+
+  private rollMinigameGoldBead(): void {
+    if (this.stats.getManualSidequestClears('necromancer') < BEADS.GOLD_BEAD_MIN_MANUAL_CLEARS) return;
+    if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
+      this.goldBeadFound.emit();
+    }
+  }
+
+  // ── Gold-2 helpers ─────────────────────
+
+  /**
+   * Returns true if nodes at indices `a` and `b` are directly adjacent
+   * in the circular ring (i.e. their array positions differ by exactly 1
+   * modulo the total node count).
+   */
+  private areRingAdjacent(a: number, b: number): boolean {
+    const n = this.nodes.length;
+    const diff = ((a - b) % n + n) % n;
+    return diff === 1 || diff === n - 1;
+  }
+
+  /**
+   * After a successful ritual, check if the player never selected a
+   * ring-adjacent node. Track a streak across consecutive games.
+   * 3 games in a row → award the gold-2 bead.
+   */
+  private trackGold2NoAdjacent(): void {
+    const progress = (this.gold2Progress as { streak?: number }) ?? {};
+    let streak = progress.streak ?? 0;
+    const target = GOLD2_CONDITIONS.NECROMANCER_NO_ADJACENT_STREAK;
+
+    if (this.gold2AdjacentUsed) {
+      // Used an adjacent node — reset streak
+      this.gold2ProgressChange.emit({ streak: 0 });
+    } else {
+      // Clean game — increment streak
+      streak++;
+      if (streak >= target) {
+        // Pattern complete — award the bead!
+        this.gold2Awarded = true;
+        this.gold2BeadFound.emit();
+        this.gold2ProgressChange.emit({ streak: 0 });
+      } else {
+        if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) {
+          const msgs = GOLD2_STEP_MESSAGES['necromancer'];
+          this.log.log(msgs[(streak - 1) % msgs.length], 'rare');
+        }
+        this.gold2ProgressChange.emit({ streak });
+      }
     }
   }
 
@@ -511,6 +724,17 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
     this.ritualDone   = true;
     this.ritualActive = false;
 
+    // Roll for gold bead on successful ritual
+    if (!this.autoSolveEnabled) {
+      this.stats.trackManualSidequestClear('necromancer');
+    }
+    this.rollMinigameGoldBead();
+
+    // Gold-2: track no-adjacent streak
+    if (!this.autoSolveEnabled && !this.gold2Awarded) {
+      this.trackGold2NoAdjacent();
+    }
+
     // Compute player's path length
     let playerLen = 0;
     for (let i = 1; i < this.selectedPath.length; i++) {
@@ -533,21 +757,26 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
     // Base soul stone reward: 5% steps, floor at 50% (gives 0), ceiling at 100% (gives 10).
     // Formula: every 5 percentage-points above 50 earns 1 stone.
     //   91% → 8,  94% → 8,  95% → 9,  96% → 9,  100% → 10,  <50% → 0
-    this.soulStonesAwarded = Math.max(0, Math.floor((this.efficiencyPct - 50) / 5));
-    this.xpAwarded = this.cfg.XP_REWARD;
+    let baseSoulStones = Math.max(0, Math.floor((this.efficiencyPct - 50) / 5));
+    let baseXp = this.cfg.XP_REWARD;
 
     // Perfect Transmutation bonus: +2 soul stones per upgrade level on a perfect run
     const transmutationBonus = this.efficiencyPct >= 100
       ? this.upgrades.level('PERFECT_TRANSMUTATION') * 2
       : 0;
-    this.soulStonesAwarded += transmutationBonus;
+    baseSoulStones += transmutationBonus;
+
+    // Apply bead multiplier
+    const bm = this.wallet.getBeadMultiplier('necromancer');
+    this.soulStonesAwarded = baseSoulStones * bm;
+    this.xpAwarded = baseXp * bm;
 
     if (this.soulStonesAwarded > 0) {
       this.wallet.add('soul-stone', this.soulStonesAwarded);
       this.stats.trackCurrencyGain('soul-stone', this.soulStonesAwarded);
       if (!this.wallet.isCurrencyUnlocked('soul-stone')) {
         this.wallet.unlockCurrency('soul-stone');
-        this.log.log('Soul Stones discovered! A new currency!', 'rare');
+        this.log.log(LOG_MSG.MG_NECROMANCER.SOUL_STONE_UNLOCKED, 'rare');
       }
     }
     this.wallet.add('xp', this.xpAwarded);
@@ -560,14 +789,14 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy {
       this.msgClass = 'msg-good';
       const bonusNote = transmutationBonus > 0 ? ` (+${transmutationBonus} transmutation)` : '';
       this.log.log(
-        `Ritual complete — PERFECT!${bonusNote} (${cur('soul-stone', this.soulStonesAwarded)}, ${cur('xp', this.xpAwarded)})`,
+        LOG_MSG.MG_NECROMANCER.RITUAL_PERFECT(bonusNote, cur('soul-stone', this.soulStonesAwarded), cur('xp', this.xpAwarded)),
         'success',
       );
     } else {
       this.lastMsg = MINIGAME_MSG.NECROMANCER.COMPLETE(this.efficiencyPct);
       this.msgClass = this.efficiencyPct >= 80 ? 'msg-good' : 'msg-neutral';
       this.log.log(
-        `Ritual complete — ${this.efficiencyPct}% efficiency. (${cur('soul-stone', this.soulStonesAwarded)}, ${cur('xp', this.xpAwarded)})`,
+        LOG_MSG.MG_NECROMANCER.RITUAL_COMPLETE(this.efficiencyPct, cur('soul-stone', this.soulStonesAwarded), cur('xp', this.xpAwarded)),
         this.efficiencyPct >= 90 ? 'success' : 'default',
       );
     }

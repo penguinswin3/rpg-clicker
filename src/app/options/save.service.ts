@@ -7,6 +7,7 @@ import { StatisticsService, StatisticsSnapshot } from '../statistics/statistics.
 import { UPGRADE_DEFS, VERSION } from '../game-config';
 import { UpgradesSnapshot } from '../upgrade/upgrade.service';
 import { scaledCost } from '../utils/mathUtils';
+import { LOG_MSG } from '../flavor-text';
 
 /** Persistent snapshot of the Fighter's in-progress combat. */
 export interface FighterCombatState {
@@ -38,6 +39,7 @@ export interface UpgradeState {
   synapticalEnabled?: boolean;
   fermentationVatsEnabled?: boolean;
   koboldBaitEnabled?: boolean;
+  ancientCookbookEnabled?: boolean;
   /** Absolute timestamp (ms) when the artisan timer expires (0 = idle). */
   artisanTimerUntil?: number;
   /** How many appraisals (manual 1 + jacks N) are batched in the current timer. */
@@ -50,6 +52,24 @@ export interface UpgradeState {
   familiarTimers?: Record<string, number>;
   /** Whether all familiars are paused (not contributing clicks or per-second). */
   familiarsPaused?: boolean;
+  /** Bead state per character — { charId: { slotId: { found, socketed } } } */
+  beads?: Record<string, Record<string, { found: boolean; socketed: boolean }>>;
+  /** Auto-solve toggle state per character — { charId: true/false } */
+  autoSolveEnabled?: Record<string, boolean>;
+  /** Gold-2 bead unlock progress per character — shape varies by character. */
+  gold2Progress?: Record<string, unknown>;
+  /** Merchant stock market auto-buyer selections — { currencyId: true/false }. */
+  merchantAutoBuySelections?: Record<string, boolean>;
+  /** Which artificer button is currently active ('study' or 'reflect'). */
+  artificerActiveButton?: 'study' | 'reflect';
+  /** Current insight level of the Artificer (0–max). */
+  artificerInsight?: number;
+  /** Currently-selected etching difficulty level (0 = base). */
+  selectedEtchingLevel?: number;
+  /** Chimeramancer chimera-building contribution progress (currencyId → amount). */
+  chimeramancerContributions?: Record<string, number>;
+  /** Whether the Chimeramancer relic "Thread of Infinite Weaving" is enabled. */
+  chimeramancerRelicEnabled?: boolean;
 }
 
 // ── Legacy save migration ─────────────────────────────────────
@@ -269,7 +289,7 @@ export class SaveService {
     this.stopAutoSave();
     this.autoSaveTimer = setInterval(() => {
       this.saveToLocalStorage();
-      this.log.log('[ AUTO-SAVE ] Game state saved to browser cache.', 'success');
+      this.log.log(LOG_MSG.SAVE.AUTO_SAVED, 'success');
     }, AUTO_SAVE_MS);
   }
 

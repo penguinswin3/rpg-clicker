@@ -4,6 +4,17 @@
   transition: right 0.15s ease, bottom 0.15s ease;
   z-index: 500;
   font-family: 'Courier New', Courier, monospace;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.playtime-counter {
+  font-size: 0.68rem;
+  color: #555;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .stats-trigger {

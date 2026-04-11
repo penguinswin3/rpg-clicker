@@ -4,7 +4,7 @@ import { Subscription, combineLatest } from 'rxjs';
 import { CharacterService, Character } from './character.service';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
-import { GLOBAL_UPGRADE_FLAVOR, CURRENCY_FLAVOR, JACK_FLAVOR } from '../flavor-text';
+import { GLOBAL_UPGRADE_FLAVOR, CURRENCY_FLAVOR, JACK_FLAVOR, LOG_MSG } from '../flavor-text';
 import { fmtNumber } from '../utils/mathUtils';
 
 @Component({
@@ -98,14 +98,14 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
         .filter(cost => !this.wallet.canAfford(cost.currencyId, cost.amount))
         .map(cost => `${cost.amount} ${this.shorthand(cost.currencyId)}`)
         .join(', ');
-      this.log.log(`Can't unlock ${char.name} — still need: ${missing}.`, 'warn');
+      this.log.log(LOG_MSG.SYSTEM.CHAR_CANT_AFFORD(char.name, missing), 'warn');
       return;
     }
     for (const cost of char.unlockCosts) {
       this.wallet.remove(cost.currencyId, cost.amount);
     }
     this.charService.unlock(char.id);
-    this.log.log(`${char.name} has been unlocked! Welcome to the party.`, 'rare');
+    this.log.log(LOG_MSG.SYSTEM.CHAR_UNLOCKED(char.name), 'rare');
   }
 
   /** Returns structured cost entries for template rendering with colored symbols. */

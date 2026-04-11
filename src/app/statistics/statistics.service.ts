@@ -70,6 +70,13 @@ export interface ThiefMinigameStats {
   failedHeists: number;
 }
 
+export interface MerchantMinigameStats {
+  /** Total individual items purchased (manual + auto-buy). */
+  itemsPurchased: number;
+  /** Total gold spent on stock market purchases (manual + auto-buy). */
+  goldSpent: number;
+}
+
 export interface ArtisanMinigameStats {
   /** Total number of appraisals completed (manual + jack). */
   appraisalsCompleted: number;
@@ -88,6 +95,13 @@ export interface NecromancerMinigameStats {
   totalEfficiency: number;
 }
 
+export interface ArtificerMinigameStats {
+  /** Total etchings completed successfully. */
+  etchingsCompleted: number;
+  /** Total etchings failed. */
+  etchingsFailed: number;
+}
+
 export interface StatisticsSnapshot {
   /** Lifetime totals of currency gained (only additions, never subtractions). */
   lifetimeCurrency: Record<string, number>;
@@ -97,6 +111,8 @@ export interface StatisticsSnapshot {
   manualHeroPresses: Record<string, number>;
   /** Jack auto-click presses per character. */
   jackHeroPresses: Record<string, number>;
+  /** Manual (non-auto-solve) sidequest completions per character. */
+  manualSidequestClears: Record<string, number>;
   /** @deprecated Kept for backward-compatible save loading. */
   heroButtonPresses?: Record<string, number>;
   /** Fighter minigame kill stats. */
@@ -113,6 +129,12 @@ export interface StatisticsSnapshot {
   artisanMinigame: ArtisanMinigameStats;
   /** Necromancer minigame ritual stats. */
   necromancerMinigame: NecromancerMinigameStats;
+  /** Artificer minigame etching stats. */
+  artificerMinigame: ArtificerMinigameStats;
+  /** Merchant minigame stock market stats. */
+  merchantMinigame: MerchantMinigameStats;
+  /** Cumulative seconds the game has been open and actively played. */
+  playtimeSeconds: number;
 }
 
 function defaultSnapshot(): StatisticsSnapshot {
@@ -121,6 +143,7 @@ function defaultSnapshot(): StatisticsSnapshot {
     milestones:         {},
     manualHeroPresses:  {},
     jackHeroPresses:    {},
+    manualSidequestClears: {},
     fighterMinigame:    { totalKills: 0, killsByType: {}, potionsDrank: 0, timesDefeated: 0, firstStrikeUnlocked: false, longestKillChain: 0 },
     rangerMinigame:     { successful: 0, unsuccessful: 0, treasureChestsFound: 0 },
     apothecaryMinigame: { minigamesComplete: 0, potionHits: 0, perfectHits: 0, potionMisses: 0, dilutionSuccesses: 0, dilutionFailures: 0 },
@@ -128,6 +151,9 @@ function defaultSnapshot(): StatisticsSnapshot {
     thiefMinigame:      { successfulHeists: 0, failedHeists: 0 },
     artisanMinigame:    { appraisalsCompleted: 0, facetingSuccesses: 0, facetingFailures: 0 },
     necromancerMinigame:{ ritualsCompleted: 0, perfectRituals: 0, totalEfficiency: 0 },
+    artificerMinigame:  { etchingsCompleted: 0, etchingsFailed: 0 },
+    merchantMinigame:   { itemsPurchased: 0, goldSpent: 0 },
+    playtimeSeconds:    0,
   };
 }
 
@@ -195,6 +221,20 @@ export class StatisticsService {
     const snap = this.source.getValue();
     snap.jackHeroPresses[charId] = (snap.jackHeroPresses[charId] ?? 0) + 1;
     this._scheduleFlush();
+  }
+
+  // ── Sidequest completions ────────────────────────────────────
+
+  /** Record a manual (non-auto-solve) sidequest clear for a character. */
+  trackManualSidequestClear(charId: string): void {
+    const snap = this.source.getValue();
+    snap.manualSidequestClears[charId] = (snap.manualSidequestClears[charId] ?? 0) + 1;
+    this._scheduleFlush();
+  }
+
+  /** Get the number of manual sidequest clears for a character. */
+  getManualSidequestClears(charId: string): number {
+    return this.source.getValue().manualSidequestClears[charId] ?? 0;
   }
 
   // ── Fighter minigame ───────────────────────────────────────
@@ -341,6 +381,50 @@ export class StatisticsService {
     this._scheduleFlush();
   }
 
+  // ── Artificer minigame ──────────────────────────────────────
+
+  trackArtificerEtching(success: boolean): void {
+    const snap = this.source.getValue();
+    if (success) snap.artificerMinigame.etchingsCompleted++;
+    else         snap.artificerMinigame.etchingsFailed++;
+    this._scheduleFlush();
+  }
+
+  // ── Merchant minigame ──────────────────────────────────────
+
+  /** Track a merchant stock market purchase (manual or auto-buy). */
+  trackMerchantPurchase(qty: number, goldCost: number): void {
+    if (qty <= 0) return;
+    const snap = this.source.getValue();
+    snap.merchantMinigame.itemsPurchased += qty;
+    snap.merchantMinigame.goldSpent += goldCost;
+    this._scheduleFlush();
+  }
+
+  // ── Playtime tracking ──────────────────────────────────────
+
+  private _playtimeInterval?: ReturnType<typeof setInterval>;
+
+  /** Start the 1-second playtime ticker. Safe to call multiple times. */
+  startPlaytimeTimer(): void {
+    this.stopPlaytimeTimer();
+    this._playtimeInterval = setInterval(() => {
+      if (!document.hidden) {
+        const snap = this.source.getValue();
+        snap.playtimeSeconds++;
+        this._scheduleFlush();
+      }
+    }, 1000);
+  }
+
+  /** Stop the playtime ticker. */
+  stopPlaytimeTimer(): void {
+    if (this._playtimeInterval !== undefined) {
+      clearInterval(this._playtimeInterval);
+      this._playtimeInterval = undefined;
+    }
+  }
+
   // ── Persistence ────────────────────────────────────────────
 
   buildSnapshot(): StatisticsSnapshot {
@@ -363,6 +447,7 @@ export class StatisticsService {
       ...snap,
       manualHeroPresses:  { ...manualPresses },
       jackHeroPresses:    { ...jackPresses },
+      manualSidequestClears: { ...(snap.manualSidequestClears ?? {}) },
       fighterMinigame:    { ...defaultSnapshot().fighterMinigame,    ...snap.fighterMinigame },
       rangerMinigame:     { ...defaultSnapshot().rangerMinigame,     ...snap.rangerMinigame },
       apothecaryMinigame: { ...defaultSnapshot().apothecaryMinigame, ...snap.apothecaryMinigame },
@@ -370,6 +455,9 @@ export class StatisticsService {
       thiefMinigame:      { ...defaultSnapshot().thiefMinigame,      ...snap.thiefMinigame },
       artisanMinigame:    { ...defaultSnapshot().artisanMinigame,    ...snap.artisanMinigame },
       necromancerMinigame:{ ...defaultSnapshot().necromancerMinigame,...snap.necromancerMinigame },
+      artificerMinigame:  { ...defaultSnapshot().artificerMinigame, ...(snap.artificerMinigame ?? {}) },
+      merchantMinigame:   { ...defaultSnapshot().merchantMinigame, ...(snap.merchantMinigame ?? {}) },
+      playtimeSeconds:    snap.playtimeSeconds ?? 0,
     };
     // Remove deprecated field from live snapshot
     delete merged.heroButtonPresses;

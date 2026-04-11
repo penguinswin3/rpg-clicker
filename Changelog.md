@@ -1,3 +1,36 @@
+# Version Alpha 1.3.0
+
+## Added
+- Bead System
+- Blue bead 1 and 2 are unlcoked by manual clicking and jacks clicking
+- Auto-Solve system for all sidequests, unlocked by socketing a Gold Bead
+- Gold Bead has a 1/100 chance to drop on any successful sidequest completion, after 100 manual clears of that sidequest
+- Gold Bead 2 is unlocked through secret patterns in sidequests
+- The character menu will display a shine when something new is 
+- Buy quantity buttons 
+- New Character: The Merchant! Fence illicit goods and buy all sorts of items on the black market
+- New Character: The Artificer! Study up to discover secrets and generate mana to create some particular enhancements to familiars
+- New Character: Chimeramancer! Create a horror beyond comprehension using the parts of your fallen enemies and the resources you've gathered
+- Two new kobolds! 
+## Removed
+
+## Changed
+- Misc UI tweaks
+- Kobold Ears no longer double from blue beads (other kobold parts still do)
+- The LVL 0 dev button now unsockets all beads
+- The UNLOCK dev button now finds all four bead types (not just blue)
+- Hero button border pulses when clicked (color is configurable in flavor-text.ts)
+- Thief gold-2 "good" auto-solve now probes at 0° and 30° then targets the sweet spot directly, instead of cycling through 90° intervals
+- Necromancer costs more XP 
+- Artisan costs more XP 
+- Renamed Alchemist hero button to Distill
+
+
+## Bugfixes
+- Fixed per seconds not adding up properly 
+
+
+----------------------------
 # Version Alpha 1.2.2
 
 ## Added

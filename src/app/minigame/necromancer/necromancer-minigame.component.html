@@ -13,12 +13,12 @@
         </span>
       </div>
 
-      <button class="ritual-btn" [disabled]="!canStart" (click)="startRitual()">
+      <button class="ritual-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startRitual()">
         [ BEGIN RITUAL ]
       </button>
 
       <div class="cost-warn" *ngIf="!canStart">
-        Insufficient resources
+        {{ insufficientResourcesMsg }}
       </div>
     </div>
   </ng-container>
@@ -75,9 +75,9 @@
            class="node-group"
            [class.node-selected]="node.selected"
            [class.node-closing]="isClosingTarget(i)"
-           [class.node-disabled]="!isNodeSelectable(i)"
-           (click)="selectNode(i)"
-           [style.cursor]="isNodeSelectable(i) ? 'pointer' : 'not-allowed'">
+           [class.node-disabled]="autoSolveEnabled || !isNodeSelectable(i)"
+           (click)="autoSolveEnabled ? null : selectNode(i)"
+           [style.cursor]="autoSolveEnabled ? 'not-allowed' : (isNodeSelectable(i) ? 'pointer' : 'not-allowed')">
 
           <!-- Node background circle -->
           <circle [attr.cx]="node.pos.x" [attr.cy]="node.pos.y" r="7"
@@ -121,7 +121,7 @@
   <ng-container *ngIf="ritualDone">
 
     <!-- Show the completed path -->
-    <div class="circle-container" (click)="tryAgain()">
+    <div class="circle-container" (click)="autoSolveEnabled ? null : tryAgain()">
       <svg [attr.viewBox]="'0 0 ' + VB + ' ' + VB" class="circle-svg">
 
         <defs>
@@ -202,13 +202,22 @@
     </div>
 
     <!-- Try again -->
-    <button class="ritual-btn" [disabled]="!canStart" (click)="startRitual()">
+    <button class="ritual-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startRitual()">
       [ RITUAL AGAIN ]
     </button>
     <div class="cost-warn" *ngIf="!canStart">
-      Insufficient resources
+      {{ insufficientResourcesMsg }}
     </div>
   </ng-container>
+
+  <!-- ── Auto-solve toggle ─────────────── -->
+  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
+    <button class="auto-solve-btn"
+            [class.as-on]="autoSolveEnabled"
+            (click)="toggleAutoSolve()">
+      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
+    </button>
+  </div>
 
 </div>
 

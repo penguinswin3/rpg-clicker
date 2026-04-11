@@ -7,7 +7,7 @@
         Reveal 3 of 9 hidden boxes.<br>
         Costs {{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span> per scout.
       </div>
-      <button class="scout-btn" [disabled]="!canScout" (click)="newRound()">
+      <button class="scout-btn" [disabled]="!canScout || autoSolveEnabled" (click)="newRound()">
         [ SCOUT ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>) ]
       </button>
       <div class="cost-warn" *ngIf="!canScout">
@@ -35,7 +35,7 @@
         [class.cell-hidden]="!cell.revealed"
         [class.cell-restart]="roundOver && canScout"
         [ngClass]="cellClass(cell)"
-        [disabled]="(!roundOver && cell.revealed) || (roundOver && !canScout)"
+        [disabled]="autoSolveEnabled || (!roundOver && cell.revealed) || (roundOver && !canScout)"
         (click)="cellClick(i)">
         <span class="cell-sym" [style.color]="symbolColor(cell)">{{ symbol(cell) }}</span>
         <span class="cell-sub" *ngIf="cell.revealed">{{ subLabel(cell) }}</span>
@@ -58,7 +58,7 @@
 
     <!-- Scout again (only when round is over) -->
     <ng-container *ngIf="roundOver">
-      <button class="scout-btn" [disabled]="!canScout" (click)="newRound()">
+      <button class="scout-btn" [disabled]="!canScout || autoSolveEnabled" (click)="newRound()">
         [ SCOUT AGAIN ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>) ]
       </button>
       <div class="cost-warn" *ngIf="!canScout">
@@ -68,6 +68,15 @@
     </ng-container>
 
   </ng-container>
+
+  <!-- ── Auto-solve toggle ─────────────── -->
+  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
+    <button class="auto-solve-btn"
+            [class.as-on]="autoSolveEnabled"
+            (click)="toggleAutoSolve()">
+      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
+    </button>
+  </div>
 
 </div>
 

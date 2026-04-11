@@ -37,6 +37,8 @@
     (synapticalEnabledChange)="synapticalEnabled = $event"
     [wasteNotLevel]="upgrades.level('WASTE_NOT')"
     [largerCookbooksLevel]="upgrades.level('LARGER_COOKBOOKS')"
+    [ancientCookbookEnabled]="ancientCookbookEnabled"
+    (ancientCookbookEnabledChange)="ancientCookbookEnabled = $event"
     [cookbookAnnotationsLevel]="upgrades.level('COOKBOOK_ANNOTATIONS')"
     [vanishingPowderLevel]="upgrades.level('VANISHING_POWDER')"
     [potionCatEarsLevel]="upgrades.level('POTION_CATS_EARS')"
@@ -52,7 +54,60 @@
     [doubleDipLevel]="upgrades.level('DOUBLE_DIP')"
     [standOutSelectionLevel]="upgrades.level('STAND_OUT_SELECTION')"
     [goodEnoughLevel]="upgrades.level('GOOD_ENOUGH')"
-    [closeEnoughLevel]="upgrades.level('CLOSE_ENOUGH')" />
+    [closeEnoughLevel]="upgrades.level('CLOSE_ENOUGH')"
+    [autoSolveUnlocked]="{
+      fighter: isAutoSolveUnlocked('fighter'),
+      ranger: isAutoSolveUnlocked('ranger'),
+      apothecary: isAutoSolveUnlocked('apothecary'),
+      culinarian: isAutoSolveUnlocked('culinarian'),
+      thief: isAutoSolveUnlocked('thief'),
+      artisan: isAutoSolveUnlocked('artisan'),
+      necromancer: isAutoSolveUnlocked('necromancer'),
+      merchant: isAutoSolveUnlocked('merchant'),
+      artificer: isAutoSolveUnlocked('artificer'),
+      chimeramancer: isAutoSolveUnlocked('chimeramancer')
+    }"
+    [autoSolveGoodMode]="{
+      fighter: isAutoSolveGood('fighter'),
+      ranger: isAutoSolveGood('ranger'),
+      apothecary: isAutoSolveGood('apothecary'),
+      culinarian: isAutoSolveGood('culinarian'),
+      thief: isAutoSolveGood('thief'),
+      artisan: isAutoSolveGood('artisan'),
+      necromancer: isAutoSolveGood('necromancer'),
+      merchant: isAutoSolveGood('merchant'),
+      artificer: isAutoSolveGood('artificer'),
+      chimeramancer: isAutoSolveGood('chimeramancer')
+    }"
+    [autoSolveEnabled]="autoSolveEnabled"
+    (autoSolveEnabledChange)="autoSolveEnabled[$event.charId] = $event.enabled"
+    (goldBeadFound)="findMinigameGoldBead($event)"
+    [gold2Progress]="gold2Progress"
+    (gold2ProgressChange)="onGold2ProgressChange($event.charId, $event.progress)"
+    (gold2BeadFound)="findGold2Bead($event)"
+    [gemHunterLevel]="upgrades.level('GEM_HUNTER')"
+    [gold2BeadFoundState]="{
+      fighter: !!beadState['fighter']?.['gold-2']?.found,
+      ranger: !!beadState['ranger']?.['gold-2']?.found,
+      apothecary: !!beadState['apothecary']?.['gold-2']?.found,
+      culinarian: !!beadState['culinarian']?.['gold-2']?.found,
+      thief: !!beadState['thief']?.['gold-2']?.found,
+      artisan: !!beadState['artisan']?.['gold-2']?.found,
+      necromancer: !!beadState['necromancer']?.['gold-2']?.found,
+      merchant: !!beadState['merchant']?.['gold-2']?.found,
+      artificer: !!beadState['artificer']?.['gold-2']?.found,
+      chimeramancer: !!beadState['chimeramancer']?.['gold-2']?.found
+    }"
+    [merchantAutoBuySelections]="merchantAutoBuySelections"
+    (merchantAutoBuySelectionsChange)="onMerchantAutoBuySelectionsChange($event)"
+    (merchantAutoBuyerStateChange)="onMerchantAutoBuyerStateChange($event)"
+    [extendedEtchingLevel]="upgrades.level('EXTENDED_ETCHING')"
+    [selectedEtchingLevel]="selectedEtchingLevel"
+    (selectedEtchingLevelChange)="selectedEtchingLevel = $event"
+    [chimeramancerContributions]="chimeramancerContributions"
+    (chimeramancerContributionsChange)="onChimeramancerContributionsChange($event)"
+    [quickStitchingLevel]="upgrades.level('QUICK_STITCHING')"
+    [minorTouchUpLevel]="upgrades.level('MINOR_TOUCH_UP')" />
 
   <div class="game-wrapper">
 
@@ -95,10 +150,10 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <div class="upgrade-btn-wrap">
               <button class="upgrade-btn"
                 [class.upgrade-maxed]="upgrades.isMaxed(id)"
-                [disabled]="upgrades.isMaxed(id) || !upgrades.canAfford(id)"
-                (click)="upgrades.buy(id)">
+                [disabled]="upgrades.isMaxed(id) || !canAffordMultiBuy(id)"
+                (click)="buyUpgrade(id)">
                 <ng-container *ngIf="upgrades.isMaxed(id); else costTpl">[MAXED]</ng-container>
-                <ng-template #costTpl>[BUY: <ng-container *ngFor="let c of upgrades.allCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container><span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></span></ng-container>]</ng-template>
+                <ng-template #costTpl>[BUY<ng-container *ngIf="buyQuantity !== 1"> x{{ effectiveBuyCount(id) }}</ng-container>: <ng-container *ngFor="let c of getMultiCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container><span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></span></ng-container>]</ng-template>
               </button>
               <span class="upgrade-level">Lv.{{ upgrades.level(id) }}/{{ upgrades.maxLevel(id) }}</span>
             </div>
@@ -108,19 +163,36 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
       <section class="click-area">
 
-        <!-- ══ Relic Crown — decorative gem sockets ══ -->
-        <div class="relic-crown" *ngIf="relicSlots.length > 0">
+        <!-- ══ Bead + Relic Crown — decorative gem sockets ══ -->
+        <div class="relic-crown" *ngIf="beadCrownItems.length > 0">
           <div class="crown-sockets">
             <span class="crown-chain"></span>
-            <ng-container *ngFor="let slot of relicSlots; let first = first; let last = last">
+            <ng-container *ngFor="let item of beadCrownItems; let first = first">
               <span class="crown-link" *ngIf="!first">───</span>
-              <button class="relic-socket"
-                      [class.socket-filled]="slot.purchased"
-                      [class.socket-empty]="!slot.purchased"
-                      (click)="openRelicPopup(slot.id)"
-                      [title]="slot.name">
-                {{ relicSymbol }}
-              </button>
+
+              <!-- Bead socket -->
+              <ng-container *ngIf="item.kind === 'bead'">
+                <button class="bead-socket"
+                        [class.bead-blue]="item.beadType === 'blue'"
+                        [class.bead-gold]="item.beadType === 'gold'"
+                        [class.bead-locked]="item.beadState === 'locked'"
+                        [class.bead-found]="item.beadState === 'found'"
+                        [class.bead-socketed]="item.beadState === 'socketed'"
+                        (click)="openBeadPopup(item)">
+                  {{ getBeadSymbol(item.beadState!) }}
+                </button>
+              </ng-container>
+
+              <!-- Relic socket -->
+              <ng-container *ngIf="item.kind === 'relic'">
+                <button class="relic-socket"
+                        [class.socket-filled]="item.relicPurchased"
+                        [class.socket-empty]="!item.relicPurchased"
+                        (click)="openRelicPopup(item.relicId!)"
+                        [title]="item.relicName!">
+                  {{ relicSymbol }}
+                </button>
+              </ng-container>
             </ng-container>
             <span class="crown-chain"></span>
           </div>
@@ -147,6 +219,32 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           </div>
         </div>
 
+        <!-- Bead detail popup -->
+        <div class="bead-popup-backdrop" *ngIf="beadPopupInfo" (click)="closeBeadPopup()">
+          <div class="bead-popup" (click)="$event.stopPropagation()"
+               [class.bead-popup-blue]="beadPopupInfo.type === 'blue'"
+               [class.bead-popup-gold]="beadPopupInfo.type === 'gold'">
+            <div class="bead-popup-symbol"
+                 [class.bead-popup-owned]="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).socketed"
+                 [style.color]="getBeadColor(beadPopupInfo.type)">
+              {{ getBeadSymbol('') }}
+            </div>
+            <div class="bead-popup-name" [style.color]="getBeadColor(beadPopupInfo.type)">{{ getBeadName(beadPopupInfo.charId, beadPopupInfo.slotId) }}</div>
+            <div class="bead-popup-lore" *ngIf="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">{{ getBeadLore(beadPopupInfo.charId, beadPopupInfo.slotId) }}</div>
+            <div class="bead-popup-effect" *ngIf="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">
+              <span class="bead-effect-label">Effect:</span> {{ getBeadEffect(beadPopupInfo.charId, beadPopupInfo.slotId) }}
+            </div>
+            <button class="bead-popup-socket-btn"
+                    *ngIf="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found && !getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).socketed"
+                    (click)="socketBeadFromPopup()">
+              [ SOCKET ]
+            </button>
+            <div class="bead-popup-status socketed" *ngIf="getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).socketed">── SOCKETED ──</div>
+            <div class="bead-popup-status locked" *ngIf="!getBeadSlot(beadPopupInfo.charId, beadPopupInfo.slotId).found">── NOT YET DISCOVERED ──</div>
+            <button class="bead-popup-close" (click)="closeBeadPopup()">[CLOSE]</button>
+          </div>
+        </div>
+
         <!-- ══ Starvation message ══ -->
         <div class="hero-starvation"
              [style.visibility]="activeCharJackStarved ? 'visible' : 'hidden'">
@@ -155,24 +253,92 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
         <!-- ══ Hero button(s) — main focus ══ -->
         <div class="hero-area">
-          <ng-container *ngIf="activeCharacterId === 'necromancer'; else singleHeroButton">
+          <ng-container *ngIf="activeCharacterId === 'necromancer'; else checkArtificer">
             <div class="necro-buttons">
               <button class="hero-btn necro-btn"
                       [class.necro-active]="necromancerActiveButton === 'defile'"
+                      [class.hero-holding]="heroHolding"
+                      [class.hero-pressed]="heroPressAnim"
+                      [style.--hero-pulse-color]="heroPulseColor"
                       [disabled]="necromancerActiveButton !== 'defile'"
-                      (click)="clickHero()">
+                      (click)="clickHero()"
+                      (mousedown)="heroHoldStart()"
+                      (mouseup)="heroHoldStop()"
+                      (mouseleave)="heroHoldStop()"
+                      (touchstart)="heroHoldStart()"
+                      (touchend)="heroHoldStop()"
+                      (touchcancel)="heroHoldStop()">
                 <span class="hero-btn-label">[ >>> {{ necromancerDefileLabel }} </span>
               </button>
               <button class="hero-btn necro-btn"
                       [class.necro-active]="necromancerActiveButton === 'ward'"
+                      [class.hero-holding]="heroHolding"
+                      [class.hero-pressed]="heroPressAnim"
+                      [style.--hero-pulse-color]="heroPulseColor"
                       [disabled]="necromancerActiveButton !== 'ward'"
-                      (click)="clickHero()">
+                      (click)="clickHero()"
+                      (mousedown)="heroHoldStart()"
+                      (mouseup)="heroHoldStop()"
+                      (mouseleave)="heroHoldStop()"
+                      (touchstart)="heroHoldStart()"
+                      (touchend)="heroHoldStop()"
+                      (touchcancel)="heroHoldStop()">
                 <span class="hero-btn-label">{{ necromancerWardLabel }} <<< ]</span>
               </button>
             </div>
           </ng-container>
+          <ng-template #checkArtificer>
+            <ng-container *ngIf="activeCharacterId === 'artificer'; else singleHeroButton">
+              <div class="necro-buttons artificer-buttons">
+                <button class="hero-btn necro-btn artificer-btn"
+                        [class.necro-active]="artificerActiveButton === 'study'"
+                        [class.hero-holding]="heroHolding"
+                        [class.hero-pressed]="heroPressAnim"
+                        [style.--hero-pulse-color]="heroPulseColor"
+                        (click)="artificerActiveButton = 'study'; clickHero()"
+                        (mousedown)="artificerActiveButton = 'study'; heroHoldStart()"
+                        (mouseup)="heroHoldStop()"
+                        (mouseleave)="heroHoldStop()"
+                        (touchstart)="artificerActiveButton = 'study'; heroHoldStart()"
+                        (touchend)="heroHoldStop()"
+                        (touchcancel)="heroHoldStop()">
+                  <span class="hero-btn-label">[ >>> Study ]</span>
+                </button>
+                <div class="artificer-insight-bar">
+                  <div class="insight-fill" [style.width.%]="(artificerInsight / artificerMaxInsight) * 100"></div>
+                  <span class="insight-text">{{ artificerInsight }} / {{ artificerMaxInsight }}</span>
+                </div>
+                <button class="hero-btn necro-btn artificer-btn"
+                        [class.necro-active]="artificerActiveButton === 'reflect'"
+                        [class.hero-holding]="heroHolding"
+                        [class.hero-pressed]="heroPressAnim"
+                        [style.--hero-pulse-color]="heroPulseColor"
+                        [disabled]="artificerInsight <= 0"
+                        (click)="artificerActiveButton = 'reflect'; clickHero()"
+                        (mousedown)="artificerActiveButton = 'reflect'; heroHoldStart()"
+                        (mouseup)="heroHoldStop()"
+                        (mouseleave)="heroHoldStop()"
+                        (touchstart)="artificerActiveButton = 'reflect'; heroHoldStart()"
+                        (touchend)="heroHoldStop()"
+                        (touchcancel)="heroHoldStop()">
+                  <span class="hero-btn-label">[ Reflect <<< ]</span>
+                </button>
+              </div>
+            </ng-container>
+          </ng-template>
           <ng-template #singleHeroButton>
-            <button class="hero-btn" [disabled]="isHeroDisabled" (click)="clickHero()">
+            <button class="hero-btn"
+                    [class.hero-holding]="heroHolding"
+                    [class.hero-pressed]="heroPressAnim"
+                    [style.--hero-pulse-color]="heroPulseColor"
+                    [disabled]="isHeroDisabled"
+                    (click)="clickHero()"
+                    (mousedown)="heroHoldStart()"
+                    (mouseup)="heroHoldStop()"
+                    (mouseleave)="heroHoldStop()"
+                    (touchstart)="heroHoldStart()"
+                    (touchend)="heroHoldStop()"
+                    (touchcancel)="heroHoldStop()">
               <div class="stun-fill-bar" *ngIf="activeCharacterId === 'thief' && isThiefStunned" [ngStyle]="thiefStunAnimStyle"></div>
               <div class="stun-fill-bar" *ngIf="activeCharacterId === 'artisan' && isArtisanTimerActive" [ngStyle]="artisanTimerAnimStyle"></div>
               <span class="hero-btn-label">[ >>> {{ questBtnLabel }} <<< ]</span>
@@ -194,6 +360,12 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                   (click)="toggleFermentationVats()">
             {{ fermentationVatsEnabled ? '[ Fermentation Vats: ON  ]' : '[ Fermentation Vats: OFF ]' }}
           </button>
+          <button class="wholesale-toggle-btn"
+                  *ngIf="activeCharacterId === 'chimeramancer' && upgrades.level('RELIC_CHIMERAMANCER') >= 1"
+                  [class.wt-on]="chimeramancerRelicEnabled"
+                  (click)="toggleChimeramancerRelic()">
+            {{ chimeramancerRelicEnabled ? '[ Infinite Weaving: ON  ]' : '[ Infinite Weaving: OFF ]' }}
+          </button>
           <div class="necro-clicks-remaining" *ngIf="activeCharacterId === 'necromancer' && upgrades.level('AUGURY') >= 1">
             Switches in: {{ necromancerClicksRemaining }} clicks
           </div>
@@ -205,43 +377,27 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           <!-- ── Jacks ── -->
           <div class="jack-column">
 
-            <ng-container *ngIf="activeCharacterId === 'necromancer'; else singleJackColumn">
-              <!-- Necromancer: two side-by-side jack cards -->
+            <ng-container *ngIf="activeCharacterId === 'necromancer' || activeCharacterId === 'artificer'; else singleJackColumn">
+              <!-- Necromancer/Artificer: two side-by-side jack cards -->
               <div class="jack-row-necro">
-                <div class="jack-box">
-                  <div class="jack-box-label">Defile</div>
+                <div class="jack-box" *ngFor="let fk of familiarKeys">
+                  <div class="jack-box-label">{{ familiarLabel(fk) }}</div>
                   <div class="jack-controls">
-                    <button class="jack-alloc-btn" [disabled]="getJackCount('necromancer-defile') <= 0" (click)="deallocateJack('necromancer-defile')">[-]</button>
-                    <span class="jack-assigned-num">{{ getJackCount('necromancer-defile') }}</span>
-                    <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-defile')">[+]</button>
+                    <button class="jack-alloc-btn" [disabled]="getJackCount(fk) <= 0" (click)="deallocateJack(fk)">[-]</button>
+                    <span class="jack-assigned-num">{{ getJackCount(fk) }}</span>
+                    <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack(fk)">[+]</button>
                   </div>
                   <div class="jack-bulk-row" *ngIf="jacksOwned >= 5">
                     <button class="jack-bulk-btn"
-                            [disabled]="getJackCount('necromancer-defile') <= 0"
-                            (click)="deallocateAllJacks('necromancer-defile')">[NONE]</button>
+                            [disabled]="getJackCount(fk) <= 0"
+                            (click)="deallocateAllJacks(fk)">[NONE]</button>
                     <button class="jack-bulk-btn"
                             [disabled]="jacksPoolFree <= 0"
-                            (click)="allocateAllJacks('necromancer-defile')">[ALL]</button>
-                  </div>
-                </div>
-                <div class="jack-box">
-                  <div class="jack-box-label">Ward</div>
-                  <div class="jack-controls">
-                    <button class="jack-alloc-btn" [disabled]="getJackCount('necromancer-ward') <= 0" (click)="deallocateJack('necromancer-ward')">[-]</button>
-                    <span class="jack-assigned-num">{{ getJackCount('necromancer-ward') }}</span>
-                    <button class="jack-alloc-btn" [disabled]="jacksPoolFree <= 0" (click)="allocateJack('necromancer-ward')">[+]</button>
-                  </div>
-                  <div class="jack-bulk-row" *ngIf="jacksOwned >= 5">
-                    <button class="jack-bulk-btn"
-                            [disabled]="getJackCount('necromancer-ward') <= 0"
-                            (click)="deallocateAllJacks('necromancer-ward')">[NONE]</button>
-                    <button class="jack-bulk-btn"
-                            [disabled]="jacksPoolFree <= 0"
-                            (click)="allocateAllJacks('necromancer-ward')">[ALL]</button>
+                            (click)="allocateAllJacks(fk)">[ALL]</button>
                   </div>
                 </div>
               </div>
-              <!-- Shared pool info for necromancer -->
+              <!-- Shared pool info -->
               <div class="jack-pool-info" [style.visibility]="jacksPoolFree > 0 ? 'visible' : 'hidden'">
                 Avail: <span class="jack-pool-count">{{ jacksPoolFree }}</span>
               </div>
@@ -275,11 +431,22 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           <!-- ── Familiars ── -->
           <div class="familiar-column" *ngIf="familiarUnlocked">
             <div class="familiar-panel" [class.familiars-paused]="familiarsPaused">
-              <button class="familiar-pause-btn"
-                      [class.paused]="familiarsPaused"
-                      (click)="toggleFamiliarsPaused()">
-                {{ familiarsPaused ? '[ RESUME ]' : '[ PAUSE ]' }}
-              </button>
+              <div class="familiar-top-row">
+                <button class="familiar-pause-btn"
+                        [class.paused]="familiarsPaused"
+                        (click)="toggleFamiliarsPaused()">
+                  {{ familiarsPaused ? '[ RESUME ]' : '[ PAUSE ]' }}
+                </button>
+                <span class="familiar-count-info" *ngIf="upgrades.level('MIND_AND_SOUL') > 0">
+                  <span class="familiar-power-label">Power</span> ×{{ 1 + upgrades.level('MIND_AND_SOUL') }}
+                </span>
+                <button class="familiar-btn summon-all-btn"
+                        *ngIf="spreadingSoulUnlocked"
+                        [disabled]="!canSummonAll"
+                        (click)="summonAll()">
+                  [ SUMMON ALL ]
+                </button>
+              </div>
               <div class="familiar-boxes-row">
                 <ng-container *ngFor="let fk of familiarKeys; let last = last">
                   <div class="familiar-box">
@@ -312,6 +479,13 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
       <section class="upgrades">
         <div class="divider">+===============================================================================================+</div>
 
+        <!-- Buy-quantity toggle — only shown after sidequests are unlocked -->
+        <div class="buy-quantity-bar" *ngIf="minigameShown">
+          <button class="buy-qty-btn" [class.buy-qty-active]="buyQuantity === 1"    (click)="buyQuantity = 1">x1</button>
+          <button class="buy-qty-btn" [class.buy-qty-active]="buyQuantity === 5"    (click)="buyQuantity = 5">x5</button>
+          <button class="buy-qty-btn" [class.buy-qty-active]="buyQuantity === 10"   (click)="buyQuantity = 10">x10</button>
+          <button class="buy-qty-btn" [class.buy-qty-active]="buyQuantity === 'max'" (click)="buyQuantity = 'max'">MAX</button>
+        </div>
 
         <div class="upgrades-columns">
 
@@ -325,9 +499,9 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             </div>
           </div><!-- /upgrades-col standard -->
 
-          <!-- ══ Minigame upgrades ══════════════════════════════════ -->
+          <!-- ══ Sidequest upgrades ══════════════════════════════════ -->
           <div class="upgrades-col" *ngIf="minigameShown && !hideMinigameUpgrades">
-            <div class="section-title">[ MINIGAME ]</div>
+            <div class="section-title">[ SIDEQUEST ]</div>
             <div class="upgrades-scroll">
               <ng-container *ngFor="let id of getVisibleUpgrades('minigame')">
                 <ng-container *ngTemplateOutlet="upgradeCard; context: { $implicit: id }"></ng-container>
@@ -367,6 +541,9 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
     [isArtisanTimerActive]="isArtisanTimerActive"
     [artisanTimerAnimStyle]="artisanTimerAnimStyle"
     [necromancerActiveButton]="necromancerActiveButton"
+    [charShine]="charShine"
+    [artificerInsight]="artificerInsight"
+    [artificerMaxInsight]="artificerMaxInsight"
     (unassignAllJacks)="unassignAllJacks()" />
 </div>
 

@@ -1,0 +1,261 @@
+// Merchant minigame — Black Market Exchange
+// Matches the 225 px panel console aesthetic
+$font:    'Courier New', Courier, monospace;
+$accent:  #b87333;   // merchant copper
+$bg:      #000;
+$bg-el:   #111;
+$border:  #333;
+$muted:   #555;
+$text:    #ccc;
+$gold-c:  #ffd700;
+$green:   #44dd44;
+$red:     #f44;
+
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.merchant-mg {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: $font;
+  font-size: 11px;
+  color: $text;
+  user-select: none;
+}
+
+// ── Gold balance ─────────────────────────────
+
+.gold-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  background: $bg-el;
+  border: 1px solid $border;
+}
+
+.gold-label {
+  color: $gold-c;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.gold-val {
+  color: $gold-c;
+  font-weight: bold;
+  font-size: 11px;
+}
+
+// ── Auto-buy spend rate ───────────────────────
+
+.spend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 6px;
+  background: $bg-el;
+  border: 1px solid $border;
+  border-top: none;          // butts up against the gold-row above
+}
+
+.spend-label {
+  color: $muted;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.spend-val {
+  color: $muted;
+  font-size: 10px;
+  font-weight: bold;
+  transition: color 0.2s;
+
+  &.spend-active {
+    color: $red;
+  }
+}
+
+.spend-unit {
+  font-size: 8px;
+  opacity: 0.75;
+}
+
+// ── Status message ───────────────────────────
+
+.status-msg {
+  color: $accent;
+  font-size: 9px;
+  text-align: center;
+  min-height: 1.4em;
+  white-space: pre-line;
+}
+
+// ── Exchange item list ───────────────────────
+
+.exchange-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  // The panel-body scrolls, but give the list its own max-height
+  // so extremely long lists don't crowd auto-buyers off-screen.
+}
+
+.item-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px 4px;
+  background: $bg-el;
+  border: 1px solid #222;
+  transition: border-color 0.1s;
+
+  &:hover {
+    border-color: $border;
+  }
+}
+
+.item-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.item-sym {
+  flex-shrink: 0;
+  width: 12px;
+  text-align: center;
+  font-size: 11px;
+}
+
+.item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #aaa;
+  font-size: 10px;
+}
+
+.item-price {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: right;
+  min-width: 44px;
+  transition: color 0.3s;
+}
+
+.item-btns {
+  display: flex;
+  gap: 3px;
+}
+
+.buy-btn {
+  flex: 1;
+  background: #0a0a0a;
+  color: $accent;
+  border: 1px solid #2a2a2a;
+  font-family: $font;
+  font-size: 9px;
+  padding: 2px 0;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+
+  &:hover:not(:disabled) {
+    background: #1a1408;
+    border-color: $accent;
+    color: #fff;
+  }
+
+  &:disabled {
+    color: #333;
+    border-color: #1a1a1a;
+    cursor: default;
+  }
+}
+
+// ── Inline auto-buy toggles ──────────────────
+// Buyer 1 accent = copper ($accent), buyer 2 accent = gold ($gold-c).
+// Native checkbox is hidden; the visible bracket-label mimics the
+// [ Auto-Solve: ON ] button style used elsewhere in the game.
+
+.ab-check {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  margin-left: 3px;
+  // Must be positioned so the absolutely-placed input anchors here,
+  // not at a distant ancestor. Without this the browser scroll-to-focus
+  // snaps the panel to the top when the checkbox receives focus.
+  position: relative;
+
+  // Hide the browser's native checkbox entirely.
+  // clip + clip-path suppresses the browser's scroll-into-view behaviour
+  // that would otherwise kick in when the input receives focus.
+  input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ab-label {
+    font-family: $font;
+    font-size: 8px;
+    letter-spacing: 0.04em;
+    padding: 1px 3px;
+    border: 1px solid #2a2a2a;
+    background: #0a0a0a;
+    color: #3a3a3a;
+    transition: color 0.1s, border-color 0.1s, background 0.1s;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  &:hover .ab-label {
+    border-color: $muted;
+    color: #666;
+  }
+
+  // Active = buyer 1 (copper)
+  &.ab-check-active .ab-label {
+    color: $accent;
+    border-color: darken($accent, 10%);
+    background: #120a00;
+  }
+}
+
+// Buyer 2 uses gold accent instead of copper
+.ab-check-2 {
+  .ab-label {
+    // inherit dim state from .ab-check
+  }
+
+  &:hover .ab-label {
+    border-color: darken($gold-c, 40%);
+    color: darken($gold-c, 20%);
+  }
+
+  &.ab-check-active .ab-label {
+    color: $gold-c;
+    border-color: darken($gold-c, 30%);
+    background: #151000;
+  }
+}

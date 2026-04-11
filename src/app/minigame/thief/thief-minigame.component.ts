@@ -1,11 +1,11 @@
-import { Component, Input, OnInit, OnDestroy, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { THIEF_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
+import { THIEF_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS } from '../../game-config';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES, LOG_MSG } from '../../flavor-text';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
 
 @Component({
@@ -16,7 +16,7 @@ import { toPct, randInt, rollChance } from '../../utils/mathUtils';
   styleUrls: ['./thief-minigame.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ThiefMinigameComponent implements OnInit, OnDestroy {
+export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
@@ -45,6 +45,35 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
   @Input() lockedInLevel        = 0;
   /** Flow State level — when ≥1, failed tick colours shift from red→yellow→green based on proximity to the sweet spot. */
   @Input() flowStateLevel        = 0;
+
+  // ── Auto-solve ──────────────────────────
+  @Input() autoSolveUnlocked = false;
+  @Input() autoSolveEnabled = false;
+  @Input() autoSolveGoodMode = false;
+  @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
+  @Output() goldBeadFound = new EventEmitter<void>();
+  private autoSolveInterval?: ReturnType<typeof setInterval>;
+  /** Pre-computed evenly-spaced angles for the auto-solve guesses. */
+  private autoSolveAngles: number[] = [];
+  private autoSolveAngleIdx = 0;
+
+  // ── Gold-2 bead tracking ─────────────────
+  @Input() gold2Progress: unknown;
+  @Output() gold2ProgressChange = new EventEmitter<unknown>();
+  @Output() gold2BeadFound = new EventEmitter<void>();
+  private gold2Awarded = false;
+  /** Level of the Gem Hunter upgrade — enables gold-2 log progress messages. */
+  @Input() gemHunterLevel = 0;
+  /** Whether the gold-2 bead has already been found for this character (suppresses log messages). */
+  @Input() gold2BeadAlreadyFound = false;
+
+  // ── Good auto-solve state ────────────────
+  /** Phase of the good auto-solve: 'probe1' → 'probe2' → 'crack'. */
+  private goodAutoPhase: 'probe1' | 'probe2' | 'crack' = 'probe1';
+
+  toggleAutoSolve(): void {
+    this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
 
   // ── Wallet-synced ─────────────────────────
   dossiers = 0;
@@ -138,6 +167,32 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
+      if (this.autoSolveEnabled && this.autoSolveUnlocked) {
+        this.startAutoSolve();
+        // If a heist is already active, compute target angles so auto-solve
+        // can resume the in-progress crack instead of waiting for the next heist.
+        if (this.heistActive) {
+          if (this.autoSolveGoodMode) {
+            this.goodAutoPhase = 'probe1';
+            this.autoSolveAngles = [0, 30];
+            this.autoSolveAngleIdx = 0;
+          } else {
+            const attempts = this.maxDetection - this.detection;
+            this.autoSolveAngles = [];
+            for (let i = 0; i < attempts; i++) {
+              this.autoSolveAngles.push((360 / attempts) * i);
+            }
+            this.autoSolveAngleIdx = 0;
+          }
+        }
+      } else {
+        this.stopAutoSolve();
+      }
+    }
+  }
+
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
@@ -150,6 +205,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sub.unsubscribe();
     this.stopAnimation();
+    this.stopAutoSolve();
   }
 
   // ── Actions ───────────────────────────────
@@ -169,7 +225,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     this.lastMsg  = MINIGAME_MSG.THIEF.IDLE;
     this.msgClass = 'msg-neutral';
     this.lastTime = undefined;
-    this.log.log(`Heist started! (${cur('dossier', this.DOSSIER_COST, '-')})`);
+    this.log.log(LOG_MSG.MG_THIEF.HEIST_START(cur('dossier', this.DOSSIER_COST, '-')));
     this.startAnimation();
   }
 
@@ -188,6 +244,11 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
 
     // Normal crack attempt during active heist
     if (!this.heistActive) return;
+
+    // Gold-2 tracking: record each crack attempt angle
+    if (!this.autoSolveEnabled && !this.gold2Awarded) {
+      this.trackGold2Angle();
+    }
 
     if (this.isInSweetSpot()) {
       this.heistWon    = true;
@@ -208,11 +269,76 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
         this.stats.trackThiefHeist(false);
         this.lastMsg  = MINIGAME_MSG.THIEF.BUSTED;
         this.msgClass = 'msg-bad';
-        this.log.log('Heist failed — you were detected!', 'warn');
+        this.log.log(LOG_MSG.MG_THIEF.HEIST_DETECTED, 'warn');
       } else {
         this.lastMsg  = MINIGAME_MSG.THIEF.MISS;
         this.msgClass = 'msg-bad';
       }
+    }
+  }
+
+  // ── Auto-solve helpers ──────────────────
+
+  private startAutoSolve(): void {
+    this.stopAutoSolve();
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.THIEF_TICK_MS);
+  }
+
+  private stopAutoSolve(): void {
+    if (this.autoSolveInterval) {
+      clearInterval(this.autoSolveInterval);
+      this.autoSolveInterval = undefined;
+    }
+  }
+
+  /** The interval tick only handles starting new heists and pre-computing target angles. */
+  private autoSolveTick(): void {
+    if (!this.autoSolveEnabled || !this.autoSolveUnlocked) {
+      this.stopAutoSolve();
+      return;
+    }
+    // If heist is not active, start one
+    if (!this.heistActive) {
+      if (this.canStart) {
+        this.startHeist();
+        if (this.autoSolveGoodMode) {
+          // Good auto-solve: probe at 0° and 30° quickly, then crack at the sweet spot
+          this.goodAutoPhase = 'probe1';
+          this.autoSolveAngles = [0, 30];
+          this.autoSolveAngleIdx = 0;
+        } else {
+          // Pre-compute evenly spaced angles based on maxDetection
+          const attempts = this.maxDetection;
+          this.autoSolveAngles = [];
+          for (let i = 0; i < attempts; i++) {
+            this.autoSolveAngles.push((360 / attempts) * i);
+          }
+          this.autoSolveAngleIdx = 0;
+        }
+      }
+      this.cdr.markForCheck();
+    }
+    // Actual crack attempts are handled inside the animation loop
+  }
+
+  /**
+   * Check if the pointer crossed a target angle between two frames.
+   * Handles the 360→0 wrap-around.
+   */
+  private hasCrossedAngle(prev: number, curr: number, target: number): boolean {
+    if (prev <= curr) {
+      // No wrap: check if target is between prev and curr (inclusive)
+      return target >= prev && target <= curr;
+    } else {
+      // Wrapped past 360→0: target in [prev, 360) or [0, curr]
+      return target >= prev || target <= curr;
+    }
+  }
+
+  private rollMinigameGoldBead(): void {
+    if (this.stats.getManualSidequestClears('thief') < BEADS.GOLD_BEAD_MIN_MANUAL_CLEARS) return;
+    if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
+      this.goldBeadFound.emit();
     }
   }
 
@@ -229,14 +355,15 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
   }
 
   private awardRewards(): void {
+    const bm = this.wallet.getBeadMultiplier('thief');
     const unused   = this.maxDetection - this.detection;
     // Bag of Holding bonus scales with efficiency: full bonus at 0 detection used, none at full detection used
     const unusedFraction = this.maxDetection > 0 ? unused / this.maxDetection : 0;
-    const treasure = THIEF_MG.TREASURE_BASE + THIEF_MG.TREASURE_PER_UNUSED * unused
-                   + Math.floor(this.effectiveMaxTreasureBonus * unusedFraction);
-    const gold     = THIEF_MG.GOLD_BASE     + THIEF_MG.GOLD_PER_UNUSED     * unused
-                   + Math.floor(this.effectiveMaxGoldBonus     * unusedFraction);
-    const xp       = THIEF_MG.XP_REWARD;
+    const treasure = (THIEF_MG.TREASURE_BASE + THIEF_MG.TREASURE_PER_UNUSED * unused
+                   + Math.floor(this.effectiveMaxTreasureBonus * unusedFraction)) * bm;
+    const gold     = (THIEF_MG.GOLD_BASE     + THIEF_MG.GOLD_PER_UNUSED     * unused
+                   + Math.floor(this.effectiveMaxGoldBonus     * unusedFraction)) * bm;
+    const xp       = THIEF_MG.XP_REWARD * bm;
 
     this.wallet.add('treasure', treasure);
     this.wallet.add('gold', gold);
@@ -249,7 +376,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
 
     if (!this.wallet.isCurrencyUnlocked('treasure')) {
       this.wallet.unlockCurrency('treasure');
-      this.log.log('Treasure discovered! New currency unlocked!', 'rare');
+      this.log.log(LOG_MSG.MG_THIEF.TREASURE_UNLOCKED, 'rare');
     }
 
     this.resultParts = [
@@ -268,7 +395,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
       this.stats.trackCurrencyGain('relic', THIEF_MG.RELIC_AMOUNT);
       if (!this.wallet.isCurrencyUnlocked('relic')) {
         this.wallet.unlockCurrency('relic');
-        this.log.log('A Relic has been unearthed! Incredibly rare!', 'rare');
+        this.log.log(LOG_MSG.MG_THIEF.RELIC_FOUND, 'rare');
         this.stats.recordMilestone('first_relic', 'First Relic Found');
       }
       this.resultParts.push({
@@ -276,13 +403,19 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
         symbol: CURRENCY_FLAVOR['relic'].symbol,
         color:  CURRENCY_FLAVOR['relic'].color,
       });
-      this.log.log(`Safe cracked! (${cur('treasure', treasure)}, ${cur('gold', gold)}, ${cur('relic', THIEF_MG.RELIC_AMOUNT)}, ${cur('xp', xp)})`, 'rare');
+      this.log.log(LOG_MSG.MG_THIEF.SAFE_CRACKED_RELIC(cur('treasure', treasure), cur('gold', gold), cur('relic', THIEF_MG.RELIC_AMOUNT), cur('xp', xp)), 'rare');
     } else {
-      this.log.log(`Safe cracked! (${cur('treasure', treasure)}, ${cur('gold', gold)}, ${cur('xp', xp)})`, 'success');
+      this.log.log(LOG_MSG.MG_THIEF.SAFE_CRACKED(cur('treasure', treasure), cur('gold', gold), cur('xp', xp)), 'success');
     }
 
     this.lastMsg  = MINIGAME_MSG.THIEF.SUCCESS;
     this.msgClass = 'msg-good';
+
+    // Roll for gold bead on successful heist
+    if (!this.autoSolveEnabled) {
+      this.stats.trackManualSidequestClear('thief');
+    }
+    this.rollMinigameGoldBead();
   }
 
   // ── Animation loop ────────────────────────
@@ -293,7 +426,31 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
 
       if (this.lastTime !== undefined) {
         const dt = timestamp - this.lastTime;
+        const prevAngle = this.pointerAngle;
         this.pointerAngle = (this.pointerAngle + THIEF_MG.DIAL_SPEED * dt / 1000) % 360;
+
+        // Auto-solve: check if the spinning pointer crossed the next target angle
+        if (this.autoSolveEnabled
+            && this.autoSolveAngleIdx < this.autoSolveAngles.length
+            && this.heistActive) {
+          const target = this.autoSolveAngles[this.autoSolveAngleIdx];
+          if (this.hasCrossedAngle(prevAngle, this.pointerAngle, target)) {
+            this.pointerAngle = target; // snap to the exact target angle
+            this.autoSolveAngleIdx++;
+            this.attemptCrack();
+
+            // Good auto-solve: after each probe, update state
+            if (this.autoSolveGoodMode && this.heistActive) {
+              this.handleGoodAutoProbeResult();
+            }
+
+            // If heist ended from that crack, bail out of this frame
+            if (!this.heistActive) {
+              this.cdr.detectChanges();
+              return;
+            }
+          }
+        }
       }
       this.lastTime = timestamp;
 
@@ -313,54 +470,113 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── SVG helpers ───────────────────────────
+  // ── Good auto-solve helpers ─────────────
 
   /**
-   * SVG line endpoints for a Locked In failed-click tick mark.
-   * Drawn from just inside the ring (r=43) to the ring edge (r=50).
+   * After a probe attempt in good auto-solve, schedule the next action.
+   * Probe1 at 0°, Probe2 at 30°. If both miss, target the sweet spot center directly.
    */
-  getFailedTickCoords(angle: number): { x1: number; y1: number; x2: number; y2: number } {
-    const rad = (angle - 90) * Math.PI / 180;
+  private handleGoodAutoProbeResult(): void {
+    if (this.goodAutoPhase === 'probe1') {
+      // First probe missed — continue to probe2 (already scheduled)
+      this.goodAutoPhase = 'probe2';
+    } else if (this.goodAutoPhase === 'probe2') {
+      // Both probes missed — schedule a crack at the actual sweet spot
+      this.goodAutoPhase = 'crack';
+      this.autoSolveAngles.push(this.sweetSpotCenter);
+    }
+  }
+
+  // ── Gold-2 helpers ─────────────────────
+
+  /**
+   * Track crack attempt angles for the gold-2 unlock.
+   * Must guess specific angles in order within tolerance.
+   * On a matching angle: advance the step.
+   * On a non-matching angle: do nothing (don't reset).
+   * Progress persists across games regardless of heist outcome.
+   */
+  private trackGold2Angle(): void {
+    if (this.gold2BeadAlreadyFound) return;
+
+    const progress = (this.gold2Progress as { step?: number }) ?? {};
+    let step = progress.step ?? 0;
+    const sequence = GOLD2_CONDITIONS.THIEF_ANGLE_SEQUENCE;
+    const tolerance = GOLD2_CONDITIONS.THIEF_ANGLE_TOLERANCE;
+
+    if (step >= sequence.length) {
+      return;
+    }
+
+    const targetAngle = sequence[step];
+    const clickAngle = this.pointerAngle;
+
+    // Check if the click is within tolerance of the target clock-face angle
+    let diff = Math.abs(clickAngle - targetAngle);
+    if (diff > 180) diff = 360 - diff;
+
+    if (diff <= tolerance) {
+      step++;
+      if (step >= sequence.length) {
+        // Pattern complete — award the bead!
+        this.gold2Awarded = true;
+        this.gold2BeadFound.emit();
+        this.gold2ProgressChange.emit({ step: 0 });
+      } else {
+        if (this.gemHunterLevel >= 1) {
+          const msgs = GOLD2_STEP_MESSAGES['thief'];
+          this.log.log(msgs[(step - 1) % msgs.length], 'rare');
+        }
+        this.gold2ProgressChange.emit({ step });
+      }
+    }
+    // Non-matching angle: do nothing — progress preserved across games.
+  }
+
+  // ── Dial SVG helpers ────────────────────
+
+  /** Compute (x1,y1)→(x2,y2) for a failed-click tick mark on the dial at angle `a`. */
+  getFailedTickCoords(a: number): { x1: number; y1: number; x2: number; y2: number } {
+    const rad = (a - 90) * Math.PI / 180;
     return {
-      x1: 60 + 43 * Math.cos(rad),
-      y1: 60 + 43 * Math.sin(rad),
+      x1: 60 + 42 * Math.cos(rad),
+      y1: 60 + 42 * Math.sin(rad),
       x2: 60 + 50 * Math.cos(rad),
       y2: 60 + 50 * Math.sin(rad),
     };
   }
 
   /**
-   * Returns the stroke color for a failed-click tick mark.
-   * Without Flow State: always red (#f44).
-   * With Flow State: interpolates red → yellow → green on a 0–180° angular
-   * distance scale from the sweet spot center.
-   *   0°  away → hue 120 (green)
-   *   90° away → hue 60  (yellow)
-   *   180° away → hue 0  (red)
+   * Colour for a failed tick — grades from red (far from sweet spot) through
+   * yellow to green (very close) when Flow State is active.
+   * Without Flow State, all failed ticks are red.
    */
-  getFailedTickColor(angle: number): string {
-    if (this.flowStateLevel < 1) return '#f44';
-    // Compute shortest angular distance from this tick to the sweet spot center
-    let diff = Math.abs(angle - this.sweetSpotCenter) % 360;
+  getFailedTickColor(a: number): string {
+    if (this.flowStateLevel < 1) return '#ff4444';
+    // Proximity to the sweet spot center (0 = on it, 180 = opposite side)
+    let diff = Math.abs(a - this.sweetSpotCenter);
     if (diff > 180) diff = 360 - diff;
-    // Normalize to [0, 1]: 0 = at center, 1 = opposite side
-    const t = Math.min(diff / 180, 1);
-    // Interpolate hue: 120 (green) → 60 (yellow) → 0 (red)
-    const hue = Math.round(120 * (1 - t));
-    return `hsl(${hue}, 90%, 55%)`;
+    const halfSpot = this.effectiveSweetSpotSize / 2;
+    if (diff <= halfSpot) return '#44ff44'; // shouldn't normally happen (that's a hit)
+    // Map distance to hue: close → green (120), far → red (0)
+    const maxDist = 180;
+    const t = Math.max(0, Math.min(1, 1 - (diff - halfSpot) / (maxDist - halfSpot)));
+    const hue = Math.round(t * 120);
+    return `hsl(${hue}, 100%, 50%)`;
   }
 
-  /** Compute the SVG arc path for the sweet-spot indicator (shown after heist ends). */
+  /** Build an SVG arc path string for the sweet-spot highlight. */
   getSweetSpotArc(cx: number, cy: number, r: number): string {
-    const startRad = (this.sweetSpotStartDeg - 90) * Math.PI / 180;
-    const endRad   = (this.sweetSpotEndDeg   - 90) * Math.PI / 180;
+    const startDeg = this.sweetSpotStartDeg - 90;
+    const endDeg   = this.sweetSpotEndDeg - 90;
+    const startRad = startDeg * Math.PI / 180;
+    const endRad   = endDeg * Math.PI / 180;
     const x1 = cx + r * Math.cos(startRad);
     const y1 = cy + r * Math.sin(startRad);
     const x2 = cx + r * Math.cos(endRad);
     const y2 = cy + r * Math.sin(endRad);
-    const largeArc = this.effectiveSweetSpotSize > 180 ? 1 : 0;
+    const largeArc = (endDeg - startDeg + 360) % 360 > 180 ? 1 : 0;
     return `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
   }
 }
-
 

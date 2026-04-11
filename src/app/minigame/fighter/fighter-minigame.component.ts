@@ -5,12 +5,15 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
 import { FIGHTER_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant, MINIGAME_MSG, cur } from '../../flavor-text';
+import { CURRENCY_FLAVOR, KOBOLD_VARIANTS, KoboldVariant, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES, LOG_MSG } from '../../flavor-text';
 import { FighterCombatState } from '../../options/save.service';
 import { toPct, randInt, rollChance } from '../../utils/mathUtils';
+import { AUTO_SOLVE, BEADS, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE } from '../../game-config';
 
 interface Enemy {
   name: string;
+  /** The kobold tier/level this enemy was spawned at. */
+  level: number;
   hp: number;
   maxHp: number;
   goldMin: number;
@@ -74,6 +77,33 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   @Input() savedState: FighterCombatState | null = null;
   /** Emitted whenever combat state changes (HP, defeated, rest countdown). */
   @Output() stateChange = new EventEmitter<FighterCombatState>();
+
+  // ── Auto-solve ──────────────────────────
+  /** Whether auto-solve is unlocked (gold-1 bead socketed). */
+  @Input() autoSolveUnlocked = false;
+  /** Whether auto-solve is currently active. */
+  @Input() autoSolveEnabled = false;
+  /** Whether good (upgraded) auto-solve is active (both gold beads socketed). */
+  @Input() autoSolveGoodMode = false;
+  /** Emitted when the player toggles auto-solve on/off. */
+  @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
+  /** Emitted when a gold bead is found from minigame success. */
+  @Output() goldBeadFound = new EventEmitter<void>();
+  private autoSolveInterval?: ReturnType<typeof setInterval>;
+
+  // ── Gold-2 bead tracking ─────────────────
+  /** Persisted progress toward the gold-2 unlock. */
+  @Input() gold2Progress: unknown;
+  /** Emitted when gold-2 progress changes. */
+  @Output() gold2ProgressChange = new EventEmitter<unknown>();
+  /** Emitted when the gold-2 bead is unlocked. */
+  @Output() gold2BeadFound = new EventEmitter<void>();
+  /** Whether the gold-2 bead has already been awarded this session (to prevent double-emit). */
+  private gold2Awarded = false;
+  /** Level of the Gem Hunter upgrade — enables gold-2 log progress messages. */
+  @Input() gemHunterLevel = 0;
+  /** Whether the gold-2 bead has already been found for this character (suppresses log messages). */
+  @Input() gold2BeadAlreadyFound = false;
 
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
@@ -186,11 +216,22 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     this.koboldBaitEnabledChange.emit(!this.koboldBaitEnabled);
   }
 
+  toggleAutoSolve(): void {
+    this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
+
   // ── Lifecycle ─────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['firstStrikeLevel'] && this.firstStrikeLevel >= 1) {
       this.stats.markFirstStrikeUnlocked();
+    }
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
+      if (this.autoSolveEnabled && this.autoSolveUnlocked) {
+        this.startAutoSolve();
+      } else {
+        this.stopAutoSolve();
+      }
     }
   }
 
@@ -272,6 +313,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     if (this.spawnTimer)   clearTimeout(this.spawnTimer);
     if (this.restInterval) clearInterval(this.restInterval);
     if (this.fleeInterval) clearInterval(this.fleeInterval);
+    this.stopAutoSolve();
   }
 
   // ── Actions ───────────────────────────────
@@ -301,7 +343,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       this.lastMsg   = `!! DEFEATED by ${this.enemy.name} !!`;
       this.msgLine2  = '';
       this.msgClass  = 'msg-bad';
-      this.log.log(`The Fighter was slain by a ${this.enemy.name}!`, 'warn');
+      this.log.log(LOG_MSG.MG_FIGHTER.SLAIN(this.enemy.name), 'warn');
       this.startRest();
     }
     this.emitState();
@@ -370,7 +412,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
         this.lastMsg  = MINIGAME_MSG.FIGHTER.ESCAPED;
         this.msgLine2 = '';
         this.msgClass = 'msg-neutral';
-        this.log.log('The Fighter fled from combat.', 'default');
+        this.log.log(LOG_MSG.MG_FIGHTER.FLED, 'default');
         this.emitState();
       }
       this.cdr.markForCheck();
@@ -429,7 +471,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       this.fighterHp = Math.min(this.maxHp, this.fighterHp + this.potionHealAmount*this.potionHealEfficiency);
     }
     if (potionsConsumed > 0) {
-      this.log.log(`Chugged some potions during a short rest. (${cur('potion', potionsConsumed, '-')})`, "default")
+      this.log.log(LOG_MSG.MG_FIGHTER.SHORT_REST(cur('potion', potionsConsumed, '-')), "default")
       this.stats.trackFighterPotionDrank(potionsConsumed);
     }
 
@@ -443,27 +485,36 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
       this.lastMsg   = `!! DEFEATED by ${this.enemy.name} !!`;
       this.msgLine2  = '';
       this.msgClass  = 'msg-bad';
-      this.log.log(`The Fighter was slain by a ${this.enemy.name}!`, 'warn');
+      this.log.log(LOG_MSG.MG_FIGHTER.SLAIN(this.enemy.name), 'warn');
       this.startRest();
     }
     this.emitState();
   }
 
   private onEnemyDefeated(enemyLastDmg: number, firstStrike: boolean = false): void {
+    // ── Gold-2 tracking: record each kill's kobold level ──
+    if (!this.autoSolveEnabled && !this.gold2Awarded) {
+      this.trackGold2Kill();
+    }
+
+    const bm = this.wallet.getBeadMultiplier('fighter');
     const baseGold = randInt(this.enemy.goldMin, this.enemy.goldMax);
     const gildedBonus = this.gildedBladeLevel > 0 ? Math.floor(baseGold * this.gildedBladeLevel / 100) : 0;
-    const gold = baseGold + gildedBonus;
+    const gold = (baseGold + gildedBonus) * bm;
+    const xpReward  = this.enemy.xpReward * bm;
+    // Kobold ears are intentionally exempt from the bead multiplier
+    const earReward = this.enemy.earReward;
 
     this.wallet.add('gold',       gold);
-    this.wallet.add('xp',         this.enemy.xpReward);
-    this.wallet.add('kobold-ear', this.enemy.earReward);
+    this.wallet.add('xp',         xpReward);
+    this.wallet.add('kobold-ear', earReward);
 
     // Track stats
     const variantIdx = Math.min(this.selectedKoboldLevel - 1, KOBOLD_VARIANTS.length - 1);
     this.stats.trackKoboldKill(KOBOLD_VARIANTS[variantIdx].name);
     this.stats.trackCurrencyGain('gold', gold);
-    this.stats.trackCurrencyGain('xp', this.enemy.xpReward);
-    this.stats.trackCurrencyGain('kobold-ear', this.enemy.earReward);
+    this.stats.trackCurrencyGain('xp', xpReward);
+    this.stats.trackCurrencyGain('kobold-ear', earReward);
 
     const isFirstEar = !this.wallet.isCurrencyUnlocked('kobold-ear');
     if (isFirstEar) {
@@ -486,6 +537,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
             dropAmount *= 2;
           }
         }
+        dropAmount *= bm;
 
         this.wallet.add(drop.currencyId, dropAmount);
         gotSecondaryDrop = true;
@@ -496,7 +548,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
           const dropFlavor = (CURRENCY_FLAVOR as Record<string, { name: string; symbol: string; color: string }>)[drop.currencyId];
           const dropName = dropFlavor?.name ?? drop.currencyId;
           this.log.log(
-            `The ${this.enemy.name} drops a ${dropName}! A new trophy!`,
+            LOG_MSG.MG_FIGHTER.NEW_TROPHY(this.enemy.name, dropName),
             'rare'
           );
         }
@@ -507,25 +559,31 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     // ── Log message ───────────────────────────────
     // Detect mutual kill first so the log message is accurate even in that case.
     const isMutualKill = this.fighterHp <= 0;
-    const dropsText = `${cur('gold', gold)}, ${cur('xp', this.enemy.xpReward)}, ${cur('kobold-ear', this.enemy.earReward)}${secondaryMsg}`;
+    const dropsText = `${cur('gold', gold)}, ${cur('xp', xpReward)}, ${cur('kobold-ear', earReward)}${secondaryMsg}`;
 
     if (isFirstEar) {
       this.log.log(
-        `${isMutualKill ? 'Mutual kill!' : 'Victory!'} The ${this.enemy.name} drops a Kobold Ear! (${dropsText})`,
+        LOG_MSG.MG_FIGHTER.FIRST_EAR(isMutualKill, this.enemy.name, dropsText),
         'rare'
       );
     } else if (isMutualKill) {
       this.log.log(
-        `Mutual kill! Loot still collected. (${dropsText})`,
+        LOG_MSG.MG_FIGHTER.MUTUAL_KILL(dropsText),
         'warn'
       );
     } else {
       const logType = gotSecondaryDrop ? 'success' : 'default';
       this.log.log(
-        `Victory! ${this.enemy.name} defeated. (${dropsText})`,
+        LOG_MSG.MG_FIGHTER.VICTORY(this.enemy.name, dropsText),
         logType
       );
     }
+
+    // Roll for gold bead drop on successful kill
+    if (!this.autoSolveEnabled) {
+      this.stats.trackManualSidequestClear('fighter');
+    }
+    this.rollMinigameGoldBead();
 
     if (isMutualKill) {
       // Mutual kill — awards still granted, but fighter is defeated
@@ -594,6 +652,91 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  // ── Auto-solve helpers ──────────────────
+
+  private startAutoSolve(): void {
+    this.stopAutoSolve();
+    const tickMs = this.autoSolveGoodMode ? GOOD_AUTO_SOLVE.FIGHTER_TICK_MS : AUTO_SOLVE.FIGHTER_TICK_MS;
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), tickMs);
+  }
+
+  private stopAutoSolve(): void {
+    if (this.autoSolveInterval) {
+      clearInterval(this.autoSolveInterval);
+      this.autoSolveInterval = undefined;
+    }
+  }
+
+  private autoSolveTick(): void {
+    if (!this.autoSolveEnabled || !this.autoSolveUnlocked) {
+      this.stopAutoSolve();
+      return;
+    }
+    // If defeated and rest is done, retry
+    if (this.defeated && this.restCountdown <= 0) {
+      this.retry();
+      this.cdr.markForCheck();
+      return;
+    }
+    // Good auto-solve: heal when below half HP
+    if (this.autoSolveGoodMode && !this.actionsDisabled && this.fighterHp <= this.maxHp / 2 && this.potions > 0) {
+      this.heal();
+      this.cdr.markForCheck();
+      return;
+    }
+    // If not defeated and actions not disabled, attack
+    if (!this.actionsDisabled) {
+      this.attack();
+      this.cdr.markForCheck();
+    }
+  }
+
+  // ── Gold bead roll helper ──────────────
+
+  private rollMinigameGoldBead(): void {
+    if (this.stats.getManualSidequestClears('fighter') < BEADS.GOLD_BEAD_MIN_MANUAL_CLEARS) return;
+    if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
+      this.goldBeadFound.emit();
+    }
+  }
+
+  // ── Gold-2 helpers ─────────────────────
+
+  /** Track a kill for gold-2 pattern: kills at levels 1,1,2,3,5. */
+  private trackGold2Kill(): void {
+    const progress = (this.gold2Progress as { killLevels?: number[] }) ?? {};
+    const killLevels = progress.killLevels ? [...progress.killLevels] : [];
+    const target = GOLD2_CONDITIONS.FIGHTER_KILL_LEVELS;
+    const defeatedLevel = this.enemy.level;
+
+    killLevels.push(defeatedLevel);
+
+    // Check if the sequence so far matches the target prefix
+    for (let i = 0; i < killLevels.length; i++) {
+
+      if (i >= target.length || killLevels[i] !== target[i]) {
+        // Mismatch — reset, but check if this kill starts a new sequence
+        if (defeatedLevel === target[0]) {
+          this.gold2ProgressChange.emit({ killLevels: [defeatedLevel] });
+          if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) this.log.log(GOLD2_STEP_MESSAGES['fighter'][0], 'rare');
+        } else {
+          this.gold2ProgressChange.emit({ killLevels: [] });
+        }
+        return;
+      }
+    }
+    if (killLevels.length >= target.length) {
+      // Pattern complete — award the bead!
+      this.gold2Awarded = true;
+      this.gold2BeadFound.emit();
+      this.gold2ProgressChange.emit({ killLevels: [] });
+    } else {
+      const msgs = GOLD2_STEP_MESSAGES['fighter'];
+      if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) this.log.log(msgs[(killLevels.length - 1) % msgs.length], 'rare');
+      this.gold2ProgressChange.emit({ killLevels });
+    }
+  }
+
   private buildKobold(): Enemy {
     const lvl   = this.selectedKoboldLevel;
     const extra = lvl - 1;
@@ -605,6 +748,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
 
     return {
       name:      variant.name + (lvl > KOBOLD_VARIANTS.length ? ` Lv.${lvl}` : ''),
+      level:     lvl,
       hp,
       maxHp:     hp,
       goldMin:   FIGHTER_MG.KOBOLD_GOLD_MIN   + extra * FIGHTER_MG.KOBOLD_GOLD_MIN_PER_LEVEL,

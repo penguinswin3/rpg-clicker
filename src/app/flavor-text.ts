@@ -30,16 +30,24 @@ export const CURRENCY_FLAVOR = {
   jewelry:               { name: 'Jewelry',                   symbol: 'Ő',  color: '#97dfc8' },
   'synaptical-potion':   { name: 'Synaptical Potion Base',    symbol: '⚗',  color: '#5b67eb' },
   'kobold-feather':      { name: 'Kobold Feather',            symbol: '⸙',  color: '#c5b3aa' },
+  'kobold-pebble':       { name: 'Kobold Pebble',             symbol: '\u25CB',  color: '#8a9a7b' },
+  'kobold-heart':        { name: '"Kobold" Heart',            symbol: '♥',  color: '#8b1a1a' },
   'bone':                { name: 'Bones',                     symbol: '🕱',  color: '#d7d8e6' },
   'brimstone':           { name: 'Brimstone',                 symbol: '🜏',  color: '#ffbd2b' },
   'soul-stone':          { name: 'Soul Stone',                symbol: '◈',  color: '#8f4fff' },
   'mana':                { name: 'Mana',                      symbol: 'ᳱ',  color: '#40a3e1' },
+  'illicit-goods':       { name: 'Illicit Goods',              symbol: '⌺',  color: '#8f5a28' },
+  'monster-trophy':      { name: 'Monster Trophy',             symbol: 'ᛃ',  color: '#c94444' },
+  'forbidden-tome':      { name: 'Forbidden Tome',             symbol: '⍯',  color: '#3e2e24' },
+  'magical-implement':   { name: 'Magical Implement',          symbol: 'ᛗ',  color: '#3eafc9' },
+  'construct':           { name: 'Construct',                   symbol: '⚙',  color: '#7eb8d4' },
+  'life-thread':         { name: 'Life Thread',                  symbol: '⌇',  color: '#8bea93' },
 
   /**
   Ideas for new Symbols
-   - Relics: ᛤ  ᛥ  ᛯ ᛰ ᛗ ᛃ ᚸ ⸎
+   - Relics: ᛤ  ᛥ  ᛯ ᛰ ᚸ ⸎
    - Kobold Nose: ᴥ
-   - scroll: ⍯ ⌺ ꖸ
+   - scroll: ꖸ
 
    */
 
@@ -133,6 +141,7 @@ export const UPGRADE_FLAVOR = {
   POTION_CATS_EARS:         { name: "Potion of Cat's Ears",      desc: '+3° sweet spot size per level' },
   BAG_OF_HOLDING:           { name: 'Bag of Holding',            desc: 'Increases maximum gold and treasure yield' },
   RELIC_HUNTER:             { name: 'Relic Hunter',              desc: 'Allows the discovery of one additional relic!' },
+  GEM_HUNTER:               { name: 'Gem Hunter',                desc: 'Reveals cryptic progress messages when completing steps toward unclaimed golden bead challenges' },
   LOCKED_IN:                { name: 'Locked In',                 desc: 'Marks failed click positions on the dial with a red tick' },
   FLOW_STATE:               { name: 'Flow State',                desc: 'Dial ticks now give hints as to where the sweet spot is' },
 
@@ -157,6 +166,24 @@ export const UPGRADE_FLAVOR = {
   FIND_FAMILIAR:            { name: 'Find Familiar',             desc: 'Summon a spectral familiar for each hero button. Feed it Soul Stones for temporary +1 jack power' },
   CONCENTRATED_SOULS:       { name: 'Concentrated Souls',        desc: 'Each Soul Stone fed to a familiar grants an additional +15s of familiar time per level' },
   VAULT_OF_SOULS:           { name: 'Vault of Souls',            desc: 'Increases the maximum familiar time cap by 5 minutes per level' },
+  SPREADING_SOUL:           { name: 'Spreading Soul',            desc: 'Summon familiars for all characters at once, distributing Soul Stones to the most needy first' },
+  MIND_AND_SOUL:            { name: 'Mind and Soul',             desc: 'Allows +1 additional active familiar per level, up to 20' },
+
+  // Artificer
+  DEEP_STUDY:               { name: 'Deep Study',               desc: '+1 insight per Study click (max insight bar reached in fewer clicks)' },
+  FOCUSED_REFLECTION:       { name: 'Focused Reflection',       desc: '-1 minimum insight consumed per Reflect (min 1)' },
+  AMPLIFIED_INSIGHT:        { name: 'Amplified Insight',         desc: '+1 level added to insight before squaring for mana (max 32 pre-square)' },
+  POTION_ARCANE_INTELLECT:  { name: 'Potion of Arcane Intellect', desc: '+8 maximum insight per level. Only 8 insight is consumed per Reflect; excess remains.' },
+
+  EXTENDED_ETCHING:         { name: 'Extended Etching',          desc: '+1 symbol to the Etching sequence, ×2 constructs per additional symbol' },
+  SECOND_CHANCE:            { name: 'Second Chance',             desc: 'Allows one retry on a failed Etching round' },
+
+  // Chimeramancer
+  BIGGER_THREADS:  { name: 'Bigger Threads',  desc: '+1 Life Thread per Stitch click per level' },
+  SHARPER_NEEDLES: { name: 'Sharper Needles', desc: '+1 Life Thread per second per level' },
+  LOOM_OF_LIFE:    { name: 'Loom of Life',    desc: 'Each Sharper Needle gets this many extra needles, each also generating +1 Life Thread/sec' },
+  QUICK_STITCHING: { name: 'Quick Stitching', desc: 'Doubles the amount of resources applied per contribution click per level' },
+  MINOR_TOUCH_UP:  { name: 'Minor Touch Up',  desc: '10% chance per level to also apply (level) of a resource to a random other unfinished bar' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
   RELIC_FIGHTER:    { name: 'Crown of Hireling Command',          desc: 'Each Jack hires hirelings, who in turn hire hirelings' },
@@ -166,6 +193,20 @@ export const UPGRADE_FLAVOR = {
   RELIC_THIEF:      { name: 'Ring of Shadows',                    desc: 'Jacks double their dossier yield range and steal 2 bonus treasure per successful action' },
   RELIC_ARTISAN:    { name: 'Masterwork Monocle of Perfection',   desc: 'Jacks always salvage maximum metal and double the minimum gemstone yield' },
   RELIC_NECROMANCER:{ name: 'Jeweled Hand of the Night',         desc: 'Defile and Ward Jacks each act regardless of which button is active, and produce double the yield' },
+
+  // Merchant
+  BOXING_DAY:            { name: 'Boxing Day',                  desc: 'Opens 1 additional illicit goods per click' },
+  SHADY_CONNECTIONS:     { name: 'Shady Connections',           desc: '+3% chance to find bonus loot when opening goods' },
+  BLACK_MARKET_CONNECTIONS: { name: 'Black Market Connections', desc: '+1% chance per level at rare rolls when opening goods' },
+  SMUGGLER_NETWORK:      { name: "Smuggler's Network",          desc: '+4% chance per level to double the goods opened per click' },
+  RIGGED_GAME:           { name: 'Rigged Game',                desc: '-1% cost on all stock market items per level' },
+  DIVERSIFIED_PORTFOLIO: { name: 'Diversified Portfolio',      desc: 'Unlocks a new set of purchaseable resources on the exchange per level' },
+  STABLE_MARKET:         { name: 'Stable Market',              desc: '-1% max price on all stock market items per level' },
+
+  // ── Relic upgrades (one per character) ──────────────────────────
+  RELIC_MERCHANT:      { name: 'Ledger of Infinite Commerce',      desc: 'Each assigned Jack purchases 10 of a random resource for free per hero button press' },
+  RELIC_ARTIFICER:     { name: 'Tome of Boundless Creation',       desc: 'Jacks double the mana produced by Reflect and gain +1 insight per Study' },
+  RELIC_CHIMERAMANCER: { name: 'Thread of Infinite Weaving',       desc: 'Jacks assigned to the Chimeramancer also click every other hero button (toggleable)' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
@@ -273,6 +314,54 @@ export const KOBOLD_VARIANTS: readonly KoboldVariant[] = [
       chance: 33,
     },
   },
+  // Level 7 — Kobold Grotesque
+  {
+    name: 'Kobold Grotesque',
+    ascii:
+      '   ____       ____\n' +
+      '  /    )     (    \\\n' +
+      ' /    (  ^_^  )    \\\n' +
+      '|  {   \\(\'v\')/   }  |\n' +
+      '|   {   /   \\   }   |\n' +
+      '|_)(   /\\   /\\   )(_|\n' +
+      '|)  (_ | \\|/  |_)  (|\n' +
+      '\'     "--^^^^--"    \'',
+    secondaryDrop: {
+      currencyId: 'kobold-pebble',
+      amount: 1,
+      chance: 25,
+    },
+  },
+  // Level 8 — Kobold Leader
+  {
+    name: 'Kobold Leader',
+    ascii:
+      '       \\(______     ______)/\n' +
+      '       /`.----.\\   /.----.`\\\n' +
+      '      } /      :} {:      \\ {\n' +
+      '     / {        } {        } \\\n' +
+      '     } }      ) } { (      { {\n' +
+      '    / {      /|\\}!{/|\\      } \\\n' +
+      '    } }     ( (."^".) )     { {\n' +
+      '   / {       (d\\   /b)       } \\\n' +
+      '   } }       |\\~   ~/|       { {\n' +
+      '  / /        | )   ( |        \\ \\\n' +
+      ' { {        _)(,   ,)(_        } }\n' +
+      '  } }      //  `";"`  \\\\      { {\n' +
+      ' / /      //     (     \\\\      \\ \\\n' +
+      '{ {      {(     -=)     )}      } }\n' +
+      ' \\ \\     /)    -=(=-     (\\    / /\n' +
+      '  `\\\\  /\'/    /-=|\\-\\    \\`\\  //\'\n' +
+      '    `\\{  |   ( -===- )   |  }/\'\n' +
+      '      `  _\\   \\-===-/   /_  \'\n' +
+      '        (_(_(_)\'-=-\'(_)_)_)\n' +
+      '        `"`"`"       "`"`"`',
+    secondaryDrop: {
+      currencyId: 'kobold-heart',
+      amount: 1,
+      chance: 20,
+    },
+  },
 ];
 
 // ── Characters ────────────────────────────────────────────────
@@ -290,7 +379,7 @@ export const CHARACTER_FLAVOR = {
   APOTHECARY: {
     name: 'Apothecary',
     desc: 'The proud owner of a small potion shop. He is quite good at his craft, and specializes in versatile potion bases.',
-    questBtn: 'Alchemize',
+    questBtn: 'Distill',
   },
   CULINARIAN: {
     name: 'Culinarian',
@@ -312,6 +401,22 @@ export const CHARACTER_FLAVOR = {
     desc: 'A scholar of the forbidden arts. He commands the boundary between life and death, cycling between desecration and warding.',
     questBtnExhume: 'Exhume',
     questBtnWard: 'Ward',
+  },
+  MERCHANT: {
+    name: 'Merchant',
+    desc: 'A cunning dealer who trades in goods others dare not touch. His connections span every dark corner of the realm.',
+    questBtn: 'Fence Goods',
+  },
+  ARTIFICER: {
+    name: 'Artificer',
+    desc: 'A scholar of arcane constructs. She reads the forbidden tomes to gain insight, then channels that knowledge into raw mana and wondrous constructs.',
+    questBtnStudy: '>>> Study',
+    questBtnReflect: 'Reflect <<<',
+  },
+  CHIMERAMANCER: {
+    name: 'Chimeramancer',
+    desc: 'A mad visionary who stitches flesh, bone, and spirit into a single impossible form. Thread by thread, a chimeric horror takes shape.',
+    questBtn: 'Stitch',
   },
 } as const;
 
@@ -335,7 +440,7 @@ export const MINIGAME_FLAVOR = {
   },
   THIEF: {
     name: 'Big Heist',
-    desc: 'Crack the safe before you\nare detected.',
+    desc: 'Crack the safe before you\nare detected. Perhaps you may find an epic relic...',
   },
   ARTISAN: {
     name: 'Faceting',
@@ -344,6 +449,18 @@ export const MINIGAME_FLAVOR = {
   NECROMANCER: {
     name: 'Well of Souls',
     desc: 'Draw the binding circle.\nShortest path wins.',
+  },
+  MERCHANT: {
+    name: 'Black Market Exchange',
+    desc: 'Buy low, sell never.\nPrices shift every few seconds.',
+  },
+  ARTIFICER: {
+    name: 'Etching',
+    desc: 'Repeat the flashing symbol sequence.\nPerfect recall yields Constructs.',
+  },
+  CHIMERAMANCER: {
+    name: 'Chimeric Animation',
+    desc: 'Gather the pieces. Build the beast.\nAwaken the impossible.',
   },
 } as const;
 
@@ -370,6 +487,9 @@ export const JACK_FLAVOR = {
 } as const;
 
 // ── Hero Stats Box ────────────────────────────────────────────
+/** The color used for the hero button border pulse on click. */
+export const HERO_PRESS_PULSE_COLOR = '#000';
+
 export const HERO_STATS_FLAVOR = {
   BOX_TITLE: '[ CHARACTER STATS ]',
 
@@ -428,6 +548,26 @@ export const HERO_STATS_FLAVOR = {
     WARD_XP_COST:     'Ward XP Cost   :',
     SWITCH_RANGE:     'Switch Range   :',
     GRAVE_LOOT_CHANCE:'Grave Loot     :',
+    FAMILIAR_POWER:   'Familiar Power :',
+  },
+  MERCHANT: {
+    GOODS_PER_CLICK:  'Goods Per Click  :',
+    BONUS_LOOT:       'Bonus Roll       :',
+    RARE_CHANCE:      'Rare Chance      :',
+    DOUBLE_CHANCE:    'Double Chance    :',
+  },
+  ARTIFICER: {
+    ACTIVE_BUTTON:    'Active Ability :',
+    INSIGHT_LEVEL:    'Insight Level  :',
+    INSIGHT_PER_CLICK:'Insight / Click:',
+    MANA_PER_REFLECT: 'Max Mana / Ref :',
+    INSIGHT_CONSUMED: 'Consumed Range :',
+    AMPLIFIED_BONUS:  'Amplified Bonus:',
+    EXCESS_INSIGHT:   'Excess Insight : +',
+  },
+  CHIMERAMANCER: {
+    THREAD_PER_CLICK: 'Thread / Stitch:',
+    NEEDLES_PER_SEC:  'Thread / Sec  :',
   },
 } as const;
 
@@ -468,7 +608,7 @@ export const MINIGAME_MSG = {
   },
 
   THIEF: {
-    IDLE:     'Find the sweet spot on the dial!',
+    IDLE:     'Find the sweet spot on the dial!\nMaybe you will find a rare relic...',
     MISS:     'Miss!',
     HIT:      'Sweet spot found!',
     BUSTED:   'DETECTED! Heist failed.',
@@ -492,4 +632,344 @@ export const MINIGAME_MSG = {
     PERFECT:      'Perfect binding! The spirits are yours!',
   },
 
+  MERCHANT: {
+    IDLE:         'Prices fluctuate every few seconds.\nBuy low!',
+    ROUND_START:  (count: number) => `${count} items available on the exchange.`,
+    OPEN:         'Purchase confirmed.',
+    RARE_FIND:    'A rare deal appears on the exchange!',
+  },
+
+  ARTIFICER: {
+    IDLE:         'Repeat the flashing symbols!\nConcentrate...',
+    ROUND_START:  (len: number) => `${len}-symbol sequence. Watch carefully!`,
+    SUCCESS:      'Etching complete! Constructs forged.',
+    SUCCESS_WITH_MISTAKES: 'Etching complete — but with errors.',
+    FAIL:         'Wrong symbol — Etching failed!',
+    WRONG:        'Wrong symbol! Try again...',
+    RETRY:        'Second Chance! Try again...',
+  },
+
+  CHIMERAMANCER: {
+    IDLE:         'Contribute resources to build\nthe chimera.',
+    CONTRIBUTE:   (currency: string, amount: number) => `Contributed ${amount}× ${currency}.`,
+    AWAKEN:       'THE CHIMERA AWAKENS!',
+  },
+
 };
+
+// ── Bead System ───────────────────────────────────────────────
+export const BEAD_COLORS = {
+  blue: { primary: '#00fff8', dim: '#004d4b', glow: 'rgba(0, 255, 248, 0.4)' },
+  gold: { primary: '#ffcc00', dim: '#4d3d00', glow: 'rgba(255, 204, 0, 0.4)' },
+} as const;
+
+/** Display symbol used for all bead sockets. */
+export const BEAD_SYMBOL = 'Ф';
+
+/** Per-character, per-slot lore for each bead. */
+export interface BeadSlotFlavor {
+  name: string;
+  lore: string;
+  effect: string;
+}
+
+export const BEAD_FLAVOR: Record<string, Record<string, BeadSlotFlavor>> = {
+  fighter: {
+    'blue-1': { name: 'Bead of Valor',         lore: 'Forged in the heat of countless battles, this bead hums with the memory of every bounty completed.',               effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of the Vanguard',  lore: 'Carried by those who fight on behalf of others. It empowers the blade to swing on its own.',                        effect: 'Unlocks basic sidequest automation.' },
+    'gold-2': { name: 'Bead of Supremacy',     lore: 'Awaits the ultimate proof of martial prowess.',                                                                     effect: 'Attacks faster and auto-heals below half HP.' },
+    'blue-2': { name: 'Bead of the Mercenary', lore: 'Pulled from the coffers of a hired band, it resonates with the tireless work of loyal hirelings.',                   effect: '2× resource yields from this character (stacks).' },
+  },
+  ranger: {
+    'blue-1': { name: 'Bead of the Wild',       lore: 'Grown from the heartwood of an ancient tree, it pulses with the rhythm of the forest.',                             effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of the Pathfinder', lore: 'Found in the deepest thicket, where only the most tireless scouts dare to tread.',                                  effect: 'Unlocks basic sidequest automation.' },
+    'gold-2': { name: 'Bead of Mastery',        lore: 'Only the most skilled tracker can reveal its secrets.',                                                              effect: 'Prioritizes pixies and treasure chests when auto-solving.' },
+    'blue-2': { name: 'Bead of the Pack',       lore: 'Formed from the ambient magic of a hundred tireless hunts, it hums with the rhythm of the pack.',                   effect: '2× resource yields from this character (stacks).' },
+  },
+  apothecary: {
+    'blue-1': { name: 'Bead of Distillation',   lore: 'Crystallized from a thousand perfect brews, it amplifies the potency of every concoction.',                         effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of the Alembic',    lore: 'Formed in the residue of a master\'s cauldron. It stirs the brew without a hand.',                                  effect: 'Unlocks basic sidequest automation.' },
+    'gold-2': { name: 'Bead of Perfection',     lore: 'Whispers of an impeccable brew echo within.',                                                                       effect: 'Ultra-fast auto-brew at 20 ms tick speed.' },
+    'blue-2': { name: 'Bead of Automation',     lore: 'Crystallized in an unattended cauldron, it carries the echo of a thousand mechanical stirs.',                        effect: '2× resource yields from this character (stacks).' },
+  },
+  culinarian: {
+    'blue-1': { name: 'Bead of Seasoning',      lore: 'Imbued with the essence of rare spices from distant lands, it enriches every ingredient it touches.',               effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of the Hearth',     lore: 'Warmed by countless fires. It stokes the flame without tending.',                                                   effect: 'Unlocks basic sidequest automation.' },
+    'gold-2': { name: 'Bead of the Epicure',    lore: 'Reserved for a chef who never wastes a single ingredient.',                                                          effect: 'Solves every recipe in exactly 2 guesses.' },
+    'blue-2': { name: 'Bead of the Sous Chef',  lore: 'Warmed by dutiful hands that never tire, it doubles the bounty of every sous chef\'s contribution.',                 effect: '2× resource yields from this character (stacks).' },
+  },
+  thief: {
+    'blue-1': { name: 'Bead of Shadows',        lore: 'Stolen from the vault of a legendary thief, it ensures every heist yields double the spoils.',                      effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of the Unseen Hand',lore: 'Passed between thieves in the dark. It picks the lock without a finger.',                                            effect: 'Unlocks basic sidequest automation.' },
+    'gold-2': { name: 'Bead of the Ghost',      lore: 'Said to appear only to one who cracks the impossible.',                                                              effect: 'Deduces the sweet spot in two quick guesses, then cracks it.' },
+    'blue-2': { name: 'Bead of the Fence',      lore: 'Exchanged in back alleys between middlemen, it amplifies the yield of every clandestine operation.',                 effect: '2× resource yields from this character (stacks).' },
+  },
+  artisan: {
+    'blue-1': { name: 'Bead of Precision',      lore: 'Cut by the steadiest hand, it doubles the value found in every raw material.',                                      effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of the Masterwork', lore: 'Embedded in a workbench for generations. It guides the chisel with phantom hands.',                                  effect: 'Unlocks basic sidequest automation.' },
+    'gold-2': { name: 'Bead of the Prodigy',    lore: 'Hidden within a flawless gem, waiting to be found.',                                                                 effect: 'Always selects the top two gems each game.' },
+    'blue-2': { name: 'Bead of Industry',       lore: 'Polished by the relentless grind of a workshop that never sleeps, it doubles every yield.',                           effect: '2× resource yields from this character (stacks).' },
+  },
+  necromancer: {
+    'blue-1': { name: 'Bead of the Veil',       lore: 'Harvested from the space between worlds, it amplifies the yield of every dark ritual.',                              effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of Binding',        lore: 'Chains the familiar realm to this one. It traces the circle without mortal hands.',                                   effect: 'Unlocks basic sidequest automation.' },
+    'gold-2': { name: 'Bead of Dominion',       lore: 'Pulses with the promise of absolute control.',                                                                       effect: 'Always follows the optimal ritual path.' },
+    'blue-2': { name: 'Bead of the Thrall',     lore: 'Bound to an undying servant, it channels the tireless labor of those who cannot rest.',                               effect: '2× resource yields from this character (stacks).' },
+  },
+  merchant: {
+    'blue-1': { name: 'Bead of Fortune',         lore: 'Minted from the first coin of a merchant prince, it doubles the yield of every illicit deal.',                        effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of the Broker',      lore: 'Passed through a thousand secret transactions, it enables a tireless buyer on the exchange.',                           effect: 'Unlocks 1 auto-buyer on the stock market.' },
+    'gold-2': { name: 'Bead of the Kingpin',     lore: 'Only the most connected trader can reveal its secrets.',                                                               effect: 'Unlocks unlimited auto-buyers on the stock market.' },
+    'blue-2': { name: 'Bead of the Cartel',      lore: 'Forged in the fires of a vast smuggling empire, it amplifies every underground operation.',                            effect: '2× resource yields from this character (stacks).' },
+  },
+  artificer: {
+    'blue-1': { name: 'Bead of Arcana',          lore: 'Crystallized from raw insight, it amplifies every arcane construct forged.',                                           effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of the Automaton',   lore: 'Imbued with the memory of a thousand etchings, it traces the symbols without mortal guidance.',                         effect: 'Unlocks basic sidequest automation.' },
+    'gold-2': { name: 'Bead of the Paradox',     lore: 'Born from deliberate failure, it bends the rules of creation.',                                                        effect: 'Auto-etch never fails and yields bonus constructs.' },
+    'blue-2': { name: 'Bead of the Workshop',    lore: 'Hammered into shape by tireless familiars, it doubles the output of every workshop cycle.',                             effect: '2× resource yields from this character (stacks).' },
+  },
+  chimeramancer: {
+    'blue-1': { name: 'Bead of Stitching',       lore: 'Woven from a hundred severed threads, it amplifies the output of every stitch.',                                        effect: '2× resource yields from this character.' },
+    'gold-1': { name: 'Bead of Animation',       lore: 'Pulsing with stolen life, it drives the needle without mortal hands.',                                                  effect: 'Unlocks basic sidequest automation.' },
+    'gold-2': { name: 'Bead of the Chimera',     lore: 'Forged in the heart of an impossible creature.',                                                                        effect: 'Placeholder — future effect.' },
+    'blue-2': { name: 'Bead of the Abomination', lore: 'Harvested from the first chimera ever stitched, it doubles all yields from this grotesque art.',                         effect: '2× resource yields from this character (stacks).' },
+  },
+};
+
+/**
+ * Cryptic messages shown (as 'rare' log entries) when the player completes
+ * one step of a multi-step gold-2 bead unlock sequence.
+ * Each array entry is picked based on step index (wrapping if needed).
+ */
+export const GOLD2_STEP_MESSAGES: Record<string, string[]> = {
+  fighter:     ['The blade remembers…',          'A familiar rhythm echoes.',     'The pattern deepens.',               'Something stirs in the steel.',  'Almost there — the final strike awaits.'],
+  ranger:      ['The forest acknowledges you.',   'Footprints align.',             'The path reveals itself.',           'Nature bends to your will.',     'One final trace remains.'],
+  apothecary:  ['The cauldron hums in recognition.', 'The brew senses your intent.'],
+  culinarian:  ['The hearth remembers this taste.', 'Ingredients align.',           'The recipe whispers its name.'],
+  thief:       ['The tumblers shift…',            'A click in the dark.',          'The mechanism yields.',              'Pins fall into place.',          'The vault trembles.',        'Almost free…',        'One final turn.'],
+  artisan:     ['The gem glimmers knowingly.',    'A facet catches the light.',    'The jewel responds to your touch.',  'Crystalline whispers grow.',     'The pattern sharpens.',      'Cut after cut, the gem obeys.', 'Brilliance takes shape.', 'The stone sings.', 'One final selection.'],
+  necromancer: ['The spirits fall silent.',        'The circle holds.',             'Dominion approaches.'],
+  merchant:    ['The ledger grows heavy…',        'A deal is struck in the dark.', 'The network expands.',          'Profits beyond measure.',    'The final shipment arrives.'],
+  artificer:   ['The construct hums…',            'Symbols align in memory.',      'The pattern crystallizes.',      'One final etching remains.'],
+  chimeramancer: ['The thread twitches…',          'Flesh remembers its purpose.',   'The chimera stirs in its sleep.'],
+};
+
+
+// ── Activity Log Messages ─────────────────────────────────────
+/**
+ * All activity-log messages in one place.
+ * Static messages are plain strings; messages with dynamic
+ * values are arrow functions that accept pre-formatted `cur()`
+ * tokens or computed numbers.
+ */
+export const LOG_MSG = {
+
+  // ── Hero-button click messages ────────────────────────────────
+
+  HERO: {
+    FIGHTER: {
+      BOUNTY:                (gold: string, xp: string) => `You ventured forth and found gold. (${gold}, ${xp})`,
+    },
+    RANGER: {
+      CATS_EYE_BOTH:         (herb: string, beast: string, xp: string) => `Cat's Eye! You foraged herbs AND hunted a beast! (${herb}, ${beast}, ${xp})`,
+      CATS_EYE_HERB_ONLY:    (herb: string, xp: string) => `Cat's Eye! You foraged herbs, but the beast escaped. (${herb}, ${xp})`,
+      FORAGE_HERB:           (herb: string, xp: string) => `You targeted herbs and foraged some. (${herb}, ${xp})`,
+      HUNT_BEAST:            (beast: string, xp: string) => `You tracked a beast and claimed its meat. (${beast}, ${xp})`,
+      BEAST_ESCAPED:         (xp: string) => `You targeted a beast but it escaped. (${xp})`,
+    },
+    APOTHECARY: {
+      NOT_ENOUGH_HERBS:      (need: string, have: string) => `Not enough herbs to brew. Need ${need}, have ${have}.`,
+      BREW_RECOVERED:        (potion: string, herb: string, xp: string) => `You brewed a potion and recovered herbs! (${potion}, ${herb}, ${xp})`,
+      BREW:                  (potion: string, xp: string) => `You brewed a potion. (${potion}, ${xp})`,
+    },
+    CULINARIAN: {
+      NOT_ENOUGH_GOLD:       (need: string, have: string) => `Not enough gold to gather spices. Need ${need}, have ${have}.`,
+      SOURCED:               (gold: string, spice: string, xp: string) => `You sourced exotic spices. (${gold}, ${spice}, ${xp})`,
+    },
+    THIEF: {
+      SUCCESS_WITH_GOLD:     (dossier: string, xp: string, gold: string) => `You slipped in undetected and secured some dossier. (${dossier}, ${xp}, ${gold})`,
+      SUCCESS:               (dossier: string, xp: string) => `You slipped in undetected and secured some dossier. (${dossier}, ${xp})`,
+      SPOTTED:               (seconds: number) => `You were spotted! Retreating for ${seconds} seconds...`,
+    },
+    ARTISAN: {
+      NOT_ENOUGH_TREASURE:   (need: string, have: string) => `Not enough treasure to appraise. Need ${need}, have ${have}.`,
+      APPRAISAL_STARTED:     (cost: string) => `Appraisal started... (${cost})`,
+    },
+    NECROMANCER: {
+      DEFILE_GOLD:           (bone: string, gold: string, xp: string) => `You defiled the earth and unearthed bones — and found buried gold! (${bone}, ${gold}, ${xp})`,
+      DEFILE_GEM:            (bone: string, gem: string, xp: string) => `You defiled the earth and unearthed bones — adorned with gemstones! (${bone}, ${gem}, ${xp})`,
+      DEFILE_JEWELRY:        (bone: string, jewelry: string, xp: string) => `You defiled the earth and unearthed bones — and uncovered jewelry! (${bone}, ${jewelry}, ${xp})`,
+      DEFILE:                (bone: string, xp: string) => `You defiled the earth and unearthed bones. (${bone}, ${xp})`,
+      NOT_ENOUGH_XP:         (need: string, have: string) => `Not enough XP to ward. Need ${need}, have ${have}.`,
+      WARD:                  (xp: string, brimstone: string) => `You warded the veil and conjured brimstone. (${xp}, ${brimstone})`,
+    },
+    MERCHANT: {
+      GOODS_ACQUIRED:        (goods: string, xp: string) => `You acquired illicit goods from your contacts. (${goods}, ${xp})`,
+      GOODS_DOUBLE:          (goods: string, xp: string) => `Double shipment! Extra illicit goods acquired! (${goods}, ${xp})`,
+      NOT_ENOUGH_GOODS:      (need: string, have: string) => `Not enough illicit goods to open. Need ${need}, have ${have}.`,
+    },
+    ARTIFICER: {
+      STUDY:                 (insight: string) => `You studied the forbidden tomes and gained insight. (${insight})`,
+      STUDY_MAX:             'Insight is already at maximum!',
+      REFLECT:               (mana: string, insight: string) => `You reflected and converted insight into mana. (${mana}, ${insight})`,
+      REFLECT_NO_INSIGHT:    'No insight to reflect upon!',
+    },
+    CHIMERAMANCER: {
+      STITCH:                (thread: string, xp: string) => `You stitched sinew and soul together. (${thread}, ${xp})`,
+    },
+  },
+
+  // ── Sidequest (minigame) activity-log messages ────────────────
+
+  MG_FIGHTER: {
+    SLAIN:                   (enemy: string) => `The Fighter was slain by a ${enemy}!`,
+    FLED:                    'The Fighter fled from combat.',
+    SHORT_REST:              (potions: string) => `Chugged some potions during a short rest. (${potions})`,
+    NEW_TROPHY:              (enemy: string, drop: string) => `The ${enemy} drops a ${drop}! A new trophy!`,
+    FIRST_EAR:               (mutual: boolean, enemy: string, drops: string) => `${mutual ? 'Mutual kill!' : 'Victory!'} The ${enemy} drops a Kobold Ear! (${drops})`,
+    MUTUAL_KILL:             (drops: string) => `Mutual kill! Loot still collected. (${drops})`,
+    VICTORY:                 (enemy: string, drops: string) => `Victory! ${enemy} defeated. (${drops})`,
+  },
+
+  MG_RANGER: {
+    SCOUT_START:             (cost: string) => `Ranger sets out to scout the area. (${cost})`,
+    PIXIE_UNLOCKED:          'A Pixie emerged from the undergrowth! Pixie Dust unlocked!',
+    TREASURE_UNLOCKED:       'A treasure chest! Treasure unlocked!',
+    SCOUT_RESULT:            (multiplier: string, parts: string) => `${multiplier} Ranger scouted the area. (${parts})`,
+    SCOUT_NOTHING:           'Ranger scouted the area: found nothing useful.',
+  },
+
+  MG_APOTHECARY: {
+    BREW_START:              (costs: string) => `Apothecary begins brewing. (${costs})`,
+    SYNAPTICAL_UNLOCKED:     'A Synaptical Potion has been crafted! New currency unlocked!',
+    SYNAPTICAL_SUCCESS:      (potion: string) => `Synaptical dilution success! (${potion})`,
+    SYNAPTICAL_PARTIAL:      (potion: string, base: string) => `Synaptical dilution partial! (${potion}, ${base})`,
+    SYNAPTICAL_FAIL:         (base: string) => `Synaptical dilution failed! (${base})`,
+    SYNAPTICAL_CRAFTED:      (potion: string) => `Synaptical Potion crafted! (${potion})`,
+    CONCENTRATED_UNLOCKED:   'A Concentrated Potion has been crafted! New currency unlocked!',
+    DILUTION_SUCCESS:        (potion: string) => `Dilution success! (${potion})`,
+    DILUTION_PARTIAL:        (potion: string, base: string) => `Dilution partial! (${potion}, ${base})`,
+    DILUTION_FAIL:           (base: string) => `Dilution failed! (${base})`,
+    CONCENTRATED_CRAFTED:    (potion: string) => `Concentrated Potion crafted! (${potion})`,
+  },
+
+  MG_CULINARIAN: {
+    ANNOTATION_MATCH:        'Cookbook Annotations: the annotated guess was a perfect match!',
+    EXPERIMENT_START:        (costs: string) => `Culinarian begins experimenting. (${costs})`,
+    MEAL_UNLOCKED:           'The Culinarian perfects a Hearty Meal! New currency unlocked!',
+    MEAL_WITH_WASTE_NOT:     (base: string, bonus: string) => `Hearty Meal crafted! (${base} base ${bonus} Waste Not!)`,
+    MEAL_CRAFTED:            (meal: string) => `Hearty Meal crafted! (${meal})`,
+    RECIPE_FAILED:           'The Culinarian failed to find the recipe.',
+  },
+
+  MG_THIEF: {
+    HEIST_START:             (cost: string) => `Heist started! (${cost})`,
+    HEIST_DETECTED:          'Heist failed — you were detected!',
+    TREASURE_UNLOCKED:       'Treasure discovered! New currency unlocked!',
+    RELIC_FOUND:             'A Relic has been unearthed! Incredibly rare!',
+    SAFE_CRACKED_RELIC:      (treasure: string, gold: string, relic: string, xp: string) => `Safe cracked! (${treasure}, ${gold}, ${relic}, ${xp})`,
+    SAFE_CRACKED:            (treasure: string, gold: string, xp: string) => `Safe cracked! (${treasure}, ${gold}, ${xp})`,
+  },
+
+  MG_ARTISAN: {
+    JEWELRY_UNLOCKED:        (jewelry: string) => `A perfect jewel! ${jewelry} Jewelry unlocked!`,
+    FACET_CLOSE_ENOUGH:      (jewelry: string, xp: string) => `Faceting success (Close Enough)! (${jewelry}, ${xp})`,
+    FACET_DOUBLE_DIP:        (jewelry: string, xp: string) => `Faceting success + Double Dip! (${jewelry}, ${xp})`,
+    FACET_SUCCESS:           (jewelry: string, xp: string) => `Faceting success! (${jewelry}, ${xp})`,
+    FACET_FAILED:            'Faceting failed — wrong gemstone selected.',
+  },
+
+  MG_NECROMANCER: {
+    RITUAL_START:            (costs: string) => `Well of Souls begun! (${costs})`,
+    SOUL_STONE_UNLOCKED:     'Soul Stones discovered! A new currency!',
+    RITUAL_PERFECT:          (bonus: string, stones: string, xp: string) => `Ritual complete — PERFECT!${bonus} (${stones}, ${xp})`,
+    RITUAL_COMPLETE:         (pct: number, stones: string, xp: string) => `Ritual complete — ${pct}% efficiency. (${stones}, ${xp})`,
+  },
+
+  MG_MERCHANT: {
+    OPEN_START:              (cost: string) => `Opening illicit goods… (${cost})`,
+    TROPHY_UNLOCKED:         'A Monster Trophy emerged! New currency unlocked!',
+    TOME_UNLOCKED:           'A Forbidden Tome discovered! New currency unlocked!',
+    IMPLEMENT_UNLOCKED:      'A Magical Implement found! New currency unlocked!',
+    OPEN_RESULT:             (parts: string) => `Goods opened! (${parts})`,
+    OPEN_NOTHING:            'Opened goods but found nothing of value.',
+    FENCED_GOLD:             (gold: string) => `Fenced the goods for bonus gold! (${gold})`,
+    PURCHASE:                (item: string, qty: number, cost: string) => `Purchased ${qty}× ${item} from the exchange. (${cost})`,
+    AUTO_BUY:                (item: string, qty: number, cost: string) => `Auto-buy: ${qty}× ${item}. (${cost})`,
+  },
+
+  MG_ARTIFICER: {
+    ETCHING_START:           (cost: string) => `Etching begun! (${cost})`,
+    CONSTRUCT_UNLOCKED:      'Constructs discovered! A new currency!',
+    ETCHING_SUCCESS:         (constructs: string, xp: string) => `Etching complete! (${constructs}, ${xp})`,
+    ETCHING_FAIL:            'Etching failed — wrong symbol!',
+    ETCHING_WRONG:           'Wrong symbol — keep going!',
+    ETCHING_RETRY:           'Second Chance activated — try again!',
+  },
+
+  MG_CHIMERAMANCER: {
+    CONTRIBUTE:              (formatted: string) => `Contributed ${formatted} to the chimera.`,
+    CHIMERA_AWAKEN:          '★ THE CHIMERA AWAKENS! The impossible lives!',
+    LIFE_THREAD_UNLOCKED:    'Life Thread discovered! A new currency!',
+  },
+
+  // ── System messages ───────────────────────────────────────────
+
+  SYSTEM: {
+    // Upgrades
+    UPGRADE_CANT_AFFORD:     (name: string, needs: string) => `Not enough resources for ${name}. Need: ${needs}.`,
+    UPGRADE_SUCCESS:         (name: string, level: number) => `${name} upgraded to Lv.${level}.`,
+
+    // Jacks
+    JACK_CANT_AFFORD:        'Not enough resources to hire a Jack.',
+    JACK_HIRED:              (total: number) => `A Jack of All Trades has been hired! (Total: ${total})`,
+
+    // Minigame / global unlocks
+    MINIGAME_CANT_AFFORD:    (missing: string) => `Not enough resources to unlock Sidequests. Need ${missing}.`,
+    MINIGAME_UNLOCKED:       '★ SIDEQUESTS UNLOCKED! Character-specific challenges are now available.',
+    JACKDUP_CANT_AFFORD:     (missing: string) => `Not enough resources for Jack'd Up. Need ${missing}.`,
+    JACKDUP_UNLOCKED:        "★ JACK'D UP! Your Jacks now click 50% faster!",
+
+    // Artisan appraisal timer
+    APPRAISAL_COMPLETE:      (gems: string, metal: string, xp: string) => `Appraisal complete! (${gems}, ${metal}, ${xp})`,
+
+    // Character unlock
+    CHAR_CANT_AFFORD:        (name: string, missing: string) => `Can't unlock ${name} — still need: ${missing}.`,
+    CHAR_UNLOCKED:           (name: string) => `${name} has been unlocked! Welcome to the party.`,
+
+    // Beads
+    BEAD_GOLD_MG:            (charName: string) => `★ ${charName} discovered a golden bead from their sidequest! Check the crown above.`,
+    BEAD_GOLD2:              (charName: string) => `★ ${charName} unlocked a golden bead of mastery! Check the crown above.`,
+    BEAD_BLUE:               (charName: string) => `★ ${charName} discovered a mysterious bead! Check the crown above.`,
+    BEAD_JACK:               (charName: string) => `★ ${charName}'s Jacks discovered a mysterious bead! Check the crown above.`,
+    BEAD_SOCKETED:           (beadName: string, charName: string, isBlue: boolean) => `★ ${beadName} socketed for ${charName}!${isBlue ? ' Resource yields doubled!' : ''}`,
+  },
+
+  // ── Save / Options ────────────────────────────────────────────
+
+  SAVE: {
+    AUTO_SAVED:              '[AUTO-SAVE] Game state saved to browser cache.',
+    MANUAL_SAVED:            '[SAVE] Game saved to browser cache.',
+    COPIED:                  '[SAVE] Save data copied to clipboard.',
+    COPY_FAILED:             'Failed to copy save data — check browser permissions.',
+    EXPORTED:                '[SAVE] Save file exported.',
+    IMPORT_EMPTY:            'Paste a save string into the import box first.',
+    IMPORTED:                '[SAVE] Save data imported and applied.',
+    IMPORT_INVALID:          'Invalid save data — could not import.',
+    CLEARED:                 '[SAVE] Browser save data erased. Reloading…',
+  },
+
+  // ── Dev tools ─────────────────────────────────────────────────
+
+  DEV: {
+    GRANT:                   '[DEV] +1M granted to all resources.',
+    ZERO:                    '[DEV] All resources set to 0.',
+    MAX_XP:                  '[DEV] XP set to 2,000,000,000.',
+    HALF_MAX:                '[DEV] All upgrades set to half of their maximum level.',
+    ZERO_UPGRADES:           '[DEV] All upgrades set to level 0. All beads unsocketed.',
+    MAX_UPGRADES:            '[DEV] All upgrades set to maximum level.',
+    UNLOCK_ALL:              '[DEV] Everything unlocked.',
+  },
+
+} as const;
+

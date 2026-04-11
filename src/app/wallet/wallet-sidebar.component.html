@@ -40,11 +40,12 @@
           <span class="currency-rate rate-hover"
                 [class.inactive]="getEntry(c.id).perSecond === 0"
                 [class.negative]="getEntry(c.id).perSecond < 0"
-                (mouseenter)="showTooltip(c.id)"
+                (mouseenter)="showTooltip(c.id, $event)"
                 (mouseleave)="hideTooltip()">
             {{ fmtRate(getEntry(c.id).perSecond) }}
             <!-- per-second breakdown tooltip -->
-            <div class="rate-tooltip" *ngIf="hoveredCurrencyId === c.id && hasBreakdown(c.id)">
+            <div class="rate-tooltip" *ngIf="hoveredCurrencyId === c.id && hasBreakdown(c.id)"
+                 [ngStyle]="tooltipStyle">
               <div class="tooltip-row" *ngFor="let e of getBreakdownEntries(c.id)">
                 <span class="tooltip-source" [style.color]="e.color">{{ e.source }}</span>
                 <span class="tooltip-value" [class.negative]="e.rate < 0">{{ fmtRate(e.rate) }}</span>
@@ -73,11 +74,12 @@
           <span class="currency-rate rate-hover"
                 [class.inactive]="getEntry(c.id).perSecond === 0"
                 [class.negative]="getEntry(c.id).perSecond < 0"
-                (mouseenter)="showTooltip(c.id)"
+                (mouseenter)="showTooltip(c.id, $event)"
                 (mouseleave)="hideTooltip()">
             {{ fmtRate(getEntry(c.id).perSecond) }}
             <!-- per-second breakdown tooltip -->
-            <div class="rate-tooltip" *ngIf="hoveredCurrencyId === c.id && hasBreakdown(c.id)">
+            <div class="rate-tooltip" *ngIf="hoveredCurrencyId === c.id && hasBreakdown(c.id)"
+                 [ngStyle]="tooltipStyle">
               <div class="tooltip-row" *ngFor="let e of getBreakdownEntries(c.id)">
                 <span class="tooltip-source" [style.color]="e.color">{{ e.source }}</span>
                 <span class="tooltip-value" [class.negative]="e.rate < 0">{{ fmtRate(e.rate) }}</span>

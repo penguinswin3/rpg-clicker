@@ -8,7 +8,7 @@
 
 import { HeroStat } from '../character/character-sidebar.component';
 import { HERO_STATS_FLAVOR, CHARACTER_FLAVOR } from '../flavor-text';
-import { YIELDS, APOTH_MG, THIEF_MG, ARTISAN_MG } from '../game-config';
+import { YIELDS, APOTH_MG, THIEF_MG, ARTISAN_MG, MERCHANT_MG, CHIMERAMANCER_YIELDS, FAMILIAR } from '../game-config';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { WalletService } from '../wallet/wallet.service';
 import { roundTo } from '../utils/mathUtils';
@@ -24,6 +24,8 @@ import {
   calcNecromancerBoneYield, calcNecromancerWardXpCost,
   calcNecromancerBrimstoneYield, calcNecromancerSwitchMin,
   calcNecromancerSwitchMax, calcGraveLootingChance,
+  calcMerchantOpensPerClick, calcMerchantDoubleChance,
+  calcChimeramancerThreadPerClick, calcSharperNeedlesThreadPerSec,
 } from './yield-helpers';
 
 // ── Context required by the builder ──────────────────────────
@@ -41,6 +43,10 @@ export interface HeroStatsContext {
   necromancerActiveButton: 'defile' | 'ward';
   /** How many clicks remain before the necromancer button switches. */
   necromancerClicksRemaining: number;
+  /** Which artificer button is currently active. */
+  artificerActiveButton: 'study' | 'reflect';
+  /** Current insight level of the Artificer. */
+  artificerInsight: number;
 }
 
 // ── Public API ──────────────────────────────────────────────
@@ -55,6 +61,9 @@ export function getQuestBtnLabel(charId: string): string {
     thief:      CHARACTER_FLAVOR.THIEF.questBtn,
     artisan:    CHARACTER_FLAVOR.ARTISAN.questBtn,
     necromancer: CHARACTER_FLAVOR.NECROMANCER.questBtnExhume,
+    merchant:   CHARACTER_FLAVOR.MERCHANT.questBtn,
+    artificer:  CHARACTER_FLAVOR.ARTIFICER.questBtnStudy,
+    chimeramancer: CHARACTER_FLAVOR.CHIMERAMANCER.questBtn,
   };
   return map[charId] ?? CHARACTER_FLAVOR.FIGHTER.questBtn;
 }
@@ -68,6 +77,9 @@ export function buildHeroStats(charId: string, ctx: HeroStatsContext): HeroStat[
     case 'thief':       return buildThiefStats(ctx);
     case 'artisan':     return buildArtisanStats(ctx);
     case 'necromancer': return buildNecromancerStats(ctx);
+    case 'merchant':    return buildMerchantStats(ctx);
+    case 'artificer':   return buildArtificerStats(ctx);
+    case 'chimeramancer': return buildChimeramancerStats(ctx);
     default:            return buildFighterStats(ctx);
   }
 }
@@ -241,5 +253,88 @@ function buildNecromancerStats(ctx: HeroStatsContext): HeroStat[] {
     stats.push({ label: HERO_STATS_FLAVOR.NECROMANCER.GRAVE_LOOT_CHANCE, value: `${graveLootChance}%` });
   }
 
+  const mindAndSoulLevel = u.level('MIND_AND_SOUL');
+  if (mindAndSoulLevel > 0) {
+    const familiarPower = FAMILIAR.JACKS_PER_FAMILIAR + mindAndSoulLevel * FAMILIAR.MIND_AND_SOUL_PER_LEVEL;
+    stats.push({ label: HERO_STATS_FLAVOR.NECROMANCER.FAMILIAR_POWER, value: `×${familiarPower}`, color: '#3bf184' });
+  }
+
+  return stats;
+}
+
+function buildMerchantStats(ctx: HeroStatsContext): HeroStat[] {
+  const u = ctx.upgrades;
+  const opensPerClick = calcMerchantOpensPerClick(u.level('BOXING_DAY'));
+  const shadyBonus    = u.level('SHADY_CONNECTIONS') * MERCHANT_MG.SHADY_CONNECTIONS_BONUS_PER_LEVEL;
+  const rareChance    = u.level('BLACK_MARKET_CONNECTIONS') * MERCHANT_MG.BLACK_MARKET_RARE_BONUS_PER_LEVEL;
+  const doubleChance  = calcMerchantDoubleChance(u.level('SMUGGLER_NETWORK'));
+
+  const stats: HeroStat[] = [
+    { label: HERO_STATS_FLAVOR.MERCHANT.GOODS_PER_CLICK, value: `${opensPerClick}` },
+  ];
+  if (shadyBonus > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.MERCHANT.BONUS_LOOT, value: `+${shadyBonus}%` });
+  }
+  if (rareChance > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.MERCHANT.RARE_CHANCE, value: `+${rareChance}%` });
+  }
+  if (doubleChance > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.MERCHANT.DOUBLE_CHANCE, value: `${doubleChance}%` });
+  }
+  return stats;
+}
+
+function buildArtificerStats(ctx: HeroStatsContext): HeroStat[] {
+  const u = ctx.upgrades;
+  const deepStudy = u.level('DEEP_STUDY');
+  const focusedReflection = u.level('FOCUSED_REFLECTION');
+  const amplifiedInsight = u.level('AMPLIFIED_INSIGHT');
+  const arcaneIntellect = u.level('POTION_ARCANE_INTELLECT');
+  const maxInsight = YIELDS.ARTIFICER_MAX_INSIGHT + arcaneIntellect * YIELDS.ARTIFICER_ARCANE_INTELLECT_PER_LEVEL;
+  const maxConsume = YIELDS.ARTIFICER_MAX_CONSUME_PER_REFLECT;
+  const insightPerClick = YIELDS.ARTIFICER_INSIGHT_PER_CLICK + deepStudy;
+  const effectiveInsight = Math.min(32, maxInsight + amplifiedInsight * YIELDS.ARTIFICER_AMPLIFIED_INSIGHT_PER_LEVEL);
+  const maxMana = effectiveInsight * effectiveInsight;
+  const minConsume = Math.max(1, Math.min(maxConsume, maxInsight) - focusedReflection);
+  const activeLabel = ctx.artificerActiveButton === 'study' ? 'Study' : 'Reflect';
+
+  // Excess insight = how much remains after a reflect at max insight
+  const excessAfterReflect = maxInsight > maxConsume ? maxInsight - maxConsume : 0;
+
+  const stats: HeroStat[] = [
+    { label: HERO_STATS_FLAVOR.ARTIFICER.ACTIVE_BUTTON, value: activeLabel },
+    // { label: HERO_STATS_FLAVOR.ARTIFICER.INSIGHT_LEVEL, value: `${ctx.artificerInsight} / ${maxInsight}` },
+    { label: HERO_STATS_FLAVOR.ARTIFICER.INSIGHT_PER_CLICK, value: `${insightPerClick}` },
+    { label: HERO_STATS_FLAVOR.ARTIFICER.MANA_PER_REFLECT, value: `${maxMana}` },
+  ];
+  if (focusedReflection > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.ARTIFICER.INSIGHT_CONSUMED, value: `${minConsume} - ${Math.min(maxConsume, maxInsight)}` });
+  }
+  if (amplifiedInsight > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.ARTIFICER.AMPLIFIED_BONUS, value: `+${amplifiedInsight}` });
+  }
+  // if (arcaneIntellect > 0) {
+  //   stats.push({ label: HERO_STATS_FLAVOR.ARTIFICER.EXCESS_INSIGHT, value: `${excessAfterReflect}` });
+  // }
+  return stats;
+}
+
+function buildChimeramancerStats(ctx: HeroStatsContext): HeroStat[] {
+  const u = ctx.upgrades;
+  const threadPerClick = calcChimeramancerThreadPerClick(
+    CHIMERAMANCER_YIELDS.THREAD_PER_CLICK,
+    u.level('BIGGER_THREADS'),
+  );
+  const needlesPerSec = calcSharperNeedlesThreadPerSec(
+    u.level('SHARPER_NEEDLES'),
+    u.level('LOOM_OF_LIFE'),
+  );
+
+  const stats: HeroStat[] = [
+    { label: HERO_STATS_FLAVOR.CHIMERAMANCER.THREAD_PER_CLICK, value: `${threadPerClick}` },
+  ];
+  if (needlesPerSec > 0) {
+    stats.push({ label: HERO_STATS_FLAVOR.CHIMERAMANCER.NEEDLES_PER_SEC, value: `${needlesPerSec}` });
+  }
   return stats;
 }

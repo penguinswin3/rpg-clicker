@@ -1,11 +1,11 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, NgZone, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService } from '../../wallet/wallet.service';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { StatisticsService } from '../../statistics/statistics.service';
-import { APOTH_MG } from '../../game-config';
-import { CURRENCY_FLAVOR, MINIGAME_MSG, cur } from '../../flavor-text';
+import { APOTH_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE } from '../../game-config';
+import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES, LOG_MSG } from '../../flavor-text';
 import { toPct, rollChance } from '../../utils/mathUtils';
 
 @Component({
@@ -16,7 +16,7 @@ import { toPct, rollChance } from '../../utils/mathUtils';
   styleUrls: ['./apothecary-minigame.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
+export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges {
   private wallet = inject(WalletService);
   private log    = inject(ActivityLogService);
   private stats  = inject(StatisticsService);
@@ -70,6 +70,30 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
   /** Accumulated dilution success chance penalty from misses in the current brew session. */
   dilutionMissPenalty = 0;
+
+  // ── Auto-solve ──────────────────────────
+  @Input() autoSolveUnlocked = false;
+  @Input() autoSolveEnabled = false;
+  @Input() autoSolveGoodMode = false;
+  @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
+  @Output() goldBeadFound = new EventEmitter<void>();
+  private autoSolveInterval?: ReturnType<typeof setInterval>;
+
+  // ── Gold-2 bead tracking ─────────────────
+  @Input() gold2Progress: unknown;
+  @Output() gold2ProgressChange = new EventEmitter<unknown>();
+  @Output() gold2BeadFound = new EventEmitter<void>();
+  private gold2Awarded = false;
+  /** Level of the Gem Hunter upgrade — enables gold-2 log progress messages. */
+  @Input() gemHunterLevel = 0;
+  /** Whether the gold-2 bead has already been found for this character (suppresses log messages). */
+  @Input() gold2BeadAlreadyFound = false;
+  /** Tracks the phase within a single brew for gold-2: 'up' → 'down' → 'inner'. */
+  private gold2Phase: 'up' | 'down' | 'inner' | 'failed' = 'up';
+
+  toggleAutoSolve(): void {
+    this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
+  }
 
   onDilutionChange(val: boolean): void {
     this.dilutionEnabled = val;
@@ -182,6 +206,16 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
+      if (this.autoSolveEnabled && this.autoSolveUnlocked) {
+        this.startAutoSolve();
+      } else {
+        this.stopAutoSolve();
+      }
+    }
+  }
+
   ngOnInit(): void {
     this.sub.add(
       this.wallet.state$.subscribe(s => {
@@ -197,6 +231,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sub.unsubscribe();
     this.stopAnimation();
+    this.stopAutoSolve();
   }
 
   // ── Actions ───────────────────────────────
@@ -246,7 +281,10 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
       }
     }
 
-    this.log.log(`Apothecary begins brewing. (${logCostStr})`);
+    // Reset gold-2 tracking for this brew
+    this.gold2Phase = 'up';
+
+    this.log.log(LOG_MSG.MG_APOTHECARY.BREW_START(logCostStr));
     this.startAnimation();
   }
 
@@ -305,9 +343,115 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
         this.stats.trackPotionMiss();
       }
     }
+
+    // Gold-2 tracking (only manual play, non-synaptical)
+    if (!this.autoSolveEnabled && !this.gold2Awarded && !this.synapticalEnabled) {
+      this.trackGold2Brew();
+    }
   }
 
-  // ── Private ───────────────────────────────
+  // ── Auto-solve helpers ──────────────────
+
+  private startAutoSolve(): void {
+    this.stopAutoSolve();
+    const tickMs = this.autoSolveGoodMode ? GOOD_AUTO_SOLVE.APOTHECARY_TICK_MS : AUTO_SOLVE.APOTHECARY_TICK_MS;
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), tickMs);
+  }
+
+  private stopAutoSolve(): void {
+    if (this.autoSolveInterval) {
+      clearInterval(this.autoSolveInterval);
+      this.autoSolveInterval = undefined;
+    }
+  }
+
+  private autoSolveTick(): void {
+    if (!this.autoSolveEnabled || !this.autoSolveUnlocked) {
+      this.stopAutoSolve();
+      return;
+    }
+    // If no potion is active, start one
+    if (!this.potionActive) {
+      if (this.canStart) {
+        this.startPotion();
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+    // Only click when the cursor is in the sweet spot zone (not inner zone, not synaptic zones)
+    if (this.isInZone) {
+      this.brew();
+      this.cdr.markForCheck();
+    }
+  }
+
+  private rollMinigameGoldBead(): void {
+    if (this.stats.getManualSidequestClears('apothecary') < BEADS.GOLD_BEAD_MIN_MANUAL_CLEARS) return;
+    if (Math.random() < BEADS.MINIGAME_GOLD_BEAD_CHANCE) {
+      this.goldBeadFound.emit();
+    }
+  }
+
+  // ── Gold-2 helpers ─────────────────────
+
+  /**
+   * Track brew clicks for the gold-2 pattern:
+   * Phase 1 (up): Brew up to 9/10 quality (only zone/inner zone hits)
+   * Phase 2 (down): Miss down to 0/10 quality (only misses)
+   * Phase 3 (inner): Complete using ONLY inner zone clicks
+   */
+  private trackGold2Brew(): void {
+    const peakTarget = GOLD2_CONDITIONS.APOTHECARY_PEAK_QUALITY;
+
+    switch (this.gold2Phase) {
+      case 'up':
+        // During "up" phase, we just track. Once quality reaches peakTarget, advance to "down".
+        if (this.quality >= peakTarget && this.quality < this.maxQuality) {
+          this.gold2Phase = 'down';
+          if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) {
+            const msgs = GOLD2_STEP_MESSAGES['apothecary'];
+            this.log.log(msgs[0 % msgs.length], 'rare');
+          }
+        } else if (this.quality >= this.maxQuality) {
+          // Completed too early — not the right pattern
+          this.gold2Phase = 'failed';
+        }
+        break;
+
+      case 'down':
+        // During "down" phase, quality should be going down via misses.
+        if (this.quality <= 0) {
+          this.gold2Phase = 'inner';
+          if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) {
+            const msgs = GOLD2_STEP_MESSAGES['apothecary'];
+            this.log.log(msgs[1 % msgs.length], 'rare');
+          }
+        }
+        // If quality goes UP during down phase (hit zone), it's ok — the player might
+        // have been in the zone accidentally. But if quality reaches max, it's failed.
+        if (this.quality >= this.maxQuality) {
+          this.gold2Phase = 'failed';
+        }
+        break;
+
+      case 'inner':
+        // During "inner" phase, only inner zone clicks are allowed.
+        // If the player clicked and was NOT in inner zone, fail.
+        if (!this.isInInnerZone && this.isInZone) {
+          // Hit the outer zone (not inner) — fail
+          this.gold2Phase = 'failed';
+        } else if (!this.isInZone) {
+          // Missed entirely — fail (going backwards)
+          this.gold2Phase = 'failed';
+        }
+        // If quality reached max via inner zone only — success! (checked in onPerfectPotion)
+        break;
+
+      case 'failed':
+        // Already failed — no tracking
+        break;
+    }
+  }
 
   private startAnimation(): void {
     // Run rAF outside Angular so the frame loop doesn't trigger global CD.
@@ -345,8 +489,21 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
     this.stopAnimation();
     this.potionActive = false;
 
+    // Roll for gold bead on successful brew
+    if (!this.autoSolveEnabled) {
+      this.stats.trackManualSidequestClear('apothecary');
+    }
+    this.rollMinigameGoldBead();
+
+    // Gold-2 check: if we completed in the 'inner' phase, award the bead
+    if (!this.autoSolveEnabled && !this.gold2Awarded && !this.synapticalEnabled && this.gold2Phase === 'inner') {
+      this.gold2Awarded = true;
+      this.gold2BeadFound.emit();
+    }
+
     // Snapshot before zeroing — the getter depends on both fields.
     const successChance = this.dilutionSuccessChance;
+    const bm = this.wallet.getBeadMultiplier('apothecary');
 
     this.dilutionMissPenalty = 0;
     this.perfectClickBonus   = 0;
@@ -370,43 +527,47 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
           }
         }
 
-        if (synaptical > 0) this.wallet.add('synaptical-potion', synaptical);
-        if (downgraded > 0) this.wallet.add('potion', downgraded);
+        const synapticalYield = synaptical * bm;
+        const downgradedYield = downgraded * bm;
 
-        if (synaptical > 0) this.stats.trackCurrencyGain('synaptical-potion', synaptical);
-        if (downgraded > 0) this.stats.trackCurrencyGain('potion', downgraded);
+        if (synapticalYield > 0) this.wallet.add('synaptical-potion', synapticalYield);
+        if (downgradedYield > 0) this.wallet.add('potion', downgradedYield);
+
+        if (synapticalYield > 0) this.stats.trackCurrencyGain('synaptical-potion', synapticalYield);
+        if (downgradedYield > 0) this.stats.trackCurrencyGain('potion', downgradedYield);
         for (let i = 0; i < totalRolls; i++) {
           this.stats.trackDilution(i < synaptical);
         }
 
-        if (!this.wallet.isCurrencyUnlocked('synaptical-potion') && synaptical > 0) {
+        if (!this.wallet.isCurrencyUnlocked('synaptical-potion') && synapticalYield > 0) {
           this.wallet.unlockCurrency('synaptical-potion');
-          this.log.log('A Synaptical Potion has been crafted! New currency unlocked!', 'rare');
+          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_UNLOCKED, 'rare');
         }
 
         if (synaptical === totalRolls) {
-          this.log.log(`Synaptical dilution success! (${cur('synaptical-potion', synaptical)})`, 'success');
+          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_SUCCESS(cur('synaptical-potion', synapticalYield)), 'success');
           this.lastMsg  = `${synaptical}/${totalRolls} SYNAPTICAL!`;
           this.msgClass = 'msg-good';
         } else if (synaptical > 0) {
-          this.log.log(`Synaptical dilution partial! (${cur('synaptical-potion', synaptical)}, ${cur('potion', downgraded)})`, 'success');
+          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_PARTIAL(cur('synaptical-potion', synapticalYield), cur('potion', downgradedYield)), 'success');
           this.lastMsg  = `${synaptical}/${totalRolls} SYNAPTICAL  (${downgraded} BASE)`;
           this.msgClass = 'msg-good';
         } else {
-          this.log.log(`Synaptical dilution failed! (${cur('potion', downgraded)})`, 'warn');
+          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_FAIL(cur('potion', downgradedYield)), 'warn');
           this.lastMsg  = `All ${downgraded} failed — ${downgraded}x BASE`;
           this.msgClass = 'msg-bad';
         }
       } else {
         // Standard synaptical: 1 synaptical potion
-        this.wallet.add('synaptical-potion', 1);
-        this.stats.trackCurrencyGain('synaptical-potion', 1);
+        const synYield = 1 * bm;
+        this.wallet.add('synaptical-potion', synYield);
+        this.stats.trackCurrencyGain('synaptical-potion', synYield);
 
         if (!this.wallet.isCurrencyUnlocked('synaptical-potion')) {
           this.wallet.unlockCurrency('synaptical-potion');
-          this.log.log('A Synaptical Potion has been crafted! New currency unlocked!', 'rare');
+          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_UNLOCKED, 'rare');
         } else {
-          this.log.log(`Synaptical Potion crafted! (${cur('synaptical-potion', 1)})`, 'success');
+          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_CRAFTED(cur('synaptical-potion', synYield)), 'success');
         }
 
         this.lastMsg  = 'Synaptical Potion brewed!';
@@ -431,44 +592,48 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy {
         }
       }
 
-      if (concentrated > 0) this.wallet.add('concentrated-potion', concentrated);
-      if (downgraded > 0)   this.wallet.add('potion', downgraded);
+      const concentratedYield = concentrated * bm;
+      const downgradedYield   = downgraded * bm;
+
+      if (concentratedYield > 0) this.wallet.add('concentrated-potion', concentratedYield);
+      if (downgradedYield > 0)   this.wallet.add('potion', downgradedYield);
 
       // Track stats
-      if (concentrated > 0) this.stats.trackCurrencyGain('concentrated-potion', concentrated);
-      if (downgraded > 0)   this.stats.trackCurrencyGain('potion', downgraded);
+      if (concentratedYield > 0) this.stats.trackCurrencyGain('concentrated-potion', concentratedYield);
+      if (downgradedYield > 0)   this.stats.trackCurrencyGain('potion', downgradedYield);
       for (let i = 0; i < totalRolls; i++) {
         this.stats.trackDilution(i < concentrated);
       }
 
-      if (!this.wallet.isCurrencyUnlocked('concentrated-potion') && concentrated > 0) {
+      if (!this.wallet.isCurrencyUnlocked('concentrated-potion') && concentratedYield > 0) {
         this.wallet.unlockCurrency('concentrated-potion');
-        this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
+        this.log.log(LOG_MSG.MG_APOTHECARY.CONCENTRATED_UNLOCKED, 'rare');
       }
 
       if (concentrated === totalRolls) {
-        this.log.log(`Dilution success! (${cur('concentrated-potion', concentrated)})`, 'success');
+        this.log.log(LOG_MSG.MG_APOTHECARY.DILUTION_SUCCESS(cur('concentrated-potion', concentratedYield)), 'success');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FULL(concentrated, totalRolls);
         this.msgClass = 'msg-good';
       } else if (concentrated > 0) {
-        this.log.log(`Dilution partial! (${cur('concentrated-potion', concentrated)}, ${cur('potion', downgraded)})`, 'success');
+        this.log.log(LOG_MSG.MG_APOTHECARY.DILUTION_PARTIAL(cur('concentrated-potion', concentratedYield), cur('potion', downgradedYield)), 'success');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_PARTIAL(concentrated, downgraded, totalRolls);
         this.msgClass = 'msg-good';
       } else {
-        this.log.log(`Dilution failed! (${cur('potion', downgraded)})`, 'warn');
+        this.log.log(LOG_MSG.MG_APOTHECARY.DILUTION_FAIL(cur('potion', downgradedYield)), 'warn');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FAIL(downgraded);
         this.msgClass = 'msg-bad';
       }
     } else {
       // Standard: 1 concentrated potion
-      this.wallet.add('concentrated-potion', 1);
-      this.stats.trackCurrencyGain('concentrated-potion', 1);
+      const concYield = 1 * bm;
+      this.wallet.add('concentrated-potion', concYield);
+      this.stats.trackCurrencyGain('concentrated-potion', concYield);
 
       if (!this.wallet.isCurrencyUnlocked('concentrated-potion')) {
         this.wallet.unlockCurrency('concentrated-potion');
-        this.log.log('A Concentrated Potion has been crafted! New currency unlocked!', 'rare');
+        this.log.log(LOG_MSG.MG_APOTHECARY.CONCENTRATED_UNLOCKED, 'rare');
       } else {
-        this.log.log(`Concentrated Potion crafted! (${cur('concentrated-potion', 1)})`, 'success');
+        this.log.log(LOG_MSG.MG_APOTHECARY.CONCENTRATED_CRAFTED(cur('concentrated-potion', concYield)), 'success');
       }
 
       this.lastMsg  = MINIGAME_MSG.APOTHECARY.PERFECT;

@@ -303,6 +303,233 @@
   }
 }
 
+// ── Bead Sockets ─────────────────────────────────────────────
+
+.bead-socket {
+  background: #000;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.1rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s, text-shadow 0.2s;
+
+  // ── Blue bead ──────────────────────────────
+  &.bead-blue {
+    border: 2px solid #004d4b;
+    color: #004d4b;
+
+    &.bead-locked {
+      opacity: 0.4;
+      &:hover { opacity: 0.65; color: #00a09a; border-color: #00a09a; }
+    }
+
+    &.bead-found {
+      color: #00fff8;
+      border-color: #00fff8;
+      animation: bead-pulse-blue 1.2s ease-in-out infinite;
+      box-shadow: 0 0 12px rgba(0, 255, 248, 0.5), 0 0 24px rgba(0, 255, 248, 0.2);
+      text-shadow: 0 0 8px rgba(0, 255, 248, 0.7);
+
+      &:hover {
+        box-shadow: 0 0 18px rgba(0, 255, 248, 0.7), 0 0 30px rgba(0, 255, 248, 0.3);
+        text-shadow: 0 0 12px rgba(0, 255, 248, 0.9);
+      }
+    }
+
+    &.bead-socketed {
+      color: #00fff8;
+      border-color: #00fff8;
+      background: #001a1a;
+      box-shadow: 0 0 8px rgba(0, 255, 248, 0.35), inset 0 0 6px rgba(0, 255, 248, 0.1);
+      text-shadow: 0 0 6px rgba(0, 255, 248, 0.5);
+
+      &:hover {
+        color: #66fffc;
+        border-color: #66fffc;
+        box-shadow: 0 0 12px rgba(0, 255, 248, 0.5), inset 0 0 8px rgba(0, 255, 248, 0.2);
+      }
+    }
+  }
+
+  // ── Gold bead ──────────────────────────────
+  &.bead-gold {
+    border: 2px solid #4d3d00;
+    color: #4d3d00;
+
+    &.bead-locked {
+      opacity: 0.4;
+      &:hover { opacity: 0.65; color: #b39500; border-color: #b39500; }
+    }
+
+    &.bead-found {
+      color: #ffcc00;
+      border-color: #ffcc00;
+      animation: bead-pulse-gold 1.2s ease-in-out infinite;
+      box-shadow: 0 0 12px rgba(255, 204, 0, 0.5), 0 0 24px rgba(255, 204, 0, 0.2);
+      text-shadow: 0 0 8px rgba(255, 204, 0, 0.7);
+
+      &:hover {
+        box-shadow: 0 0 18px rgba(255, 204, 0, 0.7), 0 0 30px rgba(255, 204, 0, 0.3);
+        text-shadow: 0 0 12px rgba(255, 204, 0, 0.9);
+      }
+    }
+
+    &.bead-socketed {
+      color: #ffcc00;
+      border-color: #ffcc00;
+      background: #1a1500;
+      box-shadow: 0 0 8px rgba(255, 204, 0, 0.35), inset 0 0 6px rgba(255, 204, 0, 0.1);
+      text-shadow: 0 0 6px rgba(255, 204, 0, 0.5);
+
+      &:hover {
+        color: #ffe066;
+        border-color: #ffe066;
+        box-shadow: 0 0 12px rgba(255, 204, 0, 0.5), inset 0 0 8px rgba(255, 204, 0, 0.2);
+      }
+    }
+  }
+}
+
+@keyframes bead-pulse-blue {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 248, 0.3), 0 0 20px rgba(0, 255, 248, 0.1); }
+  50%      { box-shadow: 0 0 22px rgba(0, 255, 248, 0.8), 0 0 36px rgba(0, 255, 248, 0.35); }
+}
+
+@keyframes bead-pulse-gold {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 204, 0, 0.3), 0 0 20px rgba(255, 204, 0, 0.1); }
+  50%      { box-shadow: 0 0 22px rgba(255, 204, 0, 0.8), 0 0 36px rgba(255, 204, 0, 0.35); }
+}
+
+// ── Bead detail popup ────────────────────────────────────────
+.bead-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bead-popup {
+  background: #050008;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 240px;
+  max-width: 360px;
+  font-family: 'Courier New', Courier, monospace;
+
+  &.bead-popup-blue {
+    border: 2px solid #006663;
+    box-shadow: 0 0 20px rgba(0, 255, 248, 0.15);
+  }
+
+  &.bead-popup-gold {
+    border: 2px solid #665200;
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.15);
+  }
+}
+
+.bead-popup-symbol {
+  font-size: 2.4rem;
+  line-height: 1;
+  opacity: 0.3;
+
+  &.bead-popup-owned {
+    opacity: 1;
+    text-shadow: 0 0 12px currentColor;
+  }
+}
+
+.bead-popup-name {
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.bead-popup-lore {
+  font-size: 0.8rem;
+  color: #e8e8e8;
+  text-align: center;
+  line-height: 1.35;
+  font-style: italic;
+}
+
+.bead-popup-effect {
+  font-size: 0.8rem;
+  color: #aaa;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.bead-effect-label {
+  color: #ccc;
+  font-weight: bold;
+}
+
+.bead-popup-socket-btn {
+  background: #000;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+
+  .bead-popup-blue & {
+    color: #00fff8;
+    border: 1px solid #006663;
+    &:hover { background: #001a1a; border-color: #00fff8; }
+  }
+
+  .bead-popup-gold & {
+    color: #ffcc00;
+    border: 1px solid #665200;
+    &:hover { background: #1a1500; border-color: #ffcc00; }
+  }
+}
+
+.bead-popup-status {
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+
+  &.socketed {
+    .bead-popup-blue & { color: #006663; }
+    .bead-popup-gold & { color: #665200; }
+  }
+
+  &.locked {
+    color: #444;
+    font-style: italic;
+  }
+}
+
+.bead-popup-close {
+  background: #000;
+  color: #fff;
+  border: 1px solid #555;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  margin-top: 0.3rem;
+  transition: background 0.1s, color 0.1s;
+
+  &:hover {
+    background: #fff;
+    color: #000;
+  }
+}
+
 // ── Action Row → replaced by stacked layout ─────────────────
 
 // ---- Jack of All Trades ----
@@ -572,6 +799,25 @@
     color: #555;
     cursor: not-allowed;
   }
+
+  &.hero-holding:not(:disabled) {
+    border-color: rgba(255, 255, 255, 0.5);
+    animation: hero-hold-pulse 0.5s ease-in-out infinite;
+  }
+
+  &.hero-pressed:not(:disabled) {
+    animation: hero-press-pulse 0.3s ease-out;
+  }
+}
+
+@keyframes hero-hold-pulse {
+  0%, 100% { border-color: rgba(255, 255, 255, 0.35); }
+  50%       { border-color: rgba(255, 255, 255, 0.75); }
+}
+
+@keyframes hero-press-pulse {
+  0%   { border-color: var(--hero-pulse-color, #000); box-shadow: 0 0 6px 3px var(--hero-pulse-color, #000); }
+  100% { border-color: #fff; box-shadow: 0 0 0 0 transparent; }
 }
 
 // Label sits above the fill bar so text is always readable.
@@ -636,12 +882,77 @@
   font-size: 0.9rem;
 }
 
+// ── Artificer dual-button layout + insight bar ────────────────
+.artificer-buttons {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.artificer-btn {
+  width: 100%;
+}
+
+.artificer-insight-bar {
+  position: relative;
+  width: 100%;
+  height: 1rem;
+  border: 1px solid #7eb8d4;
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(126, 184, 212, 0.08);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.65rem;
+}
+
+.insight-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(126, 184, 212, 0.5), rgba(126, 184, 212, 0.8));
+  transition: width 0.2s ease;
+  box-shadow: 0 0 6px rgba(126, 184, 212, 0.5);
+}
+
+.insight-text {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #d0e8f2;
+  text-shadow: 0 0 3px rgba(0,0,0,0.6);
+}
+
 .necro-clicks-remaining {
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.72rem;
   color: #777;
   text-align: center;
   white-space: nowrap;
+}
+
+.familiar-count-info {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.65rem;
+  color: #3bf184;
+  border: 1px solid rgba(59, 241, 132, 0.35);
+  padding: 0.1rem 0.4rem;
+  border-radius: 2px;
+  background: rgba(59, 241, 132, 0.06);
+  box-shadow: 0 0 6px rgba(59, 241, 132, 0.15);
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+.familiar-power-label {
+  color: rgba(59, 241, 132, 0.6);
+  font-weight: normal;
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 // ── Crew Row: Jacks + Familiars side by side ────────────────
@@ -697,6 +1008,39 @@
   gap: 0.15rem;
   padding: 0 0.25rem;
   min-width: 56px;
+}
+
+.familiar-top-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.summon-all-btn {
+  background: #000;
+  color: #8f4fff;
+  border: 1px solid #8f4fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.55rem;
+  padding: 0.1rem 0.3rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.1s, color 0.1s;
+  user-select: none;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #1a0a33;
+    color: #bf80ff;
+    border-color: #bf80ff;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
 }
 
 .familiar-pause-btn {
@@ -801,8 +1145,8 @@
 // ── Toggle button styling ──────────────────────────────────
 .wholesale-toggle-btn {
   background: #0a0a0a;
-  color: #555;
-  border: 1px solid #333;
+  color: #777;
+  border: 1px solid #444;
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
@@ -811,8 +1155,8 @@
   transition: background 0.1s, color 0.1s, border-color 0.1s;
 
   &:hover {
-    border-color: #666;
-    color: #999;
+    border-color: #777;
+    color: #bbb;
   }
 
   &.wt-on {
@@ -845,6 +1189,36 @@
 }
 
 // ---- Upgrades ----
+
+.buy-quantity-bar {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.buy-qty-btn {
+  background: #000;
+  color: #666;
+  border: 1px solid #444;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.7rem;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  letter-spacing: 0.05em;
+
+  &:hover {
+    color: #ccc;
+    border-color: #888;
+  }
+
+  &.buy-qty-active {
+    background: #1a1a1a;
+    color: #fff;
+    border-color: #fff;
+  }
+}
 
 .section-title {
   color: #aaa;

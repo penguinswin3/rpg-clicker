@@ -1,0 +1,52 @@
+<div class="merchant-mg">
+
+  <!-- ── Gold balance ─────────────────────── -->
+  <div class="gold-row">
+    <span class="gold-label">GOLD</span>
+    <span class="gold-val">{{ goldBalance | number }}</span>
+  </div>
+
+  <!-- ── Auto-buy gold spend rate ─────────── -->
+  <div class="spend-row" *ngIf="autoSolveUnlocked">
+    <span class="spend-label">AUTO-SPEND</span>
+    <span class="spend-val" [class.spend-active]="goldSpendPerSec > 0">
+      {{ goldSpendPerSec | number:'1.0-0' }}<span class="spend-unit">/s</span>
+    </span>
+  </div>
+
+  <!-- ── Message ──────────────────────────── -->
+  <div class="status-msg">{{ message }}</div>
+
+  <!-- ── Stock exchange list ──────────────── -->
+  <div class="exchange-list">
+    <div class="item-row" *ngFor="let item of visibleItems">
+      <!-- Row 1: symbol, name, price, auto-buy checkboxes -->
+      <div class="item-head">
+        <span class="item-sym" [style.color]="item.color">{{ item.symbol }}</span>
+        <span class="item-name">{{ item.name }}</span>
+        <span class="item-price" [style.color]="priceColor(item)">{{ item.currentPrice }}g</span>
+        <!-- Single auto-buy toggle (gold-1 only OR gold-2 unlimited) -->
+        <label class="ab-check"
+               [class.ab-check-active]="isAutoBuyTarget(item.currencyId)"
+               *ngIf="maxAutoBuyers >= 1"
+               title="Auto-buy ×100/s">
+          <input type="checkbox"
+                 [checked]="isAutoBuyTarget(item.currencyId)"
+                 (change)="toggleAutoBuy(item.currencyId)" />
+          <span class="ab-label">AUTO</span>
+        </label>
+      </div>
+      <!-- Row 2: buy buttons -->
+      <div class="item-btns">
+        <button *ngFor="let qty of increments"
+                class="buy-btn"
+                [disabled]="!canAfford(item, qty)"
+                (click)="buy(item, qty)">
+          ×{{ qty }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+

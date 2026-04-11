@@ -1,5 +1,6 @@
 <!-- Fixed-position trigger button (next to Options) -->
 <div class="stats-btn-anchor" [style.right]="rightOffset" [style.bottom]="bottomOffset">
+  <span class="playtime-counter" *ngIf="(snap.playtimeSeconds ?? 0) > 0">{{ playtimeFormatted }}</span>
   <button class="stats-trigger" (click)="open()">[ STATISTICS ]</button>
 </div>
 
@@ -25,6 +26,17 @@
 
         <!-- ═══════ LEFT COLUMN ═══════ -->
         <div class="col">
+
+          <!-- ── Playtime ── -->
+          <div class="stats-section" *ngIf="(snap.playtimeSeconds ?? 0) > 0">
+            <div class="section-label">// PLAYTIME</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Time Played</span>
+                <span class="cur-amount">{{ playtimeFormatted }}</span>
+              </div>
+            </div>
+          </div>
 
           <!-- ── Lifetime Currency Gains ── -->
           <div class="stats-section" *ngIf="activeCurrencies.length > 0">
@@ -190,6 +202,21 @@
             </div>
           </div>
 
+          <!-- ── Merchant Minigame ── -->
+          <div class="stats-section" *ngIf="snap.merchantMinigame && snap.merchantMinigame.itemsPurchased > 0">
+            <div class="section-label">// STOCK MARKET</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Items Purchased</span>
+                <span class="cur-amount">{{ fmt(snap.merchantMinigame.itemsPurchased) }}</span>
+              </div>
+              <div class="stats-row">
+                <span class="cur-name">Gold Spent</span>
+                <span class="cur-amount">{{ fmt(snap.merchantMinigame.goldSpent) }}</span>
+              </div>
+            </div>
+          </div>
+
 <!--          &lt;!&ndash; ── Artisan: Appraisals ── &ndash;&gt;-->
 <!--          <div class="stats-section" *ngIf="snap.artisanMinigame.appraisalsCompleted > 0">-->
 <!--            <div class="section-label">// APPRAISING</div>-->
@@ -231,6 +258,20 @@
               <div class="stats-row" *ngIf="snap.necromancerMinigame.ritualsCompleted > 0">
                 <span class="cur-name">Avg Efficiency</span>
                 <span class="cur-amount">{{ (snap.necromancerMinigame.totalEfficiency / snap.necromancerMinigame.ritualsCompleted).toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-section" *ngIf="snap.artificerMinigame && (snap.artificerMinigame.etchingsCompleted > 0 || snap.artificerMinigame.etchingsFailed > 0)">
+            <div class="section-label">// ETCHING</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Etchings Completed</span>
+                <span class="cur-amount stat-good">{{ fmt(snap.artificerMinigame.etchingsCompleted) }}</span>
+              </div>
+              <div class="stats-row">
+                <span class="cur-name">Etchings Failed</span>
+                <span class="cur-amount stat-bad">{{ fmt(snap.artificerMinigame.etchingsFailed) }}</span>
               </div>
             </div>
           </div>

@@ -94,6 +94,30 @@ export class CharacterService {
       unlocked: false,
       ...charUnlock('necromancer'),
     },
+    {
+      id: 'merchant',
+      name: CHARACTER_FLAVOR.MERCHANT.name,
+      color: '#4c3a29',
+      description: CHARACTER_FLAVOR.MERCHANT.desc,
+      unlocked: false,
+      ...charUnlock('merchant'),
+    },
+    {
+      id: 'artificer',
+      name: CHARACTER_FLAVOR.ARTIFICER.name,
+      color: '#7eb8d4',
+      description: CHARACTER_FLAVOR.ARTIFICER.desc,
+      unlocked: false,
+      ...charUnlock('artificer'),
+    },
+    {
+      id: 'chimeramancer',
+      name: CHARACTER_FLAVOR.CHIMERAMANCER.name,
+      color: '#c44d8e',
+      description: CHARACTER_FLAVOR.CHIMERAMANCER.desc,
+      unlocked: false,
+      ...charUnlock('chimeramancer'),
+    },
   ];
 
   private readonly charactersSource = new BehaviorSubject<Character[]>(

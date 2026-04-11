@@ -1,0 +1,232 @@
+@use 'sass:color';
+
+$silver-blue: #7eb8d4;
+
+// ── Etching level selector ───────────────────
+.etching-level-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.8rem;
+  margin-bottom: 0.3rem;
+}
+
+.elvl-btn {
+  background: none;
+  border: 1px solid $silver-blue;
+  color: $silver-blue;
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 1px 6px;
+  transition: background 0.1s, opacity 0.1s;
+
+  &:hover:not(:disabled) {
+    background: rgba($silver-blue, 0.15);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+}
+
+.elvl-label {
+  color: #aaa;
+}
+
+.elvl-num {
+  color: $silver-blue;
+  font-weight: bold;
+}
+
+.artificer-minigame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Courier New', Courier, monospace;
+  color: #ccc;
+}
+
+.mg-status {
+  text-align: center;
+  min-height: 2.4em;
+}
+
+.mg-message {
+  white-space: pre-wrap;
+  margin: 0;
+  font-size: 0.85rem;
+  color: $silver-blue;
+}
+
+.mg-divider {
+  color: #555;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.symbol-grid {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.symbol-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  width: 64px;
+  height: 64px;
+  background: #1a1a2e;
+  border: 2px solid #333;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+
+  &:hover:not(.disabled) {
+    border-color: $silver-blue;
+    background: #222244;
+  }
+
+  &.flash {
+    border-color: $silver-blue;
+    background: rgba($silver-blue, 0.3);
+    box-shadow: 0 0 12px $silver-blue;
+    animation: pulse 0.4s ease-in-out;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.sym-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.sym-name {
+  font-size: 0.55rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.progress-label {
+  color: #888;
+}
+
+.progress-dots {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.dot {
+  color: #333;
+  font-size: 0.7rem;
+  transition: color 0.2s;
+
+  &.filled {
+    color: $silver-blue;
+  }
+  &.correct {
+    color: #5f5;
+  }
+  &.wrong {
+    color: #f55;
+  }
+  &.wrong.correct {
+    color: #ff9;
+  }
+}
+
+.mg-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.mg-btn {
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: $silver-blue;
+  background: none;
+  border: 1px solid $silver-blue;
+  padding: 0.3rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover:not(:disabled) {
+    background: rgba($silver-blue, 0.15);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.mg-cost {
+  font-size: 0.7rem;
+  color: #888;
+}
+
+// ── Auto-solve toggle (gold theme) ───────────
+.auto-solve-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+.auto-solve-btn {
+  background: #0a0a0a;
+  color: #665200;
+  border: 1px solid #4d3d00;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+
+  &:hover {
+    border-color: #997a00;
+    color: #cca300;
+  }
+
+  &.as-on {
+    color: #ffcc00;
+    border-color: #997a00;
+    background: #1a1500;
+
+    &:hover {
+      background: #2a2200;
+      border-color: #ffcc00;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%   { box-shadow: 0 0 4px $silver-blue; }
+  50%  { box-shadow: 0 0 16px $silver-blue; }
+  100% { box-shadow: 0 0 4px $silver-blue; }
+}
+

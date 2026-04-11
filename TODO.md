@@ -1,121 +1,77 @@
 # TODO List
 ## Systems
-- kobold paw
-- - potion of the collosus, +1hp per level in potion of fortitude
 
-### Lore Pages
-- Lore Pages that give context about the character or the world they live in. Can be unlocked by doing certain things in minigames...
-- Each lore page gives a static resource multiplier for some of that characters resources from ALL sources
-- One can be gotten from randomly clicking the button
-  - Gives lore on the character's Bagkground
-- one can be gotten from doing a particular action in the minigame
-  - A small vignette on the character's interaction with the doomsayer
-  - Fighter: Killing kobolds in a certain pattern
-  - Ranger: Selecting a particular set of 3 in a few games in a row 
-  - Apothecary: clicking the synapse zones in a particular order, maybe doing it at 0% dilution
-  - Culinarian: guess a certain pattern of 4 in a row
-  - Thief: lockpicking times at a certain time (across multiple games cause you can get it first try)
-  - Artisan: Selecting some assortment of gems, or intentionally throwing too much in a certain way 
-  - Necromancer:drawing a certain pattern (cross through the gem 3 times?)
+###
+- Add the flavor lore
 
--Collecting one allows you to autoplay their minigame, slower than you might be able to. 
-- Collecting doubles all resource gains from that character
-- collecting 3 upgrades the minigame to the optimal strategy
-  Can this be done while not on the page? 
-  - Maybe add a secret third note that gives them an optimal strategy? 
-  - Fighter: Spam attack -> spam attack and heal when under half
-  - Ranger: 3 random squares -> star square, two treasure squares, then random
-  - Apothecary: one click per box pass through -> spam click in boxes
-  - Culinarian: "All one suit" guesses to force it -> actually use the info available
-  - Thief: Click on cadence -> Use the colored info to guess better
-  - Artisan: Factors in color and size -> Just reads the game data lol, maybe just factors in blur too
-  - Necromancer: Clicks the next available clockwise -> Just reads the game data 
-
-- These tier show up above the hero button, once the minigames are unlocked. THIS NEEDS TO INTEGRATE WITH THE RELIC, BEFORE THE RELIC SHOWS UP SO THAT WHEN THE RELIC SHOWS UP, IT INTEGRATES IN THE UI NICELY 
--Add a fourth lore tier, post relics, that give another 2x resource yield. Earned from jacks (or familiar) presses only
 ### More characters
-- Party Face
-  - Card game Blackjack?
-- Merchant
-  - Stock market game where you can sell your materials for gp, and buy other materials for gp
-- Artificer
-  - Memory matching / Simon Says
-  - Reads pages from the intel
-  - Generates Mana
-  - Minigame creates Spell Scrolls
-  - Spell Scrolls can be used to buff familiars?
-- Chimeramancer
-  - Animal parts combination mix and match synergy?
-    - kobold ear, kobold tongue, kobold hair, beast meat, bones, other things from the fighter 
-  - Makes a horror beyond our comprehension
-  - Something else?
 
-  - Slayer
-    - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
-    - Has to slay the horror 
-  
-### Easter Eggs
-- Fairy Ring codes in the ranger minigame
-- Kobold Killing... The numbers... What do they mean? Numbers Station... s: 0–2–5–8–8
-- killstreak
+
+- Slayer
+  - Last party member, unlocks the Campaign mode. Wayyyy down the line. Total game conversion.
+  - Has to slay the horror 
 
 ## Upgrade Ideas
-- Master of All - An upgrade for jacks that auto play minigames. Might be a good relic upgrade? 
 
 ### Fighter
-- Swarm Killing. Kobolds might have more HP, but you might get some bonus parts of a lower tier 
 
 ### Ranger 
-- Once better tracing is maxed open a new upgrade (Bigger beasts? Maybe add a new level select button or something?)
-- Eye for glint upgrade, costs gems, reveals all pixies. requires pixie trap
 
 ### Apothecary
-
 
 ### Culinarian
 - Spice reselling, but it at wholesale and then sell it individually
 
 ### Thief
-- Percision lockpicking, bonus treasure based on how close to the center of the bar you were 
+
 
 ### Artisan 
-- Out of Fashion upgrade for Artisan (increase good gem threshold to 50%)
-
 
 ### Necromancer
 
 ## UI Tweaks
-- Some sort of "new upgrade unlocked here" notif? maybe flash the character menu till its selected? 
-- In game Changelog?
-- Little "shine" on the character select button every time something new shows up there till you click it. 
-- Rename Alchemize to Concoct
-- make a lot of things not highlightable 
-- ~~Make the minigames area collapsable~~ ✅
-- ~~Rename Minigames to Sidequests~~ ✅
-- Add some sort of reference to relics that the thief can get from the minigame 
-- ~~Make the apoth minigame toggles look like the fighter minigame toggles~~ ✅
-- ~~artisan is colored when collapsed?~~ ✅ (necromancer coloring in collapsed view)
-- ~~make sure the ward and defile jacks boxes have the all and none buttons as well~~ ✅
+
 
 ## Statistics
-- ~~Split the appraisals out from the faceting stats section~~ ✅
-- Statistics culinarian minigame histogram or count %s
-- ~~First Relic unlocked~~ ✅
 
 ## Balancing
 - A "Balance Report" that shows gaps in the cost progression
   - Makes grap-hs of time to recoup costs for an upgrade. number of seconds or clicks
-
-- ~~Potion Titration can have 200 max levels and give 2% chance~~ ✅ (100 max levels, 4% chance)
-- ~~Pity drop rate for the first relic~~ ✅ (guaranteed after 100 successful safe cracks with no relic)
-- Add another jacks speed upgrade at Artisan Tier 
-- Each level of relic hunter should give +1% of finding a relic 
 - Ranger, apoth, and culi relic rewards are bad
-- thieving relic might be too good 
+- two new gems, that allow the minigames to operate behind the scenes at 50% and then 100% capacity. You can purchase these
+- Add a cost to socketing beads? 
 
 
 ## Bug Fixes
-- ~~apraisals complete what is this stat~~ ✅ (moved to its own Appraising section)
 
-## Code Refactors
+
+# v1.3.0 Playtest 
+- ~~Per seconds should split out fermentation vats passive gold~~
+- ~~Jacks do not factor in to kobold ears per second~~
+- ~~Align the [ CHARACTERS ] in the collapsable menu title to the right~~
+- ~~Disabled toggles could be more obvious, make them a little lighter and easier to read.~~
+- ~~make the unsocketed bead more obvious. Glow and flash a tad more.~~
+- ~~thief mastery unlock steps are bugged, make sure you have to enter it in the right order, across games, regardless if the input leads to a successful or failed sidequest.~~
+~~- if you unlock the second gold bead first it should show the first bad effect, not the second one~~
+~~- the thief minigame doesnt handle well when enabled mid round~~ 
+- unify safes cracked and heists failed in the stats page
+- Necromancer insufficient resources should say how many of what type 
+- if you hold while the necro buttons swap it will flash, it should not flash the other one 
+- Spreading soul shouldn't show up till you unlock the merchant
+- fighter jacks should not factor in to the per seconds for kobold parts
+~~- kobold parts should not be available for purchase until that tier of kobold is unlocked as well as minigame upgrade~~
+~~- make sure the characters light up when a new upgrade is unlocked~~
+~~- make sure summon all is available on all familiar buttons~~
+~~- make the mana cost in artificer sidequest use the cst formatting~~
+~~- failing the etching minigame should instead mark the wrong answer but let you continue. Second chance doesnt mark it wrong the first time and lets you continue~~
+~~- artificer jacks assignment not showing up~~
+~~- Make sure merchant gold beads are unlockable by buying things in the listed order~~
+~~- Make the artificer simon says animation faster~~
+~~- stats for items purchased and gold spent in the merchant sidequest~~
+
+- ~~Touch up the Mind and Soul to display better, feel free to adjust the layout ofthe box to be better~~
+- ~~Add a playtime counter that ticks up only while playing the game~~
+- ~~Artificer character select should have a coloring that reflects the amount of Insight stored~~
+- ~~Relic Hunter needs to factor in artificer, add a new upgrade using artificer resoruces.~~
+
 

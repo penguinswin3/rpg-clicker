@@ -90,6 +90,10 @@ export function isActiveCharJackStarved(
     // Necromancer ward jacks starve when they can't afford XP
     return (allocations['necromancer-ward'] ?? 0) > 0 && !!jackStarved['necromancer-ward'];
   }
+  if (charId === 'artificer') {
+    // Artificer reflect jacks starve when insight is 0
+    return (allocations['artificer-reflect'] ?? 0) > 0 && !!jackStarved['artificer-reflect'];
+  }
   return (allocations[charId] ?? 0) > 0 && !!jackStarved[charId];
 }
 
@@ -124,6 +128,9 @@ export function getJackStarvedMessage(
     const need = calcNecromancerWardXpCost(darkPactLevel);
     const have = Math.floor(walletGet('xp'));
     return `⚠ Ward Jack idle — need ${need} XP (have ${have})`;
+  }
+  if (charId === 'artificer') {
+    return `⚠ Reflect Jack idle — no Insight`;
   }
   return '⚠ Jack idle — insufficient resources';
 }

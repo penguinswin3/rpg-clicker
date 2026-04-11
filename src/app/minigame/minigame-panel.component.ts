@@ -10,6 +10,9 @@ import { CulinarianMinigameComponent } from './culinarian/culinarian-minigame.co
 import { ThiefMinigameComponent } from './thief/thief-minigame.component';
 import { ArtisanMinigameComponent } from './artisan/artisan-minigame.component';
 import { NecromancerMinigameComponent } from './necromancer/necromancer-minigame.component';
+import { MerchantMinigameComponent, AutoBuyerInfo } from './merchant/merchant-minigame.component';
+import { ArtificerMinigameComponent } from './artificer/artificer-minigame.component';
+import { ChimeramancerMinigameComponent } from './chimeramancer/chimeramancer-minigame.component';
 import { XP_THRESHOLDS } from '../game-config';
 import { MINIGAME_FLAVOR } from '../flavor-text';
 import { FighterCombatState } from '../options/save.service';
@@ -22,7 +25,7 @@ interface MinigameInfo {
 @Component({
   selector: 'app-minigame-panel',
   standalone: true,
-  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent, NecromancerMinigameComponent],
+  imports: [CommonModule, FighterMinigameComponent, ApothecaryMinigameComponent, RangerMinigameComponent, CulinarianMinigameComponent, ThiefMinigameComponent, ArtisanMinigameComponent, NecromancerMinigameComponent, MerchantMinigameComponent, ArtificerMinigameComponent, ChimeramancerMinigameComponent],
   templateUrl: './minigame-panel.component.html',
   styleUrls: ['./minigame-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -97,6 +100,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() wasteNotLevel = 0;
   /** Larger Cookbooks level — forwarded to the culinarian minigame. */
   @Input() largerCookbooksLevel = 0;
+  /** Whether the Ancient Cookbook (Larger Cookbooks) reveal is enabled. */
+  @Input() ancientCookbookEnabled = true;
+  /** Emitted when the player toggles the Ancient Cookbook. */
+  @Output() ancientCookbookEnabledChange = new EventEmitter<boolean>();
   /** Cookbook Annotations level — forwarded to the culinarian minigame. */
   @Input() cookbookAnnotationsLevel = 0;
   /** Vanishing Powder level — forwarded to the thief minigame. */
@@ -111,6 +118,22 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() lockedInLevel = 0;
   /** Flow State level — forwarded to the thief minigame. */
   @Input() flowStateLevel = 0;
+  /** Gem Hunter level — enables gold-2 progress log messages across all minigames. */
+  @Input() gemHunterLevel = 0;
+  /** Per-character gold-2 bead found status — used to suppress messages once bead is unlocked. */
+  @Input() gold2BeadFoundState: Record<string, boolean> = {};
+  /** Merchant auto-buyer selections (persisted). */
+  @Input() merchantAutoBuySelections: Record<string, boolean> = {};
+  /** Emitted when merchant auto-buyer selections change. */
+  @Output() merchantAutoBuySelectionsChange = new EventEmitter<Record<string, boolean>>();
+  /** Emitted when merchant auto-buyer state changes (for per-second calc). */
+  @Output() merchantAutoBuyerStateChange = new EventEmitter<AutoBuyerInfo[]>();
+  /** Extended Etching upgrade level — forwarded to the artificer minigame. */
+  @Input() extendedEtchingLevel = 0;
+  /** Currently-selected etching difficulty level — forwarded to the artificer minigame. */
+  @Input() selectedEtchingLevel = 0;
+  /** Emitted when the player changes the etching level inside the artificer minigame. */
+  @Output() selectedEtchingLevelChange = new EventEmitter<number>();
   /** Lucky Gems level — forwarded to the artisan minigame. */
   @Input() luckyGemsLevel = 0;
   /** Double Dip level — forwarded to the artisan minigame. */
@@ -129,6 +152,41 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() dilutionEnabled = false;
   /** Emitted when the player toggles dilution inside the apothecary minigame. */
   @Output() dilutionEnabledChange = new EventEmitter<boolean>();
+
+  /** Chimeramancer saved contribution state. */
+  @Input() chimeramancerContributions: Record<string, number> | null = null;
+  /** Emitted when chimeramancer contribution state changes. */
+  @Output() chimeramancerContributionsChange = new EventEmitter<Record<string, number>>();
+  /** Quick Stitching level — forwarded to the chimeramancer minigame. */
+  @Input() quickStitchingLevel = 0;
+  /** Minor Touch Up level — forwarded to the chimeramancer minigame. */
+  @Input() minorTouchUpLevel = 0;
+
+  /** Per-character auto-solve unlock state (gold-1 bead socketed). */
+  @Input() autoSolveUnlocked: Record<string, boolean> = {};
+  /** Per-character "good" auto-solve mode (both gold beads socketed). */
+  @Input() autoSolveGoodMode: Record<string, boolean> = {};
+  /** Per-character auto-solve toggle state. */
+  @Input() autoSolveEnabled: Record<string, boolean> = {};
+  /** Emitted when a minigame auto-solve toggle changes. */
+  @Output() autoSolveEnabledChange = new EventEmitter<{ charId: string; enabled: boolean }>();
+  /** Emitted when a minigame awards a gold bead. */
+  @Output() goldBeadFound = new EventEmitter<string>();
+
+  /** Per-character gold-2 bead unlock progress. */
+  @Input() gold2Progress: Record<string, unknown> = {};
+  /** Emitted when gold-2 progress changes. */
+  @Output() gold2ProgressChange = new EventEmitter<{ charId: string; progress: unknown }>();
+  /** Emitted when a gold-2 bead is unlocked. */
+  @Output() gold2BeadFound = new EventEmitter<string>();
+
+  onGold2Progress(charId: string, progress: unknown): void {
+    this.gold2ProgressChange.emit({ charId, progress });
+  }
+
+  onAutoSolveToggle(charId: string, enabled: boolean): void {
+    this.autoSolveEnabledChange.emit({ charId, enabled });
+  }
 
   xp = 0;
   /** All-time peak XP — used for the threshold gate. */
@@ -164,6 +222,18 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     {
       characterId: 'necromancer',
       title: MINIGAME_FLAVOR.NECROMANCER.name,
+    },
+    {
+      characterId: 'merchant',
+      title: MINIGAME_FLAVOR.MERCHANT.name,
+    },
+    {
+      characterId: 'artificer',
+      title: MINIGAME_FLAVOR.ARTIFICER.name,
+    },
+    {
+      characterId: 'chimeramancer',
+      title: MINIGAME_FLAVOR.CHIMERAMANCER.name,
     },
   ];
 

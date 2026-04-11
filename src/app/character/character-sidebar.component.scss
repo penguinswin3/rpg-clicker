@@ -55,6 +55,7 @@ $cyan: #0ff;
   color: #aaa;
   font-size: 11px;
   letter-spacing: 0.08em;
+  margin-left: auto;
 }
 
 // ── Expanded wrapper (fills remaining height, flex column) ─────
@@ -140,6 +141,47 @@ $cyan: #0ff;
 
 // ── Character cards ───────────────────────
 
+// New-content shine overlay — a diagonal highlight that sweeps across the card
+.char-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -80%;
+    width: 40%;
+    height: 200%;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.12) 45%,
+      rgba(255, 255, 255, 0.22) 50%,
+      rgba(255, 255, 255, 0.12) 55%,
+      transparent 70%
+    );
+    animation: char-shine-sweep 3s ease-in-out infinite;
+  }
+}
+
+// Smaller sweep for the compact (collapsed) variant
+.compact-shine::after {
+  width: 60%;
+}
+
+@keyframes char-shine-sweep {
+  0%   { transform: translateX(0); }
+  40%  { transform: translateX(350%); }
+  100% { transform: translateX(350%); }
+}
+
 .char-card {
   position: relative;
   overflow: hidden;
@@ -221,6 +263,18 @@ $cyan: #0ff;
 
 .necro-active-half {
   opacity: 1;
+}
+
+// Artificer insight fill overlay (expanded card)
+.artificer-insight-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(to right, rgba(126, 184, 212, 0.25), rgba(126, 184, 212, 0.10));
+  transition: width 0.3s ease;
 }
 
 .char-header {
@@ -340,6 +394,18 @@ $cyan: #0ff;
 .necro-ward-compact {
   right: 0;
   background: linear-gradient(to left, rgba(160, 60, 230, 0.30), transparent);
+}
+
+// Artificer insight fill overlay (collapsed)
+.artificer-insight-compact {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(to right, rgba(126, 184, 212, 0.30), rgba(126, 184, 212, 0.08));
+  transition: width 0.3s ease;
 }
 
 .compact-initial {

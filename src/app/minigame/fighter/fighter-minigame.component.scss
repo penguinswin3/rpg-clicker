@@ -131,10 +131,9 @@ $font: 'Courier New', Courier, monospace;
   font-family: $font;
   font-size: 10px;
   line-height: 1.4;
-  /* Fixed-height flex container keeps ASCII art vertically centered
-     and prevents the action buttons below from shifting when the
-     kobold variant changes.
-     Tallest variant is 6 lines × (10px font × 1.4 lh) = 84px. */
+  /* min-height keeps small ASCII art centered; height: auto lets large
+     variants (e.g. Kobold Leader, 20 lines) expand without being clipped.
+     Smallest tallest-short variant: 6 lines × (10px font × 1.4 lh) = 84px. */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -142,8 +141,9 @@ $font: 'Courier New', Courier, monospace;
   text-align: left;
   white-space: pre;
   max-width: 100%;
-  overflow: hidden;
-  height: 84px;
+  overflow: visible;
+  min-height: 84px;
+  height: auto;
 }
 
 // ── HP bars ───────────────────────────────
@@ -329,4 +329,39 @@ $font: 'Courier New', Courier, monospace;
   &:disabled { color: #2a2a2a; border-color: #1a1a1a; }
 }
 
+// ── Auto-solve toggle (gold theme) ───────────
+.auto-solve-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
 
+.auto-solve-btn {
+  background: #0a0a0a;
+  color: #665200;
+  border: 1px solid #4d3d00;
+  font-family: $font;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+
+  &:hover {
+    border-color: #997a00;
+    color: #cca300;
+  }
+
+  &.as-on {
+    color: #ffcc00;
+    border-color: #997a00;
+    background: #1a1500;
+
+    &:hover {
+      background: #2a2200;
+      border-color: #ffcc00;
+    }
+  }
+}

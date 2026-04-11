@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 import { WalletService } from '../wallet/wallet.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { UPGRADE_DEFS, UpgradeDef, UpgradeCategory, UpgradeGates, CostDef, RELIC_COSTS } from '../game-config';
-import { UPGRADE_FLAVOR, cur } from '../flavor-text';
+import { UPGRADE_FLAVOR, cur, LOG_MSG } from '../flavor-text';
 import { scaledCost } from '../utils/mathUtils';
 
 // Re-export types consumed by other components
@@ -145,6 +145,89 @@ export class UpgradeService {
     return this.defs.get(id)?.gates;
   }
 
+  /** Returns the character ID that owns a given upgrade, or undefined. */
+  charIdFor(id: string): string | undefined {
+    return this.defs.get(id)?.characterId;
+  }
+
+  // ── Multi-buy queries ──────────────────────────────────────────
+
+  /**
+   * Sum of all costs for buying `count` levels starting from the current level.
+   * Returns an array of { currency, amount } in definition order, with amounts
+   * representing the total across all levels.
+   */
+  allCostsMulti(id: string, count: number): Array<{ currency: string; amount: number }> {
+    const def = this.defs.get(id);
+    const rt = this.runtime.get(id);
+    if (!def || !rt) return [];
+    const currentLevel = rt.level;
+    const effectiveMax = this.maxLevel(id);
+    const effectiveCount = Math.min(count, effectiveMax - currentLevel);
+    if (effectiveCount <= 0) return [];
+
+    const totals: Record<string, number> = {};
+    for (let i = 0; i < effectiveCount; i++) {
+      const lvl = currentLevel + i;
+      for (const c of def.costs) {
+        if (!this.isCostActive(c, lvl)) continue;
+        const cost = scaledCost(c.base, c.scale, lvl);
+        totals[c.currency] = (totals[c.currency] ?? 0) + cost;
+      }
+    }
+
+    // Return in definition order, deduplicated by currency
+    const seen = new Set<string>();
+    return def.costs
+      .filter(c => c.currency in totals && !seen.has(c.currency) && (seen.add(c.currency), true))
+      .map(c => ({ currency: c.currency, amount: totals[c.currency] }));
+  }
+
+  /** Whether the player can afford to buy `count` levels of an upgrade. */
+  canAffordMulti(id: string, count: number): boolean {
+    const costs = this.allCostsMulti(id, count);
+    return costs.length > 0 && costs.every(c => this.wallet.canAfford(c.currency, c.amount));
+  }
+
+  /**
+   * Maximum number of levels the player can currently afford for this upgrade.
+   * Simulates successive purchases, deducting from a copy of the wallet.
+   */
+  maxAffordable(id: string): number {
+    const def = this.defs.get(id);
+    const rt = this.runtime.get(id);
+    if (!def || !rt) return 0;
+
+    const remaining = this.maxLevel(id) - rt.level;
+    if (remaining <= 0) return 0;
+
+    // Snapshot available funds
+    const available: Record<string, number> = {};
+    for (const c of def.costs) {
+      if (!(c.currency in available)) {
+        available[c.currency] = this.wallet.get(c.currency);
+      }
+    }
+
+    let count = 0;
+    for (let i = 0; i < remaining; i++) {
+      const lvl = rt.level + i;
+      let canAfford = true;
+      const levelCosts: { currency: string; amount: number }[] = [];
+
+      for (const c of def.costs) {
+        if (!this.isCostActive(c, lvl)) continue;
+        const cost = scaledCost(c.base, c.scale, lvl);
+        levelCosts.push({ currency: c.currency, amount: cost });
+        if (available[c.currency] < cost) { canAfford = false; break; }
+      }
+      if (!canAfford) break;
+      for (const lc of levelCosts) available[lc.currency] -= lc.amount;
+      count++;
+    }
+    return count;
+  }
+
   // ── Mutation ──────────────────────────────────────────────────
 
   /**
@@ -164,7 +247,7 @@ export class UpgradeService {
         .map(c => `${cur(c.currency, rt.currentCosts[c.currency], '')} (have ${cur(c.currency, Math.floor(this.wallet.get(c.currency)), '')})`)
         .join(', ');
       const name = (UPGRADE_FLAVOR as Record<string, { name: string }>)[id]?.name ?? id;
-      this.log.log(`Not enough resources for ${name}. Need: ${needs}.`, 'warn');
+      this.log.log(LOG_MSG.SYSTEM.UPGRADE_CANT_AFFORD(name, needs), 'warn');
       return false;
     }
 
@@ -180,10 +263,24 @@ export class UpgradeService {
     }
 
     const name = (UPGRADE_FLAVOR as Record<string, { name: string }>)[id]?.name ?? id;
-    this.log.log(`${name} upgraded to Lv.${rt.level}.`, 'success');
+    this.log.log(LOG_MSG.SYSTEM.UPGRADE_SUCCESS(name, rt.level), 'success');
     this.syncRelicCosts();
     this.changed$.next(id);
     return true;
+  }
+
+  /**
+   * Attempt to purchase up to `count` levels of the given upgrade.
+   * Buys one at a time; stops when the player can no longer afford or hits max.
+   * Returns the number of levels actually purchased.
+   */
+  buyMulti(id: string, count: number): number {
+    let bought = 0;
+    for (let i = 0; i < count; i++) {
+      if (!this.buy(id)) break;
+      bought++;
+    }
+    return bought;
   }
 
   // ── Save / load ───────────────────────────────────────────────

@@ -1,0 +1,65 @@
+<div class="artificer-minigame">
+
+  <!-- ── Etching Level Selector ──────────── -->
+  <div class="etching-level-row" *ngIf="extendedEtchingLevel > 0">
+    <button class="elvl-btn" [disabled]="selectedEtchingLevel <= 0" (click)="decreaseEtchingLevel()">[-]</button>
+    <span class="elvl-label">Etching Level: <span class="elvl-num">{{ selectedEtchingLevel }}</span> ({{ sequenceLength }} symbols)</span>
+    <button class="elvl-btn" [disabled]="selectedEtchingLevel >= maxEtchingLevel" (click)="increaseEtchingLevel()">[+]</button>
+  </div>
+
+  <!-- ── Status ──────────────────────────── -->
+  <div class="mg-status">
+    <pre class="mg-message">{{ message }}</pre>
+  </div>
+
+  <div class="mg-divider">+----------+</div>
+
+  <!-- ── Symbol buttons ─────────────────── -->
+  <div class="symbol-grid">
+    <button
+      *ngFor="let sym of symbols; let i = index"
+      class="symbol-btn"
+      [class.flash]="activeFlashIdx === i"
+      [class.disabled]="phase !== 'input' && phase !== 'retry'"
+      (click)="selectSymbol(i)"
+      [disabled]="phase !== 'input' && phase !== 'retry'"
+    >
+      <span class="sym-icon" [style.color]="symbolColors[sym]">{{ symbolLabels[sym] }}</span>
+    </button>
+  </div>
+
+  <!-- ── Progress ──────────────────────── -->
+  <div class="progress-row" *ngIf="phase === 'input' || phase === 'retry'">
+    <span class="progress-label">Progress:</span>
+    <span class="progress-dots">
+      <span *ngFor="let s of sequence; let i = index"
+            class="dot"
+            [class.filled]="i < playerInput.length"
+            [class.correct]="i < playerInput.length && playerInput[i] === s"
+            [class.wrong]="wrongPositions.has(i)">●</span>
+    </span>
+  </div>
+
+  <div class="mg-divider">+----------+</div>
+
+  <!-- ── Controls ──────────────────────── -->
+  <div class="mg-controls">
+    <button class="mg-btn start" *ngIf="phase === 'idle' || phase === 'result'" (click)="startRound()" [disabled]="!canAfford || autoSolveEnabled">
+      {{ phase === 'result' ? '[ ETCH AGAIN ]' : '[ BEGIN ETCHING ]' }}
+    </button>
+    <span class="mg-cost" *ngIf="phase === 'idle' || phase === 'result'">
+      Cost: {{ manaCost }}<span [style.color]="manaColor">{{ manaSymbol }}</span>
+    </span>
+  </div>
+
+  <!-- ── Auto-solve toggle ──────────────── -->
+  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
+    <button class="auto-solve-btn"
+            [class.as-on]="autoSolveEnabled"
+            (click)="toggleAutoSolve()">
+      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
+    </button>
+  </div>
+
+</div>
+
