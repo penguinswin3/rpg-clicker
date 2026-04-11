@@ -45,7 +45,7 @@ export class StatisticsComponent implements OnInit, OnDestroy {
   /** Currency IDs in the same order as the wallet panel. */
   readonly currencyIds: string[] = this.wallet.currencies.map(c => c.id);
 
-  readonly characterIds = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief', 'artisan', 'necromancer'];
+  readonly characterIds = ['fighter', 'ranger', 'apothecary', 'culinarian', 'thief', 'artisan', 'necromancer', 'merchant', 'artificer', 'chimeramancer'];
   readonly characterNames: Record<string, string> = {
     fighter: CHARACTER_FLAVOR.FIGHTER.name,
     ranger: CHARACTER_FLAVOR.RANGER.name,
@@ -54,6 +54,9 @@ export class StatisticsComponent implements OnInit, OnDestroy {
     thief: CHARACTER_FLAVOR.THIEF.name,
     artisan: CHARACTER_FLAVOR.ARTISAN.name,
     necromancer: CHARACTER_FLAVOR.NECROMANCER.name,
+    merchant: CHARACTER_FLAVOR.MERCHANT.name,
+    artificer: CHARACTER_FLAVOR.ARTIFICER.name,
+    chimeramancer: CHARACTER_FLAVOR.CHIMERAMANCER.name,
   };
 
   ngOnInit(): void {
@@ -191,13 +194,27 @@ export class StatisticsComponent implements OnInit, OnDestroy {
       || (this.snap.culinarianMinigame.wins + this.snap.culinarianMinigame.losses) > 0
       || (this.snap.thiefMinigame.successfulHeists + this.snap.thiefMinigame.failedHeists) > 0
       || this.snap.artisanMinigame.appraisalsCompleted > 0
-      || this.snap.necromancerMinigame.ritualsCompleted > 0;
+      || this.snap.necromancerMinigame.ritualsCompleted > 0
+      || (this.snap.merchantMinigame?.itemsPurchased ?? 0) > 0;
+  }
+
+  // ── Playtime ──────────────────────────────
+
+  get playtimeFormatted(): string {
+    const total = this.snap.playtimeSeconds ?? 0;
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
   }
 
   get hasNoStats(): boolean {
     return this.activeCurrencies.length === 0
       && this.milestoneEntries.length === 0
       && !this.hasAnyPresses
-      && !this.hasAnyMinigameStats;
+      && !this.hasAnyMinigameStats
+      && (this.snap.playtimeSeconds ?? 0) === 0;
   }
 }

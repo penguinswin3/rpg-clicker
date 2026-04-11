@@ -305,8 +305,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                   <span class="hero-btn-label">[ >>> Study ]</span>
                 </button>
                 <div class="artificer-insight-bar">
-                  <div class="insight-fill" [style.width.%]="(artificerInsight / 8) * 100"></div>
-                  <span class="insight-text">{{ artificerInsight }} / 8</span>
+                  <div class="insight-fill" [style.width.%]="(artificerInsight / artificerMaxInsight) * 100"></div>
+                  <span class="insight-text">{{ artificerInsight }} / {{ artificerMaxInsight }}</span>
                 </div>
                 <button class="hero-btn necro-btn artificer-btn"
                         [class.necro-active]="artificerActiveButton === 'reflect'"
@@ -438,10 +438,10 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                   {{ familiarsPaused ? '[ RESUME ]' : '[ PAUSE ]' }}
                 </button>
                 <span class="familiar-count-info" *ngIf="upgrades.level('MIND_AND_SOUL') > 0">
-                  ×{{ 1 + upgrades.level('MIND_AND_SOUL') }} each
+                  <span class="familiar-power-label">Power</span> ×{{ 1 + upgrades.level('MIND_AND_SOUL') }}
                 </span>
                 <button class="familiar-btn summon-all-btn"
-                        *ngIf="(activeCharacterId === 'necromancer' || activeCharacterId === 'artificer') && spreadingSoulUnlocked"
+                        *ngIf="spreadingSoulUnlocked"
                         [disabled]="!canSummonAll"
                         (click)="summonAll()">
                   [ SUMMON ALL ]
@@ -542,6 +542,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
     [artisanTimerAnimStyle]="artisanTimerAnimStyle"
     [necromancerActiveButton]="necromancerActiveButton"
     [charShine]="charShine"
+    [artificerInsight]="artificerInsight"
+    [artificerMaxInsight]="artificerMaxInsight"
     (unassignAllJacks)="unassignAllJacks()" />
 </div>
 

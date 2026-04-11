@@ -171,6 +171,22 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
     if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
+        // If a heist is already active, compute target angles so auto-solve
+        // can resume the in-progress crack instead of waiting for the next heist.
+        if (this.heistActive) {
+          if (this.autoSolveGoodMode) {
+            this.goodAutoPhase = 'probe1';
+            this.autoSolveAngles = [0, 30];
+            this.autoSolveAngleIdx = 0;
+          } else {
+            const attempts = this.maxDetection - this.detection;
+            this.autoSolveAngles = [];
+            for (let i = 0; i < attempts; i++) {
+              this.autoSolveAngles.push((360 / attempts) * i);
+            }
+            this.autoSolveAngleIdx = 0;
+          }
+        }
       } else {
         this.stopAutoSolve();
       }
@@ -478,9 +494,11 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
    * Must guess specific angles in order within tolerance.
    * On a matching angle: advance the step.
    * On a non-matching angle: do nothing (don't reset).
-   * The streak is only reset when a heist FAILS (see attemptCrack).
+   * Progress persists across games regardless of heist outcome.
    */
   private trackGold2Angle(): void {
+    if (this.gold2BeadAlreadyFound) return;
+
     const progress = (this.gold2Progress as { step?: number }) ?? {};
     let step = progress.step ?? 0;
     const sequence = GOLD2_CONDITIONS.THIEF_ANGLE_SEQUENCE;
@@ -505,22 +523,14 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
         this.gold2BeadFound.emit();
         this.gold2ProgressChange.emit({ step: 0 });
       } else {
-        if (this.gemHunterLevel >= 1 && !this.gold2BeadAlreadyFound) {
+        if (this.gemHunterLevel >= 1) {
           const msgs = GOLD2_STEP_MESSAGES['thief'];
           this.log.log(msgs[(step - 1) % msgs.length], 'rare');
         }
         this.gold2ProgressChange.emit({ step });
       }
     }
-    // Non-matching angle: do nothing — streak preserved.
-    // Only reset on heist failure (handled in attemptCrack).
-  }
-
-  /** Reset the gold-2 streak on heist failure. */
-  private resetGold2OnFailure(): void {
-    if (!this.gold2Awarded) {
-      this.gold2ProgressChange.emit({ step: 0 });
-    }
+    // Non-matching angle: do nothing — progress preserved across games.
   }
 
   // ── Dial SVG helpers ────────────────────

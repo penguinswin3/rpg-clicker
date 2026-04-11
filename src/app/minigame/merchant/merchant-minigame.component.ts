@@ -55,8 +55,8 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   @Input() gold2Progress: unknown = {};
-  @Output() gold2ProgressChange = new EventEmitter<{ charId: string; progress: unknown }>();
-  @Output() gold2BeadFound = new EventEmitter<string>();
+  @Output() gold2ProgressChange = new EventEmitter<unknown>();
+  @Output() gold2BeadFound = new EventEmitter<void>();
   @Input() gold2BeadFoundState = false;
   @Input() gemHunterLevel = 0;
 
@@ -180,10 +180,32 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
     return total;
   }
 
-  /** Items visible based on Diversified Portfolio level. */
+  /**
+   * Maps kobold-part currency IDs to the minimum STRONGER_KOBOLDS level
+   * required before the item appears in the stock market.
+   * kobold-ear (tier 0) is always available once the portfolio tier unlocks it.
+   */
+  private readonly koboldTierRequirements: Record<string, number> = {
+    'kobold-ear':     0,
+    'kobold-tongue':  1,
+    'kobold-hair':    2,
+    'kobold-fang':    3,
+    'kobold-brain':   4,
+    'kobold-feather': 5,
+    'kobold-pebble':  6,
+    'kobold-heart':   7,
+  };
+
+  /** Items visible based on Diversified Portfolio level and kobold tier unlock. */
   get visibleItems(): StockMarketItem[] {
     const portfolioLevel = this.upgrades.level('DIVERSIFIED_PORTFOLIO');
-    return this.items.filter(item => item.tier <= portfolioLevel);
+    const strongerKobolds = this.upgrades.level('STRONGER_KOBOLDS');
+    return this.items.filter(item => {
+      if (item.tier > portfolioLevel) return false;
+      const koboldReq = this.koboldTierRequirements[item.currencyId];
+      if (koboldReq !== undefined && strongerKobolds < koboldReq) return false;
+      return true;
+    });
   }
 
   /** How many auto-buyers are available based on gold beads. */
@@ -214,6 +236,7 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
     this.wallet.remove('gold', totalCost);
     this.wallet.add(item.currencyId, qty);
     this.stats.trackCurrencyGain(item.currencyId, qty);
+    this.stats.trackMerchantPurchase(qty, totalCost);
 
     this.checkRareUnlock(item.currencyId);
 
@@ -301,6 +324,7 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
       this.wallet.remove('gold', totalCost);
       this.wallet.add(item.currencyId, qty);
       this.stats.trackCurrencyGain(item.currencyId, qty);
+      this.stats.trackMerchantPurchase(qty, totalCost);
       this.checkRareUnlock(item.currencyId);
     }
     this.cdr.markForCheck();
@@ -338,19 +362,19 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
       step++;
       if (step >= seq.length) {
         // Sequence complete — award the bead!
-        this.gold2BeadFound.emit('merchant');
-        this.gold2ProgressChange.emit({ charId: 'merchant', progress: { step: 0 } });
+        this.gold2BeadFound.emit();
+        this.gold2ProgressChange.emit({ step: 0 });
       } else {
         if (this.gemHunterLevel >= 1 && !this.gold2BeadFoundState) {
           const msgs = GOLD2_STEP_MESSAGES['merchant'];
           this.log.log(msgs[(step - 1) % msgs.length], 'rare');
         }
-        this.gold2ProgressChange.emit({ charId: 'merchant', progress: { step } });
+        this.gold2ProgressChange.emit({ step });
       }
     } else {
       // Wrong purchase — reset sequence
       if (step > 0) {
-        this.gold2ProgressChange.emit({ charId: 'merchant', progress: { step: 0 } });
+        this.gold2ProgressChange.emit({ step: 0 });
       }
     }
   }

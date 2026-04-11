@@ -147,6 +147,12 @@ $silver-blue: #7eb8d4;
   &.correct {
     color: #5f5;
   }
+  &.wrong {
+    color: #f55;
+  }
+  &.wrong.correct {
+    color: #ff9;
+  }
 }
 
 .mg-controls {

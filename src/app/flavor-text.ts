@@ -177,7 +177,6 @@ export const UPGRADE_FLAVOR = {
 
   EXTENDED_ETCHING:         { name: 'Extended Etching',          desc: '+1 symbol to the Etching sequence, ×2 constructs per additional symbol' },
   SECOND_CHANCE:            { name: 'Second Chance',             desc: 'Allows one retry on a failed Etching round' },
-  ETCHING_MASTERY:          { name: 'Etching Mastery',           desc: 'Awards bonus resources equal to (times selected × level) per Etching symbol' },
 
   // Chimeramancer
   BIGGER_THREADS:  { name: 'Bigger Threads',  desc: '+1 Life Thread per Stitch click per level' },
@@ -549,6 +548,7 @@ export const HERO_STATS_FLAVOR = {
     WARD_XP_COST:     'Ward XP Cost   :',
     SWITCH_RANGE:     'Switch Range   :',
     GRAVE_LOOT_CHANCE:'Grave Loot     :',
+    FAMILIAR_POWER:   'Familiar Power :',
   },
   MERCHANT: {
     GOODS_PER_CLICK:  'Goods Per Click  :',
@@ -563,7 +563,7 @@ export const HERO_STATS_FLAVOR = {
     MANA_PER_REFLECT: 'Max Mana / Ref :',
     INSIGHT_CONSUMED: 'Consumed Range :',
     AMPLIFIED_BONUS:  'Amplified Bonus:',
-    EXCESS_INSIGHT:   'Excess Insight :',
+    EXCESS_INSIGHT:   'Excess Insight : +',
   },
   CHIMERAMANCER: {
     THREAD_PER_CLICK: 'Thread / Stitch:',
@@ -643,7 +643,9 @@ export const MINIGAME_MSG = {
     IDLE:         'Repeat the flashing symbols!\nConcentrate...',
     ROUND_START:  (len: number) => `${len}-symbol sequence. Watch carefully!`,
     SUCCESS:      'Etching complete! Constructs forged.',
+    SUCCESS_WITH_MISTAKES: 'Etching complete — but with errors.',
     FAIL:         'Wrong symbol — Etching failed!',
+    WRONG:        'Wrong symbol! Try again...',
     RETRY:        'Second Chance! Try again...',
   },
 
@@ -901,6 +903,7 @@ export const LOG_MSG = {
     CONSTRUCT_UNLOCKED:      'Constructs discovered! A new currency!',
     ETCHING_SUCCESS:         (constructs: string, xp: string) => `Etching complete! (${constructs}, ${xp})`,
     ETCHING_FAIL:            'Etching failed — wrong symbol!',
+    ETCHING_WRONG:           'Wrong symbol — keep going!',
     ETCHING_RETRY:           'Second Chance activated — try again!',
   },
 

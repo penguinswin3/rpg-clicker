@@ -61,12 +61,18 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
   resultMessage = '';
   usedRetry = false;
 
+  /** Positions where the player made a wrong attempt (marked visually). */
+  wrongPositions = new Set<number>();
+
   // Gold-2 bead: track consecutive intentional fail streak
   private failStreak = 0;
-  private failSelections: number[] = [];
 
   private showTimer: ReturnType<typeof setTimeout> | null = null;
   private autoSolveTimer: ReturnType<typeof setInterval> | null = null;
+
+  // ── Mana cost display (formatted) ──────────────────────────
+  readonly manaSymbol = (CURRENCY_FLAVOR as Record<string, { symbol: string }>)['mana']?.symbol ?? '?';
+  readonly manaColor  = (CURRENCY_FLAVOR as Record<string, { color: string }>)['mana']?.color ?? '#ccc';
 
   get sequenceLength(): number {
     return ARTIFICER_MG.BASE_SEQUENCE_LENGTH + this.selectedEtchingLevel;
@@ -149,6 +155,7 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
     }
     this.playerInput = [];
     this.usedRetry = false;
+    this.wrongPositions = new Set<number>();
     this.message = MINIGAME_MSG.ARTIFICER.ROUND_START(len);
     this.phase = 'showing';
     this.cdr.markForCheck();
@@ -183,7 +190,6 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
     if (this.phase !== 'input' && this.phase !== 'retry') return;
 
     this.playerInput.push(idx);
-    this.failSelections.push(idx);
 
     const pos = this.playerInput.length - 1;
     if (this.playerInput[pos] !== this.sequence[pos]) {
@@ -203,11 +209,14 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   private handleFail(): void {
+    const pos = this.playerInput.length - 1;
+    const wrongIdx = this.playerInput[pos];
+
     const secondChanceLevel = this.upgrades.level('SECOND_CHANCE');
     if (secondChanceLevel >= 1 && !this.usedRetry) {
+      // Second Chance: forgive first wrong — don't mark, just retry
       this.usedRetry = true;
       this.playerInput.pop();
-      this.failSelections.pop();
       this.message = MINIGAME_MSG.ARTIFICER.RETRY;
       this.log.log(LOG_MSG.MG_ARTIFICER.ETCHING_RETRY, 'success');
       this.phase = 'retry';
@@ -215,16 +224,15 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
       return;
     }
 
-    this.phase = 'result';
-    this.resultMessage = MINIGAME_MSG.ARTIFICER.FAIL;
-    this.message = MINIGAME_MSG.ARTIFICER.FAIL;
-    this.stats.trackArtificerEtching(false);
-    this.log.log(LOG_MSG.MG_ARTIFICER.ETCHING_FAIL, 'warn');
-    if (this.showTimer) { clearTimeout(this.showTimer); this.showTimer = null; }
+    // Mark wrong answer but let the player continue
+    this.wrongPositions = new Set(this.wrongPositions).add(pos);
+    this.playerInput.pop();
 
-    // Gold-2 bead: check if the fail matches the intentional pattern
-    this.checkGold2Fail();
+    // Gold-2: check intentional fail pattern per wrong answer
+    this.checkGold2Wrong(wrongIdx);
 
+    this.message = MINIGAME_MSG.ARTIFICER.WRONG + ` (${this.playerInput.length}/${this.sequence.length})`;
+    this.log.log(LOG_MSG.MG_ARTIFICER.ETCHING_WRONG, 'warn');
     this.cdr.markForCheck();
   }
 
@@ -232,10 +240,13 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
     this.phase = 'result';
     if (this.showTimer) { clearTimeout(this.showTimer); this.showTimer = null; }
 
-    // Reset gold-2 fail streak on success
-    this.failStreak = 0;
-    this.failSelections = [];
-    this.emitGold2Progress();
+    const hadMistakes = this.wrongPositions.size > 0;
+
+    // Reset gold-2 fail streak on clean success
+    if (!hadMistakes) {
+      this.failStreak = 0;
+      this.emitGold2Progress();
+    }
 
     const extendedLevel = this.selectedEtchingLevel;
     let constructs = ARTIFICER_MG.BASE_CONSTRUCT_REWARD;
@@ -243,23 +254,6 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
       constructs *= ARTIFICER_MG.EXTENDED_ETCHING_REWARD_MULTIPLIER;
     }
 
-    // Etching Mastery: bonus resources equal to (times selected * level) per symbol
-    const masteryLevel = this.upgrades.level('ETCHING_MASTERY');
-    if (masteryLevel > 0) {
-      // Count how many times each symbol was selected in the sequence
-      const counts: Record<number, number> = {};
-      for (const s of this.sequence) {
-        counts[s] = (counts[s] ?? 0) + 1;
-      }
-      for (const [symIdx, count] of Object.entries(counts)) {
-        const bonus = count * masteryLevel;
-        const currencyId = this.symbols[parseInt(symIdx)];
-        if (bonus > 0 && currencyId) {
-          this.wallet.add(currencyId, Math.min(999, bonus));
-          this.stats.trackCurrencyGain(currencyId, Math.min(999, bonus));
-        }
-      }
-    }
 
     const bm = this.wallet.getBeadMultiplier('artificer');
     constructs = constructs * bm;
@@ -275,12 +269,12 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
     const xp = ARTIFICER_MG.XP_REWARD * bm;
     this.wallet.add('xp', xp);
     this.stats.trackCurrencyGain('xp', xp);
-    this.stats.trackArtificerEtching(true);
+    this.stats.trackArtificerEtching(!hadMistakes);
     this.stats.trackManualSidequestClear('artificer');
 
-    this.resultMessage = MINIGAME_MSG.ARTIFICER.SUCCESS;
-    this.message = MINIGAME_MSG.ARTIFICER.SUCCESS;
-    this.log.log(LOG_MSG.MG_ARTIFICER.ETCHING_SUCCESS(cur('construct', constructs), cur('xp', xp)), 'success');
+    this.resultMessage = hadMistakes ? MINIGAME_MSG.ARTIFICER.SUCCESS_WITH_MISTAKES : MINIGAME_MSG.ARTIFICER.SUCCESS;
+    this.message = this.resultMessage;
+    this.log.log(LOG_MSG.MG_ARTIFICER.ETCHING_SUCCESS(cur('construct', constructs), cur('xp', xp)), hadMistakes ? 'default' : 'success');
 
     // Gold-1 bead chance
     const manualClears = this.stats.getManualSidequestClears('artificer');
@@ -291,31 +285,28 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
     this.cdr.markForCheck();
   }
 
-  private checkGold2Fail(): void {
+  /** Check if a wrong selection matches the gold-2 intentional fail pattern. */
+  private checkGold2Wrong(wrongSymbolIdx: number): void {
     if (this.gold2BeadAlreadyFound) return;
 
     const seq = GOLD2_CONDITIONS.ARTIFICER_FAIL_SEQUENCE;
     const neededStreak = GOLD2_CONDITIONS.ARTIFICER_FAIL_STREAK;
 
-    // Check if first selection matches the expected alternating pattern
-    if (this.failSelections.length >= 1) {
-      const expected = seq[this.failStreak % seq.length];
-      if (this.failSelections[0] === expected) {
-        this.failStreak++;
-        if (this.gemHunterLevel > 0 && GOLD2_CONDITIONS.LOG_PROGRESS) {
-          const msgs = GOLD2_STEP_MESSAGES['artificer'] ?? [];
-          const msg = msgs[this.failStreak % msgs.length] ?? 'Progress…';
-          this.log.log(msg, 'rare');
-        }
-        if (this.failStreak >= neededStreak) {
-          this.gold2BeadFound.emit();
-          this.failStreak = 0;
-        }
-      } else {
+    const expected = seq[this.failStreak % seq.length];
+    if (wrongSymbolIdx === expected) {
+      this.failStreak++;
+      if (this.gemHunterLevel > 0 && GOLD2_CONDITIONS.LOG_PROGRESS) {
+        const msgs = GOLD2_STEP_MESSAGES['artificer'] ?? [];
+        const msg = msgs[this.failStreak % msgs.length] ?? 'Progress…';
+        this.log.log(msg, 'rare');
+      }
+      if (this.failStreak >= neededStreak) {
+        this.gold2BeadFound.emit();
         this.failStreak = 0;
       }
+    } else {
+      this.failStreak = 0;
     }
-    this.failSelections = [];
     this.emitGold2Progress();
   }
 
@@ -365,6 +356,4 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
     }
   }
 }
-
-
 

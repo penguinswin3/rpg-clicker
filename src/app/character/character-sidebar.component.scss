@@ -55,6 +55,7 @@ $cyan: #0ff;
   color: #aaa;
   font-size: 11px;
   letter-spacing: 0.08em;
+  margin-left: auto;
 }
 
 // ── Expanded wrapper (fills remaining height, flex column) ─────
@@ -264,6 +265,18 @@ $cyan: #0ff;
   opacity: 1;
 }
 
+// Artificer insight fill overlay (expanded card)
+.artificer-insight-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(to right, rgba(126, 184, 212, 0.25), rgba(126, 184, 212, 0.10));
+  transition: width 0.3s ease;
+}
+
 .char-header {
   display: flex;
   align-items: center;
@@ -381,6 +394,18 @@ $cyan: #0ff;
 .necro-ward-compact {
   right: 0;
   background: linear-gradient(to left, rgba(160, 60, 230, 0.30), transparent);
+}
+
+// Artificer insight fill overlay (collapsed)
+.artificer-insight-compact {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(to right, rgba(126, 184, 212, 0.30), rgba(126, 184, 212, 0.08));
+  transition: width 0.3s ease;
 }
 
 .compact-initial {

@@ -35,7 +35,8 @@
       <span *ngFor="let s of sequence; let i = index"
             class="dot"
             [class.filled]="i < playerInput.length"
-            [class.correct]="i < playerInput.length && playerInput[i] === s">●</span>
+            [class.correct]="i < playerInput.length && playerInput[i] === s"
+            [class.wrong]="wrongPositions.has(i)">●</span>
     </span>
   </div>
 
@@ -47,7 +48,7 @@
       {{ phase === 'result' ? '[ ETCH AGAIN ]' : '[ BEGIN ETCHING ]' }}
     </button>
     <span class="mg-cost" *ngIf="phase === 'idle' || phase === 'result'">
-      Cost: {{ manaCost }} ᳱ
+      Cost: {{ manaCost }}<span [style.color]="manaColor">{{ manaSymbol }}</span>
     </span>
   </div>
 

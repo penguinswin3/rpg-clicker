@@ -333,12 +333,12 @@
       color: #00fff8;
       border-color: #00fff8;
       animation: bead-pulse-blue 1.2s ease-in-out infinite;
-      box-shadow: 0 0 8px rgba(0, 255, 248, 0.4);
-      text-shadow: 0 0 6px rgba(0, 255, 248, 0.6);
+      box-shadow: 0 0 12px rgba(0, 255, 248, 0.5), 0 0 24px rgba(0, 255, 248, 0.2);
+      text-shadow: 0 0 8px rgba(0, 255, 248, 0.7);
 
       &:hover {
-        box-shadow: 0 0 14px rgba(0, 255, 248, 0.6);
-        text-shadow: 0 0 10px rgba(0, 255, 248, 0.8);
+        box-shadow: 0 0 18px rgba(0, 255, 248, 0.7), 0 0 30px rgba(0, 255, 248, 0.3);
+        text-shadow: 0 0 12px rgba(0, 255, 248, 0.9);
       }
     }
 
@@ -371,12 +371,12 @@
       color: #ffcc00;
       border-color: #ffcc00;
       animation: bead-pulse-gold 1.2s ease-in-out infinite;
-      box-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
-      text-shadow: 0 0 6px rgba(255, 204, 0, 0.6);
+      box-shadow: 0 0 12px rgba(255, 204, 0, 0.5), 0 0 24px rgba(255, 204, 0, 0.2);
+      text-shadow: 0 0 8px rgba(255, 204, 0, 0.7);
 
       &:hover {
-        box-shadow: 0 0 14px rgba(255, 204, 0, 0.6);
-        text-shadow: 0 0 10px rgba(255, 204, 0, 0.8);
+        box-shadow: 0 0 18px rgba(255, 204, 0, 0.7), 0 0 30px rgba(255, 204, 0, 0.3);
+        text-shadow: 0 0 12px rgba(255, 204, 0, 0.9);
       }
     }
 
@@ -397,13 +397,13 @@
 }
 
 @keyframes bead-pulse-blue {
-  0%, 100% { box-shadow: 0 0 6px rgba(0, 255, 248, 0.3); }
-  50%      { box-shadow: 0 0 16px rgba(0, 255, 248, 0.7), 0 0 24px rgba(0, 255, 248, 0.3); }
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 248, 0.3), 0 0 20px rgba(0, 255, 248, 0.1); }
+  50%      { box-shadow: 0 0 22px rgba(0, 255, 248, 0.8), 0 0 36px rgba(0, 255, 248, 0.35); }
 }
 
 @keyframes bead-pulse-gold {
-  0%, 100% { box-shadow: 0 0 6px rgba(255, 204, 0, 0.3); }
-  50%      { box-shadow: 0 0 16px rgba(255, 204, 0, 0.7), 0 0 24px rgba(255, 204, 0, 0.3); }
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 204, 0, 0.3), 0 0 20px rgba(255, 204, 0, 0.1); }
+  50%      { box-shadow: 0 0 22px rgba(255, 204, 0, 0.8), 0 0 36px rgba(255, 204, 0, 0.35); }
 }
 
 // ── Bead detail popup ────────────────────────────────────────
@@ -937,7 +937,22 @@
 .familiar-count-info {
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.65rem;
-  color: #7eb8d4;
+  color: #3bf184;
+  border: 1px solid rgba(59, 241, 132, 0.35);
+  padding: 0.1rem 0.4rem;
+  border-radius: 2px;
+  background: rgba(59, 241, 132, 0.06);
+  box-shadow: 0 0 6px rgba(59, 241, 132, 0.15);
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+.familiar-power-label {
+  color: rgba(59, 241, 132, 0.6);
+  font-weight: normal;
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 // ── Crew Row: Jacks + Familiars side by side ────────────────
@@ -1130,8 +1145,8 @@
 // ── Toggle button styling ──────────────────────────────────
 .wholesale-toggle-btn {
   background: #0a0a0a;
-  color: #555;
-  border: 1px solid #333;
+  color: #777;
+  border: 1px solid #444;
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
@@ -1140,8 +1155,8 @@
   transition: background 0.1s, color 0.1s, border-color 0.1s;
 
   &:hover {
-    border-color: #666;
-    color: #999;
+    border-color: #777;
+    color: #bbb;
   }
 
   &.wt-on {

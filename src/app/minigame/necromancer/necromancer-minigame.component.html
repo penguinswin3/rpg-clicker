@@ -18,7 +18,7 @@
       </button>
 
       <div class="cost-warn" *ngIf="!canStart">
-        Insufficient resources
+        {{ insufficientResourcesMsg }}
       </div>
     </div>
   </ng-container>
@@ -206,7 +206,7 @@
       [ RITUAL AGAIN ]
     </button>
     <div class="cost-warn" *ngIf="!canStart">
-      Insufficient resources
+      {{ insufficientResourcesMsg }}
     </div>
   </ng-container>
 

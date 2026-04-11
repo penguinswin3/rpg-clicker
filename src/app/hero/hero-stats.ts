@@ -8,7 +8,7 @@
 
 import { HeroStat } from '../character/character-sidebar.component';
 import { HERO_STATS_FLAVOR, CHARACTER_FLAVOR } from '../flavor-text';
-import { YIELDS, APOTH_MG, THIEF_MG, ARTISAN_MG, MERCHANT_MG, CHIMERAMANCER_YIELDS } from '../game-config';
+import { YIELDS, APOTH_MG, THIEF_MG, ARTISAN_MG, MERCHANT_MG, CHIMERAMANCER_YIELDS, FAMILIAR } from '../game-config';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { WalletService } from '../wallet/wallet.service';
 import { roundTo } from '../utils/mathUtils';
@@ -253,6 +253,12 @@ function buildNecromancerStats(ctx: HeroStatsContext): HeroStat[] {
     stats.push({ label: HERO_STATS_FLAVOR.NECROMANCER.GRAVE_LOOT_CHANCE, value: `${graveLootChance}%` });
   }
 
+  const mindAndSoulLevel = u.level('MIND_AND_SOUL');
+  if (mindAndSoulLevel > 0) {
+    const familiarPower = FAMILIAR.JACKS_PER_FAMILIAR + mindAndSoulLevel * FAMILIAR.MIND_AND_SOUL_PER_LEVEL;
+    stats.push({ label: HERO_STATS_FLAVOR.NECROMANCER.FAMILIAR_POWER, value: `×${familiarPower}`, color: '#3bf184' });
+  }
+
   return stats;
 }
 
@@ -297,7 +303,7 @@ function buildArtificerStats(ctx: HeroStatsContext): HeroStat[] {
 
   const stats: HeroStat[] = [
     { label: HERO_STATS_FLAVOR.ARTIFICER.ACTIVE_BUTTON, value: activeLabel },
-    { label: HERO_STATS_FLAVOR.ARTIFICER.INSIGHT_LEVEL, value: `${ctx.artificerInsight} / ${maxInsight}` },
+    // { label: HERO_STATS_FLAVOR.ARTIFICER.INSIGHT_LEVEL, value: `${ctx.artificerInsight} / ${maxInsight}` },
     { label: HERO_STATS_FLAVOR.ARTIFICER.INSIGHT_PER_CLICK, value: `${insightPerClick}` },
     { label: HERO_STATS_FLAVOR.ARTIFICER.MANA_PER_REFLECT, value: `${maxMana}` },
   ];
@@ -307,9 +313,9 @@ function buildArtificerStats(ctx: HeroStatsContext): HeroStat[] {
   if (amplifiedInsight > 0) {
     stats.push({ label: HERO_STATS_FLAVOR.ARTIFICER.AMPLIFIED_BONUS, value: `+${amplifiedInsight}` });
   }
-  if (arcaneIntellect > 0) {
-    stats.push({ label: HERO_STATS_FLAVOR.ARTIFICER.EXCESS_INSIGHT, value: `${excessAfterReflect}` });
-  }
+  // if (arcaneIntellect > 0) {
+  //   stats.push({ label: HERO_STATS_FLAVOR.ARTIFICER.EXCESS_INSIGHT, value: `${excessAfterReflect}` });
+  // }
   return stats;
 }
 

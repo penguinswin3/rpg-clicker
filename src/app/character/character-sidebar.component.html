@@ -39,6 +39,7 @@
         <div class="state-fill artisan-timer-fill" *ngIf="c.id === 'artisan' && isArtisanTimerActive" [ngStyle]="artisanTimerAnimStyle"></div>
         <div class="necro-half necro-defile" *ngIf="c.id === 'necromancer'" [class.necro-active-half]="necromancerActiveButton === 'defile'"></div>
         <div class="necro-half necro-ward" *ngIf="c.id === 'necromancer'" [class.necro-active-half]="necromancerActiveButton === 'ward'"></div>
+        <div class="artificer-insight-overlay" *ngIf="c.id === 'artificer'" [style.width.%]="(artificerInsight / artificerMaxInsight) * 100"></div>
 
         <div class="char-header">
           <span class="char-name" [style.color]="c.color">{{ c.name }}</span>
@@ -78,6 +79,7 @@
       <!-- Necromancer half-shade overlays in collapsed view -->
       <div class="necro-half-compact necro-defile-compact" *ngIf="c.id === 'necromancer'" [class.necro-active-half]="necromancerActiveButton === 'defile'"></div>
       <div class="necro-half-compact necro-ward-compact" *ngIf="c.id === 'necromancer'" [class.necro-active-half]="necromancerActiveButton === 'ward'"></div>
+      <div class="artificer-insight-compact" *ngIf="c.id === 'artificer'" [style.width.%]="(artificerInsight / artificerMaxInsight) * 100"></div>
       <span class="compact-initial" [style.color]="c.color">{{ c.name[0] }}</span>
       <span class="compact-pip">{{ c.id === activeId ? '*' : 'o' }}</span>
       <span class="compact-jacks" *ngIf="getJackCount(c.id) > 0">({{ getJackCount(c.id) }})</span>

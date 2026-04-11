@@ -6,8 +6,7 @@
  * ════════════════════════════════════════════════════════════
  */
 
-import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG, FIGHTER_MG, CHIMERAMANCER_YIELDS } from '../game-config';
-import { KOBOLD_VARIANTS } from '../flavor-text';
+import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG, CHIMERAMANCER_YIELDS } from '../game-config';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { roundTo } from '../utils/mathUtils';
 import {
@@ -156,19 +155,6 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   // ── Fighter relic: each jack also earns hireling gold ─────
   const fighterRelicGold = (hasFighterRelic && fighterJacks > 0) ? fighterJacks * autoGoldPerSec : 0;
 
-  // ── Kobold part rates from fighter jacks ─────────────────
-  // kobold-ear: 1 per kill, exempt from bead multiplier
-  const koboldEarPerSec = fighterJacks * FIGHTER_MG.KOBOLD_EAR_REWARD;
-  // Secondary drop: based on selected kobold level variant
-  const koboldVariantIdx = Math.min((ctx.selectedKoboldLevel ?? 1) - 1, KOBOLD_VARIANTS.length - 1);
-  const koboldVariant = KOBOLD_VARIANTS[koboldVariantIdx];
-  const gildedBladeLevel = u.level('GILDED_BLADE');
-  const koboldSecondaryRates: Record<string, number> = {};
-  if (koboldVariant.secondaryDrop && fighterJacks > 0) {
-    const drop = koboldVariant.secondaryDrop;
-    const effectiveChance = Math.min(100, drop.chance + gildedBladeLevel) / 100;
-    koboldSecondaryRates[drop.currencyId] = fighterJacks * effectiveChance * drop.amount * bm('fighter');
-  }
 
   // ── Thief rates ───────────────────────────────────────────
   // Instead of zeroing out while stunned (which causes flashing in the display),
@@ -329,15 +315,15 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
     'soul-stone':     roundTo((autoBuyGains['soul-stone'] ?? 0) + mrg('soul-stone'), 2),
     'synaptical-potion': roundTo(mrg('synaptical-potion'), 2),
     // ── Kobold parts ─────────────────────────────────────────────
-    // kobold-ear: 1 per kill, exempt from bead multiplier; secondary drops get bead mult
-    'kobold-ear':     roundTo(koboldEarPerSec + (autoBuyGains['kobold-ear'] ?? 0) + mrg('kobold-ear'), 2),
-    'kobold-tongue':  roundTo((koboldSecondaryRates['kobold-tongue'] ?? 0) + (autoBuyGains['kobold-tongue'] ?? 0) + mrg('kobold-tongue'), 2),
-    'kobold-hair':    roundTo((koboldSecondaryRates['kobold-hair'] ?? 0) + (autoBuyGains['kobold-hair'] ?? 0) + mrg('kobold-hair'), 2),
-    'kobold-fang':    roundTo((koboldSecondaryRates['kobold-fang'] ?? 0) + (autoBuyGains['kobold-fang'] ?? 0) + mrg('kobold-fang'), 2),
-    'kobold-brain':   roundTo((koboldSecondaryRates['kobold-brain'] ?? 0) + (autoBuyGains['kobold-brain'] ?? 0) + mrg('kobold-brain'), 2),
-    'kobold-feather': roundTo((koboldSecondaryRates['kobold-feather'] ?? 0) + (autoBuyGains['kobold-feather'] ?? 0) + mrg('kobold-feather'), 2),
-    'kobold-pebble':  roundTo((koboldSecondaryRates['kobold-pebble'] ?? 0) + (autoBuyGains['kobold-pebble'] ?? 0) + mrg('kobold-pebble'), 2),
-    'kobold-heart':   roundTo((koboldSecondaryRates['kobold-heart'] ?? 0) + (autoBuyGains['kobold-heart'] ?? 0) + mrg('kobold-heart'), 2),
+    // Kobold parts only come from the fighter minigame, not from jacks
+    'kobold-ear':     roundTo((autoBuyGains['kobold-ear'] ?? 0) + mrg('kobold-ear'), 2),
+    'kobold-tongue':  roundTo((autoBuyGains['kobold-tongue'] ?? 0) + mrg('kobold-tongue'), 2),
+    'kobold-hair':    roundTo((autoBuyGains['kobold-hair'] ?? 0) + mrg('kobold-hair'), 2),
+    'kobold-fang':    roundTo((autoBuyGains['kobold-fang'] ?? 0) + mrg('kobold-fang'), 2),
+    'kobold-brain':   roundTo((autoBuyGains['kobold-brain'] ?? 0) + mrg('kobold-brain'), 2),
+    'kobold-feather': roundTo((autoBuyGains['kobold-feather'] ?? 0) + mrg('kobold-feather'), 2),
+    'kobold-pebble':  roundTo((autoBuyGains['kobold-pebble'] ?? 0) + mrg('kobold-pebble'), 2),
+    'kobold-heart':   roundTo((autoBuyGains['kobold-heart'] ?? 0) + mrg('kobold-heart'), 2),
     'life-thread':    roundTo(chimeraJacks * calcChimeramancerThreadPerClick(CHIMERAMANCER_YIELDS.THREAD_PER_CLICK, u.level('BIGGER_THREADS')) * bm('chimeramancer') + calcSharperNeedlesThreadPerSec(u.level('SHARPER_NEEDLES'), u.level('LOOM_OF_LIFE')) * bm('chimeramancer'), 2),
   };
 }
@@ -483,7 +469,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   if (cFam   > 0) add('gold', 'Familiar (Culinarian)', -cFam * culGoldCost);
   if (effectiveThiefRate > 0 && ppLevel > 0) add('gold', 'Thief', effectiveThiefRate * avgDossierYield * ppLevel * bm('thief'));
   if (effectiveThiefFam  > 0 && ppLevel > 0) add('gold', 'Familiar (Thief)', effectiveThiefFam * avgDossierYield * ppLevel * bm('thief'));
-  if (vatGoldGain2 > 0) add('gold', 'Passive', vatGoldGain2 * bm('apothecary'));
+  if (vatGoldGain2 > 0) add('gold', 'Fermentation Vats', vatGoldGain2 * bm('apothecary'));
 
   // ── XP ────────────────────────────────────────────────────
   if (fJacks > 0) add('xp', 'Fighter', fJacks * xpPerBounty * bm('fighter'));
@@ -652,20 +638,6 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   if (artRefJacks > 0) add('mana', 'Artificer', artRefJacks * avgMana2 * bm('artificer'));
   if (artRefFam   > 0) add('mana', 'Familiar (Artificer)', artRefFam * avgMana2 * bm('artificer'));
 
-  // ── Kobold parts from fighter jacks ──────────────────────────
-  // kobold-ear: exempt from bead multiplier
-  if (fJacks > 0) add('kobold-ear', 'Fighter', fJacks * FIGHTER_MG.KOBOLD_EAR_REWARD);
-  if (fFam   > 0) add('kobold-ear', 'Familiar (Fighter)', fFam * FIGHTER_MG.KOBOLD_EAR_REWARD);
-  // Secondary drops: bead multiplied
-  const bdVariantIdx = Math.min((ctx.selectedKoboldLevel ?? 1) - 1, KOBOLD_VARIANTS.length - 1);
-  const bdVariant = KOBOLD_VARIANTS[bdVariantIdx];
-  const bdGildedLevel = u.level('GILDED_BLADE');
-  if (bdVariant.secondaryDrop) {
-    const drop = bdVariant.secondaryDrop;
-    const chance = Math.min(100, drop.chance + bdGildedLevel) / 100;
-    if (fJacks > 0) add(drop.currencyId, 'Fighter', fJacks * chance * drop.amount * bm('fighter'));
-    if (fFam   > 0) add(drop.currencyId, 'Familiar (Fighter)', fFam * chance * drop.amount * bm('fighter'));
-  }
 
   // ── Chimeramancer ─────────────────────────────────────────────
   const chThreadPerJack = calcChimeramancerThreadPerClick(CHIMERAMANCER_YIELDS.THREAD_PER_CLICK, u.level('BIGGER_THREADS')) * bm('chimeramancer');

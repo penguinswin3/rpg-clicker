@@ -295,6 +295,11 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
       const necro = this.unlockedCharacters.find(c => c.id === 'necromancer');
       if (necro) return necro.color;
     }
+    // Apothecary sub-sources
+    if (['fermentation'].some(k => lower.includes(k))) {
+      const apoth = this.unlockedCharacters.find(c => c.id === 'apothecary');
+      if (apoth) return apoth.color;
+    }
     return '#aaa';
   }
 }

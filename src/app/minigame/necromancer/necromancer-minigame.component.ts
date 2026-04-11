@@ -206,6 +206,29 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
       && this.xp         >= this.cfg.XP_COST;
   }
 
+  /** Build a message listing which resources are insufficient and by how much. */
+  get insufficientResourcesMsg(): string {
+    const walletAmounts: Record<string, number> = {
+      gemstone:  this.gemstones,
+      bone:      this.bones,
+      brimstone: this.brimstone,
+      beast:     this.beast,
+      xp:        this.xp,
+    };
+    const missing: string[] = [];
+    for (const c of this.costs) {
+      const have = walletAmounts[c.id] ?? 0;
+      if (have < c.amount) {
+        const need = c.amount - have;
+        const flavor = this.currencyFlavor[c.id];
+        missing.push(`${need}${flavor?.symbol ?? c.id}`);
+      }
+    }
+    return missing.length > 0
+      ? `Need ${missing.join(', ')}`
+      : 'Insufficient resources';
+  }
+
   /** Whether the player has completed the full cycle back to start. */
   get pathComplete(): boolean {
     return this.selectedPath.length > this.nodes.length && this.ritualDone;
@@ -392,7 +415,7 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
     if (this.canStart) {
       this.startRitual();
     } else {
-      this.lastMsg = 'Insufficient resources to begin the ritual.';
+      this.lastMsg = this.insufficientResourcesMsg;
       this.msgClass = 'msg-bad';
       this.cdr.markForCheck();
     }

@@ -155,12 +155,12 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'xp',                 base: 150000,   fromCount: 23, untilCount: 24 },  // Jack 24
       { currency: 'soul-stone',         base: 250,   fromCount: 24, untilCount: 25 },  // Jack 25
       { currency: 'illicit-goods',      base: 500,   fromCount: 25, untilCount: 26 },  // Jack 26
-      { currency: 'monster-trophy',     base: 50,    fromCount: 26, untilCount: 27 },  // Jack 27
-      { currency: 'forbidden-tome',     base: 50,    fromCount: 27, untilCount: 28 },  // Jack 28
-      { currency: 'magical-implement',  base: 50,    fromCount: 28, untilCount: 29 },  // Jack 29
-      { currency: 'mana',               base: 500,    fromCount: 29, untilCount: 30 },  // Jack 30
-      { currency: 'construct',          base: 50,    fromCount: 30, untilCount: 31 },  // Jack 31
-      { currency: 'kobold-pebble',      base: 25,    fromCount: 31, untilCount: 32 },  // Jack 32
+      { currency: 'kobold-pebble',      base: 25,    fromCount: 26, untilCount: 27 },  // Jack 27
+      { currency: 'monster-trophy',     base: 50,    fromCount: 27, untilCount: 28 },  // Jack 28
+      { currency: 'forbidden-tome',     base: 50,    fromCount: 28, untilCount: 29 },  // Jack 29
+      { currency: 'magical-implement',  base: 50,    fromCount: 29, untilCount: 30 },  // Jack 30
+      { currency: 'mana',               base: 500,    fromCount: 30, untilCount: 31 },  // Jack 31
+      { currency: 'construct',          base: 50,    fromCount: 31, untilCount: 32 },  // Jack 32
       { currency: 'kobold-heart',       base: 25,    fromCount: 32, untilCount: 33 },  // Jack 33
       { currency: 'life-thread',        base: 50,    fromCount: 33, untilCount: 34 },  // Jack 34
     ],
@@ -226,8 +226,8 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
     costs: [
       { currency: 'gold',              base: 5_000_000 },
       { currency: 'precious-metal',    base: 5000       },
-      { currency: 'magical-implement', base: 300       },
-      { currency: 'forbidden-tome',    base: 300       },
+      { currency: 'magical-implement', base: 3000       },
+      { currency: 'forbidden-tome',    base: 3000       },
     ],
   },
   {
@@ -237,6 +237,7 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'construct',   base: 500        },
       { currency: 'mana',        base: 5000       },
       { currency: 'soul-stone',  base: 1000       },
+      { currency: 'monster-trophy',    base: 3000       },
     ],
   },
 
@@ -352,7 +353,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'STRONGER_KOBOLDS', characterId: 'fighter', category: 'minigame', max: KOBOLD_VARIANTS.length - 1,
     gates: { xpMin: 3000 },
     costs: [
-      { currency: 'kobold-ear',    base: 50, scale: 1.8 },                                        // always
+      { currency: 'kobold-ear',    base: 50, scale: 1.4 },                                        // always
       { currency: 'beast',         base: 500, scale: 1.0, fromLevel: 0, untilLevel: 1 },           // tier 1 only
       { currency: 'kobold-tongue', base: 50, scale: 1.0, fromLevel: 1, untilLevel: 2 },           // tier 2 only
       { currency: 'kobold-hair',   base: 50, scale: 1.0, fromLevel: 2, untilLevel: 3 },           // tier 3 only
@@ -549,6 +550,10 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'monster-trophy',      base: 500,    scale: 1.0, fromLevel: 7, untilLevel: 8 },
       { currency: 'forbidden-tome',      base: 500,    scale: 1.0, fromLevel: 7, untilLevel: 8 },
       { currency: 'magical-implement',   base: 500,    scale: 1.0, fromLevel: 7, untilLevel: 8 },
+      // Level 9 only: Artificer
+      { currency: 'mana',               base: 100000,  scale: 1.0, fromLevel: 8, untilLevel: 9 },
+      { currency: 'construct',           base: 500,    scale: 1.0, fromLevel: 8, untilLevel: 9 },
+      { currency: 'magical-implement',   base: 500,    scale: 1.0, fromLevel: 8, untilLevel: 9 },
     ] },
   { id: 'GEM_HUNTER', characterId: 'thief', category: 'standard', max: 1,
     costs: [
@@ -696,7 +701,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
       { currency: 'soul-stone',     base: 30,  scale: 1.4 },
     ] },
   { id: 'SPREADING_SOUL', characterId: 'necromancer', category: 'minigame', max: 1,
-    gates: { requiresFindFamiliar: true },
+    gates: { requiresFindFamiliar: true, requiresMerchant: true },
     costs: [
       { currency: 'magical-implement', base: 50, scale: 1.0 },
       { currency: 'forbidden-tome',    base: 50, scale: 1.0 },
@@ -704,9 +709,9 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'MIND_AND_SOUL', characterId: 'necromancer', category: 'minigame', max: 20,
     gates: { requiresFindFamiliar: true, requiresArtificer: true },
     costs: [
-      { currency: 'construct',   base: 50,  scale: 1.4 },
-      { currency: 'soul-stone',  base: 25,  scale: 1.4 },
-      { currency: 'mana',        base: 100, scale: 1.4 },
+      { currency: 'construct',   base: 10,  scale: 1.4 },
+      { currency: 'soul-stone',  base: 250,  scale: 1.4 },
+      { currency: 'mana',        base: 10000, scale: 1.4 },
     ] },
 
   // ── Merchant — standard ──────────────────────────────────────
@@ -714,13 +719,14 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [{ currency: 'gold', base: 500_000, scale: 1.12 }] },
   { id: 'SHADY_CONNECTIONS', characterId: 'merchant', category: 'standard', max: 20,
     costs: [
-      { currency: 'illicit-goods', base: 50,  scale: 1.3 },
+      { currency: 'spice', base: 5000,  scale: 1.3 },
       { currency: 'dossier',      base: 5000, scale: 1.3 },
     ] },
   { id: 'BLACK_MARKET_CONNECTIONS', characterId: 'merchant', category: 'standard', max: 10,
     costs: [
       { currency: 'gold',          base: 1_000_000, scale: 1.5 },
-      { currency: 'illicit-goods', base: 200,       scale: 1.5 },
+      { currency: 'treasure', base: 200,       scale: 1.5 },
+      { currency: 'gemstone', base: 200,       scale: 1.5 },
     ] },
   { id: 'SMUGGLER_NETWORK', characterId: 'merchant', category: 'standard', max: 25,
     costs: [
@@ -732,7 +738,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'RIGGED_GAME', characterId: 'merchant', category: 'minigame', max: 25,
     costs: [
       { currency: 'illicit-goods', base: 100, scale: 1.3 },
-      { currency: 'gold',         base: 100_000, scale: 1.2 },
+      { currency: 'bones',         base: 10_000, scale: 1.2 },
     ] },
   { id: 'DIVERSIFIED_PORTFOLIO', characterId: 'merchant', category: 'minigame', max: 6,
     costs: [
@@ -793,56 +799,50 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Artificer — standard ──────────────────────────────────────
   { id: 'DEEP_STUDY', characterId: 'artificer', category: 'standard', max: 1,
     costs: [
-      { currency: 'gold',      base: 50000,  scale: 1.0 },
-      { currency: 'gemstone', base: 2500,   scale: 1.0 },
+      { currency: 'forbidden-tome',      base: 50000,  scale: 1.0 },
+      { currency: 'gemstone', base: 25000,   scale: 1.0 },
     ] },
   { id: 'FOCUSED_REFLECTION', characterId: 'artificer', category: 'standard', max: 7,
     costs: [
-      { currency: 'gold',      base: 200,  scale: 1.3 },
-      { currency: 'magical-implement', base: 10,   scale: 1.3 },
+      { currency: 'precious-metal',      base: 2000,  scale: 1.3 },
+      { currency: 'magical-implement', base: 200,   scale: 1.3 },
     ] },
   { id: 'AMPLIFIED_INSIGHT', characterId: 'artificer', category: 'standard', max: 24,
     costs: [
-      { currency: 'mana',      base: 300,  scale: 1.25 },
+      { currency: 'mana',      base: 30000,  scale: 1.25 },
       { currency: 'construct', base: 15,   scale: 1.25 },
     ] },
   { id: 'POTION_ARCANE_INTELLECT', characterId: 'artificer', category: 'standard', max: 3,
     costs: [
-      { currency: 'mana',               base: 1000,  scale: 2.0 },
+      { currency: 'mana',               base: 100000,  scale: 2.0 },
       { currency: 'monster-trophy',           base: 100,   scale: 2.0 },
-      { currency: 'synaptical-potion',   base: 10,    scale: 1.5 },
+      { currency: 'synaptical-potion',   base: 15,    scale: 1.5 },
     ] },
 
   // ── Artificer — minigame ──────────────────────────────────────
   { id: 'EXTENDED_ETCHING', characterId: 'artificer', category: 'minigame', max: 5,
     costs: [
-      { currency: 'construct', base: 50,  scale: 1.5 },
-      { currency: 'mana',     base: 500, scale: 1.5 },
+      { currency: 'construct', base: 5,  scale: 1.5 },
+      { currency: 'mana',     base: 50000, scale: 1.5 },
     ] },
   { id: 'SECOND_CHANCE', characterId: 'artificer', category: 'minigame', max: 1,
     costs: [
-      { currency: 'construct', base: 100,  scale: 1.0 },
-      { currency: 'mana',     base: 1000, scale: 1.0 },
+      { currency: 'construct', base: 35,  scale: 1.0 },
+      { currency: 'mana',     base: 100000, scale: 1.0 },
       { currency: 'synaptical-potion',     base: 1000, scale: 1.0 },
-    ] },
-  { id: 'ETCHING_MASTERY', characterId: 'artificer', category: 'minigame', max: 999,
-    costs: [
-      { currency: 'construct', base: 75,  scale: 1.4 },
-      { currency: 'mana',     base: 750, scale: 1.4 },
-      { currency: 'magical-implement',     base: 100, scale: 1.4 },
     ] },
 
   // ── Chimeramancer — standard ──────────────────────────────────
   { id: 'BIGGER_THREADS', characterId: 'chimeramancer', category: 'standard', max: 999,
     costs: [
       { currency: 'life-thread', base: 50,  scale: 1.15 },
-      { currency: 'mana',        base: 100, scale: 1.15 },
+      { currency: 'mana',        base: 10000, scale: 1.15 },
     ] },
   { id: 'SHARPER_NEEDLES', characterId: 'chimeramancer', category: 'standard', max: 999,
     gates: { requiresBiggerThreads: true },
     costs: [
-      { currency: 'gold',      base: 10_000, scale: 1.15 },
-      { currency: 'brimstone', base: 25,     scale: 1.15 },
+      { currency: 'gold',      base: 100_000, scale: 1.15 },
+      { currency: 'brimstone', base: 650,     scale: 1.15 },
     ] },
   { id: 'LOOM_OF_LIFE', characterId: 'chimeramancer', category: 'standard', max: 999,
     gates: { requiresSharperNeedles: true },
@@ -1112,9 +1112,9 @@ export const RANGER_MG = {
   /** Meat chance reduction per Treasure Chest upgrade level (percentage). */
   CHEST_MEAT_REDUCTION_PER_LEVEL: 0.25,
   /** Min gold awarded when a treasure chest is found. */
-  CHEST_GOLD_MIN: 1200,
+  CHEST_GOLD_MIN: 4000,
   /** Max gold awarded when a treasure chest is found. */
-  CHEST_GOLD_MAX: 30000,
+  CHEST_GOLD_MAX: 16000,
   /** Min treasure awarded when a treasure chest is found. */
   CHEST_TREASURE_MIN: 12,
   /** Max treasure awarded when a treasure chest is found. */
@@ -1189,7 +1189,7 @@ export const ARTISAN_MG = {
   /** Gemstones consumed to start a Faceting round. */
   GEMSTONE_COST: 6,
   /** Precious Metal consumed to start a Faceting round. */
-  METAL_COST: 16,
+  METAL_COST: 24,
   /** Number of gemstones presented to the player. */
   GEM_COUNT: 6,
   /** Number of gems the player may select (can be increased by upgrades later). */
@@ -1245,9 +1245,9 @@ export const ARTIFICER_MG = {
   /** Base sequence length (before Extended Etching). */
   BASE_SEQUENCE_LENGTH: 5,
   /** Flash duration per symbol in ms. */
-  FLASH_DURATION_MS: 600,
+  FLASH_DURATION_MS: 400,
   /** Pause between flashes in ms. */
-  FLASH_PAUSE_MS: 200,
+  FLASH_PAUSE_MS: 150,
   /** Base constructs awarded on success. */
   BASE_CONSTRUCT_REWARD: 1,
   /** Multiplier per Extended Etching symbol added. */
@@ -1406,7 +1406,7 @@ export const MERCHANT_MG = {
   /** Auto-buyer purchases this many items per tick. */
   AUTO_BUY_AMOUNT: 100,
   /** Quantity of a random stock-market resource awarded free per jack click by the Merchant relic. */
-  RELIC_FREE_PURCHASE_QTY: 10,
+  RELIC_FREE_PURCHASE_QTY: 1,
   /**
    * Pool of currency IDs the Merchant relic can randomly award.
    * Includes the full stock-market table plus uncommon resources.
@@ -1425,31 +1425,31 @@ export const MERCHANT_MG = {
    * be purchased with gold.  Prices randomly fluctuate within [min, max].
    */
   STOCK_MARKET_TABLE: [
-    { currencyId: 'illicit-goods',       basePrice: 5000,   minPrice: 100,   maxPrice: 10000   },
-    { currencyId: 'herb',                basePrice: 50,    minPrice: 20,    maxPrice: 120    },
-    { currencyId: 'beast',               basePrice: 80,    minPrice: 30,    maxPrice: 150    },
-    { currencyId: 'potion',              basePrice: 150,   minPrice: 50,    maxPrice: 300    },
-    { currencyId: 'spice',               basePrice: 60,    minPrice: 20,    maxPrice: 140    },
-    { currencyId: 'dossier',             basePrice: 60,    minPrice: 20,    maxPrice: 140    },
-    { currencyId: 'treasure',            basePrice: 400,   minPrice: 150,   maxPrice: 800    },
-    { currencyId: 'precious-metal',      basePrice: 500,   minPrice: 200,   maxPrice: 1000   },
-    { currencyId: 'gemstone',            basePrice: 800,   minPrice: 300,   maxPrice: 1500   },
-    { currencyId: 'bone',                basePrice: 60,    minPrice: 20,    maxPrice: 140    },
-    { currencyId: 'brimstone',           basePrice: 60,    minPrice: 20,    maxPrice: 140    },
-    { currencyId: 'concentrated-potion', basePrice: 600,   minPrice: 250,   maxPrice: 1200   },
-    { currencyId: 'pixie-dust',          basePrice: 1000,  minPrice: 400,   maxPrice: 2000   },
-    { currencyId: 'hearty-meal',         basePrice: 1500,  minPrice: 600,   maxPrice: 3000   },
-    { currencyId: 'jewelry',             basePrice: 3000,  minPrice: 1000,  maxPrice: 6000   },
-    { currencyId: 'soul-stone',          basePrice: 800,   minPrice: 300,   maxPrice: 1600   },
+    { currencyId: 'illicit-goods',       basePrice: 5000,   minPrice: 3000,   maxPrice: 10000   },
+    { currencyId: 'herb',                basePrice: 500,    minPrice: 200,    maxPrice: 1900    },
+    { currencyId: 'beast',               basePrice: 800,    minPrice: 300,    maxPrice: 1500    },
+    { currencyId: 'potion',              basePrice: 1500,   minPrice: 500,    maxPrice: 3000    },
+    { currencyId: 'spice',               basePrice: 600,    minPrice: 200,    maxPrice: 1400    },
+    { currencyId: 'dossier',             basePrice: 600,    minPrice: 200,    maxPrice: 1400    },
+    { currencyId: 'treasure',            basePrice: 4000,   minPrice: 1500,   maxPrice: 8000    },
+    { currencyId: 'precious-metal',      basePrice: 5000,   minPrice: 2000,   maxPrice: 10000   },
+    { currencyId: 'gemstone',            basePrice: 8000,   minPrice: 3000,   maxPrice: 15000   },
+    { currencyId: 'bone',                basePrice: 900,    minPrice: 600,    maxPrice: 1400    },
+    { currencyId: 'brimstone',           basePrice: 900,    minPrice: 600,    maxPrice: 1400    },
+    { currencyId: 'concentrated-potion', basePrice: 6000,   minPrice: 2500,   maxPrice: 12000   },
+    { currencyId: 'pixie-dust',          basePrice: 10000,  minPrice: 4000,   maxPrice: 20000   },
+    { currencyId: 'hearty-meal',         basePrice: 15000,  minPrice: 6000,   maxPrice: 30000   },
+    { currencyId: 'jewelry',             basePrice: 3000,  minPrice: 10000,  maxPrice: 60000   },
+    { currencyId: 'soul-stone',          basePrice: 5000,   minPrice: 2000,   maxPrice: 16000   },
     // ── Kobold parts ────────────────────────────────────────────
-    { currencyId: 'kobold-ear',          basePrice: 80,    minPrice: 30,    maxPrice: 200    },
-    { currencyId: 'kobold-tongue',       basePrice: 200,   minPrice: 80,    maxPrice: 400    },
-    { currencyId: 'kobold-hair',         basePrice: 200,   minPrice: 80,    maxPrice: 400    },
-    { currencyId: 'kobold-fang',         basePrice: 250,   minPrice: 100,   maxPrice: 500    },
-    { currencyId: 'kobold-brain',        basePrice: 600,   minPrice: 250,   maxPrice: 1200   },
-    { currencyId: 'kobold-feather',      basePrice: 300,   minPrice: 120,   maxPrice: 600    },
-    { currencyId: 'kobold-pebble',       basePrice: 350,   minPrice: 140,   maxPrice: 700    },
-    { currencyId: 'kobold-heart',        basePrice: 500,   minPrice: 200,   maxPrice: 1000   },
+    { currencyId: 'kobold-ear',          basePrice: 15000,   minPrice: 6000,    maxPrice: 30000    },
+    { currencyId: 'kobold-tongue',       basePrice: 20000,   minPrice: 8000,    maxPrice: 40000    },
+    { currencyId: 'kobold-hair',         basePrice: 20000,   minPrice: 8000,    maxPrice: 40000    },
+    { currencyId: 'kobold-fang',         basePrice: 25000,   minPrice: 10000,   maxPrice: 50000    },
+    { currencyId: 'kobold-brain',        basePrice: 60000,   minPrice: 25000,   maxPrice: 70000   },
+    { currencyId: 'kobold-feather',      basePrice: 30000,   minPrice: 12000,   maxPrice: 80000    },
+    { currencyId: 'kobold-pebble',       basePrice: 35000,   minPrice: 14000,   maxPrice: 90000    },
+    { currencyId: 'kobold-heart',        basePrice: 50000,   minPrice: 20000,   maxPrice: 100000   },
   ] as const,
 } as const;
 
@@ -1576,20 +1576,16 @@ export const GOLD2_CONDITIONS = {
    * Any other purchase resets the sequence. Steps are matched in order.
    */
   MERCHANT_PURCHASE_SEQUENCE: [
-    { currencyId: 'herb',           qty: 10 },
-    { currencyId: 'beast',          qty: 10 },
-    { currencyId: 'potion',         qty: 5  },
-    { currencyId: 'spice',          qty: 10 },
-    { currencyId: 'dossier',        qty: 10 },
-    { currencyId: 'bone',           qty: 10 },
-    { currencyId: 'brimstone',      qty: 10 },
-    { currencyId: 'precious-metal', qty: 5  },
-    { currencyId: 'gemstone',       qty: 5  },
-    { currencyId: 'soul-stone',     qty: 5  },
-    { currencyId: 'kobold-ear',     qty: 10 },
-    { currencyId: 'kobold-tongue',  qty: 5  },
-    { currencyId: 'kobold-fang',    qty: 5  },
-    { currencyId: 'kobold-feather', qty: 5  },
+    { currencyId: 'herb',           qty: 10 }, // tier 1
+    { currencyId: 'beast',          qty: 10 }, // tier 1
+    { currencyId: 'potion',         qty: 5  }, // tier 2
+    { currencyId: 'spice',          qty: 10 }, // tier 3
+    { currencyId: 'dossier',        qty: 10 }, // tier 4
+    { currencyId: 'precious-metal', qty: 5  }, // tier 5
+    { currencyId: 'gemstone',       qty: 5  }, // tier 5
+    { currencyId: 'bone',           qty: 10 }, // tier 6
+    { currencyId: 'brimstone',      qty: 10 }, // tier 6
+    { currencyId: 'soul-stone',     qty: 5  }, // tier 6
   ] as readonly { currencyId: string; qty: number }[],
 
   /**
@@ -1607,7 +1603,7 @@ export const GOOD_AUTO_SOLVE = {
   /** Fighter: faster tick (ms) when upgraded. */
   FIGHTER_TICK_MS:     500,
   /** Apothecary: ultra-fast tick (ms) when upgraded. */
-  APOTHECARY_TICK_MS:  50,
+  APOTHECARY_TICK_MS:  120,
   /** Merchant: faster goods opening (ms) when upgraded. */
   MERCHANT_TICK_MS:    600,
 } as const;

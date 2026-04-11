@@ -100,6 +100,8 @@ export interface JackAutoClickContext {
   setArtificerInsight: (v: number) => void;
   /** Get the bead yield multiplier for a character. */
   beadMultiplier?: (charId: string) => number;
+  /** Currently-selected kobold level in the fighter minigame (for secondary drop rates). */
+  selectedKoboldLevel: () => number;
   /** Whether the character's right blue bead (blue-2, awarded by jacks) is still undiscovered. */
   hasUnfoundJackBead?: (charId: string) => boolean;
   /** Callback when the right blue bead (blue-2) is discovered by a jack. */
@@ -409,6 +411,7 @@ function jackFighter(ctx: JackAutoClickContext): void {
       ctx.stats.trackCurrencyGain('gold', hirelingGold);
     }
   }
+
 
   if (ctx.isJackStarved('fighter')) ctx.setJackStarved('fighter', false);
 }

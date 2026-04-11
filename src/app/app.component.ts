@@ -102,6 +102,11 @@ export class AppComponent implements OnInit, OnDestroy {
   artificerActiveButton: 'study' | 'reflect' = 'study';
   /** Current insight level (0–max). */
   artificerInsight = 0;
+  /** Computed max insight (base + Arcane Intellect bonus). */
+  get artificerMaxInsight(): number {
+    return YIELDS.ARTIFICER_MAX_INSIGHT
+      + this.upgrades.level('POTION_ARCANE_INTELLECT') * YIELDS.ARTIFICER_ARCANE_INTELLECT_PER_LEVEL;
+  }
   /** Currently-selected etching difficulty level (0 = base, max = EXTENDED_ETCHING level). */
   selectedEtchingLevel = 0;
 
@@ -158,6 +163,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Tracks previously known unlocked character IDs so we only shine *newly* unlocked ones. */
   private _prevUnlockedCharIds = new Set<string>(['fighter']);
+
+  /** Cached visible upgrade IDs per character — used to detect when new upgrades become available. */
+  private _prevVisibleUpgradeIdsByChar: Record<string, Set<string>> = {};
 
   /** Mark a character as having new content — adds a shine to its sidebar button. */
   addCharShine(charId: string): void {
@@ -606,8 +614,16 @@ export class AppComponent implements OnInit, OnDestroy {
     return BEAD_FLAVOR[charId]?.[slotId]?.lore ?? '';
   }
 
-  /** Get bead effect text for a character + slot. */
+  /** Get bead effect text for a character + slot.
+   *  If gold-2 is socketed but gold-1 is not, display gold-1's effect instead
+   *  since the actual behavior is basic auto-solve (not enhanced). */
   getBeadEffect(charId: string, slotId: string): string {
+    if (slotId === 'gold-2') {
+      const gold1Socketed = !!this.beadState[charId]?.['gold-1']?.socketed;
+      if (!gold1Socketed) {
+        return BEAD_FLAVOR[charId]?.['gold-1']?.effect ?? '';
+      }
+    }
     return BEAD_FLAVOR[charId]?.[slotId]?.effect ?? '';
   }
 
@@ -718,6 +734,8 @@ export class AppComponent implements OnInit, OnDestroy {
       const charId = this.upgrades.charIdFor(id);
       if (charId) this.addCharShine(charId);
       this._refreshDerived();
+      // Check if this upgrade purchase made new upgrades visible for other characters
+      this._checkUpgradeVisibilityShines();
     });
 
     // Passive gold income (Contracted Hirelings only)
@@ -913,8 +931,12 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.saveService.hasSave()) this.saveService.loadFromLocalStorage();
     // After save restore, clear any shine that was triggered by loading previously-unlocked state
     this.charShine = new Set<string>();
+    // Snapshot visible upgrades so we only shine on genuinely new ones
+    this._initVisibleUpgradeCache();
     this.sidequestCollapsed = this.saveService.sidequestCollapsed;
     this.saveService.startAutoSave();
+    // Start the playtime counter
+    this.statsService.startPlaytimeTimer();
   }
 
   ngOnDestroy(): void {
@@ -1179,6 +1201,39 @@ export class AppComponent implements OnInit, OnDestroy {
         if (category === 'relic') return true;
         return this.shouldShowUpgrade(this.upgrades.isMaxed(id));
       });
+  }
+
+  /**
+   * Check all unlocked non-active characters for newly visible upgrades.
+   * If a character gained new visible upgrades, shine it.
+   */
+  private _checkUpgradeVisibilityShines(): void {
+    for (const char of this.unlockedCharacters) {
+      const standard = this.upgrades.getUpgradesFor(char.id, 'standard').filter(id => this.isUpgradeVisible(id));
+      const minigame = this.upgrades.getUpgradesFor(char.id, 'minigame').filter(id => this.isUpgradeVisible(id));
+      const currentIds = new Set([...standard, ...minigame]);
+
+      const prevIds = this._prevVisibleUpgradeIdsByChar[char.id];
+      if (prevIds) {
+        for (const id of currentIds) {
+          if (!prevIds.has(id)) {
+            this.addCharShine(char.id);
+            break;
+          }
+        }
+      }
+      this._prevVisibleUpgradeIdsByChar[char.id] = currentIds;
+    }
+  }
+
+  /** Initialize the visible-upgrade cache for all characters (call after save load). */
+  private _initVisibleUpgradeCache(): void {
+    this._prevVisibleUpgradeIdsByChar = {};
+    for (const char of this.unlockedCharacters) {
+      const standard = this.upgrades.getUpgradesFor(char.id, 'standard').filter(id => this.isUpgradeVisible(id));
+      const minigame = this.upgrades.getUpgradesFor(char.id, 'minigame').filter(id => this.isUpgradeVisible(id));
+      this._prevVisibleUpgradeIdsByChar[char.id] = new Set([...standard, ...minigame]);
+    }
   }
 
   /** Build the combined bead + relic crown display items for the active character. */
@@ -1463,6 +1518,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Switch the active necromancer button and roll a new click threshold. */
   private switchNecromancerButton(): void {
+    this.heroHoldStop();
     this.necromancerActiveButton = this.necromancerActiveButton === 'defile' ? 'ward' : 'defile';
     this.necromancerClicksRemaining = rollNecromancerSwitchClicks(this.upgrades.level('EXTENDED_RITUAL'));
     this.updateAllPerSecond();
@@ -1916,6 +1972,7 @@ export class AppComponent implements OnInit, OnDestroy {
       artificerActiveButton: () => this.artificerActiveButton,
       artificerInsight: () => this.artificerInsight,
       setArtificerInsight: (v: number) => { this.artificerInsight = v; },
+      selectedKoboldLevel: () => this.selectedKoboldLevel,
       beadMultiplier: (charId: string) => this.wallet.getBeadMultiplier(charId),
       hasUnfoundJackBead: (charId: string) => this.minigameUnlocked && this.hasUnfoundJackBead(charId),
       onJackBeadFound: (charId: string) => this.findJackBead(charId),

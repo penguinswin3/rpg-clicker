@@ -39,11 +39,19 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   @Input() necromancerActiveButton: 'defile' | 'ward' = 'defile';
   /** Set of character IDs that should display a "new content" shine effect. */
   @Input() charShine: Set<string> = new Set();
+  /** Current Artificer insight level (for sidebar coloring). */
+  @Input() artificerInsight = 0;
+  /** Maximum Artificer insight (for sidebar coloring ratio). */
+  @Input() artificerMaxInsight = 8;
 
   getJackCount(charId: string): number {
     if (charId === 'necromancer') {
       return (this.jacksAllocations['necromancer-defile'] ?? 0)
            + (this.jacksAllocations['necromancer-ward'] ?? 0);
+    }
+    if (charId === 'artificer') {
+      return (this.jacksAllocations['artificer-study'] ?? 0)
+           + (this.jacksAllocations['artificer-reflect'] ?? 0);
     }
     return this.jacksAllocations[charId] ?? 0;
   }

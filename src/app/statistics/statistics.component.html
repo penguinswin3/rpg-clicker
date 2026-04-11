@@ -1,5 +1,6 @@
 <!-- Fixed-position trigger button (next to Options) -->
 <div class="stats-btn-anchor" [style.right]="rightOffset" [style.bottom]="bottomOffset">
+  <span class="playtime-counter" *ngIf="(snap.playtimeSeconds ?? 0) > 0">{{ playtimeFormatted }}</span>
   <button class="stats-trigger" (click)="open()">[ STATISTICS ]</button>
 </div>
 
@@ -25,6 +26,17 @@
 
         <!-- ═══════ LEFT COLUMN ═══════ -->
         <div class="col">
+
+          <!-- ── Playtime ── -->
+          <div class="stats-section" *ngIf="(snap.playtimeSeconds ?? 0) > 0">
+            <div class="section-label">// PLAYTIME</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Time Played</span>
+                <span class="cur-amount">{{ playtimeFormatted }}</span>
+              </div>
+            </div>
+          </div>
 
           <!-- ── Lifetime Currency Gains ── -->
           <div class="stats-section" *ngIf="activeCurrencies.length > 0">
@@ -186,6 +198,21 @@
               <div class="stats-row">
                 <span class="cur-name">Heists Failed</span>
                 <span class="cur-amount stat-bad">{{ fmt(snap.thiefMinigame.failedHeists) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Merchant Minigame ── -->
+          <div class="stats-section" *ngIf="snap.merchantMinigame && snap.merchantMinigame.itemsPurchased > 0">
+            <div class="section-label">// STOCK MARKET</div>
+            <div class="stats-table">
+              <div class="stats-row">
+                <span class="cur-name">Items Purchased</span>
+                <span class="cur-amount">{{ fmt(snap.merchantMinigame.itemsPurchased) }}</span>
+              </div>
+              <div class="stats-row">
+                <span class="cur-name">Gold Spent</span>
+                <span class="cur-amount">{{ fmt(snap.merchantMinigame.goldSpent) }}</span>
               </div>
             </div>
           </div>
