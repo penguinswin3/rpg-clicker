@@ -8,7 +8,7 @@
 
 import { HeroStat } from '../character/character-sidebar.component';
 import { HERO_STATS_FLAVOR, CHARACTER_FLAVOR } from '../flavor-text';
-import { YIELDS, APOTH_MG, THIEF_MG, ARTISAN_MG, MERCHANT_MG, CHIMERAMANCER_YIELDS, FAMILIAR } from '../game-config';
+import { YIELDS, APOTH_MG, THIEF_MG, ARTISAN_MG, MERCHANT_MG, CHIMERAMANCER_YIELDS, FAMILIAR, SLAYER } from '../game-config';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { WalletService } from '../wallet/wallet.service';
 import { roundTo } from '../utils/mathUtils';
@@ -47,6 +47,16 @@ export interface HeroStatsContext {
   artificerActiveButton: 'study' | 'reflect';
   /** Current insight level of the Artificer. */
   artificerInsight: number;
+  /** Current chimera HP (Slayer endgame). */
+  slayerHp: number;
+  /** Total damage dealt to the chimera. */
+  slayerDamageDone: number;
+  /** Number of active Condemn stacks. */
+  condemnStacks: number;
+  /** Whether the Bead of Carnage (SLAYER_GOLD_BEAD_1) is socketed. */
+  slayerBead1Socketed: boolean;
+  /** Whether the Bead of Annihilation (SLAYER_GOLD_BEAD_2) is socketed. */
+  slayerBead2Socketed: boolean;
 }
 
 // ── Public API ──────────────────────────────────────────────
@@ -80,6 +90,7 @@ export function buildHeroStats(charId: string, ctx: HeroStatsContext): HeroStat[
     case 'merchant':    return buildMerchantStats(ctx);
     case 'artificer':   return buildArtificerStats(ctx);
     case 'chimeramancer': return buildChimeramancerStats(ctx);
+    case 'slayer':        return buildSlayerStats(ctx);
     default:            return buildFighterStats(ctx);
   }
 }
@@ -335,6 +346,47 @@ function buildChimeramancerStats(ctx: HeroStatsContext): HeroStat[] {
   ];
   if (needlesPerSec > 0) {
     stats.push({ label: HERO_STATS_FLAVOR.CHIMERAMANCER.NEEDLES_PER_SEC, value: `${needlesPerSec}` });
+  }
+  return stats;
+}
+
+function buildSlayerStats(ctx: HeroStatsContext): HeroStat[] {
+  const F = HERO_STATS_FLAVOR.SLAYER;
+  const u = ctx.upgrades;
+
+  // Compute effective damage (including condemn)
+  let dmg = SLAYER.DAMAGE_PER_CLICK + u.level('KNOW_NO_FEAR') * SLAYER.KNOW_NO_FEAR_DAMAGE;
+  const condemnLevel = u.level('CONDEMN');
+  if (condemnLevel > 0 && ctx.condemnStacks > 0) {
+    dmg += condemnLevel * SLAYER.CONDEMN_DAMAGE_PER_LEVEL * ctx.condemnStacks;
+  }
+  if (ctx.slayerBead1Socketed) dmg *= 2;
+  if (ctx.slayerBead2Socketed) dmg *= 2;
+
+  // Compute attack speed
+  const intervalMs = Math.max(
+    SLAYER.AUTO_ATTACK_MIN_MS,
+    SLAYER.AUTO_ATTACK_BASE_MS - u.level('BLOODLUST') * SLAYER.BLOODLUST_REDUCTION_MS,
+  );
+  const intervalSec = roundTo(intervalMs / 1000, 1);
+
+  const hasVorpal = u.level('RELIC_SLAYER') >= 1;
+
+  const stats: HeroStat[] = [
+    { label: F.CHIMERA_HP,   value: `${ctx.slayerHp > 0 ? ctx.slayerHp.toLocaleString() : 0}`, color: '#8b0000' },
+    { label: F.DAMAGE_DEALT, value: `${ctx.slayerDamageDone.toLocaleString()}`, color: '#8b0000' },
+  ];
+  if (u.level('KNOW_NO_FEAR') > 0 || ctx.slayerBead1Socketed || ctx.slayerBead2Socketed) {
+    stats.push({ label: F.ATTACK_DAMAGE, value: `${dmg}`, color: '#ff4444' });
+  }
+  if (u.level('BLOODLUST') > 0) {
+    stats.push({ label: F.ATTACK_SPEED, value: `${intervalSec}s`, color: '#ff4444' });
+  }
+  if (hasVorpal) {
+    stats.push({ label: F.VORPAL_BLADE, value: 'Active', color: '#a700ff' });
+  }
+  if (condemnLevel > 0) {
+    stats.push({ label: F.CONDEMN_STACKS, value: `${ctx.condemnStacks} / ${SLAYER.CONDEMN_MAX_STACKS}`, color: ctx.condemnStacks > 0 ? '#ff6633' : '#555' });
   }
   return stats;
 }

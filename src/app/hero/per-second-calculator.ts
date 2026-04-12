@@ -6,7 +6,7 @@
  * ════════════════════════════════════════════════════════════
  */
 
-import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG, CHIMERAMANCER_YIELDS } from '../game-config';
+import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG, CHIMERAMANCER_YIELDS, SLAYER } from '../game-config';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { roundTo } from '../utils/mathUtils';
 import {
@@ -56,6 +56,14 @@ export interface PerSecondContext {
   selectedKoboldLevel: number;
   /** Whether the Chimeramancer relic (Thread of Infinite Weaving) is enabled. */
   chimeramancerRelicEnabled: boolean;
+  /** Whether the Slayer character has been unlocked (auto-attack is running). */
+  slayerUnlocked: boolean;
+  /** Whether the chimera is already dead (hp <= 0) — no ichor earned when dead. */
+  slayerChimeraDead: boolean;
+  /** Whether the Bead of Carnage (SLAYER_GOLD_BEAD_1) is socketed. */
+  slayerBead1Socketed?: boolean;
+  /** Whether the Bead of Annihilation (SLAYER_GOLD_BEAD_2) is socketed. */
+  slayerBead2Socketed?: boolean;
 }
 
 // ── Result ──────────────────────────────────────────────────
@@ -91,6 +99,7 @@ export interface PerSecondRates {
   'kobold-pebble':   number;
   'kobold-heart':    number;
   'life-thread':     number;
+  ichor:             number;
 }
 
 /**
@@ -101,6 +110,23 @@ export interface PerSecondRates {
 export type PerSecondBreakdown = Record<string, Record<string, number>>;
 
 // ── Public API ──────────────────────────────────────────────
+
+/**
+ * Computes the Slayer's ichor-per-second from auto-attack.
+ * Returns 0 if the slayer is not unlocked or the chimera is dead.
+ */
+function calcSlayerIchorPerSecond(ctx: PerSecondContext): number {
+  if (!ctx.slayerUnlocked || ctx.slayerChimeraDead) return 0;
+  const u = ctx.upgrades;
+  let dmg = SLAYER.DAMAGE_PER_CLICK + u.level('KNOW_NO_FEAR') * SLAYER.KNOW_NO_FEAR_DAMAGE;
+  if (ctx.slayerBead1Socketed) dmg *= 2;
+  if (ctx.slayerBead2Socketed) dmg *= 2;
+  const intervalMs = Math.max(
+    SLAYER.AUTO_ATTACK_MIN_MS,
+    SLAYER.AUTO_ATTACK_BASE_MS - u.level('BLOODLUST') * SLAYER.BLOODLUST_REDUCTION_MS,
+  );
+  return dmg / (intervalMs / 1000);
+}
 
 /** Calculate display per-second rates for all currencies. */
 export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
@@ -325,6 +351,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
     'kobold-pebble':  roundTo((autoBuyGains['kobold-pebble'] ?? 0) + mrg('kobold-pebble'), 2),
     'kobold-heart':   roundTo((autoBuyGains['kobold-heart'] ?? 0) + mrg('kobold-heart'), 2),
     'life-thread':    roundTo(chimeraJacks * calcChimeramancerThreadPerClick(CHIMERAMANCER_YIELDS.THREAD_PER_CLICK, u.level('BIGGER_THREADS')) * bm('chimeramancer') + calcSharperNeedlesThreadPerSec(u.level('SHARPER_NEEDLES'), u.level('LOOM_OF_LIFE')) * bm('chimeramancer'), 2),
+    ichor:            roundTo(calcSlayerIchorPerSecond(ctx), 2),
   };
 }
 
@@ -648,6 +675,10 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   // Sharper Needles: passive life-thread per second
   const needlesRate = calcSharperNeedlesThreadPerSec(u.level('SHARPER_NEEDLES'), u.level('LOOM_OF_LIFE')) * bm('chimeramancer');
   if (needlesRate > 0) add('life-thread', 'Passive (Needles)', needlesRate);
+
+  // ── Slayer (ichor from auto-attack) ──────────────────────────
+  const ichorPerSec = calcSlayerIchorPerSecond(ctx);
+  if (ichorPerSec > 0) add('ichor', 'Slayer', ichorPerSec);
 
   return bd;
 }

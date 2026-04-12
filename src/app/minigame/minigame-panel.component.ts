@@ -36,6 +36,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   private cdr         = inject(ChangeDetectorRef);
   private sub         = new Subscription();
 
+  readonly MINIGAME_FLAVOR = MINIGAME_FLAVOR;
+
   /** Sword sharpness passed in from AppComponent (goldPerClick). */
   @Input() fighterAttack = 1;
   /** Potion Chugging level — forwarded to the fighter minigame. */
@@ -162,6 +164,9 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   /** Minor Touch Up level — forwarded to the chimeramancer minigame. */
   @Input() minorTouchUpLevel = 0;
 
+  /** Emitted when the chimera reaches 100% completion — triggers the Slayer endgame. */
+  @Output() chimeraCompleted = new EventEmitter<void>();
+
   /** Per-character auto-solve unlock state (gold-1 bead socketed). */
   @Input() autoSolveUnlocked: Record<string, boolean> = {};
   /** Per-character "good" auto-solve mode (both gold beads socketed). */
@@ -192,6 +197,7 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   /** All-time peak XP — used for the threshold gate. */
   highestXpEver = 0;
   activeCharacterId = 'fighter';
+  slayerUnlocked = false;
   readonly threshold = XP_THRESHOLDS.MINIGAME_UNLOCK;
 
   readonly placeholders: MinigameInfo[] = [
@@ -235,6 +241,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
       characterId: 'chimeramancer',
       title: MINIGAME_FLAVOR.CHIMERAMANCER.name,
     },
+    {
+      characterId: 'slayer',
+      title: MINIGAME_FLAVOR.SLAYER.name,
+    },
   ];
 
   get shown(): boolean {
@@ -270,6 +280,12 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.charService.activeId$.subscribe(id => {
         this.activeCharacterId = id;
+        this.cdr.markForCheck();
+      })
+    );
+    this.sub.add(
+      this.charService.characters$.subscribe(chars => {
+        this.slayerUnlocked = chars.find(c => c.id === 'slayer')?.unlocked ?? false;
         this.cdr.markForCheck();
       })
     );

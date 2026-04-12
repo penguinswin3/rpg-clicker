@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { WalletService, Currency, CurrencyEntry, WalletState, PerSecondBreakdown } from './wallet.service';
@@ -14,11 +14,14 @@ import { fmtNumber } from '../utils/mathUtils';
   styleUrl: './wallet-sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WalletSidebarComponent implements OnInit, OnDestroy {
+export class WalletSidebarComponent implements OnInit, OnDestroy, OnChanges {
   private walletService    = inject(WalletService);
   private characterService = inject(CharacterService);
   private cdr              = inject(ChangeDetectorRef);
   private sub = new Subscription();
+
+  /** When true, only show the ichor currency. */
+  @Input() slayerMode = false;
 
   allCurrencies: Currency[]  = [];
   unlockedCharacters: Character[] = [];
@@ -69,6 +72,18 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
 
   /** Recompute all derived state from current inputs. Called from subscription callbacks. */
   private _recalc(): void {
+    // In Slayer mode, only show ichor
+    if (this.slayerMode) {
+      this.visibleCurrencies = this.allCurrencies.filter(c => c.id === 'ichor');
+      this.filteredCurrencies = this.visibleCurrencies;
+      this.pinnedCurrencies = [];
+      this.scrollableCurrencies = this.visibleCurrencies;
+      this.characterFilters = [];
+      this.xpProgressPct = 100;
+      this.xpComplete = true;
+      return;
+    }
+
     // visibleCurrencies
     const unlockedIds = new Set(this.unlockedCharacters.map(c => c.id));
     this.visibleCurrencies = this.allCurrencies.filter(c => {
@@ -116,6 +131,13 @@ export class WalletSidebarComponent implements OnInit, OnDestroy {
   }
 
   // ── Lifecycle ─────────────────────────────
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['slayerMode']) {
+      this._recalc();
+      this.cdr.markForCheck();
+    }
+  }
 
   ngOnInit(): void {
     this.allCurrencies = this.walletService.currencies;

@@ -22,6 +22,32 @@ interface ResourceBar {
 }
 
 /**
+ * ASCII Slayer art — displayed in precious-metal silver to the left of the
+ * Chimera once the Slayer character is unlocked.
+ */
+const SLAYER_ART: string[] = [
+
+  '                   _.--.    .--._',
+  '                 ."  ."      ".  ".',
+  '                ;  ."    /\\    ".  ;',
+  '                ;  \'._,-/  \\-,`.  ;',
+  '                \\  ,`  / /\\ \\  `,  /',
+  '                 \\/    \\/  \\/    \\/',
+  '                 ,=_    \\/\\/    _=,',
+  '                 |  "_   \\/   _"  |',
+  '                 |_   \'\"-..-\"\'   _|',
+  '                 | "-.        .-" |',
+  '                 |    "\\    /"    |',
+  '                 |      |  |      |',
+  '         ___     |      |  |      |     ___',
+  '     _,-",  ",   \'_     |  |     _\'   ,"  ,"-,_',
+  '   _(  \\  \\   \\"=--"-.  |  |  .-"--="/   /  /  )_',
+  ' ,"  \\  \\  \\   \\      "-\'--\'-"      /   /  /  /  ".',
+  '!     \\  \\  \\   \\                  /   /  /  /     !',
+  ':      \\  \\  \\   \\                /   /  /  /      :',
+];
+
+/**
  * ASCII chimera art — rows revealed progressively as overall completion
  * increases.  The chimera is assembled from the bottom up with a touch
  * of randomness so the build feels organic.
@@ -77,6 +103,11 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
   private cdr    = inject(ChangeDetectorRef);
   private sub    = new Subscription();
 
+  // ── Slayer art ────────────────────────────────────────────────
+  /** When true, displays the Slayer ASCII art to the left of the Chimera. */
+  @Input() slayerUnlocked = false;
+  readonly slayerArt = SLAYER_ART;
+
   // ── Standard bead / auto-solve inputs ────────────────────────
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled  = false;
@@ -99,6 +130,9 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
   @Input() savedContributions: Record<string, number> | null = null;
   /** Emitted whenever contribution state changes (for save). */
   @Output() contributionsChange = new EventEmitter<Record<string, number>>();
+
+  /** Emitted when the chimera is 100% complete — triggers the Slayer endgame. */
+  @Output() chimeraCompleted = new EventEmitter<void>();
 
   /** Resource bars derived from config. */
   bars: ResourceBar[] = [];
@@ -382,6 +416,7 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
       this.chimeraAwakened = true;
       this.log.log(LOG_MSG.MG_CHIMERAMANCER.CHIMERA_AWAKEN, 'rare');
       this.stats.recordMilestone('chimera_awaken', 'The Chimera Awakens!');
+      this.chimeraCompleted.emit();
     }
   }
 }

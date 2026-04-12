@@ -70,6 +70,12 @@ export interface UpgradeState {
   chimeramancerContributions?: Record<string, number>;
   /** Whether the Chimeramancer relic "Thread of Infinite Weaving" is enabled. */
   chimeramancerRelicEnabled?: boolean;
+  /** Whether Slayer endgame mode is active. */
+  slayerMode?: boolean;
+  /** Current Slayer boss-fight state. */
+  slayerState?: { hp: number; damageDone: number };
+  /** Character IDs that have been killed by the chimera. */
+  deadCharacters?: string[];
 }
 
 // ── Legacy save migration ─────────────────────────────────────

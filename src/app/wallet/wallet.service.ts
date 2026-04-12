@@ -83,6 +83,9 @@ export class WalletService {
 
     // ── Chimeramancer ────────────────────────────────────────────────
     { id: 'life-thread',         ...CURRENCY_FLAVOR['life-thread'],           requiredCharacterId: 'chimeramancer'  },
+
+    // ── Slayer ────────────────────────────────────────────────────────
+    { id: 'ichor',               ...CURRENCY_FLAVOR['ichor'],                requiredCharacterId: 'slayer'         },
   ];
 
   private readonly stateSource = new BehaviorSubject<WalletState>(

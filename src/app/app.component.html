@@ -1,5 +1,5 @@
 <div class="root-layout">
-  <app-wallet-sidebar></app-wallet-sidebar>
+  <app-wallet-sidebar [slayerMode]="slayerMode && !slayerDeathSequencePlaying"></app-wallet-sidebar>
 
   <!-- Sidequest panel: unlocked at 2500 XP, spans left of game area -->
   <app-minigame-panel *ngIf="minigameShown"
@@ -107,7 +107,8 @@
     [chimeramancerContributions]="chimeramancerContributions"
     (chimeramancerContributionsChange)="onChimeramancerContributionsChange($event)"
     [quickStitchingLevel]="upgrades.level('QUICK_STITCHING')"
-    [minorTouchUpLevel]="upgrades.level('MINOR_TOUCH_UP')" />
+    [minorTouchUpLevel]="upgrades.level('MINOR_TOUCH_UP')"
+    (chimeraCompleted)="onChimeraCompleted()" />
 
   <div class="game-wrapper">
 
@@ -253,6 +254,73 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
         <!-- ══ Hero button(s) — main focus ══ -->
         <div class="hero-area">
+
+          <!-- ══ Slayer Boss Fight ══ -->
+          <ng-container *ngIf="slayerMode && !slayerDeathSequencePlaying; else normalHeroArea">
+            <div class="slayer-boss-fight">
+              <!-- Art Row: Slayer (left) | Chimera (right) -->
+              <div class="slayer-art-row">
+                <pre *ngIf="slayerUnlocked"
+                     class="slayer-art-left"
+                     [class.slayer-glow-1]="slayerGlowTier === 1"
+                     [class.slayer-glow-2]="slayerGlowTier === 2"
+                     [class.slayer-glow-3]="slayerGlowTier === 3"
+                     [class.slayer-glow-max]="slayerGlowTier >= 4">{{ slayerArtText }}</pre>
+                <pre class="slayer-chimera-art"
+                     [class.chimera-hurt-1]="chimeraDamageTier === 1"
+                     [class.chimera-hurt-2]="chimeraDamageTier === 2"
+                     [class.chimera-hurt-3]="chimeraDamageTier === 3">{{ chimeraArtText }}</pre>
+              </div>
+
+              <!-- Health Bar -->
+              <div class="slayer-hp-bar-container">
+                <div class="slayer-hp-bar-track">
+                  <div class="slayer-hp-bar-fill" [style.width.%]="slayerHpPct"></div>
+                </div>
+                <div class="slayer-hp-text">{{ formatNumber(slayerHp) }} / {{ formatNumber(666666666) }}</div>
+                <div class="slayer-clings-msg" *ngIf="slayerHp === 1 && upgrades.level('RELIC_SLAYER') < 1"
+                     style="color: #ffcc00; font-size: 0.75rem; text-align: center; margin-top: 2px;">
+                  The chimera clings to life… acquire the Vorpal Blade to deliver the killing blow.
+                </div>
+              </div>
+
+              <!-- 9 Circular Buttons + Condemn Star -->
+              <div class="slayer-buttons-ring" *ngIf="slayerHp > 0">
+                <!-- Condemn nonagram SVG overlay -->
+                <svg *ngIf="upgrades.level('CONDEMN') > 0"
+                     class="condemn-star-svg"
+                     viewBox="0 0 200 200"
+                     xmlns="http://www.w3.org/2000/svg">
+                  <!-- 9 lines forming {9/4} star — each line connects vertex i to vertex (i+4) mod 9 -->
+                  <ng-container *ngFor="let seg of [0,1,2,3,4,5,6,7,8]; let i = index">
+                    <line *ngIf="i < condemnStarLines"
+                          class="condemn-star-line"
+                          [class.condemn-line-bright]="activeCondemnStacks >= 5"
+                          [attr.x1]="condemnStarPt(i).x"
+                          [attr.y1]="condemnStarPt(i).y"
+                          [attr.x2]="condemnStarPt((i + 4) % 9).x"
+                          [attr.y2]="condemnStarPt((i + 4) % 9).y" />
+                  </ng-container>
+                </svg>
+                <button *ngFor="let active of slayerButtons; let i = index"
+                        class="slayer-ring-btn"
+                        [class.slayer-btn-active]="active"
+                        [class.slayer-btn-inactive]="!active"
+                        [disabled]="!active"
+                        (click)="slayerAttack(i)"
+                        [style.--btn-angle]="(i * 360 / slayerButtons.length) + 'deg'">
+                  ⚔
+                </button>
+              </div>
+
+              <!-- Victory message -->
+              <div class="slayer-victory" *ngIf="slayerHp <= 0">
+                ★★★ THE CHIMERA IS SLAIN ★★★
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-template #normalHeroArea>
           <ng-container *ngIf="activeCharacterId === 'necromancer'; else checkArtificer">
             <div class="necro-buttons">
               <button class="hero-btn necro-btn"
@@ -344,10 +412,11 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
               <span class="hero-btn-label">[ >>> {{ questBtnLabel }} <<< ]</span>
             </button>
           </ng-template>
+          </ng-template><!-- /normalHeroArea -->
         </div>
 
         <!-- ══ Below-hero info: toggles, necro clicks ══ -->
-        <div class="hero-info">
+        <div class="hero-info" *ngIf="!slayerMode">
           <button class="wholesale-toggle-btn"
                   *ngIf="activeCharacterId === 'culinarian' && upgrades.level('WHOLESALE_SPICES') >= 1"
                   [class.wt-on]="wholesaleSpicesEnabled"
@@ -372,7 +441,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         </div>
 
         <!-- ══ Jacks & Familiars — supporting crew row ══ -->
-        <div class="crew-row" *ngIf="jacksVisible && activeCharacterInfo">
+        <div class="crew-row" *ngIf="jacksVisible && activeCharacterInfo && !slayerMode">
 
           <!-- ── Jacks ── -->
           <div class="jack-column">
@@ -476,7 +545,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
       </section>
 
-      <section class="upgrades">
+      <section class="upgrades" *ngIf="!(slayerMode && !slayerUpgradeAvailable)">
         <div class="divider">+===============================================================================================+</div>
 
         <!-- Buy-quantity toggle — only shown after sidequests are unlocked -->
@@ -514,16 +583,19 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
       </section>
 
       <app-character-unlock
-        [minigameUnlockAvailable]="minigameUnlockAvailable"
+        [minigameUnlockAvailable]="minigameUnlockAvailable && !slayerMode"
         [minigameCosts]="minigameCosts"
         (minigameUnlock)="buyMinigameUnlock()"
-        [jackdUpUnlockAvailable]="jackdUpUnlockAvailable"
+        [jackdUpUnlockAvailable]="jackdUpUnlockAvailable && !slayerMode"
         [jackdUpCosts]="jackdUpCosts"
         (jackdUpUnlock)="buyJackdUp()"
-        [jackHireAvailable]="jacksToPurchase > 0"
+        [jackHireAvailable]="jacksToPurchase > 0 && !slayerMode"
         [canAffordJack]="canAffordJack"
         [jackCosts]="jackCurrentCosts"
-        (jackHire)="buyJack()"></app-character-unlock>
+        (jackHire)="buyJack()"
+        [slayerMode]="slayerMode"
+        [slayerDamageDone]="slayerDamageDone"
+        (slayerUnlocked)="onSlayerUnlocked()"></app-character-unlock>
 
       <!-- spacer so content isn't hidden behind the fixed log panel -->
       <div class="log-spacer"></div>

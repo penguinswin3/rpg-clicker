@@ -1,8 +1,12 @@
 <div class="chimeramancer-minigame">
 
-  <!-- ── ASCII chimera art ──────────────── -->
-  <div class="ascii-frame">
-    <pre class="minigame-ascii chimera-art">{{ chimeraLines.join('\n') }}</pre>
+  <!-- ── ASCII art row (Slayer left | Chimera right) ──────────── -->
+  <div class="art-row" [class.slayer-showing]="slayerUnlocked">
+    <pre *ngIf="slayerUnlocked" class="slayer-art">{{ slayerArt.join('\n') }}</pre>
+    <!-- ── ASCII chimera art ──────────────────── -->
+    <div class="ascii-frame">
+      <pre class="minigame-ascii chimera-art">{{ chimeraLines.join('\n') }}</pre>
+    </div>
   </div>
 
   <!-- ── Status / Progress ──────────────── -->
@@ -48,9 +52,8 @@
   <!-- ── Awakened placeholder ────────────── -->
   <div class="awaken-placeholder" *ngIf="chimeraAwakened">
     <div class="mg-divider">+----------+</div>
-    <span class="cs-label">&gt;&gt; TO BE CONTINUED &lt;&lt;</span>
-    <span class="cs-sub">[ The chimera stirs… ]</span>
-    <span class="cs-hint">// ending coming soon //</span>
+    <span class="cs-label">&gt;&gt; THE CHIMERA AWAKENS !!! &lt;&lt;</span>
+
   </div>
 
 </div>

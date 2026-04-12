@@ -42,6 +42,7 @@ export const CURRENCY_FLAVOR = {
   'magical-implement':   { name: 'Magical Implement',          symbol: 'ᛗ',  color: '#3eafc9' },
   'construct':           { name: 'Construct',                   symbol: '⚙',  color: '#7eb8d4' },
   'life-thread':         { name: 'Life Thread',                  symbol: '⌇',  color: '#8bea93' },
+  'ichor':               { name: 'Ichor',                        symbol: '🌢',  color: '#8b0000' },
 
   /**
   Ideas for new Symbols
@@ -185,6 +186,13 @@ export const UPGRADE_FLAVOR = {
   QUICK_STITCHING: { name: 'Quick Stitching', desc: 'Doubles the amount of resources applied per contribution click per level' },
   MINOR_TOUCH_UP:  { name: 'Minor Touch Up',  desc: '10% chance per level to also apply (level) of a resource to a random other unfinished bar' },
 
+  // Slayer
+  KNOW_NO_FEAR:       { name: 'Know No Fear',       desc: '+1 damage per attack per level' },
+  BLOODLUST:          { name: 'Bloodlust',           desc: 'The Slayer attacks 0.1 seconds faster per level (min 0.5s)' },
+  CONDEMN:            { name: 'Condemn',              desc: 'Clicking a weak spot grants +1 damage per level for 7s. Stacks up to 7×.' },
+  SLAYER_GOLD_BEAD_1: { name: 'Bead of Carnage',     desc: 'Doubles the Slayer\'s damage' },
+  SLAYER_GOLD_BEAD_2: { name: 'Bead of Annihilation', desc: 'Doubles the Slayer\'s damage (stacks)' },
+
   // ── Relic upgrades (one per character) ──────────────────────────
   RELIC_FIGHTER:    { name: 'Crown of Hireling Command',          desc: 'Each Jack hires hirelings, who in turn hire hirelings' },
   RELIC_RANGER:     { name: 'Belt of the Woodlands',              desc: 'Each assigned Jack adds +1 to the base herb yield (before doubling) and +1 bonus beast meat per hunt' },
@@ -207,6 +215,7 @@ export const UPGRADE_FLAVOR = {
   RELIC_MERCHANT:      { name: 'Ledger of Infinite Commerce',      desc: 'Each assigned Jack purchases 10 of a random resource for free per hero button press' },
   RELIC_ARTIFICER:     { name: 'Tome of Boundless Creation',       desc: 'Jacks double the mana produced by Reflect and gain +1 insight per Study' },
   RELIC_CHIMERAMANCER: { name: 'Thread of Infinite Weaving',       desc: 'Jacks assigned to the Chimeramancer also click every other hero button (toggleable)' },
+  RELIC_SLAYER:        { name: 'Vorpal Blade',                     desc: 'The killing blow. Without this, the chimera clings to life at 1 HP.' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
@@ -369,54 +378,70 @@ export const CHARACTER_FLAVOR = {
   FIGHTER: {
     name: 'Fighter',
     desc: 'A mercenary looking to get by, completing odd jobs and learning about the world around him.',
+    deathDesc: 'His bounties forged the gold that fed the beast. The chimera wears his courage as its hide.',
     questBtn: 'Complete Bounty',
   },
   RANGER: {
     name: 'Ranger',
     desc: 'A perceptive folk, and a warden of the woods. Even if she hunts no prey, she manages to always bring something else home.',
+    deathDesc: 'Her herbs and beasts became its sinew. The forest she guarded now grows inside the chimera.',
     questBtn: 'Hunt & Gather',
   },
   APOTHECARY: {
     name: 'Apothecary',
     desc: 'The proud owner of a small potion shop. He is quite good at his craft, and specializes in versatile potion bases.',
+    deathDesc: 'His potions flow through the chimera\'s veins. Every elixir he brewed now sustains the abomination.',
     questBtn: 'Distill',
   },
   CULINARIAN: {
     name: 'Culinarian',
     desc: 'A seasoned chef who sources only the finest ingredients. Can craft never before tasted dishes with peculiar potency...',
+    deathDesc: 'His finest meals gave the chimera its strength. The spices he cherished now burn in its breath.',
     questBtn: 'Source Ingredients',
   },
   THIEF: {
     name: 'Thief',
     desc: "A Lady doesn't need to always lurk in the shadows.",
+    deathDesc: 'Her stolen treasures adorn the chimera\'s form. Even in death, she couldn\'t escape the shadows.',
     questBtn: 'Break & Enter',
   },
   ARTISAN: {
     name: 'Artisan',
     desc: 'A meticulous craftsman who sees value where others see junk. Give him any trinket and he will find the gems within.',
+    deathDesc: 'His gems became the chimera\'s gleaming eyes. The beauty he crafted now serves a terrible purpose.',
     questBtn: 'Appraisal',
   },
   NECROMANCER: {
     name: 'Necromancer',
     desc: 'A scholar of the forbidden arts. He commands the boundary between life and death, cycling between desecration and warding.',
+    deathDesc: 'His bones and brimstone bind the chimera\'s soul. The boundary he walked has finally closed behind him.',
     questBtnExhume: 'Exhume',
     questBtnWard: 'Ward',
   },
   MERCHANT: {
     name: 'Merchant',
     desc: 'A cunning dealer who trades in goods others dare not touch. His connections span every dark corner of the realm.',
+    deathDesc: 'His illicit goods became the chimera\'s arsenal. Every deal he brokered led to this monstrous trade.',
     questBtn: 'Fence Goods',
   },
   ARTIFICER: {
     name: 'Artificer',
     desc: 'A scholar of arcane constructs. She reads the forbidden tomes to gain insight, then channels that knowledge into raw mana and wondrous constructs.',
+    deathDesc: 'Her constructs and mana fused into the chimera\'s mind. The knowledge she sought now thinks for the beast.',
     questBtnStudy: '>>> Study',
     questBtnReflect: 'Reflect <<<',
   },
   CHIMERAMANCER: {
     name: 'Chimeramancer',
     desc: 'A mad visionary who stitches flesh, bone, and spirit into a single impossible form. Thread by thread, a chimeric horror takes shape.',
+    deathDesc: 'His creation consumed him first. The thread he wove became his own shroud.',
     questBtn: 'Stitch',
+  },
+  SLAYER: {
+    name: 'Slayer',
+    desc: 'The last one standing. There is only one thing left to do.',
+    deathDesc: '',
+    questBtn: '',
   },
 } as const;
 
@@ -461,6 +486,10 @@ export const MINIGAME_FLAVOR = {
   CHIMERAMANCER: {
     name: 'Chimeric Animation',
     desc: 'Gather the pieces. Build the beast.\nAwaken the impossible.',
+  },
+  SLAYER: {
+    name: 'Sidequest',
+    desc: 'The slayer has only one goal...',
   },
 } as const;
 
@@ -568,6 +597,14 @@ export const HERO_STATS_FLAVOR = {
   CHIMERAMANCER: {
     THREAD_PER_CLICK: 'Thread / Stitch:',
     NEEDLES_PER_SEC:  'Thread / Sec  :',
+  },
+  SLAYER: {
+    CHIMERA_HP:       'Chimera HP     :',
+    DAMAGE_DEALT:     'Damage Dealt   :',
+    ATTACK_DAMAGE:    'Attack Damage  :',
+    ATTACK_SPEED:     'Attack Speed   :',
+    VORPAL_BLADE:     'Vorpal Blade   :',
+    CONDEMN_STACKS:   'Condemn        :',
   },
 } as const;
 
@@ -733,6 +770,12 @@ export const BEAD_FLAVOR: Record<string, Record<string, BeadSlotFlavor>> = {
     'gold-1': { name: 'Bead of Animation',       lore: 'Pulsing with stolen life, it drives the needle without mortal hands.',                                                  effect: 'Unlocks basic sidequest automation.' },
     'gold-2': { name: 'Bead of the Chimera',     lore: 'Forged in the heart of an impossible creature.',                                                                        effect: 'Placeholder — future effect.' },
     'blue-2': { name: 'Bead of the Abomination', lore: 'Harvested from the first chimera ever stitched, it doubles all yields from this grotesque art.',                         effect: '2× resource yields from this character (stacks).' },
+  },
+  slayer: {
+    'blue-1': { name: '—', lore: '', effect: '' },
+    'gold-1': { name: 'Bead of Carnage',      lore: 'Carved from the bones of the chimera, it thrums with savage power awaiting release.',     effect: 'Doubles the Slayer\'s attack damage.' },
+    'gold-2': { name: 'Bead of Annihilation', lore: 'Soaked in the chimera\'s blood, it stacks carnage upon carnage until nothing remains.', effect: 'Doubles the Slayer\'s attack damage (stacks with Bead of Carnage).' },
+    'blue-2': { name: '—', lore: '', effect: '' },
   },
 };
 
@@ -911,6 +954,17 @@ export const LOG_MSG = {
     CONTRIBUTE:              (formatted: string) => `Contributed ${formatted} to the chimera.`,
     CHIMERA_AWAKEN:          '★ THE CHIMERA AWAKENS! The impossible lives!',
     LIFE_THREAD_UNLOCKED:    'Life Thread discovered! A new currency!',
+  },
+
+  SLAYER: {
+    CHIMERA_ATTACKS:         '★ THE CHIMERA BREAKS FREE! It turns on its creators!',
+    CHARACTER_SLAIN:         (name: string) => ` ${name} has been slain by the chimera...`,
+    JACKS_DESTROYED:         '☠ All Jacks have been consumed by the chimera.',
+    SLAYER_RISES:            '★ From the ashes, the Slayer rises. There is only one goal.',
+    CHIMERA_HIT:             (dmg: number) => `You strike the chimera for ${dmg} damage! (${cur('ichor', dmg)})`,
+    CHIMERA_AUTO_HIT:        (dmg: number) => `The Slayer strikes! ${dmg} damage. (${cur('ichor', dmg)})`,
+    CHIMERA_CLINGS:          'The chimera clings to life… it cannot be slain without the Vorpal Blade.',
+    CHIMERA_DEFEATED:        '★★★ THE CHIMERA IS SLAIN! ★★★',
   },
 
   // ── System messages ───────────────────────────────────────────

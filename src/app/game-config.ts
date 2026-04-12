@@ -9,7 +9,7 @@
 import { KOBOLD_VARIANTS } from './flavor-text';
 
 // ── Game Version ─────────────────────────────────────────────
-export const VERSION = 'Alpha 1.3.0';
+export const VERSION = 'Alpha 1.4.0';
 
 // ── Shared Upgrade Types ─────────────────────────────────────
 
@@ -63,6 +63,10 @@ export interface UpgradeGates {
   readonly requiresSharperSwordsMin?: number;
   /** Hide until the Treasure Chest upgrade has at least this many levels purchased. */
   readonly requiresTreasureChestMin?: number;
+  /** Hide until: slayerMode is active (chimera 100% + boss fight started), ≥50 damage dealt, and ≥50 ichor received. */
+  readonly requiresSlayerDamage?: boolean;
+  /** Hide until both Slayer Gold Bead upgrades (SLAYER_GOLD_BEAD_1 and SLAYER_GOLD_BEAD_2) are purchased. */
+  readonly requiresSlayerGoldBeads?: boolean;
 }
 
 export interface CostDef {
@@ -853,18 +857,40 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Chimeramancer — minigame ──────────────────────────────────
-  { id: 'QUICK_STITCHING', characterId: 'chimeramancer', category: 'minigame', max: 8,
+  { id: 'QUICK_STITCHING', characterId: 'chimeramancer', category: 'minigame', max: 32,
     costs: [
       { currency: 'construct',     base: 50,  scale: 2.0 },
       { currency: 'life-thread',   base: 100, scale: 2.0 },
       { currency: 'kobold-pebble', base: 200, scale: 1.8 },
     ] },
-  { id: 'MINOR_TOUCH_UP', characterId: 'chimeramancer', category: 'minigame', max: 10,
+  { id: 'MINOR_TOUCH_UP', characterId: 'chimeramancer', category: 'minigame', max: 20,
     costs: [
       { currency: 'gold',  base: 100_000, scale: 1.6 },
       { currency: 'herb',  base: 1_000,   scale: 1.6 },
       { currency: 'spice', base: 500,     scale: 1.6 },
     ] },
+
+  // ── Slayer — standard ──────────────────────────────────────────
+  { id: 'KNOW_NO_FEAR', characterId: 'slayer', category: 'standard', max: 64,
+    gates: { requiresSlayerDamage: true },
+    costs: [{ currency: 'ichor', base: 10, scale: 1.1 }] },
+  { id: 'BLOODLUST', characterId: 'slayer', category: 'standard', max: 25,
+    gates: { requiresSlayerDamage: true },
+    costs: [{ currency: 'ichor', base: 20, scale: 1.3 }] },
+  { id: 'CONDEMN', characterId: 'slayer', category: 'standard', max: 7,
+    gates: { requiresSlayerDamage: true },
+    costs: [{ currency: 'ichor', base: 77, scale: 1.15 }] },
+
+  // ── Slayer — sidequest (minigame) ─────────────────────────────
+  { id: 'SLAYER_GOLD_BEAD_1', characterId: 'slayer', category: 'minigame', max: 1,
+    gates: { requiresSlayerDamage: true },
+    costs: [{ currency: 'ichor', base: 25_000, scale: 1.0 }] },
+  { id: 'SLAYER_GOLD_BEAD_2', characterId: 'slayer', category: 'minigame', max: 1,
+    gates: { requiresSlayerDamage: true },
+    costs: [{ currency: 'ichor', base: 250_000, scale: 1.0 }] },
+  { id: 'RELIC_SLAYER', characterId: 'slayer', category: 'relic', max: 1,
+    gates: { requiresSlayerDamage: true, requiresSlayerGoldBeads: true },
+    costs: [{ currency: 'ichor', base: 1_000_000, scale: 1.0 }] },
 
   // ── Relic upgrades (one per character) ──────────────────────────
   // Each costs exactly 1 relic + a dynamically-computed jewelry amount
@@ -1480,7 +1506,7 @@ export const BEADS = {
   /** Chance (0–1) per successful minigame completion to discover a gold bead. */
   MINIGAME_GOLD_BEAD_CHANCE: 1 / 100,
   /** Minimum manual (non-auto-solve) sidequest clears before gold-1 bead can drop. */
-  GOLD_BEAD_MIN_MANUAL_CLEARS: 100,
+  GOLD_BEAD_MIN_MANUAL_CLEARS: 50,
 } as const;
 
 // ── Auto-Solve Timings ──────────────────────────────────────
@@ -1606,5 +1632,39 @@ export const GOOD_AUTO_SOLVE = {
   APOTHECARY_TICK_MS:  120,
   /** Merchant: faster goods opening (ms) when upgraded. */
   MERCHANT_TICK_MS:    600,
+} as const;
+
+// ── Slayer (Endgame Boss Fight) ──────────────────────────────
+export const SLAYER = {
+  /** Total Chimera HP for the boss fight. */
+  MAX_HP:            666_666_666,
+  /** Damage dealt per successful click on an active button. */
+  DAMAGE_PER_CLICK:  1,
+  /** Number of circular buttons in the boss fight. */
+  BUTTON_COUNT:      9,
+  /** How often (ms) each button toggles on/off. */
+  BUTTON_CYCLE_MS:   500,
+  /** How long (ms) a button stays active before cycling. */
+  BUTTON_ACTIVE_MS:  1000,
+  /** Damage threshold after which the Slayer upgrade appears. */
+  UPGRADE_THRESHOLD: 50,
+  /** Delay (ms) between each character dying in the death sequence. */
+  DEATH_DELAY_MS:    8000,
+
+  // ── Auto-attack ─────────────────────────────────────────────
+  /** Base auto-attack interval in ms (one hit every 3 seconds). */
+  AUTO_ATTACK_BASE_MS:    3000,
+  /** Minimum auto-attack interval (floor) in ms. */
+  AUTO_ATTACK_MIN_MS:     500,
+  /** Milliseconds subtracted per Bloodlust level. */
+  BLOODLUST_REDUCTION_MS: 100,
+  /** Additional damage per Know No Fear level. */
+  KNOW_NO_FEAR_DAMAGE:    1,
+  /** Duration (ms) of each Condemn stack. */
+  CONDEMN_DURATION_MS:    7000,
+  /** Maximum number of simultaneous Condemn stacks. */
+  CONDEMN_MAX_STACKS:     7,
+  /** Bonus damage per Condemn level per stack. */
+  CONDEMN_DAMAGE_PER_LEVEL: 1,
 } as const;
 

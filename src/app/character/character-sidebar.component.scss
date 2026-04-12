@@ -208,6 +208,18 @@ $cyan: #0ff;
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  &.is-dead {
+    border-left-color: #3a0000;
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: #0a0000;
+
+    &:hover {
+      background: #0a0000;
+      border-left-color: #3a0000;
+    }
+  }
 }
 
 // ── State indicator overlays (visual mirroring of hero button state) ──
@@ -291,6 +303,17 @@ $cyan: #0ff;
   flex: 1;
 
   &.dim { color: $muted; }
+
+  &.char-name-dead {
+    text-decoration: line-through;
+    opacity: 0.5;
+  }
+}
+
+.badge-dead {
+  font-size: 11px;
+  color: #8b0000;
+  flex-shrink: 0;
 }
 
 .badge-active {
@@ -367,6 +390,21 @@ $cyan: #0ff;
   // Artisan timer: tinted background
   &.compact-timer {
     background: rgba(160, 100, 20, 0.2);
+  }
+
+  // Dead character (Slayer endgame)
+  &.is-dead {
+    opacity: 0.35;
+    cursor: not-allowed;
+
+    .compact-initial {
+      text-decoration: line-through;
+    }
+
+    &:hover {
+      background: transparent;
+      .compact-initial { filter: none; }
+    }
   }
 }
 

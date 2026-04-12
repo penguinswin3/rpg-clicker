@@ -1,3 +1,16 @@
+# Version Alpha 1.4.0
+
+## Added
+- The End Times
+
+## Removed
+
+## Changed
+
+## Bugfixes
+
+----------------------------
+
 # Version Alpha 1.3.0
 
 ## Added

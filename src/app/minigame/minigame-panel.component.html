@@ -208,8 +208,10 @@
     <!-- ── Chimeramancer: Chimeric Animation minigame ─── -->
     <ng-container *ngIf="activeCharacterId === 'chimeramancer'">
       <app-chimeramancer-minigame
+        [slayerUnlocked]="slayerUnlocked"
         [savedContributions]="chimeramancerContributions"
         (contributionsChange)="chimeramancerContributionsChange.emit($event)"
+        (chimeraCompleted)="chimeraCompleted.emit()"
         [autoSolveUnlocked]="!!autoSolveUnlocked['chimeramancer']"
         [autoSolveEnabled]="!!autoSolveEnabled['chimeramancer']"
         [autoSolveGoodMode]="!!autoSolveGoodMode['chimeramancer']"
@@ -225,15 +227,22 @@
       />
     </ng-container>
 
+    <!-- ── Slayer: no sidequest ─── -->
+    <ng-container *ngIf="activeCharacterId === 'slayer'">
+      <div class="mg-divider">+----------+</div>
+      <div class="mg-coming-soon">
+        <span class="cs-label" style="color: #8b0000; text-align: center; display: block;">{{ slayerUnlocked ? MINIGAME_FLAVOR.SLAYER.desc : '...' }}</span>
+      </div>
+      <div class="mg-divider">+----------+</div>
+    </ng-container>
+
     <!-- ── Other characters: placeholder ── -->
-    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian' && activeCharacterId !== 'thief' && activeCharacterId !== 'artisan' && activeCharacterId !== 'necromancer' && activeCharacterId !== 'merchant' && activeCharacterId !== 'artificer' && activeCharacterId !== 'chimeramancer'">
+    <ng-container *ngIf="activeCharacterId !== 'fighter' && activeCharacterId !== 'apothecary' && activeCharacterId !== 'ranger' && activeCharacterId !== 'culinarian' && activeCharacterId !== 'thief' && activeCharacterId !== 'artisan' && activeCharacterId !== 'necromancer' && activeCharacterId !== 'merchant' && activeCharacterId !== 'artificer' && activeCharacterId !== 'chimeramancer' && activeCharacterId !== 'slayer'">
 
       <div class="mg-divider">+----------+</div>
 
       <div class="mg-coming-soon">
-        <span class="cs-label">&gt;&gt; SIDEQUEST &lt;&lt;</span>
-        <span class="cs-sub">[ Under Construction ]</span>
-        <span class="cs-hint">// more content soon //</span>
+        <span class="cs-label">...</span>
       </div>
 
       <div class="mg-divider">+----------+</div>

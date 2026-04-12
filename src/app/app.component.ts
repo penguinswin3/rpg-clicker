@@ -14,7 +14,7 @@ import { StatisticsComponent } from './statistics/statistics.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE } from './game-config';
+import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE, SLAYER } from './game-config';
 import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR, BEAD_FLAVOR, BEAD_COLORS, BEAD_SYMBOL, HERO_PRESS_PULSE_COLOR, LOG_MSG } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
@@ -149,6 +149,41 @@ export class AppComponent implements OnInit, OnDestroy {
   koboldBaitEnabled       = false;
   ancientCookbookEnabled  = true;
   chimeramancerRelicEnabled = true;
+
+  // ── Slayer endgame state ────────────────────────────────────
+  /** Whether the Slayer endgame sequence has been triggered. */
+  slayerMode = false;
+  /** Slayer boss fight state. */
+  slayerHp: number = SLAYER.MAX_HP;
+  slayerDamageDone: number = 0;
+  /** Whether each of the 8 circular buttons is currently active. */
+  slayerButtons: boolean[] = new Array(SLAYER.BUTTON_COUNT).fill(false);
+  /** Interval handle for the button cycling. */
+  private slayerCycleTimer: ReturnType<typeof setInterval> | null = null;
+  /** Whether the death sequence animation is currently playing. */
+  slayerDeathSequencePlaying = false;
+  /** IDs of characters that have been killed by the chimera. */
+  deadCharacters: string[] = [];
+  /** The Slayer character has been unlocked (distinct from slayerMode during death sequence). */
+  slayerUnlocked = false;
+  /** Interval handle for the Slayer auto-attack timer. */
+  private slayerAutoAttackTimer: ReturnType<typeof setInterval> | null = null;
+
+  // ── Condemn stacks (Slayer) ─────────────────────────────────
+  /** Expiry timestamps (ms) for each active Condemn stack. */
+  condemnStacks: number[] = [];
+
+  // ── Slayer bead socket helpers ───────────────────────────────
+  /** Whether the Bead of Carnage (SLAYER_GOLD_BEAD_1) is socketed and active. */
+  get slayerBead1Socketed(): boolean {
+    return !!this.beadState['slayer']?.['gold-1']?.socketed;
+  }
+  /** Whether the Bead of Annihilation (SLAYER_GOLD_BEAD_2) is socketed and active. */
+  get slayerBead2Socketed(): boolean {
+    return !!this.beadState['slayer']?.['gold-2']?.socketed;
+  }
+  /** Timer that cleans up expired stacks. */
+  private condemnCleanupTimer: ReturnType<typeof setInterval> | null = null;
 
   // ── Multi-buy state ──────────────────────────────────────────
   /** How many upgrade levels to purchase per click: 1, 5, 10, or 'max'. */
@@ -428,6 +463,14 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.xpMin != null && this.highestXp < gates.xpMin) return false;
     if (gates.requiresSharperSwordsMin != null && this.upgrades.level('SHARPER_SWORDS') < gates.requiresSharperSwordsMin) return false;
     if (gates.requiresTreasureChestMin != null && this.upgrades.level('TREASURE_CHEST') < gates.requiresTreasureChestMin) return false;
+    if (gates.requiresSlayerDamage && (
+      !this.slayerMode                                           // 1) chimera not 100% / boss fight not started
+      || this.slayerDamageDone < SLAYER.UPGRADE_THRESHOLD       // 2) fewer than 50 damage dealt
+      || (!this.slayerUnlocked && this.wallet.get('ichor') < SLAYER.UPGRADE_THRESHOLD)  // 3) fewer than 50 ichor (only before slayer is purchased)
+    )) return false;
+    if (gates.requiresSlayerGoldBeads && (
+      this.upgrades.level('SLAYER_GOLD_BEAD_1') < 1 || this.upgrades.level('SLAYER_GOLD_BEAD_2') < 1
+    )) return false;
     return true;
   }
 
@@ -495,6 +538,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Buy the current buy-quantity of levels for an upgrade. */
   buyUpgrade(id: string): void {
+    const prevLevel = this.upgrades.level(id);
     if (this.buyQuantity === 'max') {
       const max = this.upgrades.maxAffordable(id);
       if (max > 0) this.upgrades.buyMulti(id, max);
@@ -502,6 +546,25 @@ export class AppComponent implements OnInit, OnDestroy {
       const count = this.effectiveBuyCount(id);
       this.upgrades.buyMulti(id, count);
     }
+    // After buying a slayer gold bead, mark it as "found" so the player
+    // must manually socket it via the bead crown before it takes effect.
+    if (id === 'SLAYER_GOLD_BEAD_1' && this.upgrades.level(id) > prevLevel) {
+      this._markSlayerBeadFound('gold-1', 'Bead of Carnage');
+    } else if (id === 'SLAYER_GOLD_BEAD_2' && this.upgrades.level(id) > prevLevel) {
+      this._markSlayerBeadFound('gold-2', 'Bead of Annihilation');
+    }
+  }
+
+  /** Mark a slayer gold bead slot as found (purchased but not yet socketed). */
+  private _markSlayerBeadFound(slotId: 'gold-1' | 'gold-2', beadName: string): void {
+    this.ensureBeadState('slayer');
+    if (this.beadState['slayer']![slotId].found) return; // already found
+    this.beadState['slayer']![slotId].found = true;
+    this.beadState = { ...this.beadState };
+    this._refreshDerived();
+    this.addCharShine('slayer');
+    this.log.log(`The ${beadName} awaits socketing — open the bead crown to activate it.`, 'rare');
+    this.statsService.recordMilestone(`slayer_bead_found_${slotId}`, `Slayer: ${beadName} Purchased`);
   }
 
   // ── Relic popup ────────────────────────────────────────────────
@@ -730,6 +793,10 @@ export class AppComponent implements OnInit, OnDestroy {
         const flavorName = (UPGRADE_FLAVOR as any)[id]?.name ?? id;
         this.statsService.recordMilestone(`relic_${id}`, `Relic: ${flavorName}`);
       }
+      // Restart auto-attack timer when Bloodlust changes (interval changed)
+      if (id === 'BLOODLUST' && this.slayerUnlocked) {
+        this._startSlayerAutoAttack();
+      }
       // Shine the character button when something new happens for a non-active character
       const charId = this.upgrades.charIdFor(id);
       if (charId) this.addCharShine(charId);
@@ -942,6 +1009,9 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.saveService.stopAutoSave();
     this.heroHoldStop();
+    this.stopSlayerButtonCycle();
+    this._stopSlayerAutoAttack();
+    this._stopCondemnCleanup();
   }
 
   @HostListener('window:beforeunload')
@@ -982,6 +1052,9 @@ export class AppComponent implements OnInit, OnDestroy {
       selectedEtchingLevel:        this.selectedEtchingLevel,
       chimeramancerContributions:  this.chimeramancerContributions ?? undefined,
       chimeramancerRelicEnabled:   this.chimeramancerRelicEnabled,
+      slayerMode:                  this.slayerMode,
+      slayerState:                 { hp: this.slayerHp, damageDone: this.slayerDamageDone },
+      deadCharacters:              [...this.deadCharacters],
     };
   }
 
@@ -1020,6 +1093,9 @@ export class AppComponent implements OnInit, OnDestroy {
     // Restore bead state
     this.beadState = s.beads ? JSON.parse(JSON.stringify(s.beads)) : {};
     this.syncBeadMultipliers();
+    // Migrate: if slayer gold beads were already purchased in an older save,
+    // auto-socket them so existing players don't lose their bonuses.
+    this._migrateSlayerBeads();
     // Restore auto-solve toggle state
     this.autoSolveEnabled = s.autoSolveEnabled ? { ...s.autoSolveEnabled } : {};
     // Restore gold-2 progress state
@@ -1039,6 +1115,26 @@ export class AppComponent implements OnInit, OnDestroy {
       ? { ...s.chimeramancerContributions }
       : null;
     this.chimeramancerRelicEnabled = s.chimeramancerRelicEnabled ?? true;
+    // Restore slayer state
+    this.slayerMode = s.slayerMode ?? false;
+    if (s.slayerState) {
+      this.slayerHp = s.slayerState.hp ?? SLAYER.MAX_HP;
+      this.slayerDamageDone = s.slayerState.damageDone ?? 0;
+    }
+    this.deadCharacters = s.deadCharacters ? [...s.deadCharacters] : [];
+    if (this.deadCharacters.length > 0) {
+      this.charService.setDead(this.deadCharacters);
+    }
+    // Derive slayerUnlocked from the character service — characters are already
+    // restored (step 3 of applySnapshot) before setUpgradeState is called (step 5).
+    this.slayerUnlocked = this.charService.getCharacters().find(c => c.id === 'slayer')?.unlocked ?? false;
+    if (this.slayerMode && this.slayerHp > 0) {
+      this.startSlayerButtonCycle();
+    }
+    // Restart auto-attack if slayer is unlocked and chimera still alive
+    if (this.slayerUnlocked && this.slayerHp > 0) {
+      this._startSlayerAutoAttack();
+    }
     // Restore artisan timer — if still in the future, reschedule the completion callback
     this.artisanTimerUntil     = s.artisanTimerUntil     ?? 0;
     this.artisanTimerBatchSize = s.artisanTimerBatchSize  ?? 0;
@@ -1051,6 +1147,29 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     }
     this.updateAllPerSecond();
+  }
+
+  /**
+   * Backward-compat migration: if a slayer gold bead upgrade was already
+   * purchased in an older save (before the socketing mechanic was added),
+   * auto-find AND auto-socket the bead so the player doesn't lose the bonus.
+   * New purchases will only mark the bead as "found" and require manual socketing.
+   */
+  private _migrateSlayerBeads(): void {
+    const migrate = (upgradeId: string, slotId: 'gold-1' | 'gold-2') => {
+      if (this.upgrades.level(upgradeId) >= 1) {
+        this.ensureBeadState('slayer');
+        const slot = this.beadState['slayer']![slotId];
+        if (!slot.found) {
+          // Pre-existing purchase: auto-socket for backward compatibility
+          slot.found = true;
+          slot.socketed = true;
+        }
+      }
+    };
+    migrate('SLAYER_GOLD_BEAD_1', 'gold-1');
+    migrate('SLAYER_GOLD_BEAD_2', 'gold-2');
+    this.beadState = { ...this.beadState };
   }
 
   // ── Per-second display rates ───────────────────────────────────
@@ -1104,6 +1223,10 @@ export class AppComponent implements OnInit, OnDestroy {
       artificerInsight: this.artificerInsight,
       selectedKoboldLevel: this.selectedKoboldLevel,
       chimeramancerRelicEnabled: this.chimeramancerRelicEnabled,
+      slayerUnlocked:    this.slayerUnlocked,
+      slayerChimeraDead: this.slayerHp <= 0,
+      slayerBead1Socketed: this.slayerBead1Socketed,
+      slayerBead2Socketed: this.slayerBead2Socketed,
     };
     const rates = calculatePerSecondRates(ctx);
     this.wallet.batchUpdate(() => {
@@ -1137,6 +1260,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.setPerSecond('kobold-pebble',     rates['kobold-pebble']);
       this.wallet.setPerSecond('kobold-heart',      rates['kobold-heart']);
       this.wallet.setPerSecond('life-thread',       rates['life-thread']);
+      this.wallet.setPerSecond('ichor',              rates.ichor);
       this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
     });
   }
@@ -1167,6 +1291,11 @@ export class AppComponent implements OnInit, OnDestroy {
       necromancerClicksRemaining:  this.necromancerClicksRemaining,
       artificerActiveButton:       this.artificerActiveButton,
       artificerInsight:            this.artificerInsight,
+      slayerHp:                    this.slayerHp,
+      slayerDamageDone:            this.slayerDamageDone,
+      condemnStacks:               this.activeCondemnStacks,
+      slayerBead1Socketed:         this.slayerBead1Socketed,
+      slayerBead2Socketed:         this.slayerBead2Socketed,
     });
 
     // Visible upgrades (per category)
@@ -1826,6 +1955,378 @@ export class AppComponent implements OnInit, OnDestroy {
     this.updateAllPerSecond();
     this.log.log(LOG_MSG.SYSTEM.JACKDUP_UNLOCKED, 'rare');
     this.statsService.recordMilestone('jackdup_unlocked', "Jack'd Up Unlocked");
+  }
+
+  // ── Slayer endgame logic ─────────────────────────────────────
+
+  /** Slayer ASCII art — displayed in precious-metal silver to the left of the
+   *  Chimera once the Slayer character is unlocked. */
+  readonly SLAYER_ART: string[] = [
+    '                   _.--.    .--._',
+    '                 ."  ."      ".  ".',
+    '                ;  ."    /\\    ".  ;',
+    '                ;  \'._,-/  \\-,_.`  ;',
+    '                \\  ,`  / /\\ \\  `,  /',
+    '                 \\/    \\/  \\/    \\/',
+    '                 ,=_    \\/\\/    _=,',
+    '                 |  "_   \\/   _"  |',
+    '                 |_   \'\"-..-\"\'   _|',
+    '                 | "-.        .-" |',
+    '                 |    "\\    /"    |',
+    '                 |      |  |      |',
+    '         ___     |      |  |      |     ___',
+    '     _,-",  ",   \'_     |  |     _\'   ,"  ,"-,_',
+    '   _(  \\  \\   \\"=--"-.  |  |  .-"--="/   /  /  )_',
+    ' ,"  \\  \\  \\   \\      "-\'--\'-"      /   /  /  /  ".',
+    '!     \\  \\  \\   \\                  /   /  /  /     !',
+    ':      \\  \\  \\   \\                /   /  /  /      :',
+  ];
+
+  /** Pre-joined slayer art string for use inside a &lt;pre&gt; tag. */
+  get slayerArtText(): string { return this.SLAYER_ART.join('\n'); }
+
+  /** The chimera ASCII art (same as in the chimeramancer minigame). */
+  readonly CHIMERA_ART: string[] = [
+    '                                             ,--,  ,.-.',
+    '               ,                   \\,       \'-,-`,\'-.\' | ._',
+    '              /|           \\    ,   |\\         }  )/  / `-,\',',
+    '              [ ,          |\\  /|   | |        /  \\|  |/`  ,`',
+    '              | |       ,.`  `,` `, | |  _,...(   (      .\',',
+    '              \\  \\  __ ,-` `  ,  , `/ |,\'      Y     (   /_L\\',
+    '               \\  \\_\\,``,   ` , ,  /  |         )         _,/',
+    '                \\  \'  `  ,_ _`_,-,<._.<        /         /',
+    '                 \', `>.,`  `  `   ,., |_      |         /',
+    '                   \\/`  `,   `   ,`  | /__,.-`    _,   `\\',
+    '               -,-..\\  _  \\  `  /  ,  / `._) _,-\\`       \\',
+    '                \\_,,.) /\\    ` /  / ) (-,, ``    ,        |',
+    '               ,` )  | \\_\\       \'-`  |  `(               \\',
+    '              /  /```(   , --, ,\' \\   |`<`    ,            |',
+    '             /  /_,--`\\   <\\  V /> ,` )<_/)  | \\      _____)',
+    '       ,-, ,`   `   (_,\\ \\    |   /) / __/  /   `----`',
+    '      (-, \\           ) \\ (\'_.-._)/ /,`    /',
+    '      | /  `          `/ \\\\ V   V, /`     /',
+    '   ,--\\(        ,     <_/`\\\\     ||      /',
+    '  (   ,``-     \\/|         \\-A.A-`|     /',
+    ' ,>,_ )_,..(    )\\          -,,_-`  _--`',
+    '(_ \\|`   _,/_  /  \\_            ,--`',
+    ' \\( `   <.,../`     `-.._   _,-`',
+  ];
+
+  /** Pre-joined chimera art string for use inside a &lt;pre&gt; tag. */
+  get chimeraArtText(): string { return this.CHIMERA_ART.join('\n'); }
+
+  /** Chimera health percentage for the progress bar. */
+  get slayerHpPct(): number {
+    return Math.max(0, (this.slayerHp / SLAYER.MAX_HP) * 100);
+  }
+
+  /**
+   * Chimera damage tier for visual effects:
+   *  0 = above 70%, 1 = below 70%, 2 = below 50%, 3 = below 25%.
+   */
+  get chimeraDamageTier(): number {
+    const pct = this.slayerHpPct;
+    if (pct <= 0)  return 0;          // dead — no blink
+    if (pct < 25)  return 3;
+    if (pct < 50)  return 2;
+    if (pct < 70)  return 1;
+    return 0;
+  }
+
+  /**
+   * Slayer glow tier based on socketed beads:
+   *  0 = nothing, 1 = bead 1 socketed, 2 = both beads socketed, 3 = both + relic (max).
+   */
+  get slayerGlowTier(): number {
+    let tier = 0;
+    if (this.slayerBead1Socketed) tier++;
+    if (this.slayerBead2Socketed) tier++;
+    if (this.upgrades.level('RELIC_SLAYER') >= 1) tier++;
+    // blue beads (from the regular bead system) add extra glow
+    if (tier >= 3) tier = 4;  // all three → max tier
+    return tier;
+  }
+
+  /** Whether the slayer upgrade is available (50 damage dealt). */
+  get slayerUpgradeAvailable(): boolean {
+    return this.slayerDamageDone >= SLAYER.UPGRADE_THRESHOLD;
+  }
+
+  /**
+   * Called when the chimera reaches 100% completion.
+   * Triggers the screen shake, death sequence, and boss fight.
+   * The Slayer character unlock appears later at 50 damage dealt.
+   */
+  onChimeraCompleted(): void {
+    if (this.slayerMode) return; // already triggered
+    this.slayerMode = true;
+    this.slayerDeathSequencePlaying = true;
+
+    // Log the chimera attacking
+    this.log.log(LOG_MSG.SLAYER.CHIMERA_ATTACKS, 'rare');
+
+    // Death sequence: kill characters one by one from the right side
+    const killOrder = this.unlockedCharacters
+      .filter(c => c.id !== 'slayer')
+      .map(c => c.id)
+      .reverse(); // kill from the bottom/right
+
+    killOrder.forEach((charId, index) => {
+      setTimeout(() => {
+        // Screen shake on each character death
+        document.body.classList.remove('screen-shake');
+        // Force reflow so re-adding the class restarts the animation
+        void document.body.offsetWidth;
+        document.body.classList.add('screen-shake');
+
+        this.charService.kill(charId);
+        this.deadCharacters = [...this.deadCharacters, charId];
+
+        // Remove jacks for this character
+        const keysToRemove = Object.keys(this.jacksAllocations).filter(k =>
+          k === charId || k.startsWith(charId + '-')
+        );
+        for (const key of keysToRemove) {
+          this.jacksAllocations = { ...this.jacksAllocations, [key]: 0 };
+        }
+
+        const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;
+        this.log.log(LOG_MSG.SLAYER.CHARACTER_SLAIN(charName), 'warn');
+
+        // After last character dies, finalize
+        if (index === killOrder.length - 1) {
+          setTimeout(() => {
+            // Stop screen shake once all characters are dead
+            document.body.classList.remove('screen-shake');
+
+            // Destroy all jacks
+            this.jacksAllocations = {};
+            this.log.log(LOG_MSG.SLAYER.JACKS_DESTROYED, 'warn');
+
+            // Deselect all characters — no one is active yet
+            this.charService.clearActive();
+
+            // Start the boss fight button cycling (player fights without slayer unlocked)
+            this.startSlayerButtonCycle();
+            this.slayerDeathSequencePlaying = false;
+            this.updateAllPerSecond();
+          }, SLAYER.DEATH_DELAY_MS);
+        }
+      }, SLAYER.DEATH_DELAY_MS * (index + 1));
+    });
+  }
+
+  /**
+   * Called when the player purchases the Slayer character from the global upgrades panel.
+   */
+  onSlayerUnlocked(): void {
+    this.charService.setActive('slayer');
+    this.slayerUnlocked = true;
+    this.log.log(LOG_MSG.SLAYER.SLAYER_RISES, 'rare');
+    this.statsService.recordMilestone('slayer_unlocked', 'The Slayer Rises');
+    this._startSlayerAutoAttack();
+  }
+
+  /** Compute effective Slayer attack damage (base + Know No Fear + Condemn stacks + socketed bead multipliers). */
+  private _calcSlayerDamage(): number {
+    let dmg = SLAYER.DAMAGE_PER_CLICK + this.upgrades.level('KNOW_NO_FEAR') * SLAYER.KNOW_NO_FEAR_DAMAGE;
+    // Condemn: +level damage per active stack
+    const condemnLevel = this.upgrades.level('CONDEMN');
+    if (condemnLevel > 0 && this.condemnStacks.length > 0) {
+      const now = Date.now();
+      const activeStacks = this.condemnStacks.filter(t => t > now).length;
+      dmg += condemnLevel * SLAYER.CONDEMN_DAMAGE_PER_LEVEL * activeStacks;
+    }
+    if (this.slayerBead1Socketed) dmg *= 2;
+    if (this.slayerBead2Socketed) dmg *= 2;
+    return dmg;
+  }
+
+  /** Compute auto-attack interval in ms (base – Bloodlust, clamped to floor). */
+  private _calcSlayerAttackInterval(): number {
+    return Math.max(
+      SLAYER.AUTO_ATTACK_MIN_MS,
+      SLAYER.AUTO_ATTACK_BASE_MS - this.upgrades.level('BLOODLUST') * SLAYER.BLOODLUST_REDUCTION_MS,
+    );
+  }
+
+  /** Apply damage to the chimera, respecting Vorpal Blade rule, and award ichor. */
+  private _dealSlayerDamage(dmg: number, isAuto: boolean): void {
+    if (this.slayerHp <= 0) return;
+
+    // Award ichor equal to damage dealt (ichor earned even at 1 HP)
+    this.wallet.add('ichor', dmg);
+    this.statsService.trackCurrencyGain('ichor', dmg);
+
+    // Apply damage
+    this.slayerHp -= dmg;
+    this.slayerDamageDone += dmg;
+
+    // Vorpal Blade check: chimera cannot die without it
+    const hasVorpal = this.upgrades.level('RELIC_SLAYER') >= 1;
+    if (!hasVorpal && this.slayerHp <= 0) {
+      this.slayerHp = 1;
+    }
+
+    // Log
+    if (isAuto) {
+      this.log.log(LOG_MSG.SLAYER.CHIMERA_AUTO_HIT(dmg), 'default');
+    } else {
+      this.log.log(LOG_MSG.SLAYER.CHIMERA_HIT(dmg), 'default');
+    }
+
+    // Check for chimera death
+    if (this.slayerHp <= 0) {
+      this.slayerHp = 0;
+      this.stopSlayerButtonCycle();
+      this._stopSlayerAutoAttack();
+      this._stopCondemnCleanup();
+      this.condemnStacks = [];
+      this.slayerButtons = new Array(SLAYER.BUTTON_COUNT).fill(false);
+      this.log.log(LOG_MSG.SLAYER.CHIMERA_DEFEATED, 'rare');
+      this.statsService.recordMilestone('chimera_defeated', 'The Chimera Is Slain!');
+    }
+  }
+
+  /** Start the Slayer auto-attack timer. */
+  private _startSlayerAutoAttack(): void {
+    this._stopSlayerAutoAttack();
+    if (!this.slayerUnlocked || this.slayerHp <= 0) return;
+    const interval = this._calcSlayerAttackInterval();
+    this.slayerAutoAttackTimer = setInterval(() => this._slayerAutoAttackTick(), interval);
+  }
+
+  /** Stop the Slayer auto-attack timer. */
+  private _stopSlayerAutoAttack(): void {
+    if (this.slayerAutoAttackTimer) {
+      clearInterval(this.slayerAutoAttackTimer);
+      this.slayerAutoAttackTimer = null;
+    }
+  }
+
+  // ── Condemn stack management ─────────────────────────────────
+
+  /** Number of currently-active (non-expired) Condemn stacks. */
+  get activeCondemnStacks(): number {
+    const now = Date.now();
+    return this.condemnStacks.filter(t => t > now).length;
+  }
+
+  /** Add a Condemn stack. Caps at CONDEMN_MAX_STACKS; oldest stack is replaced if full. */
+  private _addCondemnStack(): void {
+    const expiry = Date.now() + SLAYER.CONDEMN_DURATION_MS;
+    // Prune expired stacks first
+    this._pruneCondemnStacks();
+    if (this.condemnStacks.length >= SLAYER.CONDEMN_MAX_STACKS) {
+      // Replace the oldest (soonest-to-expire) stack
+      this.condemnStacks.shift();
+    }
+    this.condemnStacks = [...this.condemnStacks, expiry];
+    this._startCondemnCleanup();
+  }
+
+  /** Remove expired stacks from the array. */
+  private _pruneCondemnStacks(): void {
+    const now = Date.now();
+    this.condemnStacks = this.condemnStacks.filter(t => t > now);
+    if (this.condemnStacks.length === 0) {
+      this._stopCondemnCleanup();
+    }
+  }
+
+  /** Start the periodic cleanup timer that prunes expired stacks (keeps UI in sync). */
+  private _startCondemnCleanup(): void {
+    if (this.condemnCleanupTimer) return;
+    this.condemnCleanupTimer = setInterval(() => this._pruneCondemnStacks(), 500);
+  }
+
+  /** Stop the cleanup timer. */
+  private _stopCondemnCleanup(): void {
+    if (this.condemnCleanupTimer) {
+      clearInterval(this.condemnCleanupTimer);
+      this.condemnCleanupTimer = null;
+    }
+  }
+
+  /**
+   * Number of nonagram lines to draw based on active Condemn stacks.
+   * 0 stacks = 0 lines, 7 stacks = all 9 lines.
+   * Progression: each stack reveals ~1.3 more lines.
+   */
+  get condemnStarLines(): number {
+    const stacks = this.activeCondemnStacks;
+    if (stacks <= 0) return 0;
+    // Map 1–7 stacks → 1–9 lines
+    return Math.min(9, Math.ceil(stacks * (9 / SLAYER.CONDEMN_MAX_STACKS)));
+  }
+
+  /**
+   * Get the (x, y) coordinates of vertex `i` on the 9-point ring.
+   * The ring matches the button layout: 80px radius centered at (100, 100)
+   * in the 200×200 SVG viewBox, starting from 12 o'clock (-90°).
+   */
+  condemnStarPt(i: number): { x: number; y: number } {
+    const angle = (i * 2 * Math.PI / 9) - Math.PI / 2;
+    return {
+      x: 100 + 80 * Math.cos(angle),
+      y: 100 + 80 * Math.sin(angle),
+    };
+  }
+
+  /** One tick of the Slayer auto-attack. */
+  private _slayerAutoAttackTick(): void {
+    if (this.slayerHp <= 0) { this._stopSlayerAutoAttack(); return; }
+    const dmg = this._calcSlayerDamage();
+    this._dealSlayerDamage(dmg, true);
+  }
+
+  /** Start the rapid button cycling for the boss fight. */
+  private startSlayerButtonCycle(): void {
+    if (this.slayerCycleTimer) return;
+    // Initialize: randomly activate 2 buttons
+    this._randomizeSlayerButtons();
+    this.slayerCycleTimer = setInterval(() => {
+      this._randomizeSlayerButtons();
+    }, SLAYER.BUTTON_CYCLE_MS);
+  }
+
+  /** Stop the button cycling. */
+  private stopSlayerButtonCycle(): void {
+    if (this.slayerCycleTimer) {
+      clearInterval(this.slayerCycleTimer);
+      this.slayerCycleTimer = null;
+    }
+  }
+
+  /** Randomly enable 1–2 buttons, disable all others. */
+  private _randomizeSlayerButtons(): void {
+    const newState = new Array(SLAYER.BUTTON_COUNT).fill(false);
+    // Activate 2-3 random buttons
+    const count = Math.random() < 0.5 ? 2 : 3;
+    const indices = new Set<number>();
+    while (indices.size < count) {
+      indices.add(Math.floor(Math.random() * SLAYER.BUTTON_COUNT));
+    }
+    for (const i of indices) newState[i] = true;
+    this.slayerButtons = newState;
+  }
+
+  /** Handle clicking one of the 8 boss-fight buttons. */
+  slayerAttack(index: number): void {
+    if (!this.slayerButtons[index]) return; // button wasn't active
+    if (this.slayerHp <= 0) return; // chimera already dead
+
+    // Immediately disable the clicked weak spot
+    this.slayerButtons = this.slayerButtons.map((v, i) => i === index ? false : v);
+
+    // Condemn: add a stack (if upgrade is purchased)
+    const condemnLevel = this.upgrades.level('CONDEMN');
+    if (condemnLevel > 0) {
+      this._addCondemnStack();
+    }
+
+    const dmg = this._calcSlayerDamage();
+    this._dealSlayerDamage(dmg, false);
   }
 
   // ── Dev tools ──────────────────────────────────────────────────
