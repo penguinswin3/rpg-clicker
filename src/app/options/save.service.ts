@@ -74,6 +74,8 @@ export interface UpgradeState {
   slayerMode?: boolean;
   /** Current Slayer boss-fight state. */
   slayerState?: { hp: number; damageDone: number };
+  /** Whether the Vorpal Blade has been socketed into the crown (after purchasing from sidequest). */
+  vorpalBladeSocketed?: boolean;
   /** Character IDs that have been killed by the chimera. */
   deadCharacters?: string[];
 }

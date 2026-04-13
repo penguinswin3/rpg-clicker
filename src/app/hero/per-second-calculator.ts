@@ -64,6 +64,8 @@ export interface PerSecondContext {
   slayerBead1Socketed?: boolean;
   /** Whether the Bead of Annihilation (SLAYER_GOLD_BEAD_2) is socketed. */
   slayerBead2Socketed?: boolean;
+  /** Number of currently-active Condemn stacks (for accurate Slayer DPS estimate). */
+  activeCondemnStacks?: number;
 }
 
 // ── Result ──────────────────────────────────────────────────
@@ -113,19 +115,73 @@ export type PerSecondBreakdown = Record<string, Record<string, number>>;
 
 /**
  * Computes the Slayer's ichor-per-second from auto-attack.
+ * Factors in Know No Fear, Bloodlust, Condemn stacks, Banishment, socketed beads, and blue bead ichor multiplier.
  * Returns 0 if the slayer is not unlocked or the chimera is dead.
  */
 function calcSlayerIchorPerSecond(ctx: PerSecondContext): number {
   if (!ctx.slayerUnlocked || ctx.slayerChimeraDead) return 0;
   const u = ctx.upgrades;
+
+  // Base + Know No Fear
   let dmg = SLAYER.DAMAGE_PER_CLICK + u.level('KNOW_NO_FEAR') * SLAYER.KNOW_NO_FEAR_DAMAGE;
+
+  // Condemn: +level damage per active stack
+  const condemnLevel = u.level('CONDEMN');
+  const activeStacks = ctx.activeCondemnStacks ?? 0;
+  if (condemnLevel > 0 && activeStacks > 0) {
+    dmg += condemnLevel * SLAYER.CONDEMN_DAMAGE_PER_LEVEL * activeStacks;
+  }
+
+  // Banishment: ×2 when all Condemn stacks are active
+  if (u.level('BANISHMENT') > 0 && activeStacks >= SLAYER.CONDEMN_MAX_STACKS) {
+    dmg *= SLAYER.BANISHMENT_DAMAGE_MULTIPLIER;
+  }
+
+  // Gold bead doublings (double attack damage → double ichor)
   if (ctx.slayerBead1Socketed) dmg *= 2;
   if (ctx.slayerBead2Socketed) dmg *= 2;
+
+  // Blue bead ichor multiplier (separate from attack damage)
+  const ichorMult = ctx.beadMultipliers?.['slayer'] ?? 1;
+
+  // Windfury: expected extra attacks per hit
+  const windfuryLevel = u.level('WINDFURY');
+  let windfuryMult = 1;
+  if (windfuryLevel > 0) {
+    const p = Math.min(1, windfuryLevel * SLAYER.WINDFURY_CHANCE_PER_LEVEL);
+    if (u.level('THUNDERFURY') > 0) {
+      if (u.level('SUNFURY') > 0) {
+        // Sunfury: each chain attack doubles the previous.
+        // 1st chain: 2× base, 2nd chain: 4× base, ..., Nth chain: 2^N × base.
+        // Expected damage multiplier = 1 + sum_{i=1}^{MAX_CHAIN} p^i × 2^i
+        //                            = 1 + sum_{i=1}^{MAX_CHAIN} (2p)^i
+        let extraExpected = 0;
+        let p2Pow = 2 * p;
+        for (let i = 0; i < SLAYER.THUNDERFURY_MAX_CHAIN; i++) {
+          extraExpected += p2Pow;
+          p2Pow *= 2 * p;
+        }
+        windfuryMult = 1 + extraExpected;
+      } else {
+        // Sum of geometric series: p + p^2 + ... + p^THUNDERFURY_MAX_CHAIN
+        let extraExpected = 0;
+        let pPow = p;
+        for (let i = 0; i < SLAYER.THUNDERFURY_MAX_CHAIN; i++) {
+          extraExpected += pPow;
+          pPow *= p;
+        }
+        windfuryMult = 1 + extraExpected;
+      }
+    } else {
+      windfuryMult = 1 + p;
+    }
+  }
+
   const intervalMs = Math.max(
     SLAYER.AUTO_ATTACK_MIN_MS,
     SLAYER.AUTO_ATTACK_BASE_MS - u.level('BLOODLUST') * SLAYER.BLOODLUST_REDUCTION_MS,
   );
-  return dmg / (intervalMs / 1000);
+  return (dmg * ichorMult * windfuryMult) / (intervalMs / 1000);
 }
 
 /** Calculate display per-second rates for all currencies. */

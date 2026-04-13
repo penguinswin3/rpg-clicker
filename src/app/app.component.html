@@ -188,7 +188,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
               <ng-container *ngIf="item.kind === 'relic'">
                 <button class="relic-socket"
                         [class.socket-filled]="item.relicPurchased"
-                        [class.socket-empty]="!item.relicPurchased"
+                        [class.socket-found]="item.relicFound"
+                        [class.socket-empty]="!item.relicPurchased && !item.relicFound"
                         (click)="openRelicPopup(item.relicId!)"
                         [title]="item.relicName!">
                   {{ relicSymbol }}
@@ -204,18 +205,36 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
         <div class="relic-popup-backdrop" *ngIf="relicPopupId" (click)="closeRelicPopup()">
           <div class="relic-popup" (click)="$event.stopPropagation()">
             <div class="relic-popup-symbol" [style.color]="getUpgradeColor(relicPopupId)"
-                 [class.relic-popup-owned-symbol]="upgrades.isMaxed(relicPopupId)">
+                 [class.relic-popup-owned-symbol]="relicPopupId === 'RELIC_SLAYER' ? vorpalBladeSocketed : upgrades.isMaxed(relicPopupId)">
               {{ relicSymbol }}
             </div>
             <div class="relic-popup-name" [style.color]="getUpgradeColor(relicPopupId)">{{ getUpgradeFlavor(relicPopupId).name }}</div>
             <div class="relic-popup-desc">{{ getUpgradeFlavor(relicPopupId).desc }}</div>
-            <button class="relic-popup-buy"
-                    *ngIf="!upgrades.isMaxed(relicPopupId)"
-                    [disabled]="!upgrades.canAfford(relicPopupId)"
-                    (click)="buyRelicFromPopup()">
-              [BUY: <ng-container *ngFor="let c of upgrades.allCosts(relicPopupId); let i = index"><ng-container *ngIf="i > 0"> + </ng-container><span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></span></ng-container>]
-            </button>
-            <div class="relic-popup-owned-tag" *ngIf="upgrades.isMaxed(relicPopupId)">── SOCKETED ──</div>
+
+            <!-- Slayer Vorpal Blade: three-state (not purchased / purchased / socketed) -->
+            <ng-container *ngIf="relicPopupId === 'RELIC_SLAYER'; else standardRelicActions">
+              <div class="relic-popup-desc" *ngIf="upgrades.level('RELIC_SLAYER') < 1">
+                The final weapon, worthy of beheading this foul beast.
+              </div>
+              <button class="relic-popup-buy"
+                      *ngIf="upgrades.level('RELIC_SLAYER') >= 1 && !vorpalBladeSocketed"
+                      (click)="socketVorpalBlade()">
+                [ SOCKET ]
+              </button>
+              <div class="relic-popup-owned-tag" *ngIf="vorpalBladeSocketed">── SOCKETED ──</div>
+            </ng-container>
+
+            <!-- Standard relics: buy from popup -->
+            <ng-template #standardRelicActions>
+              <button class="relic-popup-buy"
+                      *ngIf="!upgrades.isMaxed(relicPopupId)"
+                      [disabled]="!upgrades.canAfford(relicPopupId)"
+                      (click)="buyRelicFromPopup()">
+                [BUY: <ng-container *ngFor="let c of upgrades.allCosts(relicPopupId); let i = index"><ng-container *ngIf="i > 0"> + </ng-container><span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></span></ng-container>]
+              </button>
+              <div class="relic-popup-owned-tag" *ngIf="upgrades.isMaxed(relicPopupId)">── SOCKETED ──</div>
+            </ng-template>
+
             <button class="relic-popup-close" (click)="closeRelicPopup()">[CLOSE]</button>
           </div>
         </div>
@@ -260,16 +279,23 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <div class="slayer-boss-fight">
               <!-- Art Row: Slayer (left) | Chimera (right) -->
               <div class="slayer-art-row">
-                <pre *ngIf="slayerUnlocked"
-                     class="slayer-art-left"
-                     [class.slayer-glow-1]="slayerGlowTier === 1"
-                     [class.slayer-glow-2]="slayerGlowTier === 2"
-                     [class.slayer-glow-3]="slayerGlowTier === 3"
-                     [class.slayer-glow-max]="slayerGlowTier >= 4">{{ slayerArtText }}</pre>
+                <div class="slayer-art-wrap"
+                     [class.slayer-has-godhead]="sunfuryActive"
+                     [class.slayer-charging]="slayerChargeAnimPlaying">
+                  <pre *ngIf="slayerUnlocked"
+                       class="slayer-art-left"
+                       [class.slayer-glow-1]="slayerGlowTier === 1"
+                       [class.slayer-glow-2]="slayerGlowTier === 2"
+                       [class.slayer-glow-3]="slayerGlowTier === 3"
+                       [class.slayer-glow-max]="slayerGlowTier >= 4"
+                       [class.slayer-sunfury]="sunfuryActive"
+                       [class.slayer-frozen]="slayerFrozen">{{ slayerArtText }}</pre>
+                </div>
                 <pre class="slayer-chimera-art"
                      [class.chimera-hurt-1]="chimeraDamageTier === 1"
                      [class.chimera-hurt-2]="chimeraDamageTier === 2"
-                     [class.chimera-hurt-3]="chimeraDamageTier === 3">{{ chimeraArtText }}</pre>
+                     [class.chimera-hurt-3]="chimeraDamageTier === 3"
+                     [class.chimera-dead]="chimeraSlain">{{ chimeraArtText }}</pre>
               </div>
 
               <!-- Health Bar -->
@@ -278,7 +304,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                   <div class="slayer-hp-bar-fill" [style.width.%]="slayerHpPct"></div>
                 </div>
                 <div class="slayer-hp-text">{{ formatNumber(slayerHp) }} / {{ formatNumber(666666666) }}</div>
-                <div class="slayer-clings-msg" *ngIf="slayerHp === 1 && upgrades.level('RELIC_SLAYER') < 1"
+                <div class="slayer-clings-msg" *ngIf="slayerHp === 1 && !vorpalBladeSocketed"
                      style="color: #ffcc00; font-size: 0.75rem; text-align: center; margin-top: 2px;">
                   The chimera clings to life… acquire the Vorpal Blade to deliver the killing blow.
                 </div>
@@ -295,7 +321,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                   <ng-container *ngFor="let seg of [0,1,2,3,4,5,6,7,8]; let i = index">
                     <line *ngIf="i < condemnStarLines"
                           class="condemn-star-line"
-                          [class.condemn-line-bright]="activeCondemnStacks >= 5"
+                          [class.condemn-line-bright]="activeCondemnStacks >= 5 && activeCondemnStacks < 7"
+                          [class.condemn-line-max]="activeCondemnStacks >= 7"
                           [attr.x1]="condemnStarPt(i).x"
                           [attr.y1]="condemnStarPt(i).y"
                           [attr.x2]="condemnStarPt((i + 4) % 9).x"
@@ -313,9 +340,14 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                 </button>
               </div>
 
-              <!-- Victory message -->
-              <div class="slayer-victory" *ngIf="slayerHp <= 0">
-                ★★★ THE CHIMERA IS SLAIN ★★★
+              <!-- Victory modal -->
+              <div class="victory-modal-backdrop" *ngIf="victoryModalOpen">
+                <div class="victory-modal">
+                  <div class="victory-title">CONGRATULATIONS</div>
+                  <div class="victory-subtitle">You slayed the chimera in {{ victoryPlaytime }}.</div>
+                  <div class="victory-flavor">The chimera has been killed, but at what cost?</div>
+                  <button class="victory-stats-btn" (click)="openStatsFromVictory()">[ VIEW STATISTICS ]</button>
+                </div>
               </div>
             </div>
           </ng-container>

@@ -67,6 +67,12 @@ export interface UpgradeGates {
   readonly requiresSlayerDamage?: boolean;
   /** Hide until both Slayer Gold Bead upgrades (SLAYER_GOLD_BEAD_1 and SLAYER_GOLD_BEAD_2) are purchased. */
   readonly requiresSlayerGoldBeads?: boolean;
+  /** Hide until the first Slayer Gold Bead upgrade (SLAYER_GOLD_BEAD_1) is purchased. */
+  readonly requiresSlayerGoldBead1?: boolean;
+  /** Hide until the Windfury upgrade has at least one level purchased. */
+  readonly requiresWindfury?: boolean;
+  /** Hide until the Thunderfury upgrade has been purchased. */
+  readonly requiresThunderfury?: boolean;
 }
 
 export interface CostDef {
@@ -857,7 +863,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
 
   // ── Chimeramancer — minigame ──────────────────────────────────
-  { id: 'QUICK_STITCHING', characterId: 'chimeramancer', category: 'minigame', max: 32,
+  { id: 'QUICK_STITCHING', characterId: 'chimeramancer', category: 'minigame', max: 16,
     costs: [
       { currency: 'construct',     base: 50,  scale: 2.0 },
       { currency: 'life-thread',   base: 100, scale: 2.0 },
@@ -880,6 +886,24 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'CONDEMN', characterId: 'slayer', category: 'standard', max: 7,
     gates: { requiresSlayerDamage: true },
     costs: [{ currency: 'ichor', base: 77, scale: 1.15 }] },
+  { id: 'CONSECRATE', characterId: 'slayer', category: 'standard', max: 50,
+    gates: { requiresSlayerGoldBead1: true },
+    costs: [{ currency: 'ichor', base: 25_000, scale: 1.2 }] },
+  { id: 'BANISHMENT', characterId: 'slayer', category: 'standard', max: 1,
+    gates: { requiresSlayerGoldBead1: true },
+    costs: [{ currency: 'ichor', base: 100_000, scale: 1.0 }] },
+  { id: 'WINDFURY', characterId: 'slayer', category: 'standard', max: 9,
+    gates: { requiresSlayerDamage: true },
+    costs: [{ currency: 'ichor', base: 1_000_000, scale: 1.1 }] },
+  { id: 'THUNDERFURY', characterId: 'slayer', category: 'standard', max: 1,
+    gates: { requiresWindfury: true },
+    costs: [{ currency: 'ichor', base: 3_000_000, scale: 1.0 }] },
+  { id: 'SUNFURY', characterId: 'slayer', category: 'standard', max: 1,
+    gates: { requiresThunderfury: true },
+    costs: [{ currency: 'ichor', base: 20_000_000, scale: 1.0 }] },
+  { id: 'SUNDER_ARMOR', characterId: 'slayer', category: 'standard', max: 6,
+    gates: { requiresSlayerDamage: true },
+    costs: [{ currency: 'ichor', base: 50000, scale: 1.4 }] },
 
   // ── Slayer — sidequest (minigame) ─────────────────────────────
   { id: 'SLAYER_GOLD_BEAD_1', characterId: 'slayer', category: 'minigame', max: 1,
@@ -888,9 +912,9 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'SLAYER_GOLD_BEAD_2', characterId: 'slayer', category: 'minigame', max: 1,
     gates: { requiresSlayerDamage: true },
     costs: [{ currency: 'ichor', base: 250_000, scale: 1.0 }] },
-  { id: 'RELIC_SLAYER', characterId: 'slayer', category: 'relic', max: 1,
+  { id: 'RELIC_SLAYER', characterId: 'slayer', category: 'minigame', max: 1,
     gates: { requiresSlayerDamage: true, requiresSlayerGoldBeads: true },
-    costs: [{ currency: 'ichor', base: 1_000_000, scale: 1.0 }] },
+    costs: [{ currency: 'ichor', base: 1_000_000_000, scale: 1.0 }] },
 
   // ── Relic upgrades (one per character) ──────────────────────────
   // Each costs exactly 1 relic + a dynamically-computed jewelry amount
@@ -1649,7 +1673,7 @@ export const SLAYER = {
   /** Damage threshold after which the Slayer upgrade appears. */
   UPGRADE_THRESHOLD: 50,
   /** Delay (ms) between each character dying in the death sequence. */
-  DEATH_DELAY_MS:    8000,
+  DEATH_DELAY_MS:    6660,
 
   // ── Auto-attack ─────────────────────────────────────────────
   /** Base auto-attack interval in ms (one hit every 3 seconds). */
@@ -1657,14 +1681,41 @@ export const SLAYER = {
   /** Minimum auto-attack interval (floor) in ms. */
   AUTO_ATTACK_MIN_MS:     500,
   /** Milliseconds subtracted per Bloodlust level. */
+  /** Milliseconds subtracted per Bloodlust level. */
   BLOODLUST_REDUCTION_MS: 100,
   /** Additional damage per Know No Fear level. */
-  KNOW_NO_FEAR_DAMAGE:    1,
+  KNOW_NO_FEAR_DAMAGE:    5,
   /** Duration (ms) of each Condemn stack. */
   CONDEMN_DURATION_MS:    7000,
   /** Maximum number of simultaneous Condemn stacks. */
   CONDEMN_MAX_STACKS:     7,
   /** Bonus damage per Condemn level per stack. */
   CONDEMN_DAMAGE_PER_LEVEL: 1,
+
+  // ── Consecrate ──────────────────────────────────────────────
+  /** Extra milliseconds added to Condemn stack duration per Consecrate level (+5 s each). */
+  CONSECRATE_DURATION_BONUS_MS: 5_000,
+
+  // ── Banishment ──────────────────────────────────────────────
+  /** Damage multiplier applied when Banishment is purchased and all Condemn stacks are active. */
+  BANISHMENT_DAMAGE_MULTIPLIER: 2,
+
+  // ── Windfury ────────────────────────────────────────────────
+  /** Chance to trigger an extra attack per Windfury level (0.10 = 10%). */
+  WINDFURY_CHANCE_PER_LEVEL: 0.10,
+  /** Maximum number of chained Windfury procs allowed when Thunderfury is purchased. */
+  THUNDERFURY_MAX_CHAIN: 10,
+
+  // ── Sunder Armor ──────────────────────────────────────────
+  /** Base number of active weak spots (before Sunder Armor). */
+  BASE_ACTIVE_SPOTS:            3,
+  /** Extra weak spots exposed per Sunder Armor level. */
+  SUNDER_ARMOR_SPOTS_PER_LEVEL: 1,
+
+  // ── Blue Bead Drop Rates ───────────────────────────────────
+  /** Chance (0–1) per manual weak-spot click to discover the blue-1 bead. */
+  BLUE_BEAD_CLICK_CHANCE: 1 / 50,
+  /** Chance (0–1) per auto-attack hit to discover the blue-2 bead. */
+  BLUE_BEAD_AUTO_CHANCE:  1 / 200,
 } as const;
 

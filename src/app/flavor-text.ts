@@ -187,9 +187,15 @@ export const UPGRADE_FLAVOR = {
   MINOR_TOUCH_UP:  { name: 'Minor Touch Up',  desc: '10% chance per level to also apply (level) of a resource to a random other unfinished bar' },
 
   // Slayer
-  KNOW_NO_FEAR:       { name: 'Know No Fear',       desc: '+1 damage per attack per level' },
+  KNOW_NO_FEAR:       { name: 'Know No Fear',       desc: '+5 damage per attack per level' },
   BLOODLUST:          { name: 'Bloodlust',           desc: 'The Slayer attacks 0.1 seconds faster per level (min 0.5s)' },
   CONDEMN:            { name: 'Condemn',              desc: 'Clicking a weak spot grants +1 damage per level for 7s. Stacks up to 7×.' },
+  CONSECRATE:         { name: 'Consecrate',            desc: 'Extends the duration of each Condemn stack by +5 seconds per level. Max 50 levels (+250 s total).' },
+  BANISHMENT:         { name: 'Banishment',            desc: 'Doubles all damage while all 7 Condemn stacks are active.' },
+  WINDFURY:           { name: 'Windfury',              desc: '+10% chance per level to instantly trigger an extra attack on every hit (manual or auto). Max 9 levels (90%).' },
+  THUNDERFURY:        { name: 'Thunderfury',           desc: 'Windfury strikes can also trigger Windfury, chaining up to 10 times.' },
+  SUNFURY:            { name: 'Sunfury',               desc: 'Each successive Thunderfury chain attack deals double the damage of the previous attack.' },
+  SUNDER_ARMOR:       { name: 'Sunder Armor',          desc: 'Exposes +1 additional weak spot at a time per level. At max level all 9 weak spots stay active.' },
   SLAYER_GOLD_BEAD_1: { name: 'Bead of Carnage',     desc: 'Doubles the Slayer\'s damage' },
   SLAYER_GOLD_BEAD_2: { name: 'Bead of Annihilation', desc: 'Doubles the Slayer\'s damage (stacks)' },
 
@@ -215,7 +221,7 @@ export const UPGRADE_FLAVOR = {
   RELIC_MERCHANT:      { name: 'Ledger of Infinite Commerce',      desc: 'Each assigned Jack purchases 10 of a random resource for free per hero button press' },
   RELIC_ARTIFICER:     { name: 'Tome of Boundless Creation',       desc: 'Jacks double the mana produced by Reflect and gain +1 insight per Study' },
   RELIC_CHIMERAMANCER: { name: 'Thread of Infinite Weaving',       desc: 'Jacks assigned to the Chimeramancer also click every other hero button (toggleable)' },
-  RELIC_SLAYER:        { name: 'Vorpal Blade',                     desc: 'The killing blow. Without this, the chimera clings to life at 1 HP.' },
+  RELIC_SLAYER:        { name: 'Vorpal Blade',                     desc: 'You are dangerous alone. Take this blade and see to your goal.' },
 } as const;
 
 // ── Kobold Variants (per fighter-minigame level) ──────────────
@@ -599,12 +605,14 @@ export const HERO_STATS_FLAVOR = {
     NEEDLES_PER_SEC:  'Thread / Sec  :',
   },
   SLAYER: {
-    CHIMERA_HP:       'Chimera HP     :',
-    DAMAGE_DEALT:     'Damage Dealt   :',
-    ATTACK_DAMAGE:    'Attack Damage  :',
-    ATTACK_SPEED:     'Attack Speed   :',
-    VORPAL_BLADE:     'Vorpal Blade   :',
-    CONDEMN_STACKS:   'Condemn        :',
+    CHIMERA_HP:        'Chimera HP     :',
+    DAMAGE_DEALT:      'Damage Dealt   :',
+    ATTACK_DAMAGE:     'Attack Damage  :',
+    ATTACK_SPEED:      'Attack Speed   :',
+    VORPAL_BLADE:      'Vorpal Blade   :',
+    CONDEMN_STACKS:    'Condemn        :',
+    CONDEMN_DURATION:  'Condemn Dur.   :',
+    BANISHMENT:        'Banishment     :',
   },
 } as const;
 
@@ -772,10 +780,10 @@ export const BEAD_FLAVOR: Record<string, Record<string, BeadSlotFlavor>> = {
     'blue-2': { name: 'Bead of the Abomination', lore: 'Harvested from the first chimera ever stitched, it doubles all yields from this grotesque art.',                         effect: '2× resource yields from this character (stacks).' },
   },
   slayer: {
-    'blue-1': { name: '—', lore: '', effect: '' },
-    'gold-1': { name: 'Bead of Carnage',      lore: 'Carved from the bones of the chimera, it thrums with savage power awaiting release.',     effect: 'Doubles the Slayer\'s attack damage.' },
-    'gold-2': { name: 'Bead of Annihilation', lore: 'Soaked in the chimera\'s blood, it stacks carnage upon carnage until nothing remains.', effect: 'Doubles the Slayer\'s attack damage (stacks with Bead of Carnage).' },
-    'blue-2': { name: '—', lore: '', effect: '' },
+    'blue-1': { name: 'Bead of the Hunt',      lore: 'Pried from a weak spot never meant to be found, it hums with the thrill of the perfect strike.',  effect: '2× ichor gained from all attacks.' },
+    'gold-1': { name: 'Bead of Carnage',       lore: 'Carved from the bones of the chimera, it thrums with savage power awaiting release.',              effect: 'Doubles the Slayer\'s attack damage.' },
+    'gold-2': { name: 'Bead of Annihilation',  lore: 'Soaked in the chimera\'s blood, it stacks carnage upon carnage until nothing remains.',            effect: 'Doubles the Slayer\'s attack damage (stacks with Bead of Carnage).' },
+    'blue-2': { name: 'Bead of Relentlessness',lore: 'Formed in the rhythm of a thousand relentless strikes, it never lets the ichor stop flowing.',    effect: '2× ichor gained from all attacks (stacks).' },
   },
 };
 
@@ -961,10 +969,11 @@ export const LOG_MSG = {
     CHARACTER_SLAIN:         (name: string) => ` ${name} has been slain by the chimera...`,
     JACKS_DESTROYED:         '☠ All Jacks have been consumed by the chimera.',
     SLAYER_RISES:            '★ From the ashes, the Slayer rises. There is only one goal.',
-    CHIMERA_HIT:             (dmg: number) => `You strike the chimera for ${dmg} damage! (${cur('ichor', dmg)})`,
-    CHIMERA_AUTO_HIT:        (dmg: number) => `The Slayer strikes! ${dmg} damage. (${cur('ichor', dmg)})`,
+    CHIMERA_HIT:             (dmg: number, ichor: number) => `You strike the chimera for ${dmg} damage! (${cur('ichor', ichor)})`,
+    CHIMERA_AUTO_HIT:        (dmg: number, ichor: number) => `The Slayer strikes! ${dmg} damage. (${cur('ichor', ichor)})`,
     CHIMERA_CLINGS:          'The chimera clings to life… it cannot be slain without the Vorpal Blade.',
     CHIMERA_DEFEATED:        '★★★ THE CHIMERA IS SLAIN! ★★★',
+    WINDFURY_PROC:           (n: number, totalDmg: number) => `Windfury! The slayer attacks ${n} times!${n === 1 ? '' : 's'}`,
   },
 
   // ── System messages ───────────────────────────────────────────
@@ -995,7 +1004,7 @@ export const LOG_MSG = {
     BEAD_GOLD_MG:            (charName: string) => `★ ${charName} discovered a golden bead from their sidequest! Check the crown above.`,
     BEAD_GOLD2:              (charName: string) => `★ ${charName} unlocked a golden bead of mastery! Check the crown above.`,
     BEAD_BLUE:               (charName: string) => `★ ${charName} discovered a mysterious bead! Check the crown above.`,
-    BEAD_JACK:               (charName: string) => `★ ${charName}'s Jacks discovered a mysterious bead! Check the crown above.`,
+    BEAD_JACK:               (charName: string) => `★ ${charName}'s discovered a mysterious bead! Check the crown above.`,
     BEAD_SOCKETED:           (beadName: string, charName: string, isBlue: boolean) => `★ ${beadName} socketed for ${charName}!${isBlue ? ' Resource yields doubled!' : ''}`,
   },
 

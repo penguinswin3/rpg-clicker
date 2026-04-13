@@ -57,6 +57,8 @@ export interface HeroStatsContext {
   slayerBead1Socketed: boolean;
   /** Whether the Bead of Annihilation (SLAYER_GOLD_BEAD_2) is socketed. */
   slayerBead2Socketed: boolean;
+  /** Whether the Vorpal Blade relic has been socketed into the crown. */
+  vorpalBladeSocketed: boolean;
 }
 
 // ── Public API ──────────────────────────────────────────────
@@ -354,12 +356,16 @@ function buildSlayerStats(ctx: HeroStatsContext): HeroStat[] {
   const F = HERO_STATS_FLAVOR.SLAYER;
   const u = ctx.upgrades;
 
-  // Compute effective damage (including condemn)
+  // Compute effective damage (including condemn and banishment)
   let dmg = SLAYER.DAMAGE_PER_CLICK + u.level('KNOW_NO_FEAR') * SLAYER.KNOW_NO_FEAR_DAMAGE;
   const condemnLevel = u.level('CONDEMN');
   if (condemnLevel > 0 && ctx.condemnStacks > 0) {
     dmg += condemnLevel * SLAYER.CONDEMN_DAMAGE_PER_LEVEL * ctx.condemnStacks;
   }
+  // Banishment doubles damage when at max stacks
+  const banishmentLevel = u.level('BANISHMENT');
+  const banishmentActive = banishmentLevel > 0 && ctx.condemnStacks >= SLAYER.CONDEMN_MAX_STACKS;
+  if (banishmentActive) dmg *= SLAYER.BANISHMENT_DAMAGE_MULTIPLIER;
   if (ctx.slayerBead1Socketed) dmg *= 2;
   if (ctx.slayerBead2Socketed) dmg *= 2;
 
@@ -370,7 +376,7 @@ function buildSlayerStats(ctx: HeroStatsContext): HeroStat[] {
   );
   const intervalSec = roundTo(intervalMs / 1000, 1);
 
-  const hasVorpal = u.level('RELIC_SLAYER') >= 1;
+  const hasVorpal = ctx.vorpalBladeSocketed;
 
   const stats: HeroStat[] = [
     { label: F.CHIMERA_HP,   value: `${ctx.slayerHp > 0 ? ctx.slayerHp.toLocaleString() : 0}`, color: '#8b0000' },
@@ -387,6 +393,13 @@ function buildSlayerStats(ctx: HeroStatsContext): HeroStat[] {
   }
   if (condemnLevel > 0) {
     stats.push({ label: F.CONDEMN_STACKS, value: `${ctx.condemnStacks} / ${SLAYER.CONDEMN_MAX_STACKS}`, color: ctx.condemnStacks > 0 ? '#ff6633' : '#555' });
+    // Condemn duration (base + Consecrate bonus)
+    const durationMs = SLAYER.CONDEMN_DURATION_MS + u.level('CONSECRATE') * SLAYER.CONSECRATE_DURATION_BONUS_MS;
+    const durationSec = roundTo(durationMs / 1000, 1);
+    stats.push({ label: F.CONDEMN_DURATION, value: `${durationSec}s`, color: '#ff6633' });
+  }
+  if (banishmentLevel > 0) {
+    stats.push({ label: F.BANISHMENT, value: banishmentActive ? 'ACTIVE (×2)' : 'Standby', color: banishmentActive ? '#c084fc' : '#555' });
   }
   return stats;
 }

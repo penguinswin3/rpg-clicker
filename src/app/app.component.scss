@@ -179,6 +179,20 @@
     }
   }
 
+  &.socket-found {
+    color: #888;
+    border-color: #888;
+    border-style: dashed;
+    background: #0a0a0a;
+    box-shadow: 0 0 4px rgba(200, 200, 200, 0.15);
+
+    &:hover {
+      color: #bbb;
+      border-color: #bbb;
+      box-shadow: 0 0 8px rgba(200, 200, 200, 0.3);
+    }
+  }
+
   &.socket-filled {
     color: #a700ff;
     border-color: #a700ff;
@@ -1396,6 +1410,23 @@
   flex-wrap: wrap;
 }
 
+// ── Slayer art wrapper + Sunfury scale pulse ──────────────────
+.slayer-art-wrap {
+  position: relative;
+  display: inline-block;
+
+  // When Sunfury is purchased: the whole art breathes (scales up and down)
+  &.slayer-has-godhead {
+    animation: sunfury-scale-pulse 2.2s ease-in-out infinite;
+  }
+}
+
+@keyframes sunfury-scale-pulse {
+  0%   { transform: scale(1.00); }
+  50%  { transform: scale(1.07); }
+  100% { transform: scale(1.00); }
+}
+
 .slayer-chimera-art {
   color: #8b0000;
   font-family: 'Courier New', Courier, monospace;
@@ -1534,6 +1565,21 @@
                slayer-pulse-max     2.0s  ease-in-out infinite alternate;
     animation-delay: -0.3s, 0s;
   }
+  // Sunfury: characters blaze with divine white fire
+  &.slayer-sunfury {
+    color: #f0faff;
+    animation: slayer-fight-bob-max 0.68s ease-in-out infinite,
+               sunfury-text-glow    2.0s  ease-in-out infinite alternate;
+    animation-delay: -0.3s, 0s;
+  }
+}
+
+@keyframes sunfury-text-glow {
+  from { text-shadow: 0 0 6px  rgba(255, 255, 255, 0.65),
+                      0 0 14px rgba(255, 255, 220, 0.35); }
+  to   { text-shadow: 0 0 10px rgba(255, 255, 255, 1.0),
+                      0 0 22px rgba(255, 255, 210, 0.75),
+                      0 0 40px rgba(255, 245, 170, 0.45); }
 }
 
 // ── Slayer fight-bob tiers ─────────────────────────────────
@@ -1669,6 +1715,15 @@
             drop-shadow(0 0 16px rgba(255, 40, 20, 0.35));
     animation: condemn-line-pulse-bright 0.9s ease-in-out infinite alternate;
   }
+
+  &.condemn-line-max {
+    stroke: rgba(180, 210, 255, 0.9);
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 8px rgba(170, 200, 255, 0.8))
+            drop-shadow(0 0 18px rgba(140, 180, 255, 0.5))
+            drop-shadow(0 0 32px rgba(120, 160, 240, 0.3));
+    animation: condemn-line-pulse-max 1.4s ease-in-out infinite alternate;
+  }
 }
 
 @keyframes condemn-line-pulse {
@@ -1679,6 +1734,22 @@
 @keyframes condemn-line-pulse-bright {
   from { opacity: 0.7; stroke: rgba(255, 80, 40, 0.85); }
   to   { opacity: 1;   stroke: rgba(255, 120, 60, 1);   }
+}
+
+@keyframes condemn-line-pulse-max {
+  from {
+    opacity: 0.7;
+    stroke: rgba(160, 195, 240, 0.8);
+    filter: drop-shadow(0 0 8px rgba(170, 200, 255, 0.6))
+            drop-shadow(0 0 18px rgba(140, 180, 255, 0.35));
+  }
+  to {
+    opacity: 1;
+    stroke: rgba(200, 225, 255, 1);
+    filter: drop-shadow(0 0 12px rgba(190, 215, 255, 0.9))
+            drop-shadow(0 0 24px rgba(160, 200, 255, 0.6))
+            drop-shadow(0 0 40px rgba(130, 180, 250, 0.35));
+  }
 }
 
 .slayer-ring-btn {
@@ -1729,16 +1800,104 @@
   to   { box-shadow: 0 0 20px rgba(255, 0, 0, 0.9), 0 0 30px rgba(139, 0, 0, 0.5); }
 }
 
-.slayer-victory {
-  font-size: 18px;
-  color: #ffcc00;
-  text-align: center;
-  margin-top: 1rem;
-  text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
-  animation: slayer-victory-glow 1s ease infinite alternate;
+// ── Slayer frozen (pre-charge pause) ────────────────────────
+.slayer-art-left.slayer-frozen {
+  animation: none !important;
 }
 
-@keyframes slayer-victory-glow {
-  from { opacity: 0.7; }
+// ── Slayer charge animation (killing blow) ─────────────────
+.slayer-art-wrap.slayer-charging {
+  animation: slayer-charge-right 0.7s cubic-bezier(0.2, 0, 0.9, 1) forwards !important;
+}
+
+@keyframes slayer-charge-right {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(calc(50vw)); }
+}
+
+// ── Chimera death (fade out after slayer charges through) ──
+.slayer-chimera-art.chimera-dead {
+  animation: chimera-fade-die 0.6s ease-out forwards !important;
+}
+
+@keyframes chimera-fade-die {
+  0%   { opacity: 1; color: #8b0000; text-shadow: 0 0 8px rgba(139, 0, 0, 0.6); }
+  100% { opacity: 0; color: #1a0000; text-shadow: none; }
+}
+
+// ── Victory modal ──────────────────────────────────────────
+.victory-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: victory-fade-in 0.6s ease;
+}
+
+@keyframes victory-fade-in {
+  from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+.victory-modal {
+  background: #050008;
+  border: 2px solid #ffcc00;
+  padding: 2.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  min-width: 320px;
+  max-width: 480px;
+  font-family: 'Courier New', Courier, monospace;
+  box-shadow: 0 0 30px rgba(255, 204, 0, 0.3), 0 0 60px rgba(255, 204, 0, 0.1);
+  text-align: center;
+}
+
+.victory-title {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #ffcc00;
+  letter-spacing: 0.2em;
+  text-shadow: 0 0 12px rgba(255, 204, 0, 0.6);
+  animation: victory-title-pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes victory-title-pulse {
+  from { text-shadow: 0 0 8px rgba(255, 204, 0, 0.4); }
+  to   { text-shadow: 0 0 16px rgba(255, 204, 0, 0.8), 0 0 30px rgba(255, 204, 0, 0.3); }
+}
+
+.victory-subtitle {
+  font-size: 0.95rem;
+  color: #ccc;
+  line-height: 1.4;
+}
+
+.victory-flavor {
+  font-size: 0.85rem;
+  color: #888;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+.victory-stats-btn {
+  margin-top: 1rem;
+  background: #000;
+  color: #ffcc00;
+  border: 1px solid #ffcc00;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: #1a1400;
+    color: #ffe066;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+  }
 }
