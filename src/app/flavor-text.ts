@@ -973,7 +973,7 @@ export const LOG_MSG = {
     CHIMERA_AUTO_HIT:        (dmg: number, ichor: number) => `The Slayer strikes! ${dmg} damage. (${cur('ichor', ichor)})`,
     CHIMERA_CLINGS:          'The chimera clings to life… it cannot be slain without the Vorpal Blade.',
     CHIMERA_DEFEATED:        '★★★ THE CHIMERA IS SLAIN! ★★★',
-    WINDFURY_PROC:           (n: number, totalDmg: number) => `Windfury! The slayer attacks ${n} times!${n === 1 ? '' : 's'}`,
+    WINDFURY_PROC:           (n: number, totalDmg: number) => `Windfury! The slayer attacks ${n} time${n === 1 ? '' : 's'}!`,
   },
 
   // ── System messages ───────────────────────────────────────────
