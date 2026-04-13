@@ -158,7 +158,7 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Slayer boss fight state. */
   slayerHp: number = SLAYER.MAX_HP;
   slayerDamageDone: number = 0;
-  /** Whether each of the 8 circular buttons is currently active. */
+  /** Whether each of the 9 circular buttons is currently active. */
   slayerButtons: boolean[] = new Array(SLAYER.BUTTON_COUNT).fill(false);
   /** Interval handle for the button cycling. */
   private slayerCycleTimer: ReturnType<typeof setInterval> | null = null;
