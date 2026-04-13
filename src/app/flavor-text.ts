@@ -1004,7 +1004,7 @@ export const LOG_MSG = {
     BEAD_GOLD_MG:            (charName: string) => `★ ${charName} discovered a golden bead from their sidequest! Check the crown above.`,
     BEAD_GOLD2:              (charName: string) => `★ ${charName} unlocked a golden bead of mastery! Check the crown above.`,
     BEAD_BLUE:               (charName: string) => `★ ${charName} discovered a mysterious bead! Check the crown above.`,
-    BEAD_JACK:               (charName: string) => `★ ${charName}'s discovered a mysterious bead! Check the crown above.`,
+    BEAD_JACK:               (charName: string) => `★ ${charName} discovered a mysterious bead! Check the crown above.`,
     BEAD_SOCKETED:           (beadName: string, charName: string, isBlue: boolean) => `★ ${beadName} socketed for ${charName}!${isBlue ? ' Resource yields doubled!' : ''}`,
   },
 
