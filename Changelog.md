@@ -2,6 +2,8 @@
 
 ## Added
 - The End Times
+- Lore
+
 
 ## Removed
 
