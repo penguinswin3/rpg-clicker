@@ -11,6 +11,41 @@ $chimera-pink: #c44d8e;
   color: #ccc;
 }
 
+// ── Art row (Slayer + Chimera side by side) ──────────────
+.art-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+
+  &.slayer-showing {
+    overflow-x: auto;
+
+    &::-webkit-scrollbar        { height: 2px; }
+    &::-webkit-scrollbar-track  { background: #000; }
+    &::-webkit-scrollbar-thumb  { background: #444; }
+
+    .ascii-frame {
+      width: auto;
+      flex-shrink: 0;
+    }
+  }
+}
+
+// ── Slayer ASCII art ─────────────────────────────────────
+.slayer-art {
+  color: #accccb;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 5px;
+  line-height: 1.2;
+  margin: 0;
+  white-space: pre;
+  flex-shrink: 0;
+  background: #050505;
+  border: 1px solid #333;
+  padding: 4px 2px;
+}
+
 // ── ASCII frame ─────────────────────────
 .ascii-frame {
   border: 1px solid #333;

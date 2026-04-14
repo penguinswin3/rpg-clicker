@@ -6,7 +6,7 @@
  * ════════════════════════════════════════════════════════════
  */
 
-import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG, CHIMERAMANCER_YIELDS } from '../game-config';
+import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG, CHIMERAMANCER_YIELDS, SLAYER } from '../game-config';
 import { UpgradeService } from '../upgrade/upgrade.service';
 import { roundTo } from '../utils/mathUtils';
 import {
@@ -56,6 +56,16 @@ export interface PerSecondContext {
   selectedKoboldLevel: number;
   /** Whether the Chimeramancer relic (Thread of Infinite Weaving) is enabled. */
   chimeramancerRelicEnabled: boolean;
+  /** Whether the Slayer character has been unlocked (auto-attack is running). */
+  slayerUnlocked: boolean;
+  /** Whether the chimera is already dead (hp <= 0) — no ichor earned when dead. */
+  slayerChimeraDead: boolean;
+  /** Whether the Bead of Carnage (SLAYER_GOLD_BEAD_1) is socketed. */
+  slayerBead1Socketed?: boolean;
+  /** Whether the Bead of Annihilation (SLAYER_GOLD_BEAD_2) is socketed. */
+  slayerBead2Socketed?: boolean;
+  /** Number of currently-active Condemn stacks (for accurate Slayer DPS estimate). */
+  activeCondemnStacks?: number;
 }
 
 // ── Result ──────────────────────────────────────────────────
@@ -91,6 +101,7 @@ export interface PerSecondRates {
   'kobold-pebble':   number;
   'kobold-heart':    number;
   'life-thread':     number;
+  ichor:             number;
 }
 
 /**
@@ -101,6 +112,77 @@ export interface PerSecondRates {
 export type PerSecondBreakdown = Record<string, Record<string, number>>;
 
 // ── Public API ──────────────────────────────────────────────
+
+/**
+ * Computes the Slayer's ichor-per-second from auto-attack.
+ * Factors in Know No Fear, Bloodlust, Condemn stacks, Banishment, socketed beads, and blue bead ichor multiplier.
+ * Returns 0 if the slayer is not unlocked or the chimera is dead.
+ */
+function calcSlayerIchorPerSecond(ctx: PerSecondContext): number {
+  if (!ctx.slayerUnlocked || ctx.slayerChimeraDead) return 0;
+  const u = ctx.upgrades;
+
+  // Base + Know No Fear
+  let dmg = SLAYER.DAMAGE_PER_CLICK + u.level('KNOW_NO_FEAR') * SLAYER.KNOW_NO_FEAR_DAMAGE;
+
+  // Condemn: +level damage per active stack
+  const condemnLevel = u.level('CONDEMN');
+  const activeStacks = ctx.activeCondemnStacks ?? 0;
+  if (condemnLevel > 0 && activeStacks > 0) {
+    dmg += condemnLevel * SLAYER.CONDEMN_DAMAGE_PER_LEVEL * activeStacks;
+  }
+
+  // Banishment: ×2 when all Condemn stacks are active
+  if (u.level('BANISHMENT') > 0 && activeStacks >= SLAYER.CONDEMN_MAX_STACKS) {
+    dmg *= SLAYER.BANISHMENT_DAMAGE_MULTIPLIER;
+  }
+
+  // Gold bead doublings (double attack damage → double ichor)
+  if (ctx.slayerBead1Socketed) dmg *= 2;
+  if (ctx.slayerBead2Socketed) dmg *= 2;
+
+  // Blue bead ichor multiplier (separate from attack damage)
+  const ichorMult = ctx.beadMultipliers?.['slayer'] ?? 1;
+
+  // Windfury: expected extra attacks per hit
+  const windfuryLevel = u.level('WINDFURY');
+  let windfuryMult = 1;
+  if (windfuryLevel > 0) {
+    const p = Math.min(1, windfuryLevel * SLAYER.WINDFURY_CHANCE_PER_LEVEL);
+    if (u.level('THUNDERFURY') > 0) {
+      if (u.level('SUNFURY') > 0) {
+        // Sunfury: each chain attack doubles the previous.
+        // 1st chain: 2× base, 2nd chain: 4× base, ..., Nth chain: 2^N × base.
+        // Expected damage multiplier = 1 + sum_{i=1}^{MAX_CHAIN} p^i × 2^i
+        //                            = 1 + sum_{i=1}^{MAX_CHAIN} (2p)^i
+        let extraExpected = 0;
+        let p2Pow = 2 * p;
+        for (let i = 0; i < SLAYER.THUNDERFURY_MAX_CHAIN; i++) {
+          extraExpected += p2Pow;
+          p2Pow *= 2 * p;
+        }
+        windfuryMult = 1 + extraExpected;
+      } else {
+        // Sum of geometric series: p + p^2 + ... + p^THUNDERFURY_MAX_CHAIN
+        let extraExpected = 0;
+        let pPow = p;
+        for (let i = 0; i < SLAYER.THUNDERFURY_MAX_CHAIN; i++) {
+          extraExpected += pPow;
+          pPow *= p;
+        }
+        windfuryMult = 1 + extraExpected;
+      }
+    } else {
+      windfuryMult = 1 + p;
+    }
+  }
+
+  const intervalMs = Math.max(
+    SLAYER.AUTO_ATTACK_MIN_MS,
+    SLAYER.AUTO_ATTACK_BASE_MS - u.level('BLOODLUST') * SLAYER.BLOODLUST_REDUCTION_MS,
+  );
+  return (dmg * ichorMult * windfuryMult) / (intervalMs / 1000);
+}
 
 /** Calculate display per-second rates for all currencies. */
 export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
@@ -325,6 +407,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
     'kobold-pebble':  roundTo((autoBuyGains['kobold-pebble'] ?? 0) + mrg('kobold-pebble'), 2),
     'kobold-heart':   roundTo((autoBuyGains['kobold-heart'] ?? 0) + mrg('kobold-heart'), 2),
     'life-thread':    roundTo(chimeraJacks * calcChimeramancerThreadPerClick(CHIMERAMANCER_YIELDS.THREAD_PER_CLICK, u.level('BIGGER_THREADS')) * bm('chimeramancer') + calcSharperNeedlesThreadPerSec(u.level('SHARPER_NEEDLES'), u.level('LOOM_OF_LIFE')) * bm('chimeramancer'), 2),
+    ichor:            roundTo(calcSlayerIchorPerSecond(ctx), 2),
   };
 }
 
@@ -648,6 +731,10 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   // Sharper Needles: passive life-thread per second
   const needlesRate = calcSharperNeedlesThreadPerSec(u.level('SHARPER_NEEDLES'), u.level('LOOM_OF_LIFE')) * bm('chimeramancer');
   if (needlesRate > 0) add('life-thread', 'Passive (Needles)', needlesRate);
+
+  // ── Slayer (ichor from auto-attack) ──────────────────────────
+  const ichorPerSec = calcSlayerIchorPerSecond(ctx);
+  if (ichorPerSec > 0) add('ichor', 'Slayer', ichorPerSec);
 
   return bd;
 }

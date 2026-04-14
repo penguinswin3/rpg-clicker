@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription, combineLatest } from 'rxjs';
 import { CharacterService, Character } from './character.service';
@@ -15,7 +15,7 @@ import { fmtNumber } from '../utils/mathUtils';
   styleUrl: './character-unlock.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CharacterUnlockComponent implements OnInit, OnDestroy {
+export class CharacterUnlockComponent implements OnInit, OnDestroy, OnChanges {
   private charService = inject(CharacterService);
   private wallet      = inject(WalletService);
   private log         = inject(ActivityLogService);
@@ -45,6 +45,11 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
   @Input() jackCosts: Array<{ currency: string; amount: number }> = [];
   @Output() jackHire         = new EventEmitter<void>();
 
+  // ── Slayer unlock gate ────────────────────
+  @Input() slayerMode = false;
+  @Input() slayerDamageDone = 0;
+  @Output() slayerUnlocked = new EventEmitter<string>();
+
   /** Locked characters whose XP requirement has been reached. */
   available: Character[] = [];
   xp = 0;
@@ -70,18 +75,35 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
     return this.wallet.canAfford(currency, amount);
   }
 
+  /** Cached snapshot of all characters for recomputing available list. */
+  private latestChars: Character[] = [];
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['slayerMode'] || changes['slayerDamageDone']) {
+      this.recomputeAvailable();
+    }
+  }
+
   ngOnInit(): void {
     this.sub.add(
       combineLatest([this.charService.characters$, this.wallet.state$, this.wallet.highestXpEver$])
         .subscribe(([chars, state, highestXp]) => {
           this.xp = Math.floor(state['xp']?.amount ?? 0);
           this.highestXpEver = highestXp;
-          this.available = chars.filter(
-            c => !c.unlocked && this.highestXpEver >= c.xpRequirement
-          );
+          this.latestChars = chars;
+          this.recomputeAvailable();
           this.cdr.markForCheck();
         })
     );
+  }
+
+  private recomputeAvailable(): void {
+    const slayerUnlockReady = this.slayerMode && this.slayerDamageDone >= 50;
+    this.available = this.latestChars.filter(c => {
+      if (c.unlocked) return false;
+      if (c.eventDriven) return slayerUnlockReady; // show event-driven chars only when slayer gate met
+      return this.highestXpEver >= c.xpRequirement;
+    });
   }
 
   ngOnDestroy(): void {
@@ -106,6 +128,11 @@ export class CharacterUnlockComponent implements OnInit, OnDestroy {
     }
     this.charService.unlock(char.id);
     this.log.log(LOG_MSG.SYSTEM.CHAR_UNLOCKED(char.name), 'rare');
+
+    // Notify parent when the slayer is unlocked
+    if (char.eventDriven) {
+      this.slayerUnlocked.emit(char.id);
+    }
   }
 
   /** Returns structured cost entries for template rendering with colored symbols. */

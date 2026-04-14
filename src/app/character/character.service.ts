@@ -15,6 +15,10 @@ export interface Character {
   color: string;
   description: string;
   unlocked: boolean;
+  /** Whether this character has been killed by the chimera (Slayer endgame). Defaults to false. */
+  dead?: boolean;
+  /** If true, this character is unlocked via an in-game event, not the purchase panel. */
+  eventDriven?: boolean;
   /** Costs required to unlock. Empty array = free / starts unlocked. */
   unlockCosts: UnlockCost[];
   /** Minimum XP required before the unlock option is shown. */
@@ -43,6 +47,7 @@ export class CharacterService {
       color: '#c87941',
       description: CHARACTER_FLAVOR.FIGHTER.desc,
       unlocked: true,
+      dead: false,
       unlockCosts: [],
       xpRequirement: 0,
     },
@@ -53,6 +58,7 @@ export class CharacterService {
       description: CHARACTER_FLAVOR.RANGER.desc,
       unlocked: false,
       ...charUnlock('ranger'),
+      dead: false,
     },
     {
       id: 'apothecary',
@@ -61,6 +67,7 @@ export class CharacterService {
       description: CHARACTER_FLAVOR.APOTHECARY.desc,
       unlocked: false,
       ...charUnlock('apothecary'),
+      dead: false,
     },
     {
       id: 'culinarian',
@@ -69,6 +76,7 @@ export class CharacterService {
       description: CHARACTER_FLAVOR.CULINARIAN.desc,
       unlocked: false,
       ...charUnlock('culinarian'),
+      dead: false,
     },
     {
       id: 'thief',
@@ -77,6 +85,7 @@ export class CharacterService {
       description: CHARACTER_FLAVOR.THIEF.desc,
       unlocked: false,
       ...charUnlock('thief'),
+      dead: false,
     },
     {
       id: 'artisan',
@@ -85,6 +94,7 @@ export class CharacterService {
       description: CHARACTER_FLAVOR.ARTISAN.desc,
       unlocked: false,
       ...charUnlock('artisan'),
+      dead: false,
     },
     {
       id: 'necromancer',
@@ -93,6 +103,7 @@ export class CharacterService {
       description: CHARACTER_FLAVOR.NECROMANCER.desc,
       unlocked: false,
       ...charUnlock('necromancer'),
+      dead: false,
     },
     {
       id: 'merchant',
@@ -101,6 +112,7 @@ export class CharacterService {
       description: CHARACTER_FLAVOR.MERCHANT.desc,
       unlocked: false,
       ...charUnlock('merchant'),
+      dead: false,
     },
     {
       id: 'artificer',
@@ -109,6 +121,7 @@ export class CharacterService {
       description: CHARACTER_FLAVOR.ARTIFICER.desc,
       unlocked: false,
       ...charUnlock('artificer'),
+      dead: false,
     },
     {
       id: 'chimeramancer',
@@ -117,6 +130,18 @@ export class CharacterService {
       description: CHARACTER_FLAVOR.CHIMERAMANCER.desc,
       unlocked: false,
       ...charUnlock('chimeramancer'),
+      dead: false,
+    },
+    {
+      id: 'slayer',
+      name: CHARACTER_FLAVOR.SLAYER.name,
+      color: '#8b0000',
+      description: CHARACTER_FLAVOR.SLAYER.desc,
+      unlocked: false,
+      dead: false,
+      eventDriven: true,
+      unlockCosts: [{ currencyId: 'ichor', amount: 66 }],
+      xpRequirement: 0,
     },
   ];
 
@@ -148,6 +173,11 @@ export class CharacterService {
     return this.activeIdSource.getValue();
   }
 
+  /** Deselect the current character (set active ID to empty). */
+  clearActive(): void {
+    this.activeIdSource.next('');
+  }
+
   getCharacters(): Character[] {
     return this.charactersSource.getValue();
   }
@@ -164,11 +194,53 @@ export class CharacterService {
     );
   }
 
-  /** Switch the active character (only allowed if already unlocked). */
+  /** Switch the active character (only allowed if already unlocked and not dead). Pass '' to deselect. */
   setActive(id: string): void {
+    if (id === '') {
+      this.activeIdSource.next('');
+      return;
+    }
     const char = this.charactersSource.getValue().find(c => c.id === id);
-    if (char?.unlocked) {
+    if (char?.unlocked && !char?.dead) {
       this.activeIdSource.next(id);
     }
+  }
+
+  /** Map from character ID to their death description (from flavor text). */
+  private readonly deathDescs: Record<string, string> = {
+    fighter:       CHARACTER_FLAVOR.FIGHTER.deathDesc,
+    ranger:        CHARACTER_FLAVOR.RANGER.deathDesc,
+    apothecary:    CHARACTER_FLAVOR.APOTHECARY.deathDesc,
+    culinarian:    CHARACTER_FLAVOR.CULINARIAN.deathDesc,
+    thief:         CHARACTER_FLAVOR.THIEF.deathDesc,
+    artisan:       CHARACTER_FLAVOR.ARTISAN.deathDesc,
+    necromancer:   CHARACTER_FLAVOR.NECROMANCER.deathDesc,
+    merchant:      CHARACTER_FLAVOR.MERCHANT.deathDesc,
+    artificer:     CHARACTER_FLAVOR.ARTIFICER.deathDesc,
+    chimeramancer: CHARACTER_FLAVOR.CHIMERAMANCER.deathDesc,
+  };
+
+  /** Mark a character as dead (killed by the chimera in the Slayer endgame). */
+  kill(id: string): void {
+    const deathDesc = this.deathDescs[id] ?? '';
+    this.charactersSource.next(
+      this.charactersSource.getValue().map(c =>
+        c.id === id ? { ...c, dead: true, description: deathDesc || c.description } : c
+      )
+    );
+  }
+
+  /** Check if a character is dead. */
+  isDead(id: string): boolean {
+    return this.charactersSource.getValue().find(c => c.id === id)?.dead ?? false;
+  }
+
+  /** Restore dead state for a set of character IDs (used on save load). */
+  setDead(ids: string[]): void {
+    this.charactersSource.next(
+      this.charactersSource.getValue().map(c =>
+        ids.includes(c.id) ? { ...c, dead: true, description: this.deathDescs[c.id] || c.description } : c
+      )
+    );
   }
 }
