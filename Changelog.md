@@ -1,3 +1,15 @@
+# Version Alpha 1.4.1
+
+## Added
+
+## Removed
+
+## Changed
+
+## Bugfixes
+- Fixed a bug in the hint for the ranger gold-2
+- Fixed a cost for the merchant
+----------------------------
 # Version Alpha 1.4.0
 
 ## Added

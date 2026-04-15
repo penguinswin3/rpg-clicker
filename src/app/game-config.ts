@@ -9,7 +9,7 @@
 import { KOBOLD_VARIANTS } from './flavor-text';
 
 // ── Game Version ─────────────────────────────────────────────
-export const VERSION = 'Alpha 1.4.0';
+export const VERSION = 'Alpha 1.4.1';
 
 // ── Shared Upgrade Types ─────────────────────────────────────
 
@@ -748,7 +748,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'RIGGED_GAME', characterId: 'merchant', category: 'minigame', max: 25,
     costs: [
       { currency: 'illicit-goods', base: 100, scale: 1.3 },
-      { currency: 'bones',         base: 10_000, scale: 1.2 },
+      { currency: 'bone',         base: 10_000, scale: 1.2 },
     ] },
   { id: 'DIVERSIFIED_PORTFOLIO', characterId: 'merchant', category: 'minigame', max: 6,
     costs: [
