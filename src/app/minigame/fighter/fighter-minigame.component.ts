@@ -59,6 +59,10 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   @Output() selectedKoboldLevelChange = new EventEmitter<number>();
   /** First Strike level — when ≥ 1, the fighter attacks before the enemy can counter on a killing blow. */
   @Input() firstStrikeLevel = 0;
+  /** Whether First Strike is currently enabled (toggle). */
+  @Input() firstStrikeEnabled = true;
+  /** Emitted when the player toggles First Strike on/off. */
+  @Output() firstStrikeEnabledChange = new EventEmitter<boolean>();
   /** Slow Blade level — each level adds +1 to the fighter's minimum hit. */
   @Input() slowBladeLevel = 0;
   /** Gilded Blade level — +1% secondary drop chance and +1% gold per kill per level. */
@@ -617,7 +621,7 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
 
       // First Strike: free opening hit at the start of every combat encounter.
       // Only fires here (enemy spawned after a kill), never after fleeing.
-      if (this.firstStrikeLevel >= 1) {
+      if (this.firstStrikeLevel >= 1 && this.firstStrikeEnabled) {
         this.applyFirstStrike();
       }
     }, this.effectiveSpawnDelayMs);

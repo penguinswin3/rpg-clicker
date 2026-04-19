@@ -275,6 +275,32 @@ export function calcMerchantDoubleChance(smugglerNetworkLevel: number): number {
 }
 
 /**
+ * Expected loot per single illicit goods open (one roll from the loot table).
+ * Returns a map of currencyId → expected amount per roll, factoring in Black Market level.
+ */
+export function calcExpectedIllicitLootPerRoll(
+  blackMarketLevel: number = 0,
+): Record<string, number> {
+  const table = MERCHANT_MG.LOOT_TABLE;
+  const rareCurrencies = new Set(['monster-trophy', 'forbidden-tome', 'magical-implement']);
+  const rareBonus = blackMarketLevel * MERCHANT_MG.BLACK_MARKET_RARE_BONUS_PER_LEVEL;
+  const effectiveWeights = table.map(e =>
+    rareCurrencies.has(e.currencyId) ? e.weight + rareBonus : e.weight
+  );
+  const totalWeight = effectiveWeights.reduce((sum, w) => sum + w, 0);
+  if (totalWeight <= 0) return {};
+
+  const result: Record<string, number> = {};
+  for (let i = 0; i < table.length; i++) {
+    const entry = table[i];
+    const prob = effectiveWeights[i] / totalWeight;
+    const avgAmount = (entry.min + entry.max) / 2;
+    result[entry.currencyId] = (result[entry.currencyId] ?? 0) + prob * avgAmount;
+  }
+  return result;
+}
+
+/**
  * Roll the illicit goods loot table once.
  * Returns { currencyId, amount } or null if nothing.
  * blackMarketLevel shifts weight toward rare entries.

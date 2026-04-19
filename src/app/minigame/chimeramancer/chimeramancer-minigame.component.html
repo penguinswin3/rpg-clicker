@@ -34,7 +34,12 @@
       <button class="contribute-btn"
               [disabled]="!canContribute(bar)"
               [style.borderColor]="bar.color"
-              (click)="contribute(bar, i)">
+              (click)="contribute(bar, i)"
+              (mousedown)="startHold(bar, i)"
+              (mouseup)="stopHold()"
+              (mouseleave)="stopHold()"
+              (touchstart)="startHold(bar, i)"
+              (touchend)="stopHold()">
         +{{ shortNum(contributeAmount) }}
       </button>
     </div>

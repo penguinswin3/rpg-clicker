@@ -690,6 +690,7 @@ function clickArtificerReflect(ctx: HeroActionContext): void {
   ctx.setArtificerInsight(currentInsight - consumed);
   ctx.wallet.add('mana', manaYield);
   ctx.stats.trackCurrencyGain('mana', manaYield);
+  ctx.log.log(LOG_MSG.HERO.ARTIFICER.REFLECT(cur('mana', manaYield), `Insight -${consumed}`));
 }
 
 function clickMerchant(ctx: HeroActionContext): void {

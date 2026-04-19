@@ -9,6 +9,8 @@
     [potionChuggingLevel]="upgrades.level('POTION_CHUGGING')"
     [strongerKoboldsLevel]="upgrades.level('STRONGER_KOBOLDS')"
     [firstStrikeLevel]="upgrades.level('FIRST_STRIKE')"
+    [firstStrikeEnabled]="firstStrikeEnabled"
+    (firstStrikeEnabledChange)="firstStrikeEnabled = $event"
     [slowBladeLevel]="upgrades.level('SLOW_BLADE')"
     [gildedBladeLevel]="upgrades.level('GILDED_BLADE')"
     [mindReadingLevel]="upgrades.level('POTION_MIND_READING')"
@@ -31,6 +33,7 @@
     [potionDilutionLevel]="upgrades.level('POTION_DILUTION')"
     [serialDilutionLevel]="upgrades.level('SERIAL_DILUTION')"
     [perfectPotionsLevel]="upgrades.level('PERFECT_POTIONS')"
+    [potionMarketingLevel]="upgrades.level('POTION_MARKETING')"
     [synapticalPotionsLevel]="upgrades.level('SYNAPTICAL_POTIONS')"
     [synapticStaticLevel]="upgrades.level('SYNAPTIC_STATIC')"
     [synapticalEnabled]="synapticalEnabled"
@@ -566,6 +569,12 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                         MAX
                       </button>
                     </div>
+                    <button class="familiar-btn"
+                            style="margin-top:2px; font-size:0.72em;"
+                            [class.paused]="isFamiliarKeyPaused(fk)"
+                            (click)="toggleFamiliarKeyPaused(fk)">
+                      {{ isFamiliarKeyPaused(fk) ? '[ PAUSED ]' : '[ ACTIVE ]' }}
+                    </button>
                   </div>
                   <div class="familiar-sep" *ngIf="!last"></div>
                 </ng-container>

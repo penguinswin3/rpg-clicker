@@ -7,6 +7,7 @@ import { StatisticsService } from '../../statistics/statistics.service';
 import { APOTH_MG, AUTO_SOLVE, BEADS, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE } from '../../game-config';
 import { CURRENCY_FLAVOR, MINIGAME_MSG, cur, GOLD2_STEP_MESSAGES, LOG_MSG } from '../../flavor-text';
 import { toPct, rollChance } from '../../utils/mathUtils';
+import { calcPotionMarketingGoldPerBrew } from '../../hero/yield-helpers';
 
 @Component({
   selector: 'app-apothecary-minigame',
@@ -36,6 +37,8 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
   @Input() serialDilutionLevel = 0;
   /** Perfect Potions level — each inner-zone click adds +(level × 5)% to dilution success chance for the current brew. */
   @Input() perfectPotionsLevel = 0;
+  /** Potion Marketing level — grants bonus gold when a brew completes. */
+  @Input() potionMarketingLevel = 0;
 
   // ── Synaptical Potions ─────────────────
   /** Set to true when the Synaptical Potions upgrade has been purchased. */
@@ -505,6 +508,15 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
     const successChance = this.dilutionSuccessChance;
     const bm = this.wallet.getBeadMultiplier('apothecary');
 
+    // Potion Marketing: grant gold per brew (same as hero click)
+    const goldPerBrew = calcPotionMarketingGoldPerBrew(this.potionMarketingLevel);
+    let goldYield = 0;
+    if (goldPerBrew > 0) {
+      goldYield = goldPerBrew * bm;
+      this.wallet.add('gold', goldYield);
+      this.stats.trackCurrencyGain('gold', goldYield);
+    }
+
     this.dilutionMissPenalty = 0;
     this.perfectClickBonus   = 0;
     this.stats.trackApothecaryMinigameComplete();
@@ -545,15 +557,15 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
         }
 
         if (synaptical === totalRolls) {
-          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_SUCCESS(cur('synaptical-potion', synapticalYield)), 'success');
+          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_SUCCESS(cur('synaptical-potion', synapticalYield) + (goldYield > 0 ? `, ${cur('gold', goldYield)}` : '')), 'success');
           this.lastMsg  = `${synaptical}/${totalRolls} SYNAPTICAL!`;
           this.msgClass = 'msg-good';
         } else if (synaptical > 0) {
-          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_PARTIAL(cur('synaptical-potion', synapticalYield), cur('potion', downgradedYield)), 'success');
+          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_PARTIAL(cur('synaptical-potion', synapticalYield), cur('potion', downgradedYield) + (goldYield > 0 ? `, ${cur('gold', goldYield)}` : '')), 'success');
           this.lastMsg  = `${synaptical}/${totalRolls} SYNAPTICAL  (${downgraded} BASE)`;
           this.msgClass = 'msg-good';
         } else {
-          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_FAIL(cur('potion', downgradedYield)), 'warn');
+          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_FAIL(cur('potion', downgradedYield) + (goldYield > 0 ? `, ${cur('gold', goldYield)}` : '')), 'warn');
           this.lastMsg  = `All ${downgraded} failed — ${downgraded}x BASE`;
           this.msgClass = 'msg-bad';
         }
@@ -567,7 +579,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
           this.wallet.unlockCurrency('synaptical-potion');
           this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_UNLOCKED, 'rare');
         } else {
-          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_CRAFTED(cur('synaptical-potion', synYield)), 'success');
+          this.log.log(LOG_MSG.MG_APOTHECARY.SYNAPTICAL_CRAFTED(cur('synaptical-potion', synYield) + (goldYield > 0 ? `, ${cur('gold', goldYield)}` : '')), 'success');
         }
 
         this.lastMsg  = 'Synaptical Potion brewed!';
@@ -611,15 +623,15 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
       }
 
       if (concentrated === totalRolls) {
-        this.log.log(LOG_MSG.MG_APOTHECARY.DILUTION_SUCCESS(cur('concentrated-potion', concentratedYield)), 'success');
+        this.log.log(LOG_MSG.MG_APOTHECARY.DILUTION_SUCCESS(cur('concentrated-potion', concentratedYield) + (goldYield > 0 ? `, ${cur('gold', goldYield)}` : '')), 'success');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FULL(concentrated, totalRolls);
         this.msgClass = 'msg-good';
       } else if (concentrated > 0) {
-        this.log.log(LOG_MSG.MG_APOTHECARY.DILUTION_PARTIAL(cur('concentrated-potion', concentratedYield), cur('potion', downgradedYield)), 'success');
+        this.log.log(LOG_MSG.MG_APOTHECARY.DILUTION_PARTIAL(cur('concentrated-potion', concentratedYield), cur('potion', downgradedYield) + (goldYield > 0 ? `, ${cur('gold', goldYield)}` : '')), 'success');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_PARTIAL(concentrated, downgraded, totalRolls);
         this.msgClass = 'msg-good';
       } else {
-        this.log.log(LOG_MSG.MG_APOTHECARY.DILUTION_FAIL(cur('potion', downgradedYield)), 'warn');
+        this.log.log(LOG_MSG.MG_APOTHECARY.DILUTION_FAIL(cur('potion', downgradedYield) + (goldYield > 0 ? `, ${cur('gold', goldYield)}` : '')), 'warn');
         this.lastMsg  = MINIGAME_MSG.APOTHECARY.DILUTE_FAIL(downgraded);
         this.msgClass = 'msg-bad';
       }
@@ -633,7 +645,7 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
         this.wallet.unlockCurrency('concentrated-potion');
         this.log.log(LOG_MSG.MG_APOTHECARY.CONCENTRATED_UNLOCKED, 'rare');
       } else {
-        this.log.log(LOG_MSG.MG_APOTHECARY.CONCENTRATED_CRAFTED(cur('concentrated-potion', concYield)), 'success');
+        this.log.log(LOG_MSG.MG_APOTHECARY.CONCENTRATED_CRAFTED(cur('concentrated-potion', concYield) + (goldYield > 0 ? `, ${cur('gold', goldYield)}` : '')), 'success');
       }
 
       this.lastMsg  = MINIGAME_MSG.APOTHECARY.PERFECT;

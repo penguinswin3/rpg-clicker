@@ -151,6 +151,7 @@ export class AppComponent implements OnInit, OnDestroy {
   koboldBaitEnabled       = false;
   ancientCookbookEnabled  = true;
   chimeramancerRelicEnabled = true;
+  firstStrikeEnabled      = true;
 
   // ── Slayer endgame state ────────────────────────────────────
   /** Whether the Slayer endgame sequence has been triggered. */
@@ -381,6 +382,8 @@ export class AppComponent implements OnInit, OnDestroy {
   familiarTimers: Record<string, number> = {};
   /** When true, all familiars are paused — they don't click and don't count for per-second. */
   familiarsPaused = false;
+  /** Per-key individual pause state — a familiar is paused if this OR familiarsPaused is true. */
+  familiarPausedKeys: Record<string, boolean> = {};
 
   // ── Jack computed getters (delegated to jack-calculator) ───────
 
@@ -977,8 +980,8 @@ export class AppComponent implements OnInit, OnDestroy {
             anyExpired = true;
             continue;
           }
-          // Skip clicks when familiars are paused
-          if (this.familiarsPaused) continue;
+          // Skip clicks when familiars are paused (globally or individually)
+          if (this.familiarsPaused || !!this.familiarPausedKeys[key]) continue;
 
           const baseId = key.startsWith('necromancer') ? 'necromancer' : key.startsWith('artificer') ? 'artificer' : key;
           const relicMult = this.upgrades.level(`RELIC_${baseId.toUpperCase()}`) >= 1 ? 2 : 1;
@@ -996,7 +999,7 @@ export class AppComponent implements OnInit, OnDestroy {
         // ── Chimeramancer Relic (familiars): also click all other hero buttons ──
         if (this.chimeramancerRelicEnabled && this.upgrades.level('RELIC_CHIMERAMANCER') >= 1) {
           const chimeraFamExpiry = this.familiarTimers['chimeramancer'] ?? 0;
-          if (chimeraFamExpiry > Date.now() && !this.familiarsPaused) {
+          if (chimeraFamExpiry > Date.now() && !this.familiarsPaused && !this.familiarPausedKeys['chimeramancer']) {
             const chimeraRelicMult = 2; // relic is active → 2×
             const mindAndSoul = this.upgrades.level('MIND_AND_SOUL');
             const effectiveFamiliars = FAMILIAR.JACKS_PER_FAMILIAR + mindAndSoul * FAMILIAR.MIND_AND_SOUL_PER_LEVEL;
@@ -1084,12 +1087,14 @@ export class AppComponent implements OnInit, OnDestroy {
       fermentationVatsEnabled: this.fermentationVatsEnabled,
       koboldBaitEnabled:       this.koboldBaitEnabled,
       ancientCookbookEnabled:  this.ancientCookbookEnabled,
+      firstStrikeEnabled:      this.firstStrikeEnabled,
       artisanTimerUntil:       this.artisanTimerUntil,
       artisanTimerBatchSize:   this.artisanTimerBatchSize,
       necromancerActiveButton:     this.necromancerActiveButton,
       necromancerClicksRemaining:  this.necromancerClicksRemaining,
       familiarTimers:              { ...this.familiarTimers },
       familiarsPaused:             this.familiarsPaused,
+      familiarPausedKeys:          { ...this.familiarPausedKeys },
       beads:                       JSON.parse(JSON.stringify(this.beadState)),
       autoSolveEnabled:            { ...this.autoSolveEnabled },
       gold2Progress:               JSON.parse(JSON.stringify(this.gold2Progress)),
@@ -1126,6 +1131,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.fermentationVatsEnabled = s.fermentationVatsEnabled ?? true;
     this.koboldBaitEnabled       = s.koboldBaitEnabled       ?? false;
     this.ancientCookbookEnabled  = s.ancientCookbookEnabled  ?? true;
+    this.firstStrikeEnabled      = s.firstStrikeEnabled      ?? true;
     // Restore necromancer state
     this.necromancerActiveButton     = s.necromancerActiveButton     ?? 'defile';
     this.necromancerClicksRemaining  = s.necromancerClicksRemaining  ?? 10;
@@ -1138,6 +1144,7 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     this.familiarTimers = restoredTimers;
     this.familiarsPaused = s.familiarsPaused ?? false;
+    this.familiarPausedKeys = s.familiarPausedKeys ? { ...s.familiarPausedKeys } : {};
     // Restore bead state
     this.beadState = s.beads ? JSON.parse(JSON.stringify(s.beads)) : {};
     this.syncBeadMultipliers();
@@ -1327,6 +1334,9 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.setPerSecond('kobold-feather',    rates['kobold-feather']);
       this.wallet.setPerSecond('kobold-pebble',     rates['kobold-pebble']);
       this.wallet.setPerSecond('kobold-heart',      rates['kobold-heart']);
+      this.wallet.setPerSecond('monster-trophy',    rates['monster-trophy']);
+      this.wallet.setPerSecond('forbidden-tome',    rates['forbidden-tome']);
+      this.wallet.setPerSecond('magical-implement', rates['magical-implement']);
       this.wallet.setPerSecond('life-thread',       rates['life-thread']);
       this.wallet.setPerSecond('ichor',              rates.ichor);
       this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
@@ -1728,7 +1738,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Switch the active necromancer button and roll a new click threshold. */
   private switchNecromancerButton(): void {
-    this.heroHoldStop();
+    // Only interrupt hold-click if the player is actively holding on the necromancer button.
+    // If they're holding on a different character's button, leave it alone.
+    if (this.activeCharacterId === 'necromancer') {
+      this.heroHoldStop();
+    }
     this.necromancerActiveButton = this.necromancerActiveButton === 'defile' ? 'ward' : 'defile';
     this.necromancerClicksRemaining = rollNecromancerSwitchClicks(this.upgrades.level('EXTENDED_RITUAL'));
     this.updateAllPerSecond();
@@ -1796,6 +1810,17 @@ export class AppComponent implements OnInit, OnDestroy {
   toggleFamiliarsPaused(): void {
     this.familiarsPaused = !this.familiarsPaused;
     this.updateAllPerSecond();
+  }
+
+  /** Toggle the paused state for a specific familiar key. */
+  toggleFamiliarKeyPaused(key: string): void {
+    this.familiarPausedKeys = { ...this.familiarPausedKeys, [key]: !this.familiarPausedKeys[key] };
+    this.updateAllPerSecond();
+  }
+
+  /** Whether a specific familiar key is paused (individually or globally). */
+  isFamiliarKeyPaused(key: string): boolean {
+    return this.familiarsPaused || !!this.familiarPausedKeys[key];
   }
 
   /** Whether the Find Familiar upgrade is purchased. */

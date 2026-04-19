@@ -1,14 +1,22 @@
 # Version Alpha 1.4.1
 
 ## Added
-
+- You can now hold to click to buy or stitch in the sidequests 
 ## Removed
 
 ## Changed
+- Failing the last memory game press should subtract -1 from your earned constructs at the end
+- Familiars can be toggled individually per character
+- First strike can be toggled 
+- the upgrade unlocked glimmer looks better
 
 ## Bugfixes
 - Fixed a bug in the hint for the ranger gold-2
 - Fixed a cost for the merchant
+- Necromancer button changing no longer breaks hold click on other buttons
+- The chimeramancer now checks costs properly. 
+- The Thief gold bead now checks properly 
+- fixed some per second and logging values
 ----------------------------
 # Version Alpha 1.4.0
 

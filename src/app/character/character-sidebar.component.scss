@@ -150,7 +150,6 @@ $cyan: #0ff;
   height: 100%;
   pointer-events: none;
   z-index: 1;
-  overflow: hidden;
 
   &::after {
     content: '';
@@ -178,8 +177,8 @@ $cyan: #0ff;
 
 @keyframes char-shine-sweep {
   0%   { transform: translateX(0); }
-  40%  { transform: translateX(350%); }
-  100% { transform: translateX(350%); }
+  50%  { transform: translateX(600%); }
+  100% { transform: translateX(600%); }
 }
 
 .char-card {

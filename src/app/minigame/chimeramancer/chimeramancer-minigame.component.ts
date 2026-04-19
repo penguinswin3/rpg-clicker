@@ -148,6 +148,8 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
 
   /** Auto-stitch interval handle. */
   private autoStitchTimer: ReturnType<typeof setInterval> | null = null;
+  /** Hold-to-contribute interval handle. */
+  private holdTimer: ReturnType<typeof setInterval> | null = null;
 
   /**
    * Overall completion fraction 0–1.
@@ -209,6 +211,8 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
   canContribute(bar: ResourceBar): boolean {
     if (this.chimeraAwakened) return false;
     if (bar.contributed >= bar.required) return false;
+    // Good mode (both gold beads): always free — no wallet check needed.
+    if (this.autoSolveGoodMode) return true;
     // Only need to afford the remaining gap (may be less than full contributeAmount).
     const needed = Math.min(this.contributeAmount, bar.required - bar.contributed);
     return this.wallet.canAfford(bar.currencyId, needed);
@@ -229,7 +233,10 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
 
     // ── Quick Stitching ──────────────────────────────────────────
     const effectiveAmount = Math.min(this.contributeAmount, bar.required - bar.contributed);
-    this.wallet.remove(bar.currencyId, effectiveAmount);
+    // Good mode (both gold beads): free — no wallet deduction. Otherwise deduct cost.
+    if (!this.autoSolveGoodMode) {
+      this.wallet.remove(bar.currencyId, effectiveAmount);
+    }
     bar.contributed += effectiveAmount;
     this.stats.trackCurrencyGain('life-thread', 0); // track activity
 
@@ -316,6 +323,21 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
   ngOnDestroy(): void {
     this.sub.unsubscribe();
     this._stopAutoStitch();
+    this.stopHold();
+  }
+
+  startHold(bar: ResourceBar, barIndex: number): void {
+    this.stopHold();
+    this.holdTimer = setInterval(() => {
+      this.contribute(bar, barIndex);
+    }, 100);
+  }
+
+  stopHold(): void {
+    if (this.holdTimer) {
+      clearInterval(this.holdTimer);
+      this.holdTimer = null;
+    }
   }
 
   toggleAutoSolve(): void {

@@ -40,6 +40,8 @@ export interface UpgradeState {
   fermentationVatsEnabled?: boolean;
   koboldBaitEnabled?: boolean;
   ancientCookbookEnabled?: boolean;
+  /** Whether First Strike fires automatically on enemy spawn. */
+  firstStrikeEnabled?: boolean;
   /** Absolute timestamp (ms) when the artisan timer expires (0 = idle). */
   artisanTimerUntil?: number;
   /** How many appraisals (manual 1 + jacks N) are batched in the current timer. */
@@ -52,6 +54,8 @@ export interface UpgradeState {
   familiarTimers?: Record<string, number>;
   /** Whether all familiars are paused (not contributing clicks or per-second). */
   familiarsPaused?: boolean;
+  /** Per-key individual familiar pause state — key → true if paused. */
+  familiarPausedKeys?: Record<string, boolean>;
   /** Bead state per character — { charId: { slotId: { found, socketed } } } */
   beads?: Record<string, Record<string, { found: boolean; socketed: boolean }>>;
   /** Auto-solve toggle state per character — { charId: true/false } */

@@ -90,6 +90,15 @@
       </button>
     </div>
 
+    <!-- First Strike toggle: only visible once the upgrade is purchased -->
+    <div class="short-rest-row" *ngIf="firstStrikeLevel >= 1">
+      <button class="short-rest-btn"
+              [class.sr-on]="firstStrikeEnabled"
+              (click)="firstStrikeEnabledChange.emit(!firstStrikeEnabled)">
+        {{ firstStrikeEnabled ? '[ First Strike: ON  ]' : '[ First Strike: OFF ]' }}
+      </button>
+    </div>
+
   </div>
 
   <!-- ── Flee button ─────────────────────── -->
