@@ -536,13 +536,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
           <!-- ── Familiars ── -->
           <div class="familiar-column" *ngIf="familiarUnlocked">
-            <div class="familiar-panel" [class.familiars-paused]="familiarsPaused">
+            <div class="familiar-panel">
               <div class="familiar-top-row">
-                <button class="familiar-pause-btn"
-                        [class.paused]="familiarsPaused"
-                        (click)="toggleFamiliarsPaused()">
-                  {{ familiarsPaused ? '[ RESUME ]' : '[ PAUSE ]' }}
-                </button>
                 <span class="familiar-count-info" *ngIf="upgrades.level('MIND_AND_SOUL') > 0">
                   <span class="familiar-power-label">Power</span> ×{{ 1 + upgrades.level('MIND_AND_SOUL') }}
                 </span>

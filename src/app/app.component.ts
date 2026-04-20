@@ -1161,24 +1161,30 @@ export class AppComponent implements OnInit, OnDestroy {
     // (but keep timers that were paused when saved — they were frozen so still valid)
     const now = Date.now();
     const rawTimers = s.familiarTimers ?? {};
+    const wasGloballyPaused = s.familiarsPaused ?? false;
     const restoredPausedKeys: Record<string, boolean> = s.familiarPausedKeys ? { ...s.familiarPausedKeys } : {};
     const restoredPausedAt: Record<string, number> = s.familiarPausedAt ? { ...s.familiarPausedAt } : {};
     const restoredTimers: Record<string, number> = {};
     for (const [k, v] of Object.entries(rawTimers)) {
-      const wasPaused = !!restoredPausedKeys[k] || (s.familiarsPaused ?? false);
+      const wasPaused = !!restoredPausedKeys[k] || wasGloballyPaused;
       if (wasPaused) {
         // Timer was frozen — extend by time elapsed while game was closed
         const pausedAt = restoredPausedAt[k] ?? now;
         const elapsed = now - pausedAt;
         restoredTimers[k] = v + elapsed;
         restoredPausedAt[k] = now; // reset pause reference point to now
+        // Migrate: if globally paused, convert to individual key pauses (global pause button removed)
+        if (wasGloballyPaused && !restoredPausedKeys[k]) {
+          restoredPausedKeys[k] = true;
+        }
       } else if (v > now) {
         restoredTimers[k] = v;
       }
     }
     this.familiarTimers = restoredTimers;
-    this.familiarsPaused = s.familiarsPaused ?? false;
-    this.familiarsPausedAt = this.familiarsPaused ? now : null;
+    // Global pause is no longer used in the UI — always clear it on load
+    this.familiarsPaused = false;
+    this.familiarsPausedAt = null;
     this.familiarPausedKeys = restoredPausedKeys;
     this.familiarPausedAt = restoredPausedAt;
     // Restore bead state
