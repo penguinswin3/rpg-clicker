@@ -206,7 +206,7 @@ export const UPGRADE_FLAVOR = {
   SUNFURY:            { name: 'Sunfury',               desc: 'Each successive Thunderfury chain attack deals double the damage of the previous attack.' },
   SUNDER_ARMOR:       { name: 'Sunder Armor',          desc: '+1 additional weak spot exposed' },
   SLAYER_GOLD_BEAD_1: { name: 'Bead of Carnage',       desc: 'Doubles the Slayer\'s damage' },
-  SLAYER_GOLD_BEAD_2: { name: 'Bead of Annihilation',  desc: 'Doubles the Slayer\'s damage (stacks)' },
+  SLAYER_GOLD_BEAD_2: { name: 'Bead of Annihilation',  desc: 'Doubles the Slayer\'s damage. Again' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
   RELIC_FIGHTER:       { name: 'Crown of Command',                   desc: 'Each Jack hires hirelings, who in turn can hire hirelings' },
@@ -220,6 +220,9 @@ export const UPGRADE_FLAVOR = {
   RELIC_ARTIFICER:     { name: 'Chisel of Dwarvenkind',              desc: 'Jacks double the mana produced by Reflect and gain +1 insight per Study' },
   RELIC_CHIMERAMANCER: { name: 'Spool of Infinite Weaving',          desc: 'Jacks assigned to the Chimeramancer also click every other hero button (toggleable)' },
   RELIC_SLAYER:        { name: 'Vorpal Blade',                       desc: 'You are dangerous alone. Take this blade and see to your goal.' },
+
+  // ── Post-victory ─────────────────────────────────────────────────────
+  SCROLL_OF_TRUE_RESURRECTION: { name: 'Scroll of True Resurrection', desc: 'The Slayer bathe4s in ichor, executing a dark ritual. All fallen party members will be revived... At a cost...' },
 
 
 

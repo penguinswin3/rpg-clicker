@@ -167,6 +167,8 @@ export class AppComponent implements OnInit, OnDestroy {
   slayerDeathSequencePlaying = false;
   /** Whether the slayer-charge-kill animation is playing. */
   slayerChargeAnimPlaying = false;
+  /** Whether the Scroll of True Resurrection has been used (prevents re-triggering End Times). */
+  trueResurrected = false;
   /** Whether the slayer has frozen in place (pre-charge pause). */
   slayerFrozen = false;
   /** Whether the chimera has been slain (frozen chimera art). */
@@ -492,6 +494,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresSlayerGoldBead1 && this.upgrades.level('SLAYER_GOLD_BEAD_1') < 1) return false;
     if (gates.requiresWindfury        && this.upgrades.level('WINDFURY') < 1)            return false;
     if (gates.requiresThunderfury     && this.upgrades.level('THUNDERFURY') < 1)          return false;
+    if (gates.requiresChimeraSlain    && !(this.slayerMode && this.slayerHp <= 0))        return false;
     return true;
   }
 
@@ -559,6 +562,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Buy the current buy-quantity of levels for an upgrade. */
   buyUpgrade(id: string): void {
+    // Special case: Scroll of True Resurrection — deducts ALL ichor and triggers resurrection.
+    if (id === 'SCROLL_OF_TRUE_RESURRECTION') {
+      this.performTrueResurrection();
+      return;
+    }
     const prevLevel = this.upgrades.level(id);
     if (this.buyQuantity === 'max') {
       const max = this.upgrades.maxAffordable(id);
@@ -783,6 +791,11 @@ export class AppComponent implements OnInit, OnDestroy {
       this.concentratedPotions = Math.floor(state['concentrated-potion']?.amount ?? 0);
       this.spice               = Math.floor(state['spice']?.amount               ?? 0);
       this._refreshDerived();
+      // Keep the Scroll of True Resurrection cost in sync with current ichor balance.
+      if (this.upgrades.level('SCROLL_OF_TRUE_RESURRECTION') < 1) {
+        const ichor = Math.floor(state['ichor']?.amount ?? 0);
+        this.upgrades.updateCost('SCROLL_OF_TRUE_RESURRECTION', 'ichor', Math.max(1, ichor));
+      }
     });
     this.wallet.highestXpEver$.subscribe(v => {
       const prev = this.highestXp;
@@ -1108,6 +1121,7 @@ export class AppComponent implements OnInit, OnDestroy {
       slayerState:                 { hp: this.slayerHp, damageDone: this.slayerDamageDone },
       vorpalBladeSocketed:         this.vorpalBladeSocketed,
       deadCharacters:              [...this.deadCharacters],
+      trueResurrected:             this.trueResurrected,
     };
   }
 
@@ -1177,6 +1191,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.slayerDamageDone = s.slayerState.damageDone ?? 0;
     }
     this.vorpalBladeSocketed = s.vorpalBladeSocketed ?? false;
+    this.trueResurrected     = s.trueResurrected     ?? false;
     // If chimera was already killed, restore the slain visual state
     if (this.slayerHp <= 0 && this.slayerMode) {
       this.chimeraSlain = true;
@@ -1738,13 +1753,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Switch the active necromancer button and roll a new click threshold. */
   private switchNecromancerButton(): void {
-    // Only interrupt hold-click if the player is actively holding on the necromancer button.
-    // If they're holding on a different character's button, leave it alone.
-    if (this.activeCharacterId === 'necromancer') {
-      this.heroHoldStop();
-    }
     this.necromancerActiveButton = this.necromancerActiveButton === 'defile' ? 'ward' : 'defile';
     this.necromancerClicksRemaining = rollNecromancerSwitchClicks(this.upgrades.level('EXTENDED_RITUAL'));
+    // Stop any active hold — the button the player was holding just became disabled.
+    // Jacks don't use heroHoldStart so this only affects player holds.
+    this.heroHoldStop();
     this.updateAllPerSecond();
     this._refreshDerived();
   }
@@ -2165,6 +2178,7 @@ export class AppComponent implements OnInit, OnDestroy {
    */
   onChimeraCompleted(): void {
     if (this.slayerMode) return; // already triggered
+    if (this.trueResurrected) return; // End Times permanently disabled after resurrection
     this.slayerMode = true;
     this.slayerDeathSequencePlaying = true;
 
@@ -2233,7 +2247,61 @@ export class AppComponent implements OnInit, OnDestroy {
     this._startSlayerAutoAttack();
   }
 
-  /** Compute effective Slayer attack damage (base + Know No Fear + Condemn stacks + Banishment + socketed bead multipliers). */
+  /**
+   * Handle purchase of the Scroll of True Resurrection.
+   * Deducts ALL current ichor, banishes the Slayer, revives all characters,
+   * and returns the game to its pre-End-Times state.
+   * The chimeramancer sidequest remains at 100% with no way to re-trigger the boss fight.
+   */
+  performTrueResurrection(): void {
+    if (this.upgrades.level('SCROLL_OF_TRUE_RESURRECTION') >= 1) return;
+    const ichor = Math.floor(this.wallet.get('ichor'));
+    if (ichor < 1) {
+      this.log.log('You need at least 1 Ichor to use the Scroll of True Resurrection.', 'warn');
+      return;
+    }
+
+    // Deduct ALL ichor
+    this.wallet.remove('ichor', ichor);
+    // Mark the upgrade as purchased
+    this.upgrades.forceLevel('SCROLL_OF_TRUE_RESURRECTION', 1);
+
+    // ── Stop all slayer systems ──────────────────────────────────
+    this._stopSlayerAutoAttack();
+    this.stopSlayerButtonCycle();
+
+    // ── Reset slayer endgame visual/logic state ──────────────────
+    this.slayerMode              = false;
+    this.chimeraSlain            = false;
+    this.slayerFrozen            = false;
+    this.slayerChargeAnimPlaying = false;
+    this.slayerDeathSequencePlaying = false;
+    this.victoryModalOpen        = false;
+    this.slayerHp                = SLAYER.MAX_HP;
+    this.slayerDamageDone        = 0;
+    this.slayerButtons           = new Array(SLAYER.BUTTON_COUNT).fill(false);
+    this.condemnStacks           = [];
+
+    // ── Revive all characters ────────────────────────────────────
+    this.deadCharacters = [];
+    this.charService.reviveAll();
+
+    // ── Banish the Slayer (lock, deselect) ──────────────────────
+    this.charService.lock('slayer');
+    this.slayerUnlocked = false;
+
+    // ── Restore active character (select first non-slayer unlocked character) ──
+    const firstAlive = this.charService.getCharacters().find(c => c.id !== 'slayer' && c.unlocked && !c.dead);
+    if (firstAlive) this.charService.setActive(firstAlive.id);
+    else            this.charService.clearActive();
+
+    // ── Mark as resurrected — prevents End Times from re-triggering ──
+    this.trueResurrected = true;
+
+    this.log.log('The Scroll crumbles to dust. The fallen stir… and rise. The Slayer fades from memory.', 'rare');
+    this.statsService.recordMilestone('true_resurrection', 'True Resurrection');
+    this.updateAllPerSecond();
+  }
   private _calcSlayerDamage(): number {
     let dmg = SLAYER.DAMAGE_PER_CLICK + this.upgrades.level('KNOW_NO_FEAR') * SLAYER.KNOW_NO_FEAR_DAMAGE;
     // Condemn: +level damage per active stack

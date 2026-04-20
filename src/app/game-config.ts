@@ -73,6 +73,8 @@ export interface UpgradeGates {
   readonly requiresWindfury?: boolean;
   /** Hide until the Thunderfury upgrade has been purchased. */
   readonly requiresThunderfury?: boolean;
+  /** Hide until the chimera has been slain (slayerHp ≤ 0 and slayerMode is active). */
+  readonly requiresChimeraSlain?: boolean;
 }
 
 export interface CostDef {
@@ -832,7 +834,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Artificer — minigame ──────────────────────────────────────
   { id: 'EXTENDED_ETCHING', characterId: 'artificer', category: 'minigame', max: 5,
     costs: [
-      { currency: 'construct', base: 5,  scale: 1.5 },
+      { currency: 'construct', base: 5,  scale: 1.4 },
       { currency: 'mana',     base: 50000, scale: 1.5 },
     ] },
   { id: 'SECOND_CHANCE', characterId: 'artificer', category: 'minigame', max: 1,
@@ -865,7 +867,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Chimeramancer — minigame ──────────────────────────────────
   { id: 'QUICK_STITCHING', characterId: 'chimeramancer', category: 'minigame', max: 16,
     costs: [
-      { currency: 'construct',     base: 50,  scale: 2.0 },
+      { currency: 'construct',     base: 20,  scale: 2.0 },
       { currency: 'life-thread',   base: 100, scale: 2.0 },
       { currency: 'kobold-pebble', base: 200, scale: 1.8 },
     ] },
@@ -915,6 +917,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'RELIC_SLAYER', characterId: 'slayer', category: 'minigame', max: 1,
     gates: { requiresSlayerDamage: true, requiresSlayerGoldBeads: true },
     costs: [{ currency: 'ichor', base: 1_000_000_000, scale: 1.0 }] },
+
+  // ── Scroll of True Resurrection — post-victory upgrade ────────
+  // Cost is dynamically set to the player's current ichor balance by AppComponent.
+  { id: 'SCROLL_OF_TRUE_RESURRECTION', characterId: 'slayer', category: 'standard', max: 1,
+    gates: { requiresChimeraSlain: true },
+    costs: [{ currency: 'ichor', base: 1, scale: 1.0 }] },
 
   // ── Relic upgrades (one per character) ──────────────────────────
   // Each costs exactly 1 relic + a dynamically-computed jewelry amount

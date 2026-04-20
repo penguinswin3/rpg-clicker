@@ -82,6 +82,8 @@ export interface UpgradeState {
   vorpalBladeSocketed?: boolean;
   /** Character IDs that have been killed by the chimera. */
   deadCharacters?: string[];
+  /** Whether the Scroll of True Resurrection has been used — prevents re-triggering the End Times. */
+  trueResurrected?: boolean;
 }
 
 // ── Legacy save migration ─────────────────────────────────────

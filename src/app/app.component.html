@@ -284,7 +284,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
               <div class="slayer-art-row">
                 <div class="slayer-art-wrap"
                      [class.slayer-has-godhead]="sunfuryActive"
-                     [class.slayer-charging]="slayerChargeAnimPlaying">
+                     [class.slayer-charging]="slayerChargeAnimPlaying"
+                     [class.slayer-victory]="chimeraSlain && !slayerChargeAnimPlaying">
                   <pre *ngIf="slayerUnlocked"
                        class="slayer-art-left"
                        [class.slayer-glow-1]="slayerGlowTier === 1"

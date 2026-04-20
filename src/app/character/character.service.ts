@@ -243,4 +243,20 @@ export class CharacterService {
       )
     );
   }
+
+  /** Revive all characters (clear dead flag). */
+  reviveAll(): void {
+    this.charactersSource.next(
+      this.charactersSource.getValue().map(c => ({ ...c, dead: false }))
+    );
+  }
+
+  /** Lock (un-unlock) a character — used to remove the Slayer after True Resurrection. */
+  lock(id: string): void {
+    this.charactersSource.next(
+      this.charactersSource.getValue().map(c =>
+        c.id === id ? { ...c, unlocked: false } : c
+      )
+    );
+  }
 }
