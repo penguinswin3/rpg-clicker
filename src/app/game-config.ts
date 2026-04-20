@@ -1609,8 +1609,7 @@ export const GOLD2_CONDITIONS = {
   CULINARIAN_FIRST_GUESSES: [
     ['spice', 'spice', 'herb', 'herb'],
     ['kobold-tongue', 'kobold-tongue', 'beast', 'beast'],
-    ['kobold-tong' +
-    'e', 'herb', 'beast', 'spice'],
+    ['kobold-tongue', 'herb', 'beast', 'spice'],
   ] as readonly (readonly string[])[],
 
   /**
