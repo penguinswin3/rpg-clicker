@@ -1,7 +1,5 @@
 # TODO List
 ## Systems
-Credits Page 
-True Resurrection 
 
 ### More characters
 

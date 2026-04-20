@@ -1044,5 +1044,39 @@ export const LOG_MSG = {
     UNLOCK_ALL:              '[DEV] Everything unlocked.',
   },
 
+  // ── Credits ──────────────────────────────────────────────────
+
+  CREDITS: {
+    TITLE: '+[ CREDITS ]+',
+    BODY:
+`Thank you for playing RPG Clicker!
+
+This game is my first attempt at releasing a game to the public.
+I hope you felt a sense of exploration and adventure while playing.
+I hope to create more games in the future that allow us to explore more cool ideas.
+
+─── ASCII ART ───────────────────────────────
+Ascii art modified from https://www.asciiart.eu
+Credit to:
+Unknown - Kobold, Kobold Sorcerer
+Unknown - Kobold Snake
+Unknown - Kobold Spider
+Unknown - Kobold Mountain Lion
+Colin J. Randall - Winged Kobold
+BluePard - Kobold Grotesque
+Joan G. Stark - Kobold Leader
+Unknown - Chimera
+https://ascii.co.uk/art/knights - Slayer
+
+
+─── PLAYTESTING ─────────────────────────────
+Thank you to all of my playtesters who provided invaluable feedback along the way!
+- Behrend Shite Boyz
+- Azeroth ATF
+
+If you have any feedback feel free to send me an email at bcgamesoft@gmail.com
+`,
+  },
+
 } as const;
 

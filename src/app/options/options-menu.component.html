@@ -54,6 +54,11 @@
       <button class="opt-btn opt-import-btn" (click)="importSave()">[ Load Save ]</button>
     </div>
 
+    <!-- Credits -->
+    <div class="opt-section">
+      <button class="opt-btn" (click)="openCredits()">[ Credits ]</button>
+    </div>
+
   </div>
 
 </div>
@@ -90,4 +95,17 @@
 
   </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════
+     CREDITS MODAL
+     ═══════════════════════════════════════════════════════ -->
+<div class="confirm-backdrop credits-backdrop" *ngIf="showCredits" (click)="closeCredits()">
+  <div class="credits-dialog" (click)="$event.stopPropagation()">
+    <div class="credits-header">{{ creditsTitle }}</div>
+    <pre class="credits-body">{{ creditsBody }}</pre>
+    <button class="confirm-btn confirm-no" (click)="closeCredits()">[ Close ]</button>
+  </div>
+</div>
+
+
 

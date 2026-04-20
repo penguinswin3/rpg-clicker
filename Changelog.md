@@ -1,7 +1,9 @@
-# Version Alpha 1.4.1
+# Release 1.0.0
 
 ## Added
 - You can now hold to click to buy or stitch in the sidequests 
+- Credits page
+
 ## Removed
 
 ## Changed
