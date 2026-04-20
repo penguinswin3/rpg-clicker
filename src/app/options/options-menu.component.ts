@@ -35,6 +35,10 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
   isOpen           = false;
   importString     = '';
   showClearConfirm = false;
+  showCredits      = false;
+
+  readonly creditsTitle = LOG_MSG.CREDITS.TITLE;
+  readonly creditsBody  = LOG_MSG.CREDITS.BODY;
 
   /** Bound to [style.right] on the anchor — follows the sidebar width. */
   rightOffset  = `${SIDEBAR_EXPANDED + SIDEBAR_GAP}px`;
@@ -129,5 +133,13 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
 
   cancelClear(): void {
     this.showClearConfirm = false;
+  }
+
+  openCredits(): void {
+    this.showCredits = true;
+  }
+
+  closeCredits(): void {
+    this.showCredits = false;
   }
 }

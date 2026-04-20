@@ -241,6 +241,8 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
     if (this.showTimer) { clearTimeout(this.showTimer); this.showTimer = null; }
 
     const hadMistakes = this.wrongPositions.size > 0;
+    /** Whether the player failed the very last press — costs 1 construct. */
+    const failedLastPress = this.wrongPositions.has(this.sequence.length - 1);
 
     // Reset gold-2 fail streak on clean success
     if (!hadMistakes) {
@@ -249,7 +251,7 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
     }
 
     const extendedLevel = this.selectedEtchingLevel;
-    let constructs = ARTIFICER_MG.BASE_CONSTRUCT_REWARD;
+    let constructs: number = ARTIFICER_MG.BASE_CONSTRUCT_REWARD;
     for (let i = 0; i < extendedLevel; i++) {
       constructs *= ARTIFICER_MG.EXTENDED_ETCHING_REWARD_MULTIPLIER;
     }
@@ -257,6 +259,10 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
 
     const bm = this.wallet.getBeadMultiplier('artificer');
     constructs = constructs * bm;
+    // Penalty: if the player failed the last press, subtract 1 construct (min 0).
+    if (failedLastPress) {
+      constructs = Math.max(0, constructs - 1);
+    }
 
     // Unlock construct currency on first receipt
     if (!this.wallet.isCurrencyUnlocked('construct')) {

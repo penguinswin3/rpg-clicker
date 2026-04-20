@@ -8,7 +8,7 @@
 
   <!-- ── Collapsed view ─────────────────── -->
   <div class="collapsed-label" *ngIf="collapsed">
-    <span class="collapsed-text">S I D E Q U E S T</span>
+    <span class="collapsed-text">{{ activeCharacterId === 'merchant' ? 'B L A C K   M A R K E T' : 'S I D E Q U E S T' }}</span>
   </div>
 
   <div class="panel-body" *ngIf="!collapsed">
@@ -20,6 +20,8 @@
         [potionChuggingLevel]="potionChuggingLevel"
         [strongerKoboldsLevel]="strongerKoboldsLevel"
         [firstStrikeLevel]="firstStrikeLevel"
+        [firstStrikeEnabled]="firstStrikeEnabled"
+        (firstStrikeEnabledChange)="firstStrikeEnabledChange.emit($event)"
         [slowBladeLevel]="slowBladeLevel"
         [gildedBladeLevel]="gildedBladeLevel"
         [mindReadingLevel]="mindReadingLevel"
@@ -55,6 +57,7 @@
         [potionDilutionUnlocked]="potionDilutionLevel >= 1"
         [serialDilutionLevel]="serialDilutionLevel"
         [perfectPotionsLevel]="perfectPotionsLevel"
+        [potionMarketingLevel]="potionMarketingLevel"
         [dilutionEnabled]="dilutionEnabled"
         (dilutionEnabledChange)="dilutionEnabledChange.emit($event)"
         [synapticalPotionsUnlocked]="synapticalPotionsLevel >= 1"

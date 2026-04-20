@@ -246,3 +246,40 @@
 
   &:active { background: #0f2a0f; }
 }
+
+// ── Credits modal ─────────────────────────────────────────────
+
+.credits-dialog {
+  background: #0d0d0d;
+  border: 2px solid #888;
+  padding: 24px 28px 20px;
+  min-width: 340px;
+  max-width: 520px;
+  color: #ccc;
+  font-size: 0.82rem;
+  box-shadow: 0 0 32px rgba(136, 136, 136, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.credits-header {
+  color: #ccaa55;
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  text-align: center;
+}
+
+.credits-body {
+  color: #bbb;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  text-align: center;
+  max-height: 60vh;
+  overflow-y: auto;
+}

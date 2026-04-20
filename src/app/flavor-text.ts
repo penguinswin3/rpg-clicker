@@ -187,7 +187,7 @@ export const UPGRADE_FLAVOR = {
 
   // Merchant
   BOXING_DAY:               { name: 'Boxing Day',                  desc: '+1 additional illicit good opened per fence' },
-  SHADY_CONNECTIONS:        { name: 'Shady Connections',           desc: '+3% chance to find bonus loot when opening goods' },
+  SHADY_CONNECTIONS:        { name: 'Underworld Connections',           desc: '+3% chance to find bonus loot when opening goods' },
   BLACK_MARKET_CONNECTIONS: { name: 'Black Market Connections',    desc: '+1% chance at rare rolls when opening goods' },
   SMUGGLER_NETWORK:         { name: "Smuggler's Network",          desc: '+4% chance to double the goods opened per fence' },
   RIGGED_GAME:              { name: 'Rigged Game',                 desc: '-1% cost on all stock market items' },
@@ -206,7 +206,7 @@ export const UPGRADE_FLAVOR = {
   SUNFURY:            { name: 'Sunfury',               desc: 'Each successive Thunderfury chain attack deals double the damage of the previous attack.' },
   SUNDER_ARMOR:       { name: 'Sunder Armor',          desc: '+1 additional weak spot exposed' },
   SLAYER_GOLD_BEAD_1: { name: 'Bead of Carnage',       desc: 'Doubles the Slayer\'s damage' },
-  SLAYER_GOLD_BEAD_2: { name: 'Bead of Annihilation',  desc: 'Doubles the Slayer\'s damage (stacks)' },
+  SLAYER_GOLD_BEAD_2: { name: 'Bead of Annihilation',  desc: 'Doubles the Slayer\'s damage. Again' },
 
   // ── Relic upgrades (one per character) ──────────────────────────
   RELIC_FIGHTER:       { name: 'Crown of Command',                   desc: 'Each Jack hires hirelings, who in turn can hire hirelings' },
@@ -220,6 +220,9 @@ export const UPGRADE_FLAVOR = {
   RELIC_ARTIFICER:     { name: 'Chisel of Dwarvenkind',              desc: 'Jacks double the mana produced by Reflect and gain +1 insight per Study' },
   RELIC_CHIMERAMANCER: { name: 'Spool of Infinite Weaving',          desc: 'Jacks assigned to the Chimeramancer also click every other hero button (toggleable)' },
   RELIC_SLAYER:        { name: 'Vorpal Blade',                       desc: 'You are dangerous alone. Take this blade and see to your goal.' },
+
+  // ── Post-victory ─────────────────────────────────────────────────────
+  SCROLL_OF_TRUE_RESURRECTION: { name: 'Scroll of True Resurrection', desc: 'The Slayer bathes in ichor, executing a dark ritual. All fallen party members will be revived... At a cost...' },
 
 
 
@@ -734,7 +737,7 @@ export const BEAD_FLAVOR: Record<string, Record<string, BeadSlotFlavor>> = {
   },
   ranger: {
     'blue-1': { name: 'Bead of the Wild',       lore: 'The Ranger maneuvers through the wilds effortlessly. In normal times, they identify and procure valuable herbs, mushrooms, and other forageable goods. If they\'re lucky, they\'ll bring home a quality hunt, fetching the real big bucks.' ,                             effect: '2× resource yields from this character.' },
-    'gold-1': { name: 'Bead of the Pathfinder', lore: 'These mountain hills are confusing to travel through. I start in the northwest passage, and suddenly find myself in the north east, but I was mistken again, it was just the south! I travel far north, just to be South west, or was it south east? Anyways, I retreat from the east all the way back west, just to head north and back to the east, a long journey! Once day, next time I find myself in the south east, I\'ll make a straight shot west for one final trek.',                                  effect: 'Unlocks basic sidequest automation.' },
+    'gold-1': { name: 'Bead of the Pathfinder', lore: 'These mountain hills are confusing to travel through. I start in the northwest passage, and suddenly find myself in the north east, but I was mistaken again, it was just the south! I travel far north, just to be South west, or was it south east? Anyways, I retreat from the east all the way back west, just to head north and back to the east, a long journey! One day, next time I find myself in the south west, I\'ll make a straight shot east for one final trek.',                                  effect: 'Unlocks basic sidequest automation.' },
     'gold-2': { name: 'Bead of Mastery',        lore: '"The Patron seems to have no regard for the excellent quality of cuts I return with. No matter how many times I explain the exact killing method and intricate butchering process, I get pushed aside. Maybe this is only meant to be a working relationship."',                                                              effect: 'Prioritizes pixies and treasure chests when auto-solving.' },
     'blue-2': { name: 'Bead of the Pack',       lore: '"A mercenary reached out to on behalf of some sort of "Patron". I was requested to gather large quantities of beast flesh, for some reason. Perhaps this is some sort of Lord, looking to throw a feast? I should gather some edible herbs then!"',                   effect: '2× resource yields from this character (stacks).' },
   },
@@ -746,7 +749,7 @@ export const BEAD_FLAVOR: Record<string, Record<string, BeadSlotFlavor>> = {
   },
   culinarian: {
     'blue-1': { name: 'Bead of Seasoning',      lore: 'The Chef welcomes guests from all over the nation to charm them with rare flavors and exotic ingredients. His secrets are his own, and his culinary rivals are always looking to uncover his secret ingredient. But the truth is, there\'s no secret. It\'s al in the preparation.' ,               effect: '2× resource yields from this character.' },
-    'gold-1': { name: 'Bead of the Hearth',     lore: '"Note from Mom - I\'ve slipped this not in your favorite cookbook! Hopefully one day you can put this modification to good use! I first start with a healthy dose of spice and fresh herbs. I then rub that mix on a double serving of kobold tongue and fresh meat. For good measure, I add a little more tongue, crusted in dried herbs, and some more meat, spiced with only the greatest!"',                                                   effect: 'Unlocks basic sidequest automation.' },
+    'gold-1': { name: 'Bead of the Hearth',     lore: '"Note from Mom - I\'ve slipped this note in your favorite cookbook! Hopefully one day you can put this modification to good use! I first start with a healthy dose of spice and fresh herbs. I then rub that mix on a double serving of kobold tongue and fresh meat. For good measure, I add a little more tongue, crusted in dried herbs, and some more meat, spiced with only the greatest!"',                                                   effect: 'Unlocks basic sidequest automation.' },
     'gold-2': { name: 'Bead of the Epicure',    lore: 'His restaurant ravaged by gluttony. It\'s never enough. More! More! More! Eat and consume, grow and bloat! What good is savoring it when you can simply absorb it all? There\'s no art here, just excess.',                                                          effect: 'Solves every recipe in exactly 2 guesses.' },
     'blue-2': { name: 'Bead of the Sous Chef',  lore: '"My favorite guest, a long time Patron came to me with an odd request today. The flavors unconventional, the portions... excessive. This is no catered meal, but a feast for some sort of devouring animal!"',                 effect: '2× resource yields from this character (stacks).' },
   },
@@ -758,7 +761,7 @@ export const BEAD_FLAVOR: Record<string, Record<string, BeadSlotFlavor>> = {
   },
   artisan: {
     'blue-1': { name: 'Bead of Precision',      lore: 'The Artisan sees the good in things others overlook. One man\'s \'trash\' is another man\'s \'treasure\'. ',                                      effect: '2× resource yields from this character.' },
-    'gold-1': { name: 'Bead of the Masterwork', lore: 'Etched in to a workstation, you see the following diagram: "Anchor: Top Left. Left. Up-Right. Left. Up-Right. Right. Down. Left. Up-Left. Down."',                                  effect: 'Unlocks basic sidequest automation.' },
+    'gold-1': { name: 'Bead of the Masterwork', lore: 'Etched in to a workstation, you see the following diagram: "Anchor: Top Left. Left. Up-Right. Left. Up. Right. Down. Left. Up-Left. Down."',                                  effect: 'Unlocks basic sidequest automation.' },
     'gold-2': { name: 'Bead of the Prodigy',    lore: '"I can only speculate on whatever perverse nature that man will use my crown jewel for. It woes me that I may never see something of that high quality again. He best put it to good use."',                                                                 effect: 'Always selects the top two gems each game.' },
     'blue-2': { name: 'Bead of Industry',       lore: '"It\'s unlike someone of the Patron\'s nature to only want *one* gemstone. He insists that it\'s perfect, and deemed that only I can find the exact gem he needs."',                           effect: '2× resource yields from this character (stacks).' },
   },
@@ -837,8 +840,8 @@ export const LOG_MSG = {
     },
     APOTHECARY: {
       NOT_ENOUGH_HERBS:      (need: string, have: string) => `Not enough herbs to brew. Need ${need}, have ${have}.`,
-      BREW_RECOVERED:        (potion: string, herb: string, xp: string) => `You brewed a potion and recovered herbs! (${potion}, ${herb}, ${xp})`,
-      BREW:                  (potion: string, xp: string) => `You brewed a potion. (${potion}, ${xp})`,
+      BREW_RECOVERED:        (potion: string, herb: string, xp: string, gold?: string) => `You brewed a potion and recovered herbs! (${potion}, ${herb}, ${xp}${gold ? `, ${gold}` : ''})`,
+      BREW:                  (potion: string, xp: string, gold?: string) => `You brewed a potion. (${potion}, ${xp}${gold ? `, ${gold}` : ''})`,
     },
     CULINARIAN: {
       NOT_ENOUGH_GOLD:       (need: string, have: string) => `Not enough gold to gather spices. Need ${need}, have ${have}.`,
@@ -1039,6 +1042,40 @@ export const LOG_MSG = {
     ZERO_UPGRADES:           '[DEV] All upgrades set to level 0. All beads unsocketed.',
     MAX_UPGRADES:            '[DEV] All upgrades set to maximum level.',
     UNLOCK_ALL:              '[DEV] Everything unlocked.',
+  },
+
+  // ── Credits ──────────────────────────────────────────────────
+
+  CREDITS: {
+    TITLE: '+[ CREDITS ]+',
+    BODY:
+`Thank you for playing RPG Clicker!
+
+This game is my first attempt at releasing a game to the public.
+I hope you felt a sense of exploration and adventure while playing.
+I hope to create more games in the future that allow us to explore more cool ideas.
+
+─── ASCII ART ───────────────────────────────
+Ascii art modified from https://www.asciiart.eu
+Credit to:
+Unknown - Kobold, Kobold Sorcerer
+Unknown - Kobold Snake
+Unknown - Kobold Spider
+Unknown - Kobold Mountain Lion
+Colin J. Randall - Winged Kobold
+BluePard - Kobold Grotesque
+Joan G. Stark - Kobold Leader
+Unknown - Chimera
+https://ascii.co.uk/art/knights - Slayer
+
+
+─── PLAYTESTING ─────────────────────────────
+Thank you to all of my playtesters who provided invaluable feedback along the way!
+- Behrend Shite Boyz
+- Azeroth ATF
+
+If you have any feedback feel free to send me an email at bcgamesoft@gmail.com
+`,
   },
 
 } as const;

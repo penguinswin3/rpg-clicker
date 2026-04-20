@@ -93,6 +93,22 @@ export class UpgradeService {
     this.maxOverrides.set(id, Math.max(0, value));
   }
 
+  /** Dynamically update the runtime cost for a single currency on an upgrade.
+   *  Used for upgrades whose cost depends on runtime state (e.g. all current ichor). */
+  updateCost(id: string, currency: string, amount: number): void {
+    const rt = this.runtime.get(id);
+    if (rt) rt.currentCosts[currency] = Math.max(1, Math.floor(amount));
+  }
+
+  /** Force a single-use upgrade to level 1 without deducting costs. Used by
+   *  special purchase handlers that handle cost deduction themselves. */
+  forceLevel(id: string, level: number): void {
+    const rt = this.runtime.get(id);
+    if (!rt) return;
+    rt.level = level;
+    this.changed$.next(id);
+  }
+
   category(id: string): UpgradeCategory | undefined {
     return this.defs.get(id)?.category;
   }

@@ -151,6 +151,7 @@ export class AppComponent implements OnInit, OnDestroy {
   koboldBaitEnabled       = false;
   ancientCookbookEnabled  = true;
   chimeramancerRelicEnabled = true;
+  firstStrikeEnabled      = true;
 
   // ── Slayer endgame state ────────────────────────────────────
   /** Whether the Slayer endgame sequence has been triggered. */
@@ -166,6 +167,8 @@ export class AppComponent implements OnInit, OnDestroy {
   slayerDeathSequencePlaying = false;
   /** Whether the slayer-charge-kill animation is playing. */
   slayerChargeAnimPlaying = false;
+  /** Whether the Scroll of True Resurrection has been used (prevents re-triggering End Times). */
+  trueResurrected = false;
   /** Whether the slayer has frozen in place (pre-charge pause). */
   slayerFrozen = false;
   /** Whether the chimera has been slain (frozen chimera art). */
@@ -345,6 +348,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
   /** Whether the hero button should be disabled (only true for thief while stunned). */
   get isHeroDisabled(): boolean {
+    if (this.deadCharacters.includes(this.activeCharacterId)) return true;
     if (this.activeCharacterId === 'thief') return this.isThiefStunned;
     if (this.activeCharacterId === 'artisan') return this.isArtisanTimerActive;
     return false;
@@ -381,6 +385,12 @@ export class AppComponent implements OnInit, OnDestroy {
   familiarTimers: Record<string, number> = {};
   /** When true, all familiars are paused — they don't click and don't count for per-second. */
   familiarsPaused = false;
+  /** Per-key individual pause state — a familiar is paused if this OR familiarsPaused is true. */
+  familiarPausedKeys: Record<string, boolean> = {};
+  /** Timestamp (ms) at which each familiar was individually paused — used to freeze timer countdown. */
+  familiarPausedAt: Record<string, number> = {};
+  /** Timestamp (ms) at which the global pause was started — used to freeze all timers. */
+  familiarsPausedAt: number | null = null;
 
   // ── Jack computed getters (delegated to jack-calculator) ───────
 
@@ -489,6 +499,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (gates.requiresSlayerGoldBead1 && this.upgrades.level('SLAYER_GOLD_BEAD_1') < 1) return false;
     if (gates.requiresWindfury        && this.upgrades.level('WINDFURY') < 1)            return false;
     if (gates.requiresThunderfury     && this.upgrades.level('THUNDERFURY') < 1)          return false;
+    if (gates.requiresChimeraSlain    && !(this.slayerMode && this.slayerHp <= 0))        return false;
     return true;
   }
 
@@ -556,6 +567,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Buy the current buy-quantity of levels for an upgrade. */
   buyUpgrade(id: string): void {
+    // Special case: Scroll of True Resurrection — deducts ALL ichor and triggers resurrection.
+    if (id === 'SCROLL_OF_TRUE_RESURRECTION') {
+      this.performTrueResurrection();
+      return;
+    }
     const prevLevel = this.upgrades.level(id);
     if (this.buyQuantity === 'max') {
       const max = this.upgrades.maxAffordable(id);
@@ -780,6 +796,11 @@ export class AppComponent implements OnInit, OnDestroy {
       this.concentratedPotions = Math.floor(state['concentrated-potion']?.amount ?? 0);
       this.spice               = Math.floor(state['spice']?.amount               ?? 0);
       this._refreshDerived();
+      // Keep the Scroll of True Resurrection cost in sync with current ichor balance.
+      if (this.upgrades.level('SCROLL_OF_TRUE_RESURRECTION') < 1) {
+        const ichor = Math.floor(state['ichor']?.amount ?? 0);
+        this.upgrades.updateCost('SCROLL_OF_TRUE_RESURRECTION', 'ichor', Math.max(1, ichor));
+      }
     });
     this.wallet.highestXpEver$.subscribe(v => {
       const prev = this.highestXp;
@@ -972,13 +993,14 @@ export class AppComponent implements OnInit, OnDestroy {
         const now = Date.now();
         let anyExpired = false;
         for (const [key, expiry] of Object.entries(this.familiarTimers)) {
-          if (expiry <= now) {
+          const isPaused = this.familiarsPaused || !!this.familiarPausedKeys[key];
+          if (!isPaused && expiry <= now) {
             // Timer just expired — mark for cleanup
             anyExpired = true;
             continue;
           }
-          // Skip clicks when familiars are paused
-          if (this.familiarsPaused) continue;
+          // Skip clicks when familiars are paused (globally or individually)
+          if (isPaused) continue;
 
           const baseId = key.startsWith('necromancer') ? 'necromancer' : key.startsWith('artificer') ? 'artificer' : key;
           const relicMult = this.upgrades.level(`RELIC_${baseId.toUpperCase()}`) >= 1 ? 2 : 1;
@@ -996,7 +1018,7 @@ export class AppComponent implements OnInit, OnDestroy {
         // ── Chimeramancer Relic (familiars): also click all other hero buttons ──
         if (this.chimeramancerRelicEnabled && this.upgrades.level('RELIC_CHIMERAMANCER') >= 1) {
           const chimeraFamExpiry = this.familiarTimers['chimeramancer'] ?? 0;
-          if (chimeraFamExpiry > Date.now() && !this.familiarsPaused) {
+          if (chimeraFamExpiry > Date.now() && !this.familiarsPaused && !this.familiarPausedKeys['chimeramancer']) {
             const chimeraRelicMult = 2; // relic is active → 2×
             const mindAndSoul = this.upgrades.level('MIND_AND_SOUL');
             const effectiveFamiliars = FAMILIAR.JACKS_PER_FAMILIAR + mindAndSoul * FAMILIAR.MIND_AND_SOUL_PER_LEVEL;
@@ -1018,7 +1040,8 @@ export class AppComponent implements OnInit, OnDestroy {
         if (anyExpired) {
           const cleaned: Record<string, number> = {};
           for (const [k, v] of Object.entries(this.familiarTimers)) {
-            if (v > now) cleaned[k] = v;
+            const isPaused = this.familiarsPaused || !!this.familiarPausedKeys[k];
+            if (isPaused || v > now) cleaned[k] = v;
           }
           this.familiarTimers = cleaned;
           this.updateAllPerSecond();
@@ -1084,12 +1107,15 @@ export class AppComponent implements OnInit, OnDestroy {
       fermentationVatsEnabled: this.fermentationVatsEnabled,
       koboldBaitEnabled:       this.koboldBaitEnabled,
       ancientCookbookEnabled:  this.ancientCookbookEnabled,
+      firstStrikeEnabled:      this.firstStrikeEnabled,
       artisanTimerUntil:       this.artisanTimerUntil,
       artisanTimerBatchSize:   this.artisanTimerBatchSize,
       necromancerActiveButton:     this.necromancerActiveButton,
       necromancerClicksRemaining:  this.necromancerClicksRemaining,
       familiarTimers:              { ...this.familiarTimers },
       familiarsPaused:             this.familiarsPaused,
+      familiarPausedKeys:          { ...this.familiarPausedKeys },
+      familiarPausedAt:            { ...this.familiarPausedAt },
       beads:                       JSON.parse(JSON.stringify(this.beadState)),
       autoSolveEnabled:            { ...this.autoSolveEnabled },
       gold2Progress:               JSON.parse(JSON.stringify(this.gold2Progress)),
@@ -1103,6 +1129,7 @@ export class AppComponent implements OnInit, OnDestroy {
       slayerState:                 { hp: this.slayerHp, damageDone: this.slayerDamageDone },
       vorpalBladeSocketed:         this.vorpalBladeSocketed,
       deadCharacters:              [...this.deadCharacters],
+      trueResurrected:             this.trueResurrected,
     };
   }
 
@@ -1126,18 +1153,40 @@ export class AppComponent implements OnInit, OnDestroy {
     this.fermentationVatsEnabled = s.fermentationVatsEnabled ?? true;
     this.koboldBaitEnabled       = s.koboldBaitEnabled       ?? false;
     this.ancientCookbookEnabled  = s.ancientCookbookEnabled  ?? true;
+    this.firstStrikeEnabled      = s.firstStrikeEnabled      ?? true;
     // Restore necromancer state
     this.necromancerActiveButton     = s.necromancerActiveButton     ?? 'defile';
     this.necromancerClicksRemaining  = s.necromancerClicksRemaining  ?? 10;
     // Restore familiar timers — prune any that have expired while the game was closed
+    // (but keep timers that were paused when saved — they were frozen so still valid)
     const now = Date.now();
     const rawTimers = s.familiarTimers ?? {};
+    const wasGloballyPaused = s.familiarsPaused ?? false;
+    const restoredPausedKeys: Record<string, boolean> = s.familiarPausedKeys ? { ...s.familiarPausedKeys } : {};
+    const restoredPausedAt: Record<string, number> = s.familiarPausedAt ? { ...s.familiarPausedAt } : {};
     const restoredTimers: Record<string, number> = {};
     for (const [k, v] of Object.entries(rawTimers)) {
-      if (v > now) restoredTimers[k] = v;
+      const wasPaused = !!restoredPausedKeys[k] || wasGloballyPaused;
+      if (wasPaused) {
+        // Timer was frozen — extend by time elapsed while game was closed
+        const pausedAt = restoredPausedAt[k] ?? now;
+        const elapsed = now - pausedAt;
+        restoredTimers[k] = v + elapsed;
+        restoredPausedAt[k] = now; // reset pause reference point to now
+        // Migrate: if globally paused, convert to individual key pauses (global pause button removed)
+        if (wasGloballyPaused && !restoredPausedKeys[k]) {
+          restoredPausedKeys[k] = true;
+        }
+      } else if (v > now) {
+        restoredTimers[k] = v;
+      }
     }
     this.familiarTimers = restoredTimers;
-    this.familiarsPaused = s.familiarsPaused ?? false;
+    // Global pause is no longer used in the UI — always clear it on load
+    this.familiarsPaused = false;
+    this.familiarsPausedAt = null;
+    this.familiarPausedKeys = restoredPausedKeys;
+    this.familiarPausedAt = restoredPausedAt;
     // Restore bead state
     this.beadState = s.beads ? JSON.parse(JSON.stringify(s.beads)) : {};
     this.syncBeadMultipliers();
@@ -1170,6 +1219,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.slayerDamageDone = s.slayerState.damageDone ?? 0;
     }
     this.vorpalBladeSocketed = s.vorpalBladeSocketed ?? false;
+    this.trueResurrected     = s.trueResurrected     ?? false;
     // If chimera was already killed, restore the slain visual state
     if (this.slayerHp <= 0 && this.slayerMode) {
       this.chimeraSlain = true;
@@ -1273,6 +1323,7 @@ export class AppComponent implements OnInit, OnDestroy {
       familiarTimers: this.familiarTimers,
       jackdUpUnlocked: this.jackdUpUnlocked,
       familiarsPaused: this.familiarsPaused,
+      familiarPausedKeys: { ...this.familiarPausedKeys },
       beadMultipliers: {
         fighter:     this.wallet.getBeadMultiplier('fighter'),
         ranger:      this.wallet.getBeadMultiplier('ranger'),
@@ -1327,6 +1378,9 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.setPerSecond('kobold-feather',    rates['kobold-feather']);
       this.wallet.setPerSecond('kobold-pebble',     rates['kobold-pebble']);
       this.wallet.setPerSecond('kobold-heart',      rates['kobold-heart']);
+      this.wallet.setPerSecond('monster-trophy',    rates['monster-trophy']);
+      this.wallet.setPerSecond('forbidden-tome',    rates['forbidden-tome']);
+      this.wallet.setPerSecond('magical-implement', rates['magical-implement']);
       this.wallet.setPerSecond('life-thread',       rates['life-thread']);
       this.wallet.setPerSecond('ichor',              rates.ichor);
       this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
@@ -1728,9 +1782,14 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Switch the active necromancer button and roll a new click threshold. */
   private switchNecromancerButton(): void {
-    this.heroHoldStop();
     this.necromancerActiveButton = this.necromancerActiveButton === 'defile' ? 'ward' : 'defile';
     this.necromancerClicksRemaining = rollNecromancerSwitchClicks(this.upgrades.level('EXTENDED_RITUAL'));
+    // Stop any active hold only if the player is currently on necromancer —
+    // their held button just became disabled. If they're on a different character,
+    // a jack triggered this switch and we must not cancel their hold.
+    if (this.activeCharacterId === 'necromancer') {
+      this.heroHoldStop();
+    }
     this.updateAllPerSecond();
     this._refreshDerived();
   }
@@ -1794,8 +1853,56 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Toggle the paused state of all familiars. */
   toggleFamiliarsPaused(): void {
-    this.familiarsPaused = !this.familiarsPaused;
+    const now = Date.now();
+    if (!this.familiarsPaused) {
+      // Pausing globally — record pause time for all active, non-individually-paused timers
+      this.familiarsPaused = true;
+      this.familiarsPausedAt = now;
+    } else {
+      // Unpausing globally — extend all timers that were frozen by this global pause
+      if (this.familiarsPausedAt !== null) {
+        const elapsed = now - this.familiarsPausedAt;
+        const extended: Record<string, number> = {};
+        for (const [k, v] of Object.entries(this.familiarTimers)) {
+          // Only extend timers not individually paused (they have their own pausedAt)
+          extended[k] = !!this.familiarPausedKeys[k] ? v : v + elapsed;
+        }
+        this.familiarTimers = extended;
+      }
+      this.familiarsPaused = false;
+      this.familiarsPausedAt = null;
+    }
     this.updateAllPerSecond();
+  }
+
+  /** Toggle the paused state for a specific familiar key. */
+  toggleFamiliarKeyPaused(key: string): void {
+    const now = Date.now();
+    const currentlyPaused = !!this.familiarPausedKeys[key];
+    if (!currentlyPaused) {
+      // Pausing this key — record when it was paused
+      this.familiarPausedKeys = { ...this.familiarPausedKeys, [key]: true };
+      this.familiarPausedAt = { ...this.familiarPausedAt, [key]: now };
+    } else {
+      // Unpausing this key — extend the timer by the time it was paused
+      const pausedAt = this.familiarPausedAt[key] ?? now;
+      const elapsed = now - pausedAt;
+      if (this.familiarTimers[key] !== undefined) {
+        this.familiarTimers = { ...this.familiarTimers, [key]: this.familiarTimers[key] + elapsed };
+      }
+      const updatedPausedKeys = { ...this.familiarPausedKeys };
+      delete updatedPausedKeys[key];
+      this.familiarPausedKeys = updatedPausedKeys;
+      const updatedPausedAt = { ...this.familiarPausedAt };
+      delete updatedPausedAt[key];
+      this.familiarPausedAt = updatedPausedAt;
+    }
+    this.updateAllPerSecond();
+  }
+
+  /** Whether a specific familiar key is paused (individually or globally). */
+  isFamiliarKeyPaused(key: string): boolean {
+    return this.familiarsPaused || !!this.familiarPausedKeys[key];
   }
 
   /** Whether the Find Familiar upgrade is purchased. */
@@ -2140,6 +2247,7 @@ export class AppComponent implements OnInit, OnDestroy {
    */
   onChimeraCompleted(): void {
     if (this.slayerMode) return; // already triggered
+    if (this.trueResurrected) return; // End Times permanently disabled after resurrection
     this.slayerMode = true;
     this.slayerDeathSequencePlaying = true;
 
@@ -2208,7 +2316,61 @@ export class AppComponent implements OnInit, OnDestroy {
     this._startSlayerAutoAttack();
   }
 
-  /** Compute effective Slayer attack damage (base + Know No Fear + Condemn stacks + Banishment + socketed bead multipliers). */
+  /**
+   * Handle purchase of the Scroll of True Resurrection.
+   * Deducts ALL current ichor, banishes the Slayer, revives all characters,
+   * and returns the game to its pre-End-Times state.
+   * The chimeramancer sidequest remains at 100% with no way to re-trigger the boss fight.
+   */
+  performTrueResurrection(): void {
+    if (this.upgrades.level('SCROLL_OF_TRUE_RESURRECTION') >= 1) return;
+    const ichor = Math.floor(this.wallet.get('ichor'));
+    if (ichor < 1) {
+      this.log.log('You need at least 1 Ichor to use the Scroll of True Resurrection.', 'warn');
+      return;
+    }
+
+    // Deduct ALL ichor
+    this.wallet.remove('ichor', ichor);
+    // Mark the upgrade as purchased
+    this.upgrades.forceLevel('SCROLL_OF_TRUE_RESURRECTION', 1);
+
+    // ── Stop all slayer systems ──────────────────────────────────
+    this._stopSlayerAutoAttack();
+    this.stopSlayerButtonCycle();
+
+    // ── Reset slayer endgame visual/logic state ──────────────────
+    this.slayerMode              = false;
+    this.chimeraSlain            = false;
+    this.slayerFrozen            = false;
+    this.slayerChargeAnimPlaying = false;
+    this.slayerDeathSequencePlaying = false;
+    this.victoryModalOpen        = false;
+    this.slayerHp                = SLAYER.MAX_HP;
+    this.slayerDamageDone        = 0;
+    this.slayerButtons           = new Array(SLAYER.BUTTON_COUNT).fill(false);
+    this.condemnStacks           = [];
+
+    // ── Revive all characters ────────────────────────────────────
+    this.deadCharacters = [];
+    this.charService.reviveAll();
+
+    // ── Banish the Slayer (lock, deselect) ──────────────────────
+    this.charService.lock('slayer');
+    this.slayerUnlocked = false;
+
+    // ── Restore active character (select first non-slayer unlocked character) ──
+    const firstAlive = this.charService.getCharacters().find(c => c.id !== 'slayer' && c.unlocked && !c.dead);
+    if (firstAlive) this.charService.setActive(firstAlive.id);
+    else            this.charService.clearActive();
+
+    // ── Mark as resurrected — prevents End Times from re-triggering ──
+    this.trueResurrected = true;
+
+    this.log.log('The Scroll crumbles to dust. The fallen stir… and rise. The Slayer fades from memory.', 'rare');
+    this.statsService.recordMilestone('true_resurrection', 'True Resurrection');
+    this.updateAllPerSecond();
+  }
   private _calcSlayerDamage(): number {
     let dmg = SLAYER.DAMAGE_PER_CLICK + this.upgrades.level('KNOW_NO_FEAR') * SLAYER.KNOW_NO_FEAR_DAMAGE;
     // Condemn: +level damage per active stack

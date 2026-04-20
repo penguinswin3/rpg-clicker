@@ -46,6 +46,10 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() strongerKoboldsLevel = 0;
   /** First Strike level — forwarded to the fighter minigame. */
   @Input() firstStrikeLevel = 0;
+  /** Whether First Strike is enabled — forwarded to the fighter minigame. */
+  @Input() firstStrikeEnabled = true;
+  /** Emitted when the player toggles First Strike inside the fighter minigame. */
+  @Output() firstStrikeEnabledChange = new EventEmitter<boolean>();
   /** Slow Blade level — forwarded to the fighter minigame. */
   @Input() slowBladeLevel = 0;
   /** Gilded Blade level — forwarded to the fighter minigame. */
@@ -90,6 +94,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Input() serialDilutionLevel = 0;
   /** Perfect Potions level — forwarded to the apothecary minigame. */
   @Input() perfectPotionsLevel = 0;
+  /** Potion Marketing level — forwarded to the apothecary minigame. */
+  @Input() potionMarketingLevel = 0;
   /** Synaptical Potions level — forwarded to the apothecary minigame. */
   @Input() synapticalPotionsLevel = 0;
   /** Synaptic Static level — forwarded to the apothecary minigame. */

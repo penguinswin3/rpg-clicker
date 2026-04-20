@@ -9,7 +9,7 @@
 import { KOBOLD_VARIANTS } from './flavor-text';
 
 // ── Game Version ─────────────────────────────────────────────
-export const VERSION = 'Alpha 1.4.1';
+export const VERSION = '1.0.0';
 
 // ── Shared Upgrade Types ─────────────────────────────────────
 
@@ -73,6 +73,8 @@ export interface UpgradeGates {
   readonly requiresWindfury?: boolean;
   /** Hide until the Thunderfury upgrade has been purchased. */
   readonly requiresThunderfury?: boolean;
+  /** Hide until the chimera has been slain (slayerHp ≤ 0 and slayerMode is active). */
+  readonly requiresChimeraSlain?: boolean;
 }
 
 export interface CostDef {
@@ -245,7 +247,7 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
     costs: [
       { currency: 'gold',        base: 10_000_000 },
       { currency: 'construct',   base: 500        },
-      { currency: 'mana',        base: 5000       },
+      { currency: 'mana',        base: 500_000       },
       { currency: 'soul-stone',  base: 1000       },
       { currency: 'monster-trophy',    base: 3000       },
     ],
@@ -740,25 +742,25 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
   { id: 'SMUGGLER_NETWORK', characterId: 'merchant', category: 'standard', max: 25,
     costs: [
-      { currency: 'illicit-goods',   base: 100, scale: 1.3 },
+      { currency: 'dossier',   base: 10000, scale: 1.3 },
       { currency: 'monster-trophy',  base: 10,  scale: 1.3 },
     ] },
 
   // ── Merchant — minigame ──────────────────────────────────────
   { id: 'RIGGED_GAME', characterId: 'merchant', category: 'minigame', max: 25,
     costs: [
-      { currency: 'illicit-goods', base: 100, scale: 1.3 },
+      { currency: 'magical-implement',         base: 25, scale: 1.3 },
       { currency: 'bone',         base: 10_000, scale: 1.2 },
     ] },
   { id: 'DIVERSIFIED_PORTFOLIO', characterId: 'merchant', category: 'minigame', max: 6,
     costs: [
-      { currency: 'illicit-goods', base: 200,  scale: 1.5 },
-      { currency: 'dossier',      base: 5000, scale: 1.5 },
+      { currency: 'gold',         base: 2_900,  scale: 1.5 },
+      { currency: 'dossier',      base: 5_000, scale: 1.5 },
     ] },
   { id: 'STABLE_MARKET', characterId: 'merchant', category: 'minigame', max: 20,
     costs: [
       { currency: 'gold',          base: 200_000, scale: 1.3 },
-      { currency: 'illicit-goods', base: 100,     scale: 1.3 },
+      { currency: 'precious-metal', base: 100,     scale: 1.3 },
     ] },
 
   // ── Apothecary — minigame ────────────────────────────────────
@@ -832,7 +834,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Artificer — minigame ──────────────────────────────────────
   { id: 'EXTENDED_ETCHING', characterId: 'artificer', category: 'minigame', max: 5,
     costs: [
-      { currency: 'construct', base: 5,  scale: 1.5 },
+      { currency: 'construct', base: 5,  scale: 1.4 },
       { currency: 'mana',     base: 50000, scale: 1.5 },
     ] },
   { id: 'SECOND_CHANCE', characterId: 'artificer', category: 'minigame', max: 1,
@@ -865,7 +867,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Chimeramancer — minigame ──────────────────────────────────
   { id: 'QUICK_STITCHING', characterId: 'chimeramancer', category: 'minigame', max: 16,
     costs: [
-      { currency: 'construct',     base: 50,  scale: 2.0 },
+      { currency: 'construct',     base: 20,  scale: 2.0 },
       { currency: 'life-thread',   base: 100, scale: 2.0 },
       { currency: 'kobold-pebble', base: 200, scale: 1.8 },
     ] },
@@ -915,6 +917,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'RELIC_SLAYER', characterId: 'slayer', category: 'minigame', max: 1,
     gates: { requiresSlayerDamage: true, requiresSlayerGoldBeads: true },
     costs: [{ currency: 'ichor', base: 1_000_000_000, scale: 1.0 }] },
+
+  // ── Scroll of True Resurrection — post-victory upgrade ────────
+  // Cost is dynamically set to the player's current ichor balance by AppComponent.
+  { id: 'SCROLL_OF_TRUE_RESURRECTION', characterId: 'slayer', category: 'standard', max: 1,
+    gates: { requiresChimeraSlain: true },
+    costs: [{ currency: 'ichor', base: 1, scale: 1.0 }] },
 
   // ── Relic upgrades (one per character) ──────────────────────────
   // Each costs exactly 1 relic + a dynamically-computed jewelry amount
@@ -1216,7 +1224,7 @@ export const THIEF_MG = {
   /** Degrees added to the sweet spot per Potion of Cat's Ears level */
   CATS_EARS_SPOT_PER_LEVEL: 3,
   /** Extra base gold AND treasure yield per Bag of Holding level */
-  BAG_OF_HOLDING_GOLD_YIELD_PER_LEVEL: 10,
+  BAG_OF_HOLDING_GOLD_YIELD_PER_LEVEL: 350,
   BAG_OF_HOLDING_TREASURE_YIELD_PER_LEVEL: 1,
 } as const;
 
@@ -1347,8 +1355,8 @@ export const CHIMERAMANCER_MG = {
     { currencyId: 'soul-stone',         required: 100_000   },
     { currencyId: 'mana',               required: 200_000  },
     { currencyId: 'construct',          required: 20_000   },
-    { currencyId: 'life-thread',        required: 500_000   },
-    { currencyId: 'xp',                 required: 500_000 },
+    { currencyId: 'life-thread',        required: 1_000_000   },
+    { currencyId: 'xp',                 required: 2_500_000 },
   ] as readonly ChimeraResourceReq[],
 
   /** Amount of a resource contributed per click. */

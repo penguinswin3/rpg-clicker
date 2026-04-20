@@ -84,6 +84,7 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
 
   private priceTicker: ReturnType<typeof setInterval> | null = null;
   private autoBuyTimer: ReturnType<typeof setInterval> | null = null;
+  private holdTimer: ReturnType<typeof setInterval> | null = null;
 
   // ── Lifecycle ───────────────────────────────────────────────
 
@@ -105,6 +106,23 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
     this.sub.unsubscribe();
     if (this.priceTicker) clearInterval(this.priceTicker);
     if (this.autoBuyTimer) clearInterval(this.autoBuyTimer);
+    this.stopHold();
+  }
+
+  // ── Hold-to-buy ────────────────────────────────────────────
+
+  startHold(item: StockMarketItem, qty: number): void {
+    this.stopHold();
+    this.holdTimer = setInterval(() => {
+      this.buy(item, qty);
+    }, 100);
+  }
+
+  stopHold(): void {
+    if (this.holdTimer) {
+      clearInterval(this.holdTimer);
+      this.holdTimer = null;
+    }
   }
 
   // ── Initialization ─────────────────────────────────────────

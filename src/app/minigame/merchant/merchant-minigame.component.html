@@ -41,7 +41,12 @@
         <button *ngFor="let qty of increments"
                 class="buy-btn"
                 [disabled]="!canAfford(item, qty)"
-                (click)="buy(item, qty)">
+                (click)="buy(item, qty)"
+                (mousedown)="startHold(item, qty)"
+                (mouseup)="stopHold()"
+                (mouseleave)="stopHold()"
+                (touchstart)="startHold(item, qty)"
+                (touchend)="stopHold()">
           ×{{ qty }}
         </button>
       </div>

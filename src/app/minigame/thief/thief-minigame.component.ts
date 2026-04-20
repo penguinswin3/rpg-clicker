@@ -229,8 +229,9 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
     this.startAnimation();
   }
 
-  /** Player clicks on the dial trying to find the sweet spot, or to restart after completion. */
-  attemptCrack(): void {
+  /** Player clicks on the dial trying to find the sweet spot, or to restart after completion.
+   *  Pass isManual=false for auto-solve clicks so gold-2 tracking is skipped. */
+  attemptCrack(isManual = true): void {
     // If heist is complete, try to restart it
     if ((this.heistWon || this.heistLost) && !this.heistActive) {
       if (!this.canStart) {
@@ -245,8 +246,8 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
     // Normal crack attempt during active heist
     if (!this.heistActive) return;
 
-    // Gold-2 tracking: record each crack attempt angle
-    if (!this.autoSolveEnabled && !this.gold2Awarded) {
+    // Gold-2 tracking: record each manual crack attempt angle (not auto-solve clicks)
+    if (isManual && !this.gold2Awarded) {
       this.trackGold2Angle();
     }
 
@@ -437,7 +438,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
           if (this.hasCrossedAngle(prevAngle, this.pointerAngle, target)) {
             this.pointerAngle = target; // snap to the exact target angle
             this.autoSolveAngleIdx++;
-            this.attemptCrack();
+            this.attemptCrack(false); // auto-solve click — don't track gold-2
 
             // Good auto-solve: after each probe, update state
             if (this.autoSolveGoodMode && this.heistActive) {
@@ -493,7 +494,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
    * Track crack attempt angles for the gold-2 unlock.
    * Must guess specific angles in order within tolerance.
    * On a matching angle: advance the step.
-   * On a non-matching angle: do nothing (don't reset).
+   * On a non-matching angle: reset the streak back to step 0.
    * Progress persists across games regardless of heist outcome.
    */
   private trackGold2Angle(): void {
@@ -529,8 +530,12 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
         }
         this.gold2ProgressChange.emit({ step });
       }
+    } else {
+      // Wrong angle — break the streak and restart from step 0.
+      if (step > 0) {
+        this.gold2ProgressChange.emit({ step: 0 });
+      }
     }
-    // Non-matching angle: do nothing — progress preserved across games.
   }
 
   // ── Dial SVG helpers ────────────────────

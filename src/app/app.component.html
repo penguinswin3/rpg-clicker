@@ -9,6 +9,8 @@
     [potionChuggingLevel]="upgrades.level('POTION_CHUGGING')"
     [strongerKoboldsLevel]="upgrades.level('STRONGER_KOBOLDS')"
     [firstStrikeLevel]="upgrades.level('FIRST_STRIKE')"
+    [firstStrikeEnabled]="firstStrikeEnabled"
+    (firstStrikeEnabledChange)="firstStrikeEnabled = $event"
     [slowBladeLevel]="upgrades.level('SLOW_BLADE')"
     [gildedBladeLevel]="upgrades.level('GILDED_BLADE')"
     [mindReadingLevel]="upgrades.level('POTION_MIND_READING')"
@@ -31,6 +33,7 @@
     [potionDilutionLevel]="upgrades.level('POTION_DILUTION')"
     [serialDilutionLevel]="upgrades.level('SERIAL_DILUTION')"
     [perfectPotionsLevel]="upgrades.level('PERFECT_POTIONS')"
+    [potionMarketingLevel]="upgrades.level('POTION_MARKETING')"
     [synapticalPotionsLevel]="upgrades.level('SYNAPTICAL_POTIONS')"
     [synapticStaticLevel]="upgrades.level('SYNAPTIC_STATIC')"
     [synapticalEnabled]="synapticalEnabled"
@@ -281,7 +284,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
               <div class="slayer-art-row">
                 <div class="slayer-art-wrap"
                      [class.slayer-has-godhead]="sunfuryActive"
-                     [class.slayer-charging]="slayerChargeAnimPlaying">
+                     [class.slayer-charging]="slayerChargeAnimPlaying"
+                     [class.slayer-victory]="chimeraSlain && !slayerChargeAnimPlaying">
                   <pre *ngIf="slayerUnlocked"
                        class="slayer-art-left"
                        [class.slayer-glow-1]="slayerGlowTier === 1"
@@ -360,7 +364,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                       [class.hero-holding]="heroHolding"
                       [class.hero-pressed]="heroPressAnim"
                       [style.--hero-pulse-color]="heroPulseColor"
-                      [disabled]="necromancerActiveButton !== 'defile'"
+                      [disabled]="necromancerActiveButton !== 'defile' || isHeroDisabled"
                       (click)="clickHero()"
                       (mousedown)="heroHoldStart()"
                       (mouseup)="heroHoldStop()"
@@ -375,7 +379,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                       [class.hero-holding]="heroHolding"
                       [class.hero-pressed]="heroPressAnim"
                       [style.--hero-pulse-color]="heroPulseColor"
-                      [disabled]="necromancerActiveButton !== 'ward'"
+                      [disabled]="necromancerActiveButton !== 'ward' || isHeroDisabled"
                       (click)="clickHero()"
                       (mousedown)="heroHoldStart()"
                       (mouseup)="heroHoldStop()"
@@ -390,13 +394,14 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
           <ng-template #checkArtificer>
             <ng-container *ngIf="activeCharacterId === 'artificer'; else singleHeroButton">
               <div class="necro-buttons artificer-buttons">
-                <button class="hero-btn necro-btn artificer-btn"
-                        [class.necro-active]="artificerActiveButton === 'study'"
-                        [class.hero-holding]="heroHolding"
-                        [class.hero-pressed]="heroPressAnim"
-                        [style.--hero-pulse-color]="heroPulseColor"
-                        (click)="artificerActiveButton = 'study'; clickHero()"
-                        (mousedown)="artificerActiveButton = 'study'; heroHoldStart()"
+                 <button class="hero-btn necro-btn artificer-btn"
+                         [class.necro-active]="artificerActiveButton === 'study'"
+                         [class.hero-holding]="heroHolding"
+                         [class.hero-pressed]="heroPressAnim"
+                         [style.--hero-pulse-color]="heroPulseColor"
+                         [disabled]="isHeroDisabled"
+                         (click)="artificerActiveButton = 'study'; clickHero()"
+                         (mousedown)="artificerActiveButton = 'study'; heroHoldStart()"
                         (mouseup)="heroHoldStop()"
                         (mouseleave)="heroHoldStop()"
                         (touchstart)="artificerActiveButton = 'study'; heroHoldStart()"
@@ -413,7 +418,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                         [class.hero-holding]="heroHolding"
                         [class.hero-pressed]="heroPressAnim"
                         [style.--hero-pulse-color]="heroPulseColor"
-                        [disabled]="artificerInsight <= 0"
+                        [disabled]="artificerInsight <= 0 || isHeroDisabled"
                         (click)="artificerActiveButton = 'reflect'; clickHero()"
                         (mousedown)="artificerActiveButton = 'reflect'; heroHoldStart()"
                         (mouseup)="heroHoldStop()"
@@ -531,13 +536,8 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
 
           <!-- ── Familiars ── -->
           <div class="familiar-column" *ngIf="familiarUnlocked">
-            <div class="familiar-panel" [class.familiars-paused]="familiarsPaused">
+            <div class="familiar-panel">
               <div class="familiar-top-row">
-                <button class="familiar-pause-btn"
-                        [class.paused]="familiarsPaused"
-                        (click)="toggleFamiliarsPaused()">
-                  {{ familiarsPaused ? '[ RESUME ]' : '[ PAUSE ]' }}
-                </button>
                 <span class="familiar-count-info" *ngIf="upgrades.level('MIND_AND_SOUL') > 0">
                   <span class="familiar-power-label">Power</span> ×{{ 1 + upgrades.level('MIND_AND_SOUL') }}
                 </span>
@@ -566,6 +566,12 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
                         MAX
                       </button>
                     </div>
+                    <button class="familiar-btn"
+                            style="margin-top:2px; font-size:0.72em;"
+                            [class.paused]="isFamiliarKeyPaused(fk)"
+                            (click)="toggleFamiliarKeyPaused(fk)">
+                      {{ isFamiliarKeyPaused(fk) ? '[ PAUSED ]' : '[ ACTIVE ]' }}
+                    </button>
                   </div>
                   <div class="familiar-sep" *ngIf="!last"></div>
                 </ng-container>

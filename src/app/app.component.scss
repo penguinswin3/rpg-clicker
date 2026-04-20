@@ -1805,6 +1805,11 @@
   animation: none !important;
 }
 
+// ── Slayer victory (post-kill persistent center position) ───
+.slayer-art-wrap.slayer-victory {
+  transform: translateX(calc(50vw - 50%));
+}
+
 // ── Slayer charge animation (killing blow) ─────────────────
 .slayer-art-wrap.slayer-charging {
   animation: slayer-charge-right 0.7s cubic-bezier(0.2, 0, 0.9, 1) forwards !important;
