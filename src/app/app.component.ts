@@ -348,6 +348,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
   /** Whether the hero button should be disabled (only true for thief while stunned). */
   get isHeroDisabled(): boolean {
+    if (this.deadCharacters.includes(this.activeCharacterId)) return true;
     if (this.activeCharacterId === 'thief') return this.isThiefStunned;
     if (this.activeCharacterId === 'artisan') return this.isArtisanTimerActive;
     return false;
@@ -1755,9 +1756,12 @@ export class AppComponent implements OnInit, OnDestroy {
   private switchNecromancerButton(): void {
     this.necromancerActiveButton = this.necromancerActiveButton === 'defile' ? 'ward' : 'defile';
     this.necromancerClicksRemaining = rollNecromancerSwitchClicks(this.upgrades.level('EXTENDED_RITUAL'));
-    // Stop any active hold — the button the player was holding just became disabled.
-    // Jacks don't use heroHoldStart so this only affects player holds.
-    this.heroHoldStop();
+    // Stop any active hold only if the player is currently on necromancer —
+    // their held button just became disabled. If they're on a different character,
+    // a jack triggered this switch and we must not cancel their hold.
+    if (this.activeCharacterId === 'necromancer') {
+      this.heroHoldStop();
+    }
     this.updateAllPerSecond();
     this._refreshDerived();
   }
