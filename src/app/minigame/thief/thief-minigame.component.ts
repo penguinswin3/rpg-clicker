@@ -494,7 +494,7 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
    * Track crack attempt angles for the gold-2 unlock.
    * Must guess specific angles in order within tolerance.
    * On a matching angle: advance the step.
-   * On a non-matching angle: do nothing (don't reset).
+   * On a non-matching angle: reset the streak back to step 0.
    * Progress persists across games regardless of heist outcome.
    */
   private trackGold2Angle(): void {
@@ -530,8 +530,12 @@ export class ThiefMinigameComponent implements OnInit, OnDestroy, OnChanges {
         }
         this.gold2ProgressChange.emit({ step });
       }
+    } else {
+      // Wrong angle — break the streak and restart from step 0.
+      if (step > 0) {
+        this.gold2ProgressChange.emit({ step: 0 });
+      }
     }
-    // Non-matching angle: do nothing — progress preserved across games.
   }
 
   // ── Dial SVG helpers ────────────────────
