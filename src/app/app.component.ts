@@ -387,6 +387,10 @@ export class AppComponent implements OnInit, OnDestroy {
   familiarsPaused = false;
   /** Per-key individual pause state — a familiar is paused if this OR familiarsPaused is true. */
   familiarPausedKeys: Record<string, boolean> = {};
+  /** Timestamp (ms) at which each familiar was individually paused — used to freeze timer countdown. */
+  familiarPausedAt: Record<string, number> = {};
+  /** Timestamp (ms) at which the global pause was started — used to freeze all timers. */
+  familiarsPausedAt: number | null = null;
 
   // ── Jack computed getters (delegated to jack-calculator) ───────
 
@@ -989,13 +993,14 @@ export class AppComponent implements OnInit, OnDestroy {
         const now = Date.now();
         let anyExpired = false;
         for (const [key, expiry] of Object.entries(this.familiarTimers)) {
-          if (expiry <= now) {
+          const isPaused = this.familiarsPaused || !!this.familiarPausedKeys[key];
+          if (!isPaused && expiry <= now) {
             // Timer just expired — mark for cleanup
             anyExpired = true;
             continue;
           }
           // Skip clicks when familiars are paused (globally or individually)
-          if (this.familiarsPaused || !!this.familiarPausedKeys[key]) continue;
+          if (isPaused) continue;
 
           const baseId = key.startsWith('necromancer') ? 'necromancer' : key.startsWith('artificer') ? 'artificer' : key;
           const relicMult = this.upgrades.level(`RELIC_${baseId.toUpperCase()}`) >= 1 ? 2 : 1;
@@ -1035,7 +1040,8 @@ export class AppComponent implements OnInit, OnDestroy {
         if (anyExpired) {
           const cleaned: Record<string, number> = {};
           for (const [k, v] of Object.entries(this.familiarTimers)) {
-            if (v > now) cleaned[k] = v;
+            const isPaused = this.familiarsPaused || !!this.familiarPausedKeys[k];
+            if (isPaused || v > now) cleaned[k] = v;
           }
           this.familiarTimers = cleaned;
           this.updateAllPerSecond();
@@ -1109,6 +1115,7 @@ export class AppComponent implements OnInit, OnDestroy {
       familiarTimers:              { ...this.familiarTimers },
       familiarsPaused:             this.familiarsPaused,
       familiarPausedKeys:          { ...this.familiarPausedKeys },
+      familiarPausedAt:            { ...this.familiarPausedAt },
       beads:                       JSON.parse(JSON.stringify(this.beadState)),
       autoSolveEnabled:            { ...this.autoSolveEnabled },
       gold2Progress:               JSON.parse(JSON.stringify(this.gold2Progress)),
@@ -1151,15 +1158,29 @@ export class AppComponent implements OnInit, OnDestroy {
     this.necromancerActiveButton     = s.necromancerActiveButton     ?? 'defile';
     this.necromancerClicksRemaining  = s.necromancerClicksRemaining  ?? 10;
     // Restore familiar timers — prune any that have expired while the game was closed
+    // (but keep timers that were paused when saved — they were frozen so still valid)
     const now = Date.now();
     const rawTimers = s.familiarTimers ?? {};
+    const restoredPausedKeys: Record<string, boolean> = s.familiarPausedKeys ? { ...s.familiarPausedKeys } : {};
+    const restoredPausedAt: Record<string, number> = s.familiarPausedAt ? { ...s.familiarPausedAt } : {};
     const restoredTimers: Record<string, number> = {};
     for (const [k, v] of Object.entries(rawTimers)) {
-      if (v > now) restoredTimers[k] = v;
+      const wasPaused = !!restoredPausedKeys[k] || (s.familiarsPaused ?? false);
+      if (wasPaused) {
+        // Timer was frozen — extend by time elapsed while game was closed
+        const pausedAt = restoredPausedAt[k] ?? now;
+        const elapsed = now - pausedAt;
+        restoredTimers[k] = v + elapsed;
+        restoredPausedAt[k] = now; // reset pause reference point to now
+      } else if (v > now) {
+        restoredTimers[k] = v;
+      }
     }
     this.familiarTimers = restoredTimers;
     this.familiarsPaused = s.familiarsPaused ?? false;
-    this.familiarPausedKeys = s.familiarPausedKeys ? { ...s.familiarPausedKeys } : {};
+    this.familiarsPausedAt = this.familiarsPaused ? now : null;
+    this.familiarPausedKeys = restoredPausedKeys;
+    this.familiarPausedAt = restoredPausedAt;
     // Restore bead state
     this.beadState = s.beads ? JSON.parse(JSON.stringify(s.beads)) : {};
     this.syncBeadMultipliers();
@@ -1826,13 +1847,50 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Toggle the paused state of all familiars. */
   toggleFamiliarsPaused(): void {
-    this.familiarsPaused = !this.familiarsPaused;
+    const now = Date.now();
+    if (!this.familiarsPaused) {
+      // Pausing globally — record pause time for all active, non-individually-paused timers
+      this.familiarsPaused = true;
+      this.familiarsPausedAt = now;
+    } else {
+      // Unpausing globally — extend all timers that were frozen by this global pause
+      if (this.familiarsPausedAt !== null) {
+        const elapsed = now - this.familiarsPausedAt;
+        const extended: Record<string, number> = {};
+        for (const [k, v] of Object.entries(this.familiarTimers)) {
+          // Only extend timers not individually paused (they have their own pausedAt)
+          extended[k] = !!this.familiarPausedKeys[k] ? v : v + elapsed;
+        }
+        this.familiarTimers = extended;
+      }
+      this.familiarsPaused = false;
+      this.familiarsPausedAt = null;
+    }
     this.updateAllPerSecond();
   }
 
   /** Toggle the paused state for a specific familiar key. */
   toggleFamiliarKeyPaused(key: string): void {
-    this.familiarPausedKeys = { ...this.familiarPausedKeys, [key]: !this.familiarPausedKeys[key] };
+    const now = Date.now();
+    const currentlyPaused = !!this.familiarPausedKeys[key];
+    if (!currentlyPaused) {
+      // Pausing this key — record when it was paused
+      this.familiarPausedKeys = { ...this.familiarPausedKeys, [key]: true };
+      this.familiarPausedAt = { ...this.familiarPausedAt, [key]: now };
+    } else {
+      // Unpausing this key — extend the timer by the time it was paused
+      const pausedAt = this.familiarPausedAt[key] ?? now;
+      const elapsed = now - pausedAt;
+      if (this.familiarTimers[key] !== undefined) {
+        this.familiarTimers = { ...this.familiarTimers, [key]: this.familiarTimers[key] + elapsed };
+      }
+      const updatedPausedKeys = { ...this.familiarPausedKeys };
+      delete updatedPausedKeys[key];
+      this.familiarPausedKeys = updatedPausedKeys;
+      const updatedPausedAt = { ...this.familiarPausedAt };
+      delete updatedPausedAt[key];
+      this.familiarPausedAt = updatedPausedAt;
+    }
     this.updateAllPerSecond();
   }
 

@@ -56,6 +56,8 @@ export interface UpgradeState {
   familiarsPaused?: boolean;
   /** Per-key individual familiar pause state — key → true if paused. */
   familiarPausedKeys?: Record<string, boolean>;
+  /** Timestamp (ms) at which each familiar was paused — used to freeze timer countdown. */
+  familiarPausedAt?: Record<string, number>;
   /** Bead state per character — { charId: { slotId: { found, socketed } } } */
   beads?: Record<string, Record<string, { found: boolean; socketed: boolean }>>;
   /** Auto-solve toggle state per character — { charId: true/false } */
