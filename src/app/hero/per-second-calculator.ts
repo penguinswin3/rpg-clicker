@@ -45,6 +45,8 @@ export interface PerSecondContext {
   jackdUpUnlocked: boolean;
   /** Whether all familiars are currently paused by the player. */
   familiarsPaused: boolean;
+  /** Per-key individual familiar pause state. A familiar is paused if familiarsPaused OR this key is true. */
+  familiarPausedKeys?: Record<string, boolean>;
   /** Per-character bead yield multipliers (2^N where N = socketed blue beads). */
   beadMultipliers?: Record<string, number>;
   /** Active merchant auto-buyers — each entry represents a stock market auto-purchase. */
@@ -214,7 +216,7 @@ export function calculatePerSecondRates(ctx: PerSecondContext): PerSecondRates {
   const now = Date.now();
   const mindAndSoul = ctx.upgrades.level('MIND_AND_SOUL');
   const effectiveFamiliars = FAMILIAR.JACKS_PER_FAMILIAR + mindAndSoul * FAMILIAR.MIND_AND_SOUL_PER_LEVEL;
-  const fam = (key: string) => ctx.familiarsPaused ? 0 : ((ctx.familiarTimers[key] ?? 0) > now ? effectiveFamiliars : 0);
+  const fam = (key: string) => (ctx.familiarsPaused || !!ctx.familiarPausedKeys?.[key]) ? 0 : ((ctx.familiarTimers[key] ?? 0) > now ? effectiveFamiliars : 0);
 
   // ── Chimeramancer relic: each chimera jack also clicks every other hero button ──
   const chimeraJacks    = ((ctx.jacksAllocations['chimeramancer'] ?? 0) + fam('chimeramancer')) * (hasChimeramancerRelic ? 2 : 1) * jackdUpSpeedMult;
@@ -449,7 +451,7 @@ export function calculatePerSecondBreakdown(ctx: PerSecondContext): PerSecondBre
   const now2 = Date.now();
   const mindAndSoul2 = ctx.upgrades.level('MIND_AND_SOUL');
   const effectiveFamiliars2 = FAMILIAR.JACKS_PER_FAMILIAR + mindAndSoul2 * FAMILIAR.MIND_AND_SOUL_PER_LEVEL;
-  const famRaw = (key: string) => ctx.familiarsPaused ? 0 : ((ctx.familiarTimers[key] ?? 0) > now2 ? effectiveFamiliars2 : 0);
+  const famRaw = (key: string) => (ctx.familiarsPaused || !!ctx.familiarPausedKeys?.[key]) ? 0 : ((ctx.familiarTimers[key] ?? 0) > now2 ? effectiveFamiliars2 : 0);
 
   const relicMul = (hasRelic: boolean) => hasRelic ? 2 : 1;
 

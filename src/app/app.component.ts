@@ -1296,6 +1296,7 @@ export class AppComponent implements OnInit, OnDestroy {
       familiarTimers: this.familiarTimers,
       jackdUpUnlocked: this.jackdUpUnlocked,
       familiarsPaused: this.familiarsPaused,
+      familiarPausedKeys: { ...this.familiarPausedKeys },
       beadMultipliers: {
         fighter:     this.wallet.getBeadMultiplier('fighter'),
         ranger:      this.wallet.getBeadMultiplier('ranger'),

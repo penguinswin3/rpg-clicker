@@ -215,13 +215,14 @@ function clickApothecary(ctx: HeroActionContext): void {
     ctx.stats.trackCurrencyGain('gold', goldYield);
   }
 
+  const goldYieldStr = goldPerBrew > 0 ? cur('gold', goldPerBrew * bm) : undefined;
   const herbsSaved = rollMultiChance(herbSaveChance);
   if (herbsSaved > 0) {
     ctx.wallet.add('herb', herbsSaved);
     ctx.stats.trackCurrencyGain('herb', herbsSaved);
-    ctx.log.log(LOG_MSG.HERO.APOTHECARY.BREW_RECOVERED(cur('potion', potionYield), cur('herb', herbsSaved), cur('xp', xpYield)), 'default');
+    ctx.log.log(LOG_MSG.HERO.APOTHECARY.BREW_RECOVERED(cur('potion', potionYield), cur('herb', herbsSaved), cur('xp', xpYield), goldYieldStr), 'default');
   } else {
-    ctx.log.log(LOG_MSG.HERO.APOTHECARY.BREW(cur('potion', potionYield), cur('xp', xpYield)));
+    ctx.log.log(LOG_MSG.HERO.APOTHECARY.BREW(cur('potion', potionYield), cur('xp', xpYield), goldYieldStr));
   }
 }
 

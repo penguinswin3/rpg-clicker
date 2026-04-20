@@ -840,8 +840,8 @@ export const LOG_MSG = {
     },
     APOTHECARY: {
       NOT_ENOUGH_HERBS:      (need: string, have: string) => `Not enough herbs to brew. Need ${need}, have ${have}.`,
-      BREW_RECOVERED:        (potion: string, herb: string, xp: string) => `You brewed a potion and recovered herbs! (${potion}, ${herb}, ${xp})`,
-      BREW:                  (potion: string, xp: string) => `You brewed a potion. (${potion}, ${xp})`,
+      BREW_RECOVERED:        (potion: string, herb: string, xp: string, gold?: string) => `You brewed a potion and recovered herbs! (${potion}, ${herb}, ${xp}${gold ? `, ${gold}` : ''})`,
+      BREW:                  (potion: string, xp: string, gold?: string) => `You brewed a potion. (${potion}, ${xp}${gold ? `, ${gold}` : ''})`,
     },
     CULINARIAN: {
       NOT_ENOUGH_GOLD:       (need: string, have: string) => `Not enough gold to gather spices. Need ${need}, have ${have}.`,
