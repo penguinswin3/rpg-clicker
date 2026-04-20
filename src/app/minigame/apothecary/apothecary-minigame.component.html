@@ -10,7 +10,8 @@
     </button>
     <button class="action-btn brew-btn"
             [class.slot-inactive]="!potionActive"
-            [class.btn-hot]="isInZone || (synapticalEnabled && isInSynapticZone)"
+            [class.btn-hot]="isInZone && !(synapticalEnabled && isInSynapticZone)"
+            [class.btn-synaptic-hot]="synapticalEnabled && isInSynapticZone"
             [disabled]="autoSolveEnabled"
             (click)="brew()">
       [ BREW ]
@@ -54,7 +55,8 @@
       </div>
       <!-- live zone indicator -->
       <div class="zone-status"
-           [class.in-inner-zone]="synapticalEnabled ? isInSynapticZone : isInInnerZone"
+           [class.in-synaptic-zone]="synapticalEnabled && isInSynapticZone"
+           [class.in-inner-zone]="!synapticalEnabled && isInInnerZone"
            [class.in-zone]="isInZone && !(synapticalEnabled ? isInSynapticZone : isInInnerZone)"
            [class.out-zone]="!isInZone && !(synapticalEnabled && isInSynapticZone)">
         <ng-container *ngIf="synapticalEnabled ? isInSynapticZone : isInInnerZone">{{ synapticalEnabled ? '*** SYNAPTIC ***' : '*** BUBBLING ***' }}</ng-container>

@@ -162,9 +162,10 @@ $green:  #44dd44;
   letter-spacing: 0.05em;
   transition: color 0.05s;
 
-  &.in-inner-zone { color: $purple; font-weight: bold; }
-  &.in-zone       { color: #0d0; }
-  &.out-zone      { color: #333; }
+  &.in-inner-zone   { color: $purple;   font-weight: bold; }
+  &.in-synaptic-zone{ color: #5bc0eb;   font-weight: bold; }
+  &.in-zone         { color: #0d0; }
+  &.out-zone        { color: #333; }
 }
 
 // ── Action buttons ────────────────────────
@@ -210,6 +211,20 @@ $green:  #44dd44;
 
     &:hover {
       background: $purple;
+      color: #000;
+      box-shadow: none;
+    }
+  }
+
+  // Synaptic hot state: cursor is inside a synaptic zone (cyan theme)
+  &.btn-synaptic-hot {
+    border-color: #5bc0eb;
+    color: #5bc0eb;
+    background: #001419;
+    box-shadow: 0 0 6px rgba(91, 192, 235, 0.3);
+
+    &:hover {
+      background: #5bc0eb;
       color: #000;
       box-shadow: none;
     }
