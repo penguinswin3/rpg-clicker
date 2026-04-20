@@ -9,6 +9,7 @@
 - Familiars can be toggled individually per character
 - First strike can be toggled 
 - the upgrade unlocked glimmer looks better
+- rebalanced merchant costs, chimera creation requirements
 
 ## Bugfixes
 - Fixed a bug in the hint for the ranger gold-2

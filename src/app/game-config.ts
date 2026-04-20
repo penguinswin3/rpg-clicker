@@ -245,7 +245,7 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
     costs: [
       { currency: 'gold',        base: 10_000_000 },
       { currency: 'construct',   base: 500        },
-      { currency: 'mana',        base: 5000       },
+      { currency: 'mana',        base: 500_000       },
       { currency: 'soul-stone',  base: 1000       },
       { currency: 'monster-trophy',    base: 3000       },
     ],
@@ -740,25 +740,25 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
   { id: 'SMUGGLER_NETWORK', characterId: 'merchant', category: 'standard', max: 25,
     costs: [
-      { currency: 'illicit-goods',   base: 100, scale: 1.3 },
+      { currency: 'dossier',   base: 10000, scale: 1.3 },
       { currency: 'monster-trophy',  base: 10,  scale: 1.3 },
     ] },
 
   // ── Merchant — minigame ──────────────────────────────────────
   { id: 'RIGGED_GAME', characterId: 'merchant', category: 'minigame', max: 25,
     costs: [
-      { currency: 'illicit-goods', base: 100, scale: 1.3 },
+      { currency: 'magical-implement',         base: 25, scale: 1.3 },
       { currency: 'bone',         base: 10_000, scale: 1.2 },
     ] },
   { id: 'DIVERSIFIED_PORTFOLIO', characterId: 'merchant', category: 'minigame', max: 6,
     costs: [
-      { currency: 'illicit-goods', base: 200,  scale: 1.5 },
-      { currency: 'dossier',      base: 5000, scale: 1.5 },
+      { currency: 'gold',         base: 2_900,  scale: 1.5 },
+      { currency: 'dossier',      base: 5_000, scale: 1.5 },
     ] },
   { id: 'STABLE_MARKET', characterId: 'merchant', category: 'minigame', max: 20,
     costs: [
       { currency: 'gold',          base: 200_000, scale: 1.3 },
-      { currency: 'illicit-goods', base: 100,     scale: 1.3 },
+      { currency: 'precious-metal', base: 100,     scale: 1.3 },
     ] },
 
   // ── Apothecary — minigame ────────────────────────────────────
@@ -1216,7 +1216,7 @@ export const THIEF_MG = {
   /** Degrees added to the sweet spot per Potion of Cat's Ears level */
   CATS_EARS_SPOT_PER_LEVEL: 3,
   /** Extra base gold AND treasure yield per Bag of Holding level */
-  BAG_OF_HOLDING_GOLD_YIELD_PER_LEVEL: 10,
+  BAG_OF_HOLDING_GOLD_YIELD_PER_LEVEL: 350,
   BAG_OF_HOLDING_TREASURE_YIELD_PER_LEVEL: 1,
 } as const;
 
@@ -1347,8 +1347,8 @@ export const CHIMERAMANCER_MG = {
     { currencyId: 'soul-stone',         required: 100_000   },
     { currencyId: 'mana',               required: 200_000  },
     { currencyId: 'construct',          required: 20_000   },
-    { currencyId: 'life-thread',        required: 500_000   },
-    { currencyId: 'xp',                 required: 500_000 },
+    { currencyId: 'life-thread',        required: 1_000_000   },
+    { currencyId: 'xp',                 required: 2_500_000 },
   ] as readonly ChimeraResourceReq[],
 
   /** Amount of a resource contributed per click. */
