@@ -222,7 +222,7 @@ export const UPGRADE_FLAVOR = {
   RELIC_SLAYER:        { name: 'Vorpal Blade',                       desc: 'You are dangerous alone. Take this blade and see to your goal.' },
 
   // ── Post-victory ─────────────────────────────────────────────────────
-  SCROLL_OF_TRUE_RESURRECTION: { name: 'Scroll of True Resurrection', desc: 'The Slayer bathe4s in ichor, executing a dark ritual. All fallen party members will be revived... At a cost...' },
+  SCROLL_OF_TRUE_RESURRECTION: { name: 'Scroll of True Resurrection', desc: 'The Slayer bathes in ichor, executing a dark ritual. All fallen party members will be revived... At a cost...' },
 
 
 
