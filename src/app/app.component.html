@@ -104,6 +104,7 @@
     [merchantAutoBuySelections]="merchantAutoBuySelections"
     (merchantAutoBuySelectionsChange)="onMerchantAutoBuySelectionsChange($event)"
     (merchantAutoBuyerStateChange)="onMerchantAutoBuyerStateChange($event)"
+    (merchantCurrentPricesChange)="onMerchantCurrentPricesChange($event)"
     [extendedEtchingLevel]="upgrades.level('EXTENDED_ETCHING')"
     [selectedEtchingLevel]="selectedEtchingLevel"
     (selectedEtchingLevelChange)="selectedEtchingLevel = $event"
