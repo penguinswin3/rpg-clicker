@@ -786,8 +786,8 @@ export const BEAD_FLAVOR: Record<string, Record<string, BeadSlotFlavor>> = {
   chimeramancer: {
     'blue-1': { name: 'Bead of Stitching',       lore: 'How foolish of these underlings to rely on something so finicky as "artificial implements". REAL LIFE is all that matters, and no amount of beads, trinkets, artifacts, relics, or any such thing could come close!.',                                        effect: '2× resource yields from this character.' },
     'gold-1': { name: 'Bead of Animation',       lore: 'Look upon my works and despair!',                                                  effect: 'Unlocks basic sidequest automation.' },
-    'gold-2': { name: 'Bead of the Chimera',     lore: 'I don\'t care what happens to me, everyone who helped me, everyone who gets hurt because of me! All that matters is this ONE. LAST. CREATION!',                                                                        effect: 'Placeholder — future effect.' },
-    'blue-2': { name: 'Bead of the Abomination', lore: '"Questions, questions, questions! All I get are questions. Who what when where why am I doing this, what are my *real* goals? Can\'t these fools simply take their pay, give me what I asked for, and SCRAM!?"',                         effect: '2× resource yields from this character (stacks).' },
+    'gold-2': { name: 'Bead of the Chimera',     lore: 'I don\'t care what happens to me, everyone who helped me, everyone who gets hurt because of me! All that matters is this ONE. LAST. CREATION!',                                                                        effect: 'Auto applies resources to the chimera.' },
+    'blue-2': { name: 'Bead of the Abomination', lore: '"Questions, questions, questions! All I get are questions. Who what when where why am I doing this, what are my *real* goals? Can\'t these fools simply take their pay, give me what I asked for, and SCRAM!?"',                         effect: 'Resources applied to the chimera are free of cost.' },
   },
   slayer: {
     'blue-1': { name: 'Bead of the Hunt',        lore: 'The Slayer Has one goal.',  effect: '2× ichor gained from all attacks.' },
