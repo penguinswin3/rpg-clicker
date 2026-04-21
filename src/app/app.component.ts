@@ -14,7 +14,7 @@ import { StatisticsComponent } from './statistics/statistics.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE, SLAYER } from './game-config';
+import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE, SLAYER, MERCHANT_MG } from './game-config';
 import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR, BEAD_FLAVOR, BEAD_COLORS, BEAD_SYMBOL, HERO_PRESS_PULSE_COLOR, LOG_MSG } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
@@ -261,6 +261,15 @@ export class AppComponent implements OnInit, OnDestroy {
   merchantAutoBuySelections: Record<string, boolean> = {};
   /** Current merchant auto-buyer info for per-second calculation. */
   merchantAutoBuyerInfo: { currencyId: string; goldCostPerTick: number; qtyPerTick: number }[] = [];
+  /** Last known stock market prices — updated when merchant tab is open, used for off-tab auto-buying. */
+  merchantCurrentPrices: Record<string, number> = (() => {
+    const prices: Record<string, number> = {};
+    for (const entry of MERCHANT_MG.STOCK_MARKET_TABLE) {
+      prices[entry.currencyId] = entry.basePrice;
+    }
+    return prices;
+  })();
+  private merchantAutoBuyTimer?: ReturnType<typeof setInterval>;
 
   /** Chimeramancer chimera-building contribution progress (currencyId → amount). */
   chimeramancerContributions: Record<string, number> | null = null;
@@ -279,6 +288,40 @@ export class AppComponent implements OnInit, OnDestroy {
   onMerchantAutoBuyerStateChange(infos: { currencyId: string; goldCostPerTick: number; qtyPerTick: number }[]): void {
     this.merchantAutoBuyerInfo = infos;
     this.updateAllPerSecond();
+  }
+
+  /** Called when merchant stock prices re-roll — cache them for off-tab auto-buying. */
+  onMerchantCurrentPricesChange(prices: Record<string, number>): void {
+    this.merchantCurrentPrices = prices;
+  }
+
+  /** Run auto-buyers using cached prices — fires even when merchant tab is not active. */
+  private tickMerchantAutoBuyers(): void {
+    const qty = MERCHANT_MG.AUTO_BUY_AMOUNT;
+    for (const [currencyId, enabled] of Object.entries(this.merchantAutoBuySelections)) {
+      if (!enabled) continue;
+      const price = this.merchantCurrentPrices[currencyId];
+      if (!price) continue;
+      const totalCost = price * qty;
+      if (!this.wallet.canAfford('gold', totalCost)) continue;
+      this.wallet.remove('gold', totalCost);
+      this.wallet.add(currencyId, qty);
+      this.statsService.trackCurrencyGain(currencyId, qty);
+      this.statsService.trackMerchantPurchase(qty, totalCost);
+      // Unlock rare currencies on first purchase
+      const rareUnlocks: Record<string, string> = {
+        'monster-trophy': 'monster-trophy',
+        'forbidden-tome': 'forbidden-tome',
+        'magical-implement': 'magical-implement',
+      };
+      if (rareUnlocks[currencyId] && !this.wallet.isCurrencyUnlocked(currencyId)) {
+        this.wallet.unlockCurrency(currencyId);
+      }
+      const koboldParts = ['kobold-ear','kobold-tongue','kobold-hair','kobold-fang','kobold-brain','kobold-feather','kobold-pebble','kobold-heart'];
+      if (koboldParts.includes(currencyId) && !this.wallet.isCurrencyUnlocked(currencyId)) {
+        this.wallet.unlockCurrency(currencyId);
+      }
+    }
   }
 
   /** Whether auto-solve is unlocked for a character (either gold bead socketed). */
@@ -1074,6 +1117,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.saveService.startAutoSave();
     // Start the playtime counter
     this.statsService.startPlaytimeTimer();
+    // Start the merchant auto-buy timer (runs even when merchant tab is not active)
+    this.merchantAutoBuyTimer = setInterval(() => this.tickMerchantAutoBuyers(), MERCHANT_MG.AUTO_BUY_INTERVAL_MS);
   }
 
   ngOnDestroy(): void {
@@ -1082,6 +1127,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.stopSlayerButtonCycle();
     this._stopSlayerAutoAttack();
     this._stopCondemnCleanup();
+    if (this.merchantAutoBuyTimer !== undefined) clearInterval(this.merchantAutoBuyTimer);
   }
 
   @HostListener('window:beforeunload')

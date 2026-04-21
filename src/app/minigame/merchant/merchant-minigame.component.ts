@@ -62,6 +62,8 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
 
   /** Emitted whenever auto-buyer configuration or prices change. */
   @Output() autoBuyerStateChange = new EventEmitter<AutoBuyerInfo[]>();
+  /** Emitted whenever stock prices re-roll — so the app can run auto-buyers off-tab. */
+  @Output() currentPricesChange = new EventEmitter<Record<string, number>>();
 
   // ── State ───────────────────────────────────────────────────
   message = MINIGAME_MSG.MERCHANT.IDLE;
@@ -83,7 +85,6 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
   @Output() autoBuySelectionsChange = new EventEmitter<Record<string, boolean>>();
 
   private priceTicker: ReturnType<typeof setInterval> | null = null;
-  private autoBuyTimer: ReturnType<typeof setInterval> | null = null;
   private holdTimer: ReturnType<typeof setInterval> | null = null;
 
   // ── Lifecycle ───────────────────────────────────────────────
@@ -92,7 +93,6 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
     this.initItems();
     this.rollPrices();
     this.startPriceTicker();
-    this.startAutoBuyTimer();
 
     this.sub.add(
       this.wallet.state$.subscribe(() => this.cdr.markForCheck()),
@@ -105,7 +105,6 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sub.unsubscribe();
     if (this.priceTicker) clearInterval(this.priceTicker);
-    if (this.autoBuyTimer) clearInterval(this.autoBuyTimer);
     this.stopHold();
   }
 
@@ -160,6 +159,7 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
       item.currentPrice = Math.max(1, Math.floor(item.currentPrice * discount));
     }
     this.emitAutoBuyerState();
+    this.emitCurrentPrices();
     this.cdr.markForCheck();
   }
 
@@ -167,12 +167,6 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
     this.priceTicker = setInterval(() => {
       this.rollPrices();
     }, MERCHANT_MG.STOCK_MARKET_TICK_MS);
-  }
-
-  private startAutoBuyTimer(): void {
-    this.autoBuyTimer = setInterval(() => {
-      this.tickAutoBuyers();
-    }, MERCHANT_MG.AUTO_BUY_INTERVAL_MS);
   }
 
   // ── Public API ──────────────────────────────────────────────
@@ -324,29 +318,10 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
     }
     this.autoBuySelectionsChange.emit({ ...this.autoBuySelections });
     this.emitAutoBuyerState();
+    this.emitCurrentPrices();
     this.cdr.markForCheck();
   }
 
-
-  private tickAutoBuyers(): void {
-    const qty = MERCHANT_MG.AUTO_BUY_AMOUNT;
-    for (const [currencyId, enabled] of Object.entries(this.autoBuySelections)) {
-      if (!enabled) continue;
-
-      const item = this.items.find(it => it.currencyId === currencyId);
-      if (!item) continue;
-
-      const totalCost = item.currentPrice * qty;
-      if (!this.wallet.canAfford('gold', totalCost)) continue;
-
-      this.wallet.remove('gold', totalCost);
-      this.wallet.add(item.currencyId, qty);
-      this.stats.trackCurrencyGain(item.currencyId, qty);
-      this.stats.trackMerchantPurchase(qty, totalCost);
-      this.checkRareUnlock(item.currencyId);
-    }
-    this.cdr.markForCheck();
-  }
 
   /** Emit the current auto-buyer info for per-second calculation. */
   private emitAutoBuyerState(): void {
@@ -363,6 +338,15 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
       });
     }
     this.autoBuyerStateChange.emit(infos);
+  }
+
+  /** Emit current prices keyed by currencyId — used by app to run auto-buyers off-tab. */
+  private emitCurrentPrices(): void {
+    const prices: Record<string, number> = {};
+    for (const item of this.items) {
+      prices[item.currencyId] = item.currentPrice;
+    }
+    this.currentPricesChange.emit(prices);
   }
 
   // ── Gold-2 purchase sequence tracking ──────────────────────

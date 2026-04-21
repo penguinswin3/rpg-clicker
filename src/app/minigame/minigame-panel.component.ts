@@ -136,6 +136,8 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Output() merchantAutoBuySelectionsChange = new EventEmitter<Record<string, boolean>>();
   /** Emitted when merchant auto-buyer state changes (for per-second calc). */
   @Output() merchantAutoBuyerStateChange = new EventEmitter<AutoBuyerInfo[]>();
+  /** Emitted when merchant stock prices re-roll — for off-tab auto-buying. */
+  @Output() merchantCurrentPricesChange = new EventEmitter<Record<string, number>>();
   /** Extended Etching upgrade level — forwarded to the artificer minigame. */
   @Input() extendedEtchingLevel = 0;
   /** Currently-selected etching difficulty level — forwarded to the artificer minigame. */

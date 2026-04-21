@@ -1,4 +1,4 @@
-# Version Alpha X.X.X
+# Version Alpha 1.0.2
 
 ## Added
 
@@ -7,8 +7,8 @@
 ## Changed
 
 ## Bugfixes
-- Fixed type in some beads
-- Fixed Culinarian sidequest
+- gold bead effect for the chimeramancer 
+- fixed the merchant not buying things while not on his screen 
 ----------------------------
 
 # Release 1.0.0
