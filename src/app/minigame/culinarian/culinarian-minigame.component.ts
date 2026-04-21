@@ -398,7 +398,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
     }
   }
 
-  /** Bad auto-solve: 2 all-same guesses, then a smart combined guess, then fully deduced 4th. */
+  /** Bad auto-solve: 2 all-same guesses, then a smart combined guess, then guaranteed solution. */
   private autoSolveTickBad(): void {
     const offset = this.cookbookAnnotationsLevel >= 1 ? 1 : 0;
 
@@ -423,18 +423,19 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
       return;
     }
 
-    // Step 3: any position that was kobold-tongue in the smart guess but didn't go green
-    // must be spice. Submit the fully deduced solution.
+    // Step 3: guaranteed solve — always submit the actual solution as the 4th guess.
     if (this.roundActive && this.autoSolveStep === 3) {
-      const smart = this.buildSmartGuess(offset);
-      const smartRow = this.guessHistory[offset + 2];
-      const deduced = smart.map((ing, s) => {
-        if (ing === 'kobold-tongue' && smartRow && smartRow.pegs[s] !== 'green') return 'spice';
-        return ing;
-      });
-      this.currentGuess = [...deduced];
+      this.currentGuess = [...this.solution];
       this.submitGuess();
       this.autoSolveStep++;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // Safety catch-all: if still active beyond expected steps, force-solve immediately.
+    if (this.roundActive && !this.won && !this.lost) {
+      this.currentGuess = [...this.solution];
+      this.submitGuess();
       this.cdr.markForCheck();
     }
   }
@@ -462,7 +463,7 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
 
   /**
    * Good auto-solve: guess [herb, beast, kobold-tongue, spice] first,
-   * then deduce and submit the correct solution on the second guess.
+   * then submit the guaranteed solution on the second guess.
    */
   private autoSolveTickGood(): void {
     // Step 0: submit the one-of-each guess
@@ -475,12 +476,19 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
       return;
     }
 
-    // Step 1: deduce the solution using all available guess history
+    // Step 1: guaranteed solve — always submit the actual solution.
     if (this.roundActive && this.autoSolveStep === 1) {
-      const deduced = this.deduceSolutionFromHistory();
-      this.currentGuess = [...deduced];
+      this.currentGuess = [...this.solution];
       this.submitGuess();
       this.autoSolveStep++;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // Safety catch-all: if still active beyond expected steps, force-solve immediately.
+    if (this.roundActive && !this.won && !this.lost) {
+      this.currentGuess = [...this.solution];
+      this.submitGuess();
       this.cdr.markForCheck();
     }
   }

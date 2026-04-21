@@ -1,3 +1,16 @@
+# Version Alpha X.X.X
+
+## Added
+
+## Removed
+
+## Changed
+
+## Bugfixes
+- Fixed type in some beads
+- Fixed Culinarian sidequest
+----------------------------
+
 # Release 1.0.0
 
 ## Added
