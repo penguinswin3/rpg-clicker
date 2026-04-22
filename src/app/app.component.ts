@@ -1344,7 +1344,24 @@ export class AppComponent implements OnInit, OnDestroy {
     this.upgrades.setMaxOverride('SLOW_BLADE', Math.max(0, sharperSwords - 4));
   }
 
+  // ── Debounce handles ───────────────────────────────────────────
+  private _perSecondPending = false;
+  private _refreshDerivedPending = false;
+
+  /**
+   * Debounced wrapper around _doUpdateAllPerSecond.
+   * Coalesces multiple calls within the same animation frame into one.
+   */
   private updateAllPerSecond(): void {
+    if (this._perSecondPending) return;
+    this._perSecondPending = true;
+    requestAnimationFrame(() => {
+      this._perSecondPending = false;
+      this._doUpdateAllPerSecond();
+    });
+  }
+
+  private _doUpdateAllPerSecond(): void {
     const ctx = {
       upgrades:                this.upgrades,
       jacksAllocations:        this.jacksAllocations,
@@ -1434,11 +1451,24 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Debounced wrapper around _doRefreshDerived.
+   * Coalesces multiple calls within the same animation frame into one.
+   */
+  private _refreshDerived(): void {
+    if (this._refreshDerivedPending) return;
+    this._refreshDerivedPending = true;
+    requestAnimationFrame(() => {
+      this._refreshDerivedPending = false;
+      this._doRefreshDerived();
+    });
+  }
+
+  /**
    * Recompute all cached template bindings (jack costs, hero stats,
    * visible upgrades, etc.). Called after any state change that might
    * affect the template.
    */
-  private _refreshDerived(): void {
+  private _doRefreshDerived(): void {
     // Jack costs & affordability
     this.jackCurrentCosts = calculateJackCosts(this.jacksOwned);
     this.canAffordJack = canAffordJackCosts(this.jackCurrentCosts, (c, a) => this.wallet.canAfford(c, a));
