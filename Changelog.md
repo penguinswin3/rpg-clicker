@@ -1,4 +1,15 @@
-# Version Alpha 1.0.2
+# Release  1.0.3
+
+## Added
+
+## Removed
+
+## Changed
+
+## Bugfixes
+- Tried to improve performance 
+----------------------------
+# Release 1.0.2
 
 ## Added
 
