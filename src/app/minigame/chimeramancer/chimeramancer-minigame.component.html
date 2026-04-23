@@ -2,38 +2,49 @@
 
   <!-- ── ASCII art row (Slayer left | Chimera right) ──────────── -->
   <div class="art-row" [class.slayer-showing]="slayerUnlocked">
-    <pre *ngIf="slayerUnlocked" class="slayer-art">{{ slayerArt.join('\n') }}</pre>
+    <pre *ngIf="slayerUnlocked" class="slayer-art"
+         role="img" aria-label="ASCII art of the Slayer">{{ slayerArt.join('\n') }}</pre>
     <!-- ── ASCII chimera art ──────────────────── -->
     <div class="ascii-frame">
-      <pre class="minigame-ascii chimera-art">{{ chimeraLines.join('\n') }}</pre>
+      <pre class="minigame-ascii chimera-art"
+           role="img"
+           [attr.aria-label]="'ASCII art of the Chimera — ' + (chimeraAwakened ? 'awakened!' : (overallProgress | percent:'1.0-0') + ' assembled')">{{ chimeraLines.join('\n') }}</pre>
     </div>
   </div>
 
   <!-- ── Status / Progress ──────────────── -->
-  <div class="mg-status">
+  <div class="mg-status" aria-live="polite" aria-atomic="true">
     <pre class="mg-message" *ngIf="!chimeraAwakened">{{ overallProgress | percent:'1.0-0' }} assembled</pre>
     <pre class="mg-message awaken" *ngIf="chimeraAwakened">★ THE CHIMERA AWAKENS! ★</pre>
   </div>
 
-  <div class="mg-divider">+----------+</div>
+  <div class="mg-divider" aria-hidden="true">+----------+</div>
 
   <!-- ── Resource bars ──────────────────── -->
   <div class="resource-bars">
     <div class="res-row" *ngFor="let bar of bars; let i = index">
       <span class="res-symbol"
             [style.color]="bar.color"
-            [title]="bar.displayName">{{ bar.symbol }}</span>
-      <div class="bar-track">
+            [title]="bar.displayName"
+            aria-hidden="true">{{ bar.symbol }}</span>
+      <div class="bar-track"
+           role="progressbar"
+           [attr.aria-valuenow]="bar.contributed"
+           aria-valuemin="0"
+           [attr.aria-valuemax]="bar.required"
+           [attr.aria-label]="bar.displayName + ': ' + shortNum(bar.contributed) + ' of ' + shortNum(bar.required) + (barComplete(bar) ? ' — complete' : '')">
         <div class="bar-fill"
              [style.width.%]="barPercent(bar)"
              [style.background]="bar.color"
-             [class.complete]="barComplete(bar)">
+             [class.complete]="barComplete(bar)"
+             aria-hidden="true">
         </div>
       </div>
-      <span class="res-count">{{ shortNum(bar.contributed) }}/{{ shortNum(bar.required) }}</span>
+      <span class="res-count" aria-hidden="true">{{ shortNum(bar.contributed) }}/{{ shortNum(bar.required) }}</span>
       <button class="contribute-btn"
               [disabled]="!canContribute(bar)"
               [style.borderColor]="bar.color"
+              [attr.aria-label]="'Add ' + shortNum(contributeAmount) + ' ' + bar.displayName + ' to the chimera'"
               (click)="contribute(bar, i)"
               (mousedown)="startHold(bar, i)"
               (mouseup)="stopHold()"
@@ -49,6 +60,8 @@
   <div class="auto-solve-row" *ngIf="autoSolveUnlocked && !chimeraAwakened">
     <button class="auto-solve-btn"
             [class.as-on]="autoSolveEnabled"
+            [attr.aria-pressed]="autoSolveEnabled"
+            aria-label="Toggle auto-stitch"
             (click)="toggleAutoSolve()">
       {{ autoSolveEnabled ? '[ Auto-Stitch: ON  ]' : '[ Auto-Stitch: OFF ]' }}
     </button>
@@ -56,9 +69,8 @@
 
   <!-- ── Awakened placeholder ────────────── -->
   <div class="awaken-placeholder" *ngIf="chimeraAwakened">
-    <div class="mg-divider">+----------+</div>
+    <div class="mg-divider" aria-hidden="true">+----------+</div>
     <span class="cs-label">&gt;&gt; THE CHIMERA AWAKENS !!! &lt;&lt;</span>
-
   </div>
 
 </div>

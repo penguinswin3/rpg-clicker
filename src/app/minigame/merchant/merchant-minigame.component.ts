@@ -284,6 +284,16 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
     return '#e0d8c8';
   }
 
+  /** Returns a human-readable description of a price relative to the typical range. */
+  getPriceDescription(item: StockMarketItem): string {
+    const mid = (item.minPrice + item.maxPrice) / 2;
+    if (item.currentPrice < mid * 0.8) return 'very cheap';
+    if (item.currentPrice < mid) return 'below average';
+    if (item.currentPrice > mid * 1.2) return 'very expensive';
+    if (item.currentPrice > mid) return 'above average';
+    return 'average price';
+  }
+
   // ── Auto-buyers ────────────────────────────────────────────
 
   /** Whether a given item is being auto-bought. */

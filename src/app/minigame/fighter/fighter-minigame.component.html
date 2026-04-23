@@ -2,55 +2,67 @@
 
   <!-- ── Kobold Level Selector ─────────── -->
   <div class="kobold-level-row" *ngIf="strongerKoboldsLevel > 0">
-    <button class="klvl-btn" [disabled]="selectedKoboldLevel <= 1" (click)="decreaseKoboldLevel()">[-]</button>
-    <span class="klvl-label">Next Kobold Level: <span class="klvl-num">{{ selectedKoboldLevel }}</span></span>
-    <button class="klvl-btn" [disabled]="selectedKoboldLevel >= maxKoboldLevel" (click)="increaseKoboldLevel()">[+]</button>
+    <button class="klvl-btn" [disabled]="selectedKoboldLevel <= 1" (click)="decreaseKoboldLevel()"
+            aria-label="Decrease kobold level">[-]</button>
+    <span class="klvl-label" aria-live="polite">Next Kobold Level: <span class="klvl-num">{{ selectedKoboldLevel }}</span></span>
+    <button class="klvl-btn" [disabled]="selectedKoboldLevel >= maxKoboldLevel" (click)="increaseKoboldLevel()"
+            aria-label="Increase kobold level">[+]</button>
   </div>
 
   <!-- ── Fighter HP ─────────────────────── -->
   <div class="combatant">
     <div class="c-label">[ FIGHTER ]</div>
-    <div class="hp-track">
+    <div class="hp-track"
+         role="progressbar"
+         [attr.aria-valuenow]="fighterHp"
+         aria-valuemin="0"
+         [attr.aria-valuemax]="maxHp"
+         [attr.aria-label]="'Fighter HP: ' + fighterHp + ' of ' + maxHp">
       <div class="hp-fill"
            [class.hp-low]="fighterHpPct < 30"
            [class.hp-mid]="fighterHpPct >= 30 && fighterHpPct < 60"
-           [style.width.%]="fighterHpPct">
+           [style.width.%]="fighterHpPct"
+           aria-hidden="true">
       </div>
     </div>
-    <div class="hp-text">{{ fighterHp }} / {{ maxHp }} HP</div>
+    <div class="hp-text" aria-hidden="true">{{ fighterHp }} / {{ maxHp }} HP</div>
   </div>
 
-  <div class="vs-row">-- vs --</div>
+  <div class="vs-row" aria-hidden="true">-- vs --</div>
 
   <!-- ── Enemy ─────────────────────────── -->
   <div class="combatant">
     <div class="c-label enemy-label">[ {{ enemy.name | uppercase }} ]</div>
-    <pre class="enemy-ascii">{{ enemy.ascii }}</pre>
-    <div class="hp-track">
+    <pre class="enemy-ascii" [attr.aria-label]="'ASCII art of ' + enemy.name" role="img">{{ enemy.ascii }}</pre>
+    <div class="hp-track"
+         role="progressbar"
+         [attr.aria-valuenow]="enemy.hp"
+         aria-valuemin="0"
+         [attr.aria-valuemax]="enemy.maxHp"
+         [attr.aria-label]="enemy.name + ' HP: ' + enemy.hp + ' of ' + enemy.maxHp">
       <div class="hp-fill enemy-fill"
            [class.hp-low]="enemyHpPct < 30"
-           [style.width.%]="enemyHpPct">
+           [style.width.%]="enemyHpPct"
+           aria-hidden="true">
       </div>
     </div>
-    <div class="hp-text">{{ enemy.hp }} / {{ enemy.maxHp }} HP</div>
+    <div class="hp-text" aria-hidden="true">{{ enemy.hp }} / {{ enemy.maxHp }} HP</div>
   </div>
 
   <!-- ── Last combat event ─────────────── -->
-  <div class="combat-msg" [ngClass]="msgClass">
+  <div class="combat-msg" [ngClass]="msgClass" aria-live="polite" aria-atomic="true">
     <span class="msg-line1">{{ lastMsg }}</span>
     <span class="msg-line2" *ngIf="msgLine2">{{ msgLine2 }}</span>
   </div>
 
   <!-- ── Fixed action zone ─────────────── -->
-  <!-- Attack and Retry share the exact same slot: one overlays the other.
-       Heal is always directly below, invisible (not removed) when defeated. -->
   <div class="action-zone">
 
-    <!-- Primary slot: both buttons occupy the same space via absolute overlay -->
     <div class="primary-slot">
       <button class="action-btn atk-btn"
               [class.slot-inactive]="defeated"
               [disabled]="actionsDisabled || autoSolveEnabled"
+              aria-label="Attack"
               (click)="attack()">
         [&gt; ATTACK ]
       </button>
@@ -58,42 +70,46 @@
               [class.slot-inactive]="!defeated"
               [class.resting]="restCountdown > 0"
               [disabled]="restCountdown > 0 || autoSolveEnabled"
+              [attr.aria-label]="restCountdown > 0 ? 'Long rest, ' + restCountdown + ' seconds remaining' : 'Retry fight'"
               (click)="retry()">
         {{ restCountdown > 0 ? '[ LONG REST: ' + restCountdown + 's ]' : '[ RETRY ]' }}
       </button>
     </div>
 
-    <!-- Heal: always below the primary slot; hidden (not removed) when defeated -->
     <button class="action-btn heal-btn"
             [class.slot-invisible]="defeated"
             [disabled]="healDisabled"
+            [attr.aria-label]="'Heal for ' + potionHealAmount + ' HP, costs 1 potion'"
             (click)="heal()">
-      [+ HEAL +{{ potionHealAmount }} (-1<span [style.color]="currencyFlavor['potion'].color">{{ currencyFlavor['potion'].symbol }})</span>]
+      [+ HEAL +{{ potionHealAmount }} (-1<span [style.color]="currencyFlavor['potion'].color" aria-hidden="true">{{ currencyFlavor['potion'].symbol }})</span>]
     </button>
 
-    <!-- Short Rest toggle: below heal, only visible once unlocked -->
     <div class="short-rest-row" *ngIf="shortRestLevel >= 1">
       <button class="short-rest-btn"
               [class.sr-on]="shortRestEnabled"
+              [attr.aria-pressed]="shortRestEnabled"
+              [attr.aria-label]="shortRestEnabled ? 'Short Rest: On — disable short rest' : 'Short Rest: Off — enable short rest'"
               (click)="toggleShortRest()">
         {{ shortRestEnabled ? '[ Short Rest: ON  ]' : '[ Short Rest: OFF ]' }}
       </button>
     </div>
 
-    <!-- Kobold Bait toggle: only visible once the upgrade is purchased -->
     <div class="short-rest-row" *ngIf="koboldBaitLevel >= 1">
       <button class="short-rest-btn"
               [class.sr-on]="koboldBaitEnabled"
+              [attr.aria-pressed]="koboldBaitEnabled"
+              [attr.aria-label]="'Kobold Bait: ' + (koboldBaitEnabled ? 'On' : 'Off') + ', costs ' + (50 * selectedKoboldLevel) + ' beast meat'"
               (click)="toggleKoboldBait()">
         {{ koboldBaitEnabled ? '[ Kobold Bait: ON  ]' : '[ Kobold Bait: OFF ]' }}
-        (-{{ 50 * selectedKoboldLevel }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>)
+        (-{{ 50 * selectedKoboldLevel }}<span [style.color]="currencyFlavor['beast'].color" aria-hidden="true">{{ currencyFlavor['beast'].symbol }}</span>)
       </button>
     </div>
 
-    <!-- First Strike toggle: only visible once the upgrade is purchased -->
     <div class="short-rest-row" *ngIf="firstStrikeLevel >= 1">
       <button class="short-rest-btn"
               [class.sr-on]="firstStrikeEnabled"
+              [attr.aria-pressed]="firstStrikeEnabled"
+              [attr.aria-label]="'First Strike: ' + (firstStrikeEnabled ? 'On' : 'Off')"
               (click)="firstStrikeEnabledChange.emit(!firstStrikeEnabled)">
         {{ firstStrikeEnabled ? '[ First Strike: ON  ]' : '[ First Strike: OFF ]' }}
       </button>
@@ -105,6 +121,7 @@
   <button class="action-btn flee-btn"
           [class.slot-invisible]="defeated"
           [disabled]="fleeDisabled || autoSolveEnabled"
+          [attr.aria-label]="fleeing ? 'Fleeing, ' + fleeCountdown + ' seconds remaining' : 'Flee from combat'"
           (click)="flee()">
     {{ fleeing ? '[ FLEEING... ' + fleeCountdown + 's ]' : '[ FLEE ]' }}
   </button>
@@ -113,6 +130,8 @@
   <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
     <button class="auto-solve-btn"
             [class.as-on]="autoSolveEnabled"
+            [attr.aria-pressed]="autoSolveEnabled"
+            aria-label="Toggle auto-solve"
             (click)="toggleAutoSolve()">
       {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
     </button>

@@ -3,44 +3,52 @@
   <!-- ── Gold balance ─────────────────────── -->
   <div class="gold-row">
     <span class="gold-label">GOLD</span>
-    <span class="gold-val">{{ goldBalance | number }}</span>
+    <span class="gold-val" [attr.aria-label]="'Gold balance: ' + (goldBalance | number)">{{ goldBalance | number }}</span>
   </div>
 
   <!-- ── Auto-buy gold spend rate ─────────── -->
   <div class="spend-row" *ngIf="autoSolveUnlocked">
     <span class="spend-label">AUTO-SPEND</span>
-    <span class="spend-val" [class.spend-active]="goldSpendPerSec > 0">
-      {{ goldSpendPerSec | number:'1.0-0' }}<span class="spend-unit">/s</span>
+    <span class="spend-val" [class.spend-active]="goldSpendPerSec > 0"
+          aria-live="polite"
+          [attr.aria-label]="'Auto-spend rate: ' + (goldSpendPerSec | number:'1.0-0') + ' gold per second'">
+      {{ goldSpendPerSec | number:'1.0-0' }}<span class="spend-unit" aria-hidden="true">/s</span>
     </span>
   </div>
 
   <!-- ── Message ──────────────────────────── -->
-  <div class="status-msg">{{ message }}</div>
+  <div class="status-msg" aria-live="polite" aria-atomic="true">{{ message }}</div>
 
   <!-- ── Stock exchange list ──────────────── -->
-  <div class="exchange-list">
-    <div class="item-row" *ngFor="let item of visibleItems">
+  <div class="exchange-list" role="list" aria-label="Black market stock list">
+    <div class="item-row" *ngFor="let item of visibleItems" role="listitem">
       <!-- Row 1: symbol, name, price, auto-buy checkboxes -->
       <div class="item-head">
-        <span class="item-sym" [style.color]="item.color">{{ item.symbol }}</span>
+        <span class="item-sym" [style.color]="item.color" aria-hidden="true">{{ item.symbol }}</span>
         <span class="item-name">{{ item.name }}</span>
-        <span class="item-price" [style.color]="priceColor(item)">{{ item.currentPrice }}g</span>
-        <!-- Single auto-buy toggle (gold-1 only OR gold-2 unlimited) -->
+        <span class="item-price"
+              [style.color]="priceColor(item)"
+              [attr.aria-label]="item.name + ' current price: ' + item.currentPrice + ' gold (' + getPriceDescription(item) + ')'">
+          {{ item.currentPrice }}g
+        </span>
+        <!-- Single auto-buy toggle -->
         <label class="ab-check"
                [class.ab-check-active]="isAutoBuyTarget(item.currencyId)"
                *ngIf="maxAutoBuyers >= 1"
-               title="Auto-buy ×100/s">
+               [attr.aria-label]="'Auto-buy ' + item.name + ': ' + (isAutoBuyTarget(item.currencyId) ? 'enabled' : 'disabled')">
           <input type="checkbox"
                  [checked]="isAutoBuyTarget(item.currencyId)"
+                 [attr.aria-label]="'Auto-buy ' + item.name + ' at ×100 per second'"
                  (change)="toggleAutoBuy(item.currencyId)" />
-          <span class="ab-label">AUTO</span>
+          <span class="ab-label" aria-hidden="true">AUTO</span>
         </label>
       </div>
       <!-- Row 2: buy buttons -->
-      <div class="item-btns">
+      <div class="item-btns" role="group" [attr.aria-label]="'Buy ' + item.name">
         <button *ngFor="let qty of increments"
                 class="buy-btn"
                 [disabled]="!canAfford(item, qty)"
+                [attr.aria-label]="'Buy ' + qty + ' ' + item.name + ' for ' + (item.currentPrice * qty) + ' gold'"
                 (click)="buy(item, qty)"
                 (mousedown)="startHold(item, qty)"
                 (mouseup)="stopHold()"

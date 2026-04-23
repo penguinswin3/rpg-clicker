@@ -5,19 +5,21 @@
     <div class="idle-block">
       <div class="idle-desc">
         Examine {{ GEM_COUNT }} gemstones and pick the finest one.<br>
-        Costs {{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
-        + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>
+        Costs {{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color" aria-hidden="true">{{ currencyFlavor['gemstone'].symbol }}</span><span class="sr-only"> gemstones</span>
+        + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color" aria-hidden="true">{{ currencyFlavor['precious-metal'].symbol }}</span><span class="sr-only"> precious metal</span>
       </div>
-      <button class="facet-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startRound()">
-        [ FACET ({{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
-        + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>) ]
+      <button class="facet-btn" [disabled]="!canStart || autoSolveEnabled"
+              [attr.aria-label]="'Begin faceting, costs ' + GEMSTONE_COST + ' gemstones and ' + METAL_COST + ' precious metal'"
+              (click)="startRound()">
+        [ FACET ({{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color" aria-hidden="true">{{ currencyFlavor['gemstone'].symbol }}</span>
+        + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color" aria-hidden="true">{{ currencyFlavor['precious-metal'].symbol }}</span>) ]
       </button>
       <div class="cost-warn" *ngIf="!canStart">
         <span *ngIf="gemstones < GEMSTONE_COST">
-          need {{ GEMSTONE_COST - gemstones }} more <span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
+          need {{ GEMSTONE_COST - gemstones }} more <span [style.color]="currencyFlavor['gemstone'].color" aria-hidden="true">{{ currencyFlavor['gemstone'].symbol }}</span><span class="sr-only"> gemstones</span>
         </span>
         <span *ngIf="preciousMetal < METAL_COST">
-          need {{ METAL_COST - preciousMetal }} more <span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>
+          need {{ METAL_COST - preciousMetal }} more <span [style.color]="currencyFlavor['precious-metal'].color" aria-hidden="true">{{ currencyFlavor['precious-metal'].symbol }}</span><span class="sr-only"> precious metal</span>
         </span>
       </div>
     </div>
@@ -27,13 +29,13 @@
   <ng-container *ngIf="roundStarted">
 
     <!-- Round status -->
-    <div class="round-status">
+    <div class="round-status" aria-live="polite" aria-atomic="true">
       <span *ngIf="!roundOver">Select the highest quality gem</span>
       <span class="round-done" *ngIf="roundOver">-- Round complete --</span>
     </div>
 
     <!-- Gem grid (2×3) -->
-    <div class="gem-grid">
+    <div class="gem-grid" role="grid" aria-label="Gem selection grid">
       <button
         class="gem-cell"
         *ngFor="let gem of gems; let i = index"
@@ -44,54 +46,60 @@
         [class.gem-wrong]="roundOver && gem.selected && !isBest(i) && i !== doubleDipSecondPickIndex && i !== closeEnoughPickIndex"
         [class.gem-restart]="roundOver && canStart"
         [disabled]="autoSolveEnabled || (roundOver ? !canStart : gem.selected)"
+        [attr.aria-label]="getGemAriaLabel(i, gem)"
         (click)="roundOver ? tryRestart() : selectGem(i)">
 
         <!-- Gem icon container -->
         <span class="gem-icon"
               [style.font-size.px]="gemSize(gem)"
               [style.filter]="'blur(' + gemBlur(gem) + 'px) saturate(' + gemSaturation(gem) + '%)'"
-              [style.color]="GEM_COLOR">
+              [style.color]="GEM_COLOR"
+              aria-hidden="true">
           {{ GEM_SYMBOL }}
         </span>
 
         <!-- Clarity imperfections -->
         <span *ngFor="let dot of gemImperfections(gem); let d = index"
               class="imperfection"
-              [ngStyle]="imperfectionStyle(i, d)">
+              [ngStyle]="imperfectionStyle(i, d)"
+              aria-hidden="true">
         </span>
 
         <!-- Revealed score -->
         <span class="gem-score" *ngIf="gem.revealed || doubleDipConfirmedIndex === i"
               [style.color]="scoreColor(gem)"
               [class.score-best]="isBest(i)"
-              [class.score-confirmed]="doubleDipConfirmedIndex === i && !gem.revealed">
+              [class.score-confirmed]="doubleDipConfirmedIndex === i && !gem.revealed"
+              aria-hidden="true">
           {{ scorePct(gem) }}
         </span>
       </button>
     </div>
 
     <!-- Result message -->
-    <div class="round-msg" [ngClass]="msgClass" *ngIf="lastMsg">
+    <div class="round-msg" [ngClass]="msgClass" *ngIf="lastMsg" aria-live="polite" aria-atomic="true">
       {{ lastMsg }}
       <ng-container *ngFor="let part of resultParts; let i = index">
         <ng-container *ngIf="i > 0">, </ng-container>
-        {{ part.amount }}<span [style.color]="part.color">{{ part.symbol }}</span>
+        {{ part.amount }}<span [style.color]="part.color" aria-hidden="true">{{ part.symbol }}</span><span class="sr-only"> {{ part.symbol }}</span>
       </ng-container>
-      <ng-container *ngIf="resultXp > 0"> (+{{ resultXp }}<span [style.color]="currencyFlavor['xp'].color">{{ currencyFlavor['xp'].symbol }}</span>)</ng-container>
+      <ng-container *ngIf="resultXp > 0"> (+{{ resultXp }}<span [style.color]="currencyFlavor['xp'].color" aria-hidden="true">{{ currencyFlavor['xp'].symbol }}</span><span class="sr-only"> XP</span>)</ng-container>
     </div>
 
     <!-- Restart area -->
     <ng-container *ngIf="roundOver">
-      <button class="facet-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startRound()">
-        [ FACET AGAIN ({{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
-        + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>) ]
+      <button class="facet-btn" [disabled]="!canStart || autoSolveEnabled"
+              [attr.aria-label]="'Facet again, costs ' + GEMSTONE_COST + ' gemstones and ' + METAL_COST + ' precious metal'"
+              (click)="startRound()">
+        [ FACET AGAIN ({{ GEMSTONE_COST }}<span [style.color]="currencyFlavor['gemstone'].color" aria-hidden="true">{{ currencyFlavor['gemstone'].symbol }}</span>
+        + {{ METAL_COST }}<span [style.color]="currencyFlavor['precious-metal'].color" aria-hidden="true">{{ currencyFlavor['precious-metal'].symbol }}</span>) ]
       </button>
       <div class="cost-warn" *ngIf="!canStart">
         <span *ngIf="gemstones < GEMSTONE_COST">
-          need {{ GEMSTONE_COST - gemstones }} more <span [style.color]="currencyFlavor['gemstone'].color">{{ currencyFlavor['gemstone'].symbol }}</span>
+          need {{ GEMSTONE_COST - gemstones }} more <span [style.color]="currencyFlavor['gemstone'].color" aria-hidden="true">{{ currencyFlavor['gemstone'].symbol }}</span><span class="sr-only"> gemstones</span>
         </span>
         <span *ngIf="preciousMetal < METAL_COST">
-          need {{ METAL_COST - preciousMetal }} more <span [style.color]="currencyFlavor['precious-metal'].color">{{ currencyFlavor['precious-metal'].symbol }}</span>
+          need {{ METAL_COST - preciousMetal }} more <span [style.color]="currencyFlavor['precious-metal'].color" aria-hidden="true">{{ currencyFlavor['precious-metal'].symbol }}</span><span class="sr-only"> precious metal</span>
         </span>
       </div>
       <div class="round-restart-hint" *ngIf="canStart">-- or click any gem --</div>
@@ -103,6 +111,8 @@
   <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
     <button class="auto-solve-btn"
             [class.as-on]="autoSolveEnabled"
+            [attr.aria-pressed]="autoSolveEnabled"
+            aria-label="Toggle auto-solve"
             (click)="toggleAutoSolve()">
       {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
     </button>

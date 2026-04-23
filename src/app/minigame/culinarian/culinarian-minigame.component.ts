@@ -314,6 +314,16 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
     }
   }
 
+  /** Builds a screen-reader label for a history row, describing each peg's meaning. */
+  getHistoryRowAriaLabel(row: { ingredients: string[]; pegs: PegColor[] }, rowIdx: number): string {
+    const slots = row.ingredients.map((id, i) => {
+      const peg = row.pegs[i];
+      const pegDesc = peg === 'green' ? 'correct position' : peg === 'yellow' ? 'wrong position' : 'not in recipe';
+      return `${id}: ${pegDesc}`;
+    });
+    return `Guess ${rowIdx + 1}: ${slots.join(', ')}`;
+  }
+
   // ── Auto-solve helpers ──────────────────
 
   private startAutoSolve(): void {

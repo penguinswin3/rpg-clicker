@@ -361,5 +361,20 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
       this.cdr.markForCheck();
     }
   }
+
+  /** Builds a descriptive aria-label for a sequence progress dot. */
+  getDotAriaLabel(i: number, s: number): string {
+    if (i >= this.playerInput.length) {
+      return `Position ${i + 1}: not yet entered`;
+    }
+    const enteredSymbol = this.symbolNames[this.symbols[this.playerInput[i]]] || this.symbolLabels[this.symbols[this.playerInput[i]]];
+    if (this.wrongPositions.has(i)) {
+      return `Position ${i + 1}: wrong — entered ${enteredSymbol}`;
+    }
+    if (this.playerInput[i] === s) {
+      return `Position ${i + 1}: correct — ${enteredSymbol}`;
+    }
+    return `Position ${i + 1}: ${enteredSymbol}`;
+  }
 }
 

@@ -601,4 +601,25 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
   isBest(index: number): boolean {
     return index === this.bestGemIndex;
   }
+
+  /** Builds a descriptive aria-label for a gem cell. */
+  getGemAriaLabel(i: number, gem: Gem): string {
+    const num = i + 1;
+    const parts: string[] = [`Gem ${num}`];
+    if (gem.revealed || this.doubleDipConfirmedIndex === i) {
+      parts.push(`quality ${this.scorePct(gem)}`);
+      if (this.isBest(i)) parts.push('best gem');
+      if (this.doubleDipConfirmedIndex === i && !this.roundOver) parts.push('first pick confirmed');
+      if (this.closeEnoughPickIndex === i) parts.push('close enough');
+    } else {
+      const impCount = this.gemImperfections(gem).length;
+      parts.push(`size ${this.gemSize(gem).toFixed(0)}px`);
+      if (impCount > 0) parts.push(`${impCount} imperfection${impCount > 1 ? 's' : ''} visible`);
+    }
+    if (this.roundOver) {
+      if (this.isBest(i)) parts.push('— correct choice');
+      else if (gem.selected) parts.push('— wrong choice');
+    }
+    return parts.join(', ');
+  }
 }

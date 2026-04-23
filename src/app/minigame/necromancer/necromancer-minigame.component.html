@@ -9,15 +9,17 @@
 
       <div class="cost-list">
         <span class="cost-item" *ngFor="let c of costs">
-          {{ c.amount }}<span [style.color]="currencyFlavor[c.id].color">{{ currencyFlavor[c.id].symbol }}</span>
+          {{ c.amount }}<span [style.color]="currencyFlavor[c.id].color" aria-hidden="true">{{ currencyFlavor[c.id].symbol }}</span><span class="sr-only"> {{ c.id }}</span>
         </span>
       </div>
 
-      <button class="ritual-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startRitual()">
+      <button class="ritual-btn" [disabled]="!canStart || autoSolveEnabled"
+              aria-label="Begin ritual"
+              (click)="startRitual()">
         [ BEGIN RITUAL ]
       </button>
 
-      <div class="cost-warn" *ngIf="!canStart">
+      <div class="cost-warn" *ngIf="!canStart" aria-live="polite">
         {{ insufficientResourcesMsg }}
       </div>
     </div>
@@ -28,7 +30,7 @@
 
     <!-- Spell circle SVG -->
     <div class="circle-container">
-      <svg [attr.viewBox]="'0 0 ' + VB + ' ' + VB" class="circle-svg">
+      <svg [attr.viewBox]="'0 0 ' + VB + ' ' + VB" class="circle-svg" aria-hidden="true">
 
         <defs>
           <!-- Wave + glow filter for path lines -->
@@ -103,13 +105,24 @@
         </g>
 
       </svg>
+
+      <!-- Accessible node buttons (visually hidden, overlaid on SVG) -->
+      <div class="sr-only" role="group" aria-label="Soul anchor nodes">
+        <button *ngFor="let node of nodes; let i = index"
+                [disabled]="autoSolveEnabled || !isNodeSelectable(i)"
+                [attr.aria-label]="getNodeAriaLabel(i, node)"
+                [attr.aria-pressed]="node.selected"
+                (click)="autoSolveEnabled ? null : selectNode(i)">
+          {{ node.symbol }}
+        </button>
+      </div>
     </div>
 
     <!-- Status message -->
-    <div class="ritual-msg" [ngClass]="msgClass">{{ lastMsg }}</div>
+    <div class="ritual-msg" [ngClass]="msgClass" aria-live="polite" aria-atomic="true">{{ lastMsg }}</div>
 
     <!-- Progress: N of TOTAL selected -->
-    <div class="progress-row">
+    <div class="progress-row" aria-live="polite">
       <span class="prog-label">Anchors:</span>
       <span class="prog-count">{{ selectedPath.length }} / {{ nodes.length }}</span>
       <span class="prog-hint" *ngIf="selectedPath.length === nodes.length"> &larr; Return to start!</span>
@@ -121,8 +134,11 @@
   <ng-container *ngIf="ritualDone">
 
     <!-- Show the completed path -->
-    <div class="circle-container" (click)="autoSolveEnabled ? null : tryAgain()">
-      <svg [attr.viewBox]="'0 0 ' + VB + ' ' + VB" class="circle-svg">
+    <div class="circle-container"
+         role="img"
+         [attr.aria-label]="'Ritual complete. Path efficiency: ' + efficiencyPct + '%.'"
+         (click)="autoSolveEnabled ? null : tryAgain()">
+      <svg [attr.viewBox]="'0 0 ' + VB + ' ' + VB" class="circle-svg" aria-hidden="true">
 
         <defs>
           <filter id="path-fx-done" x="-40%" y="-40%" width="180%" height="180%">
@@ -181,31 +197,38 @@
     <!-- Efficiency bar -->
     <div class="efficiency-block">
       <div class="eff-label">PATH EFFICIENCY</div>
-      <div class="eff-bar-track">
+      <div class="eff-bar-track"
+           role="progressbar"
+           [attr.aria-valuenow]="efficiencyPct"
+           aria-valuemin="0"
+           aria-valuemax="100"
+           [attr.aria-label]="'Path efficiency: ' + efficiencyPct + '%'">
         <div class="eff-bar-fill" [style.width.%]="efficiencyPct"
-             [style.background]="efficiencyColor"></div>
+             [style.background]="efficiencyColor" aria-hidden="true"></div>
       </div>
-      <div class="eff-pct" [style.color]="efficiencyColor">{{ efficiencyPct }}%</div>
+      <div class="eff-pct" [style.color]="efficiencyColor" aria-hidden="true">{{ efficiencyPct }}%</div>
     </div>
 
     <!-- Reward summary -->
-    <div class="result-msg" [ngClass]="msgClass">{{ lastMsg }}</div>
-    <div class="result-rewards" *ngIf="soulStonesAwarded > 0">
+    <div class="result-msg" [ngClass]="msgClass" aria-live="polite">{{ lastMsg }}</div>
+    <div class="result-rewards" *ngIf="soulStonesAwarded > 0" aria-live="polite">
       <span class="reward-label">Yield: </span>
-      {{ soulStonesAwarded }}<span [style.color]="currencyFlavor['soul-stone'].color">{{ currencyFlavor['soul-stone'].symbol }}</span>,
-      {{ xpAwarded }}<span [style.color]="currencyFlavor['xp'].color">{{ currencyFlavor['xp'].symbol }}</span>
+      {{ soulStonesAwarded }}<span [style.color]="currencyFlavor['soul-stone'].color" aria-hidden="true">{{ currencyFlavor['soul-stone'].symbol }}</span><span class="sr-only"> soul stones</span>,
+      {{ xpAwarded }}<span [style.color]="currencyFlavor['xp'].color" aria-hidden="true">{{ currencyFlavor['xp'].symbol }}</span><span class="sr-only"> XP</span>
     </div>
-    <div class="result-rewards result-zero" *ngIf="soulStonesAwarded === 0">
+    <div class="result-rewards result-zero" *ngIf="soulStonesAwarded === 0" aria-live="polite">
       <span class="reward-label">Yield: </span>
-      0<span [style.color]="currencyFlavor['soul-stone'].color">{{ currencyFlavor['soul-stone'].symbol }}</span>
+      0<span [style.color]="currencyFlavor['soul-stone'].color" aria-hidden="true">{{ currencyFlavor['soul-stone'].symbol }}</span><span class="sr-only"> soul stones</span>
       — path too inefficient
     </div>
 
     <!-- Try again -->
-    <button class="ritual-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startRitual()">
+    <button class="ritual-btn" [disabled]="!canStart || autoSolveEnabled"
+            aria-label="Begin ritual again"
+            (click)="startRitual()">
       [ RITUAL AGAIN ]
     </button>
-    <div class="cost-warn" *ngIf="!canStart">
+    <div class="cost-warn" *ngIf="!canStart" aria-live="polite">
       {{ insufficientResourcesMsg }}
     </div>
   </ng-container>
@@ -214,6 +237,8 @@
   <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
     <button class="auto-solve-btn"
             [class.as-on]="autoSolveEnabled"
+            [attr.aria-pressed]="autoSolveEnabled"
+            aria-label="Toggle auto-solve"
             (click)="toggleAutoSolve()">
       {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
     </button>
