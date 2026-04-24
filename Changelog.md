@@ -1,7 +1,8 @@
 # Version Alpha 1.0.4
 
 ## Added
-
+- ARIA lables for accessability 
+- Jacks based minigame automation 
 ## Removed
 
 ## Changed
