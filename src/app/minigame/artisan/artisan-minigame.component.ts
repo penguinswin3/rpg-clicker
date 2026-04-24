@@ -61,6 +61,8 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled = false;
   @Input() autoSolveGoodMode = false;
+  @Input() isActiveTab = true;
+  @Input() gold1Socketed = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   private autoSolveInterval?: ReturnType<typeof setInterval>;
@@ -127,7 +129,8 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
   // ── Lifecycle ─────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode'] ||
+        changes['isActiveTab'] || changes['gold1Socketed']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -403,7 +406,9 @@ export class ArtisanMinigameComponent implements OnInit, OnDestroy, OnChanges {
 
   private startAutoSolve(): void {
     this.stopAutoSolve();
-    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.ARTISAN_TICK_MS);
+    const baseMs = AUTO_SOLVE.ARTISAN_TICK_MS;
+    const tickMs = (!this.isActiveTab && !this.gold1Socketed) ? baseMs * AUTO_SOLVE.OFF_TAB_SLOW_FACTOR : baseMs;
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), tickMs);
   }
 
   private stopAutoSolve(): void {

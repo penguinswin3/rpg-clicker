@@ -112,6 +112,8 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled  = false;
   @Input() autoSolveGoodMode = false;
+  @Input() isActiveTab = true;
+  @Input() gold1Socketed = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   @Input() gold2Progress: unknown;
@@ -311,7 +313,8 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled'] || changes['autoSolveUnlocked']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveUnlocked'] ||
+        changes['isActiveTab'] || changes['gold1Socketed']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this._startAutoStitch();
       } else {
@@ -345,8 +348,11 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
   }
 
   private _startAutoStitch(): void {
-    if (this.autoStitchTimer) return;
-    this.autoStitchTimer = setInterval(() => this._autoStitchTick(), AUTO_SOLVE.CHIMERAMANCER_TICK_MS);
+    // Always restart to pick up speed changes (tab switch, bead socket)
+    if (this.autoStitchTimer) { clearInterval(this.autoStitchTimer); this.autoStitchTimer = null; }
+    const baseMs = AUTO_SOLVE.CHIMERAMANCER_TICK_MS;
+    const tickMs = (!this.isActiveTab && !this.gold1Socketed) ? baseMs * AUTO_SOLVE.OFF_TAB_SLOW_FACTOR : baseMs;
+    this.autoStitchTimer = setInterval(() => this._autoStitchTick(), tickMs);
   }
 
   private _stopAutoStitch(): void {

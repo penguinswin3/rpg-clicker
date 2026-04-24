@@ -468,6 +468,9 @@ $cyan: #0ff;
 .sidebar-unassign-wrap {
   padding: 0.4rem 0.5rem 0.5rem;
   border-top: 1px solid $border;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .sidebar-unassign-btn {

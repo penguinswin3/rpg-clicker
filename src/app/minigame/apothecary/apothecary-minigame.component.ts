@@ -78,6 +78,10 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled = false;
   @Input() autoSolveGoodMode = false;
+  /** Whether this is the currently visible minigame tab. */
+  @Input() isActiveTab = true;
+  /** Whether gold-1 bead is socketed — grants full speed even when off-tab. */
+  @Input() gold1Socketed = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   private autoSolveInterval?: ReturnType<typeof setInterval>;
@@ -210,7 +214,8 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
   // ── Lifecycle ─────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode'] ||
+        changes['isActiveTab'] || changes['gold1Socketed']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -357,7 +362,8 @@ export class ApothecaryMinigameComponent implements OnInit, OnDestroy, OnChanges
 
   private startAutoSolve(): void {
     this.stopAutoSolve();
-    const tickMs = this.autoSolveGoodMode ? GOOD_AUTO_SOLVE.APOTHECARY_TICK_MS : AUTO_SOLVE.APOTHECARY_TICK_MS;
+    const baseMs = this.autoSolveGoodMode ? GOOD_AUTO_SOLVE.APOTHECARY_TICK_MS : AUTO_SOLVE.APOTHECARY_TICK_MS;
+    const tickMs = (!this.isActiveTab && !this.gold1Socketed) ? baseMs * AUTO_SOLVE.OFF_TAB_SLOW_FACTOR : baseMs;
     this.autoSolveInterval = setInterval(() => this.autoSolveTick(), tickMs);
   }
 

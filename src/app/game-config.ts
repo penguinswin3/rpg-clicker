@@ -1543,6 +1543,8 @@ export const BEADS = {
 
 // ── Auto-Solve Timings ──────────────────────────────────────
 export const AUTO_SOLVE = {
+  /** Multiplier applied to all off-tab auto-solve intervals (no gold bead). */
+  OFF_TAB_SLOW_FACTOR:  2,
   /** Fighter: one attack per this many ms. */
   FIGHTER_TICK_MS:      1000,
   /** Ranger: one cell pick per this many ms. */

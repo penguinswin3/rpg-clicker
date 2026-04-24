@@ -149,16 +149,7 @@
     {{ lastMsg }}
   </div>
 
-  <!-- ── Auto-solve toggle ─────────────── -->
-  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
-    <button class="auto-solve-btn"
-            [class.as-on]="autoSolveEnabled"
-            [attr.aria-pressed]="autoSolveEnabled"
-            aria-label="Toggle auto-solve"
-            (click)="toggleAutoSolve()">
-      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
-    </button>
-  </div>
+
 
 </div>
 

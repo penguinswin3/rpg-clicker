@@ -52,6 +52,8 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveGoodMode = false;
   @Input() autoSolveEnabled  = false;
+  @Input() isActiveTab = true;
+  @Input() gold1Socketed = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   @Input() gold2Progress: unknown = {};
@@ -223,7 +225,7 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
   /** How many auto-buyers are available based on gold beads. */
   get maxAutoBuyers(): number {
     if (this.autoSolveGoodMode) return Infinity;
-    if (this.autoSolveUnlocked) return 1;
+    if (this.gold1Socketed) return 1;
     return 0;
   }
 

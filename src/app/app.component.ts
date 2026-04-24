@@ -253,6 +253,8 @@ export class AppComponent implements OnInit, OnDestroy {
   // ── Auto-solve state ──────────────────────────────────────────
   /** Per-character auto-solve toggle state. */
   autoSolveEnabled: Record<string, boolean> = {};
+  /** Whether a sidequest jack is assigned per character. Gating auto-solve. */
+  sidequestJacksEnabled: Record<string, boolean> = {};
 
   /** Per-character gold-2 bead unlock progress (shape varies per character). */
   gold2Progress: Record<string, unknown> = {};
@@ -326,8 +328,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /** Whether auto-solve is unlocked for a character (either gold bead socketed). */
   isAutoSolveUnlocked(charId: string): boolean {
-    return !!this.beadState[charId]?.['gold-1']?.socketed
-        || !!this.beadState[charId]?.['gold-2']?.socketed;
+    return !!this.sidequestJacksEnabled[charId];
+  }
+
+  /** Whether gold-1 bead is socketed — allows off-tab automation at full speed. */
+  isGold1Socketed(charId: string): boolean {
+    return !!this.beadState[charId]?.['gold-1']?.socketed;
   }
 
   /** Whether the "good" auto-solve is active (both gold beads socketed). */
@@ -439,7 +445,29 @@ export class AppComponent implements OnInit, OnDestroy {
 
   get jacksVisible():    boolean { return isJacksVisible(this.highestXp, this.jacksOwned); }
   get jacksToPurchase(): number  { return getJacksToPurchase(this.highestXp, this.jacksOwned); }
-  get jacksPoolFree():   number  { return getJacksPoolFree(this.jacksOwned, this.jacksAllocations); }
+  get jacksPoolFree():   number  {
+    const sqJacks = Object.values(this.sidequestJacksEnabled).filter(Boolean).length;
+    return getJacksPoolFree(this.jacksOwned, this.jacksAllocations) - sqJacks;
+  }
+
+  /** Assign or recall the one sidequest jack for a character. */
+  toggleSidequestJack(charId: string): void {
+    const enabled = !!this.sidequestJacksEnabled[charId];
+    if (enabled) {
+      this.sidequestJacksEnabled = { ...this.sidequestJacksEnabled, [charId]: false };
+      // If auto-solve was on but jack is removed, also turn off auto-solve
+      if (this.autoSolveEnabled[charId]) {
+        this.autoSolveEnabled = { ...this.autoSolveEnabled, [charId]: false };
+      }
+    } else {
+      if (this.jacksPoolFree <= 0) return;
+      this.sidequestJacksEnabled = { ...this.sidequestJacksEnabled, [charId]: true };
+      // Auto-enable auto-solve when a jack is assigned
+      this.autoSolveEnabled = { ...this.autoSolveEnabled, [charId]: true };
+    }
+    this._refreshDerived();
+    this.updateAllPerSecond();
+  }
 
   /** Pre-computed jack costs — refreshed by _refreshDerived(). */
   jackCurrentCosts: JackCostEntry[] = [];
@@ -1164,6 +1192,7 @@ export class AppComponent implements OnInit, OnDestroy {
       familiarPausedAt:            { ...this.familiarPausedAt },
       beads:                       JSON.parse(JSON.stringify(this.beadState)),
       autoSolveEnabled:            { ...this.autoSolveEnabled },
+      sidequestJacksEnabled:       { ...this.sidequestJacksEnabled },
       gold2Progress:               JSON.parse(JSON.stringify(this.gold2Progress)),
       merchantAutoBuySelections:   { ...this.merchantAutoBuySelections },
       artificerActiveButton:       this.artificerActiveButton,
@@ -1241,6 +1270,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this._migrateSlayerBeads();
     // Restore auto-solve toggle state
     this.autoSolveEnabled = s.autoSolveEnabled ? { ...s.autoSolveEnabled } : {};
+    this.sidequestJacksEnabled = s.sidequestJacksEnabled ? { ...s.sidequestJacksEnabled } : {};
     // Restore gold-2 progress state
     this.gold2Progress = s.gold2Progress ? JSON.parse(JSON.stringify(s.gold2Progress)) : {};
     // Restore merchant auto-buyer selections
@@ -1922,6 +1952,14 @@ export class AppComponent implements OnInit, OnDestroy {
   /** Remove all jacks from every character. */
   unassignAllJacks(): void {
     this.jacksAllocations = {};
+    this._refreshDerived();
+    this.updateAllPerSecond();
+  }
+
+  unassignAllSidequestJacks(): void {
+    this.sidequestJacksEnabled = {};
+    this.autoSolveEnabled = {};
+    this._refreshDerived();
     this.updateAllPerSecond();
   }
 
@@ -2353,6 +2391,10 @@ export class AppComponent implements OnInit, OnDestroy {
         );
         for (const key of keysToRemove) {
           this.jacksAllocations = { ...this.jacksAllocations, [key]: 0 };
+        }
+        // Also recall any sidequest jack for the killed character
+        if (this.sidequestJacksEnabled[charId]) {
+          this.sidequestJacksEnabled = { ...this.sidequestJacksEnabled, [charId]: false };
         }
 
         const charName = this.unlockedCharacters.find(c => c.id === charId)?.name ?? charId;

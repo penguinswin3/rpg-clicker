@@ -84,6 +84,22 @@
     }"
     [autoSolveEnabled]="autoSolveEnabled"
     (autoSolveEnabledChange)="autoSolveEnabled[$event.charId] = $event.enabled"
+    [sidequestJacksEnabled]="sidequestJacksEnabled"
+    (sidequestJackToggle)="toggleSidequestJack($event)"
+    [jacksOwned]="jacksOwned"
+    [jacksPoolFree]="jacksPoolFree"
+    [gold1SocketedState]="{
+      fighter: isGold1Socketed('fighter'),
+      ranger: isGold1Socketed('ranger'),
+      apothecary: isGold1Socketed('apothecary'),
+      culinarian: isGold1Socketed('culinarian'),
+      thief: isGold1Socketed('thief'),
+      artisan: isGold1Socketed('artisan'),
+      necromancer: isGold1Socketed('necromancer'),
+      merchant: isGold1Socketed('merchant'),
+      artificer: isGold1Socketed('artificer'),
+      chimeramancer: isGold1Socketed('chimeramancer')
+    }"
     (goldBeadFound)="findMinigameGoldBead($event)"
     [gold2Progress]="gold2Progress"
     (gold2ProgressChange)="onGold2ProgressChange($event.charId, $event.progress)"
@@ -655,7 +671,9 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
     [charShine]="charShine"
     [artificerInsight]="artificerInsight"
     [artificerMaxInsight]="artificerMaxInsight"
-    (unassignAllJacks)="unassignAllJacks()" />
+    [sidequestJacksEnabled]="sidequestJacksEnabled"
+    (unassignAllJacks)="unassignAllJacks()"
+    (unassignAllSidequestJacks)="unassignAllSidequestJacks()" />
 </div>
 
 <!-- Dev menu moved inside .game-wrapper above -->

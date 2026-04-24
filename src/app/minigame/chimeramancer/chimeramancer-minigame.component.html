@@ -56,16 +56,7 @@
     </div>
   </div>
 
-  <!-- ── Auto-stitch toggle ─────────────── -->
-  <div class="auto-solve-row" *ngIf="autoSolveUnlocked && !chimeraAwakened">
-    <button class="auto-solve-btn"
-            [class.as-on]="autoSolveEnabled"
-            [attr.aria-pressed]="autoSolveEnabled"
-            aria-label="Toggle auto-stitch"
-            (click)="toggleAutoSolve()">
-      {{ autoSolveEnabled ? '[ Auto-Stitch: ON  ]' : '[ Auto-Stitch: OFF ]' }}
-    </button>
-  </div>
+
 
   <!-- ── Awakened placeholder ────────────── -->
   <div class="awaken-placeholder" *ngIf="chimeraAwakened">

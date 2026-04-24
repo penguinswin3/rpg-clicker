@@ -58,8 +58,13 @@
     <div class="sidebar-unassign-wrap" *ngIf="jacksOwned >= 5">
       <button class="sidebar-unassign-btn"
               [disabled]="totalJacksAssigned <= 0"
-              (click)="emitUnassignAll()">
-        [ Recall all Jacks ]
+              (click)="unassignAllJacks.emit()">
+        [ Recall Button Jacks ]
+      </button>
+      <button class="sidebar-unassign-btn"
+              [disabled]="totalSidequestJacksAssigned <= 0"
+              (click)="unassignAllSidequestJacks.emit()">
+        [ Recall Sidequest Jacks ]
       </button>
     </div>
 

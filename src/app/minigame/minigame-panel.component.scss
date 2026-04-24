@@ -169,3 +169,41 @@ $accent: #0ff;
   font-style: italic;
 }
 
+// ── Sidequest Jack row ────────────────────
+
+.sidequest-jack-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+
+.sidequest-jack-btn {
+  background: transparent;
+  border: 1px solid #333;
+  color: #666;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  padding: 3px 6px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: color 0.15s, border-color 0.15s;
+  width: 100%;
+
+  &:hover:not(:disabled) {
+    border-color: #888;
+    color: #aaa;
+  }
+
+  &.sj-on {
+    border-color: #0aa;
+    color: #0ff;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
