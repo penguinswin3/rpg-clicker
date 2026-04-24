@@ -38,7 +38,7 @@
               [attr.y2]="60 + 50 * Math.sin((t - 90) * Math.PI / 180)"
               class="dial-tick" />
 
-        <!-- Locked In: failed click positions (coloured ticks) -->
+        <!-- Locked In: failed click positions (colored ticks) -->
         <line *ngFor="let a of failedAngles"
               [attr.x1]="getFailedTickCoords(a).x1"
               [attr.y1]="getFailedTickCoords(a).y1"
