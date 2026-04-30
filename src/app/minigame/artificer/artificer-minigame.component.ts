@@ -117,6 +117,9 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
       const p = this.gold2Progress as any;
       this.failStreak = p.failStreak ?? 0;
     }
+    // Re-render whenever the wallet changes (e.g. mana loaded from save) so
+    // canAfford / button disabled states are always fresh in OnPush mode.
+    this.sub.add(this.wallet.state$.subscribe(() => this.cdr.markForCheck()));
   }
 
   ngOnChanges(changes: SimpleChanges): void {

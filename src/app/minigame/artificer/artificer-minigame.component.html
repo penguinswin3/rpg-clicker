@@ -18,17 +18,34 @@
 
   <!-- ── Symbol buttons ─────────────────── -->
   <div class="symbol-grid" role="group" aria-label="Etching symbols">
-    <button
-      *ngFor="let sym of symbols; let i = index"
-      class="symbol-btn"
-      [class.flash]="activeFlashIdx === i"
-      [class.disabled]="phase !== 'input' && phase !== 'retry'"
-      (click)="selectSymbol(i)"
-      [disabled]="phase !== 'input' && phase !== 'retry'"
-      [attr.aria-label]="'Symbol ' + (i + 1) + ': ' + symbolLabels[sym] + (activeFlashIdx === i ? ' — currently flashing in sequence' : '')"
-    >
-      <span class="sym-icon" [style.color]="symbolColors[sym]" aria-hidden="true">{{ symbolLabels[sym] }}</span>
-    </button>
+    <!-- Row 1: first 3 symbols -->
+    <div class="symbol-row">
+      <button
+        *ngFor="let sym of symbols | slice:0:3; let i = index"
+        class="symbol-btn"
+        [class.flash]="activeFlashIdx === i"
+        [class.disabled]="phase !== 'input' && phase !== 'retry'"
+        (click)="selectSymbol(i)"
+        [disabled]="phase !== 'input' && phase !== 'retry'"
+        [attr.aria-label]="'Symbol ' + (i + 1) + ': ' + symbolLabels[sym] + (activeFlashIdx === i ? ' — currently flashing in sequence' : '')"
+      >
+        <span class="sym-icon" [style.color]="symbolColors[sym]" aria-hidden="true">{{ symbolLabels[sym] }}</span>
+      </button>
+    </div>
+    <!-- Row 2: remaining symbols, centered -->
+    <div class="symbol-row">
+      <button
+        *ngFor="let sym of symbols | slice:3; let i = index"
+        class="symbol-btn"
+        [class.flash]="activeFlashIdx === (i + 3)"
+        [class.disabled]="phase !== 'input' && phase !== 'retry'"
+        (click)="selectSymbol(i + 3)"
+        [disabled]="phase !== 'input' && phase !== 'retry'"
+        [attr.aria-label]="'Symbol ' + (i + 4) + ': ' + symbolLabels[sym] + (activeFlashIdx === (i + 3) ? ' — currently flashing in sequence' : '')"
+      >
+        <span class="sym-icon" [style.color]="symbolColors[sym]" aria-hidden="true">{{ symbolLabels[sym] }}</span>
+      </button>
+    </div>
   </div>
 
   <!-- ── Progress ──────────────────────── -->

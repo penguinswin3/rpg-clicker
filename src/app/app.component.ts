@@ -14,7 +14,7 @@ import { StatisticsComponent } from './statistics/statistics.component';
 import { SaveService, UpgradeState, FighterCombatState } from './options/save.service';
 import { StatisticsService } from './statistics/statistics.service';
 import { UpgradeService, UpgradeCategory } from './upgrade/upgrade.service';
-import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE, SLAYER, MERCHANT_MG } from './game-config';
+import { XP_THRESHOLDS, YIELDS, GLOBAL_PURCHASE_DEFS, getActiveCosts, getGlobalDef, FAMILIAR, JACKD_UP_SPEED_MULT, BEADS, BEAD_SLOT_ORDER, BeadSlotState, BeadType, GOLD2_CONDITIONS, GOOD_AUTO_SOLVE, SLAYER, MERCHANT_MG, DEV_TOOLS_ENABLED } from './game-config';
 import { UPGRADE_FLAVOR, CURRENCY_FLAVOR, UPGRADE_COLORS, cur, CHARACTER_FLAVOR, BEAD_FLAVOR, BEAD_COLORS, BEAD_SYMBOL, HERO_PRESS_PULSE_COLOR, LOG_MSG } from './flavor-text';
 import { fmtNumber, clamp } from './utils/mathUtils';
 
@@ -2799,7 +2799,7 @@ export class AppComponent implements OnInit, OnDestroy {
   // ── Dev tools ──────────────────────────────────────────────────
 
   devMenuOpen = false;
-  get devToolsEnabled(): boolean { return this.saveService.enableDevTools; }
+  get devToolsEnabled(): boolean { return DEV_TOOLS_ENABLED && this.saveService.enableDevTools; }
 
   devGrant(): void {
     for (const c of this.wallet.currencies) {

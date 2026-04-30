@@ -14,7 +14,7 @@
   <div class="panel-body" *ngIf="!collapsed">
 
     <!-- ── Fighter: live combat minigame ── -->
-    <div [hidden]="activeCharacterId !== 'fighter'">
+    <div class="mg-wrapper" [hidden]="activeCharacterId !== 'fighter'">
       <app-fighter-minigame
         [attackPower]="fighterAttack"
         [potionChuggingLevel]="potionChuggingLevel"
@@ -52,7 +52,7 @@
     </div>
 
     <!-- ── Apothecary: alchemy rhythm minigame ── -->
-    <div [hidden]="activeCharacterId !== 'apothecary'">
+    <div class="mg-wrapper" [hidden]="activeCharacterId !== 'apothecary'">
       <app-apothecary-minigame
         [bubblingBrewUnlocked]="bubblingBrewLevel >= 1"
         [biggerBubblesLevel]="biggerBubblesLevel"
@@ -82,7 +82,7 @@
     </div>
 
     <!-- ── Ranger: scouting grid minigame ─── -->
-    <div [hidden]="activeCharacterId !== 'ranger'">
+    <div class="mg-wrapper" [hidden]="activeCharacterId !== 'ranger'">
       <app-ranger-minigame [bountifulLandsLevel]="bountifulLandsLevel" [abundantLandsLevel]="abundantLandsLevel" [fairyHostageLevel]="fairyHostageLevel" [treasureChestLevel]="treasureChestLevel" [xMarksTheSpotLevel]="xMarksTheSpotLevel"
         [autoSolveUnlocked]="!!autoSolveUnlocked['ranger']"
         [autoSolveEnabled]="!!autoSolveEnabled['ranger']"
@@ -100,7 +100,7 @@
     </div>
 
     <!-- ── Culinarian: Mastermind recipe minigame ─── -->
-    <div [hidden]="activeCharacterId !== 'culinarian'">
+    <div class="mg-wrapper" [hidden]="activeCharacterId !== 'culinarian'">
       <app-culinarian-minigame [wasteNotLevel]="wasteNotLevel" [largerCookbooksLevel]="largerCookbooksLevel" [cookbookAnnotationsLevel]="cookbookAnnotationsLevel"
         [ancientCookbookEnabled]="ancientCookbookEnabled"
         (ancientCookbookEnabledChange)="ancientCookbookEnabledChange.emit($event)"
@@ -120,7 +120,7 @@
     </div>
 
     <!-- ── Thief: Big Heist safe-cracking minigame ─── -->
-    <div [hidden]="activeCharacterId !== 'thief'">
+    <div class="mg-wrapper" [hidden]="activeCharacterId !== 'thief'">
       <app-thief-minigame
         [vanishingPowderLevel]="vanishingPowderLevel"
         [potionCatEarsLevel]="potionCatEarsLevel"
@@ -144,7 +144,7 @@
     </div>
 
     <!-- ── Artisan: Gem Faceting minigame ─── -->
-    <div [hidden]="activeCharacterId !== 'artisan'">
+    <div class="mg-wrapper" [hidden]="activeCharacterId !== 'artisan'">
       <app-artisan-minigame
         [luckyGemsLevel]="luckyGemsLevel"
         [doubleDipLevel]="doubleDipLevel"
@@ -167,7 +167,7 @@
     </div>
 
     <!-- ── Necromancer: Well of Souls minigame ─── -->
-    <div [hidden]="activeCharacterId !== 'necromancer'">
+    <div class="mg-wrapper" [hidden]="activeCharacterId !== 'necromancer'">
       <app-necromancer-minigame
         [autoSolveUnlocked]="!!autoSolveUnlocked['necromancer']"
         [autoSolveEnabled]="!!autoSolveEnabled['necromancer']"
@@ -185,7 +185,7 @@
     </div>
 
     <!-- ── Merchant: Black Market minigame ─── -->
-    <div [hidden]="activeCharacterId !== 'merchant'">
+    <div class="mg-wrapper" [hidden]="activeCharacterId !== 'merchant'">
       <app-merchant-minigame
         [autoSolveUnlocked]="!!autoSolveUnlocked['merchant']"
         [autoSolveEnabled]="!!autoSolveEnabled['merchant']"
@@ -207,7 +207,7 @@
     </div>
 
     <!-- ── Artificer: Etching minigame ─── -->
-    <div [hidden]="activeCharacterId !== 'artificer'">
+    <div class="mg-wrapper" [hidden]="activeCharacterId !== 'artificer'">
       <app-artificer-minigame
         [extendedEtchingLevel]="extendedEtchingLevel"
         [selectedEtchingLevel]="selectedEtchingLevel"
@@ -228,7 +228,7 @@
     </div>
 
     <!-- ── Chimeramancer: Chimeric Assembly minigame ─── -->
-    <div [hidden]="activeCharacterId !== 'chimeramancer'">
+    <div class="mg-wrapper" [hidden]="activeCharacterId !== 'chimeramancer'">
       <app-chimeramancer-minigame
         [slayerUnlocked]="slayerUnlocked"
         [savedContributions]="chimeramancerContributions"
@@ -271,7 +271,7 @@
 
     <!-- ── Sidequest Jack toggle — shown when jacks have been purchased, not for slayer ── -->
     <div class="sidequest-jack-row"
-         *ngIf="jacksOwned > 0 && activeCharacterId !== 'slayer'">
+         *ngIf="jacksOwned > 0 && activeCharacterId !== 'slayer' && activeCharacterId !== 'merchant'">
       <button class="sidequest-jack-btn"
               [class.sj-on]="!!sidequestJacksEnabled[activeCharacterId]"
               [disabled]="!sidequestJacksEnabled[activeCharacterId] && jacksPoolFree <= 0"

@@ -11,6 +11,12 @@ import { KOBOLD_VARIANTS } from './flavor-text';
 // ── Game Version ─────────────────────────────────────────────
 export const VERSION = '1.0.4';
 
+// ── Dev Tools ─────────────────────────────────────────────────
+/** Set to true to enable the in-game developer tools overlay and the
+ *  "Enable Dev Tools" toggle in the Options menu. Set to false for
+ *  production builds — dev UI will not appear anywhere in the game. */
+export const DEV_TOOLS_ENABLED = false;
+
 // ── Shared Upgrade Types ─────────────────────────────────────
 
 export type UpgradeCategory = 'standard' | 'minigame' | 'relic';
@@ -1654,6 +1660,14 @@ export const GOLD2_CONDITIONS = {
    */
   ARTIFICER_FAIL_SEQUENCE: [0, 2] as readonly number[],
   ARTIFICER_FAIL_STREAK: 10,
+
+  /**
+   * Chimeramancer: click the same resource bar this many times in a row,
+   * with each gap between clicks within [interval - buffer, interval + buffer] ms.
+   */
+  CHIMERAMANCER_SAME_BAR_CLICKS: 5,
+  CHIMERAMANCER_CLICK_INTERVAL_MS: 1000,
+  CHIMERAMANCER_CLICK_BUFFER_MS: 100,
 } as const;
 
 /**

@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { SaveService } from './save.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { CharacterService } from '../character/character.service';
-import { UPGRADE_DEFS, VERSION } from '../game-config';
+import { UPGRADE_DEFS, VERSION, DEV_TOOLS_ENABLED } from '../game-config';
 import { LOG_MSG } from '../flavor-text';
 
 /** px width of the character sidebar in each state (must match character-sidebar.component.scss) */
@@ -36,6 +36,9 @@ export class OptionsMenuComponent implements OnInit, OnDestroy {
   importString     = '';
   showClearConfirm = false;
   showCredits      = false;
+
+  /** Exposed to the template so it can conditionally show the dev tools toggle. */
+  readonly devToolsConfigEnabled = DEV_TOOLS_ENABLED;
 
   readonly creditsTitle = LOG_MSG.CREDITS.TITLE;
   readonly creditsBody  = LOG_MSG.CREDITS.BODY;

@@ -145,8 +145,13 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
   /** Manual contribution count — used for gold-1 bead drop chance. */
   private manualContributions = 0;
 
-  /** Current step in the ordered-click gold-2 sequence (0 = expecting bar[0]). */
-  private gold2Step = 0;
+  // ── Gold-2 timing-cadence state ───────────────────────────────
+  /** Bar index of the current same-bar streak (-1 = no streak). */
+  private gold2LastBarIndex = -1;
+  /** Number of qualifying consecutive clicks on the same bar. */
+  private gold2ConsecutiveCount = 0;
+  /** Timestamp (ms) of the most recent qualifying click in the streak. */
+  private gold2LastClickTime = 0;
 
   /** Auto-stitch interval handle. */
   private autoStitchTimer: ReturnType<typeof setInterval> | null = null;
@@ -298,10 +303,10 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
     }
 
     // Restore gold-2 progress
-    if (this.gold2Progress && typeof this.gold2Progress === 'object') {
-      const p = this.gold2Progress as { step?: number };
-      this.gold2Step = p.step ?? 0;
-    }
+    // Timing state cannot meaningfully survive a page reload, so always start fresh.
+    this.gold2LastBarIndex    = -1;
+    this.gold2ConsecutiveCount = 0;
+    this.gold2LastClickTime   = 0;
 
     // Start auto-stitch if already enabled on restore
     if (this.autoSolveEnabled && this.autoSolveUnlocked) {
@@ -399,34 +404,54 @@ export class ChimeramancerMinigameComponent implements OnInit, OnChanges, OnDest
     this.cdr.markForCheck();
   }
 
-  /** Gold-2: check if this manual click advances the ordered sequence. */
+  /**
+   * Gold-2: click the same resource bar CHIMERAMANCER_SAME_BAR_CLICKS times in a row,
+   * with each consecutive gap within [interval - buffer, interval + buffer] ms.
+   */
   private _checkGold2Sequence(barIndex: number): void {
     if (this.gold2BeadAlreadyFound) return;
 
-    if (barIndex === this.gold2Step) {
-      this.gold2Step++;
+    const needed   = GOLD2_CONDITIONS.CHIMERAMANCER_SAME_BAR_CLICKS;
+    const target   = GOLD2_CONDITIONS.CHIMERAMANCER_CLICK_INTERVAL_MS;
+    const buffer   = GOLD2_CONDITIONS.CHIMERAMANCER_CLICK_BUFFER_MS;
+    const now      = Date.now();
 
-      if (this.gold2Step >= this.bars.length) {
-        // Completed full sequence in order — award gold-2 bead
-        this.gold2BeadFound.emit();
-        this.gold2Step = 0;
-      } else if (this.gemHunterLevel > 0 && GOLD2_CONDITIONS.LOG_PROGRESS) {
-        const msgs = GOLD2_STEP_MESSAGES['chimeramancer'] ?? [];
-        if (msgs.length > 0) {
-          const msg = msgs[(this.gold2Step - 1) % msgs.length];
-          this.log.log(msg, 'rare');
+    if (this.gold2ConsecutiveCount > 0 && barIndex === this.gold2LastBarIndex) {
+      // Same bar — check timing window
+      const elapsed = now - this.gold2LastClickTime;
+      const inWindow = elapsed >= (target - buffer) && elapsed <= (target + buffer);
+
+      if (inWindow) {
+        this.gold2ConsecutiveCount++;
+
+        if (this.gold2ConsecutiveCount >= needed) {
+          // Success — award gold-2 bead
+          this.gold2BeadFound.emit();
+          this.gold2ConsecutiveCount = 0;
+          this.gold2LastBarIndex    = -1;
+        } else if (this.gemHunterLevel > 0 && GOLD2_CONDITIONS.LOG_PROGRESS) {
+          const msgs = GOLD2_STEP_MESSAGES['chimeramancer'] ?? [];
+          if (msgs.length > 0) {
+            this.log.log(msgs[(this.gold2ConsecutiveCount - 1) % msgs.length], 'rare');
+          }
         }
+      } else {
+        // Same bar but wrong timing — restart streak from this click
+        this.gold2ConsecutiveCount = 1;
       }
     } else {
-      // Out-of-order click — reset sequence
-      this.gold2Step = 0;
+      // Different bar (or no streak) — restart streak on this bar
+      this.gold2ConsecutiveCount = 1;
+      this.gold2LastBarIndex     = barIndex;
     }
 
+    this.gold2LastClickTime = now;
     this._emitGold2Progress();
   }
 
   private _emitGold2Progress(): void {
-    this.gold2ProgressChange.emit({ step: this.gold2Step });
+    // Timing state is not persistable across reloads; emit a neutral placeholder.
+    this.gold2ProgressChange.emit({ step: 0 });
   }
 
   private _emitState(): void {

@@ -71,8 +71,14 @@ $silver-blue: #7eb8d4;
 
 .symbol-grid {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
+}
+
+.symbol-row {
+  display: flex;
+  gap: 0.5rem;
   justify-content: center;
 }
 

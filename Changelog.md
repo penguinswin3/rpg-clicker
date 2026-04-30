@@ -6,9 +6,9 @@
 ## Removed
 
 ## Changed
-
+- reworked the chimera gold bead 2 unlock 
 ## Bugfixes
-
+- fixed some ui issues 
 ----------------------------
 # Release  1.0.3
 
