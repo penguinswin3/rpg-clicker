@@ -22,7 +22,7 @@ import { fmtNumber, clamp } from './utils/mathUtils';
 import { calcAutoGoldPerSecond, calcBeastFindChance, calcCulinarianGoldCost, calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick, calcArtisanTreasureCost, calcArtisanTimerMs, calcArtisanGemstoneYield, calcArtisanMetalYield, calcArtisanGemstoneYieldJack, calcArtisanMetalYieldJack, rollNecromancerSwitchClicks, calcSharperNeedlesThreadPerSec } from './hero/yield-helpers';
 import { buildHeroStats, getQuestBtnLabel } from './hero/hero-stats';
 import { dispatchHeroClick, performJackAutoClick, HeroActionContext, JackAutoClickContext } from './hero/hero-actions';
-import { calculatePerSecondRates, calculatePerSecondBreakdown } from './hero/per-second-calculator';
+import { calculatePerSecond } from './hero/per-second-calculator';
 import {
   calculateJackCosts, isJacksVisible, getJacksToPurchase,
   canAffordJackCosts, getJacksPoolFree, getJacksMax,
@@ -1440,7 +1440,7 @@ export class AppComponent implements OnInit, OnDestroy {
       slayerBead2Socketed: this.slayerBead2Socketed,
       activeCondemnStacks: this.activeCondemnStacks,
     };
-    const rates = calculatePerSecondRates(ctx);
+    const { rates, breakdown } = calculatePerSecond(ctx);
     this.wallet.batchUpdate(() => {
       this.wallet.setPerSecond('gold',            rates.gold);
       this.wallet.setPerSecond('xp',              rates.xp);
@@ -1476,7 +1476,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.wallet.setPerSecond('magical-implement', rates['magical-implement']);
       this.wallet.setPerSecond('life-thread',       rates['life-thread']);
       this.wallet.setPerSecond('ichor',              rates.ichor);
-      this.wallet.setPerSecondBreakdown(calculatePerSecondBreakdown(ctx));
+      this.wallet.setPerSecondBreakdown(breakdown);
     });
   }
 
