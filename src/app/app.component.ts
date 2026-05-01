@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, HostListener, inject, NgZone, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { ActivityLogComponent } from './activity-log/activity-log.component';
@@ -22,7 +22,7 @@ import { fmtNumber, clamp } from './utils/mathUtils';
 import { calcAutoGoldPerSecond, calcBeastFindChance, calcCulinarianGoldCost, calcBaitedTrapsBeastPerTick, calcHovelGardenHerbPerTick, calcArtisanTreasureCost, calcArtisanTimerMs, calcArtisanGemstoneYield, calcArtisanMetalYield, calcArtisanGemstoneYieldJack, calcArtisanMetalYieldJack, rollNecromancerSwitchClicks, calcSharperNeedlesThreadPerSec } from './hero/yield-helpers';
 import { buildHeroStats, getQuestBtnLabel } from './hero/hero-stats';
 import { dispatchHeroClick, performJackAutoClick, HeroActionContext, JackAutoClickContext } from './hero/hero-actions';
-import { calculatePerSecond } from './hero/per-second-calculator';
+import { calculatePerSecond, CALCULATOR_UPGRADE_IDS, SerializablePerSecondContext, PerSecondResult } from './hero/per-second-calculator';
 import {
   calculateJackCosts, isJacksVisible, getJacksToPurchase,
   canAffordJackCosts, getJacksPoolFree, getJacksMax,
@@ -57,6 +57,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private readonly charService = inject(CharacterService);
   private readonly saveService = inject(SaveService);
   private readonly statsService = inject(StatisticsService);
+  private readonly ngZone      = inject(NgZone);
   /** Exposed publicly so the template can call upgrade methods directly. */
   readonly upgrades            = inject(UpgradeService);
 
@@ -617,21 +618,36 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // ── Multi-buy helpers ──────────────────────────────────────────
 
-  /** Effective number of levels that will be purchased for the given upgrade. */
+  /**
+   * Effective buy count for the button LABEL only.
+   * In max mode returns 0 — the template shows "MAX" and skips the count.
+   * maxAffordable() is intentionally NOT called here to keep template
+   * evaluation fast (it's expensive when upgrades have many levels remaining).
+   */
   effectiveBuyCount(id: string): number {
-    if (this.buyQuantity === 'max') return Math.max(1, this.upgrades.maxAffordable(id));
+    if (this.buyQuantity === 'max') return 0;
     const remaining = this.upgrades.maxLevel(id) - this.upgrades.level(id);
     return Math.min(this.buyQuantity, remaining);
   }
 
-  /** Summed costs for the current buy quantity on an upgrade. */
+  /**
+   * Costs displayed on the buy button.
+   * In max mode shows next-level cost only (O(1)) — avoids iterating
+   * all potentially-affordable levels just for display.
+   */
   getMultiCosts(id: string): Array<{ currency: string; amount: number }> {
+    if (this.buyQuantity === 'max') return this.upgrades.allCosts(id);
     const count = this.effectiveBuyCount(id);
     return this.upgrades.allCostsMulti(id, count);
   }
 
-  /** Whether the player can afford the current buy-quantity purchase. */
+  /**
+   * Whether the player can afford to buy at the current quantity.
+   * In max mode: just check a single level (O(1)) — the user is asking
+   * for "buy as many as I can", so the button is enabled if they can buy ≥ 1.
+   */
   canAffordMultiBuy(id: string): boolean {
+    if (this.buyQuantity === 'max') return this.upgrades.canAfford(id);
     const count = this.effectiveBuyCount(id);
     return this.upgrades.canAffordMulti(id, count);
   }
@@ -643,6 +659,11 @@ export class AppComponent implements OnInit, OnDestroy {
       this.performTrueResurrection();
       return;
     }
+    // Guard: silently ignore clicks when the player can't afford the purchase.
+    // The button is never HTML-disabled for affordability (only for maxed) to prevent
+    // click-swallowing caused by rapid [disabled] toggling during change detection.
+    if (this.upgrades.isMaxed(id)) return;
+    if (!this.canAffordMultiBuy(id)) return;
     const prevLevel = this.upgrades.level(id);
     if (this.buyQuantity === 'max') {
       const max = this.upgrades.maxAffordable(id);
@@ -940,8 +961,9 @@ export class AppComponent implements OnInit, OnDestroy {
       const charId = this.upgrades.charIdFor(id);
       if (charId) this.addCharShine(charId);
       this._refreshDerived();
-      // Check if this upgrade purchase made new upgrades visible for other characters
-      this._checkUpgradeVisibilityShines();
+      // Debounced: check if this upgrade purchase made new upgrades visible for
+      // other characters.  Coalesces N calls from a multi-buy into one RAF.
+      this._scheduleShineCheck();
     });
 
     // Passive gold income (Contracted Hirelings only)
@@ -1147,6 +1169,23 @@ export class AppComponent implements OnInit, OnDestroy {
     this.statsService.startPlaytimeTimer();
     // Start the merchant auto-buy timer (runs even when merchant tab is not active)
     this.merchantAutoBuyTimer = setInterval(() => this.tickMerchantAutoBuyers(), MERCHANT_MG.AUTO_BUY_INTERVAL_MS);
+
+    // Spin up the per-second Web Worker so calculations run off the main thread.
+    // The new URL(...) syntax lets Angular CLI bundle the worker automatically.
+    if (typeof Worker !== 'undefined') {
+      this.ngZone.runOutsideAngular(() => {
+        this._perSecondWorker = new Worker(
+          new URL('./hero/per-second.worker', import.meta.url),
+          { type: 'module' },
+        );
+        this._perSecondWorker.onmessage = ({ data }: MessageEvent<{ id: number; result: PerSecondResult }>) => {
+          // Discard stale responses from a superseded calculation.
+          if (data.id === this._perSecondWorkerSeq) {
+            this.ngZone.run(() => this._applyPerSecondResult(data.result));
+          }
+        };
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -1155,6 +1194,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.stopSlayerButtonCycle();
     this._stopSlayerAutoAttack();
     this._stopCondemnCleanup();
+    this._perSecondWorker?.terminate();
+    this._perSecondWorker = null;
     if (this.merchantAutoBuyTimer !== undefined) clearInterval(this.merchantAutoBuyTimer);
   }
 
@@ -1377,6 +1418,23 @@ export class AppComponent implements OnInit, OnDestroy {
   // ── Debounce handles ───────────────────────────────────────────
   private _perSecondPending = false;
   private _refreshDerivedPending = false;
+  private _shineCheckPending = false;
+  // ── Web Worker for off-thread per-second calculation ────────
+  private _perSecondWorker: Worker | null = null;
+  private _perSecondWorkerSeq = 0;
+
+  /**
+   * Debounced wrapper around _checkUpgradeVisibilityShines.
+   * Coalesces N synchronous changed$ notifications (e.g. buyMulti x50) into one RAF.
+   */
+  private _scheduleShineCheck(): void {
+    if (this._shineCheckPending) return;
+    this._shineCheckPending = true;
+    requestAnimationFrame(() => {
+      this._shineCheckPending = false;
+      this._checkUpgradeVisibilityShines();
+    });
+  }
 
   /**
    * Debounced wrapper around _doUpdateAllPerSecond.
@@ -1392,8 +1450,32 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private _doUpdateAllPerSecond(): void {
-    const ctx = {
-      upgrades:                this.upgrades,
+    const ctx = this._buildSerializableCtx();
+    if (this._perSecondWorker) {
+      // Async path: bump the sequence counter, post to worker.
+      // The onmessage handler will call _applyPerSecondResult when done.
+      const id = ++this._perSecondWorkerSeq;
+      this._perSecondWorker.postMessage({ id, ctx });
+    } else {
+      // Synchronous fallback (SSR / browsers without Worker support).
+      const result = calculatePerSecond({
+        ...ctx,
+        upgrades: { level: (id: string) => ctx.upgradeLevels[id] ?? 0 },
+      });
+      this._applyPerSecondResult(result);
+    }
+  }
+
+  /** Snapshot all state needed for the calculation into a serializable plain object. */
+  private _buildSerializableCtx(): SerializablePerSecondContext {
+    // Snapshot only the upgrade IDs the calculator actually reads — keeps
+    // the message payload small and avoids transferring the service proxy.
+    const upgradeLevels: Record<string, number> = {};
+    for (const id of CALCULATOR_UPGRADE_IDS) {
+      upgradeLevels[id] = this.upgrades.level(id);
+    }
+    return {
+      upgradeLevels,
       jacksAllocations:        this.jacksAllocations,
       jackStarved:             this.jackStarved,
       isThiefStunned:          this.isThiefStunned,
@@ -1440,7 +1522,11 @@ export class AppComponent implements OnInit, OnDestroy {
       slayerBead2Socketed: this.slayerBead2Socketed,
       activeCondemnStacks: this.activeCondemnStacks,
     };
-    const { rates, breakdown } = calculatePerSecond(ctx);
+  }
+
+  /** Apply a finished PerSecondResult to the wallet. Called from the worker onmessage handler (inside NgZone). */
+  private _applyPerSecondResult(result: PerSecondResult): void {
+    const { rates, breakdown } = result;
     this.wallet.batchUpdate(() => {
       this.wallet.setPerSecond('gold',            rates.gold);
       this.wallet.setPerSecond('xp',              rates.xp);

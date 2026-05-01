@@ -9,8 +9,42 @@
  */
 
 import { YIELDS, FAMILIAR, JACKD_UP_SPEED_MULT, MERCHANT_MG, CHIMERAMANCER_YIELDS, SLAYER } from '../game-config';
-import { UpgradeService } from '../upgrade/upgrade.service';
 import { roundTo } from '../utils/mathUtils';
+
+// ── Minimal upgrade accessor interface ──────────────────────
+// Satisfied by UpgradeService on the main thread AND by a plain
+// { level: (id) => upgradeLevels[id] ?? 0 } object inside the worker.
+
+export type UpgradeProvider = { level(id: string): number };
+
+/**
+ * All upgrade IDs read by calculatePerSecond.
+ * Used by the main thread to snapshot only the needed levels before
+ * sending serialisable context to the Web Worker.
+ */
+export const CALCULATOR_UPGRADE_IDS = [
+  'MIND_AND_SOUL',
+  'BETTER_BOUNTIES', 'CONTRACTED_HIRELINGS', 'HIRELINGS_HIRELINGS', 'INSIGHTFUL_CONTRACTS',
+  'POTION_MARKETING', 'POTION_TITRATION', 'BETTER_TRACKING',
+  'WHOLESALE_SPICES', 'POTION_GLIBNESS', 'POTION_CATS_EYE',
+  'METICULOUS_PLANNING',
+  'FASTER_APPRAISING', 'POTION_CATS_PAW',
+  'PLENTIFUL_PLUNDERING', 'POTION_OF_STICKY_FINGERS',
+  'SPEAK_WITH_DEAD', 'FORTIFIED_CHALK', 'DARK_PACT', 'GRAVE_LOOTING',
+  'FERMENTATION_VATS',
+  'HOVEL_GARDEN', 'ORNATE_HERB_POTS',
+  'BAITED_TRAPS', 'SPICED_BAIT',
+  'BIGGER_GAME', 'MORE_HERBS',
+  'BOXING_DAY', 'BLACK_MARKET_CONNECTIONS',
+  'POTION_ARCANE_INTELLECT', 'AMPLIFIED_INSIGHT',
+  'BIGGER_THREADS', 'SHARPER_NEEDLES', 'LOOM_OF_LIFE',
+  'KNOW_NO_FEAR', 'CONDEMN', 'BANISHMENT', 'BLOODLUST',
+  'WINDFURY', 'THUNDERFURY', 'SUNFURY',
+] as const;
+
+/** Context that can be safely cloned and sent to a Web Worker. */
+export type SerializablePerSecondContext =
+  Omit<PerSecondContext, 'upgrades'> & { upgradeLevels: Record<string, number> };
 import {
   calcGoldPerClick, calcAutoGoldPerSecond, calcXpPerBounty,
   calcBeastFindChance, calcHerbSaveChance,
@@ -30,7 +64,7 @@ import {
 // ── Context ─────────────────────────────────────────────────
 
 export interface PerSecondContext {
-  upgrades:                UpgradeService;
+  upgrades:                UpgradeProvider;
   jacksAllocations:        Record<string, number>;
   jackStarved:             Record<string, boolean>;
   isThiefStunned:          boolean;
