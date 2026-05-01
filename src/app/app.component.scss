@@ -1379,6 +1379,24 @@
     }
   }
 
+  // Can't-afford state: visually dim like :disabled but does NOT set the HTML
+  // disabled attribute, so click events always fire and never get swallowed by
+  // the browser during rapid change-detection cycles (game tick + jack timers).
+  &.upgrade-cant-afford {
+    border-color: #333;
+    color: #444;
+    cursor: pointer;
+
+    &:hover {
+      background: #000;
+      color: #444;
+    }
+
+    .cost-met {
+      color: #fff;
+    }
+  }
+
   &.upgrade-maxed {
     border-color: #856404;
     color: #856404;

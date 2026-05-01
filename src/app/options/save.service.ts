@@ -62,6 +62,8 @@ export interface UpgradeState {
   beads?: Record<string, Record<string, { found: boolean; socketed: boolean }>>;
   /** Auto-solve toggle state per character — { charId: true/false } */
   autoSolveEnabled?: Record<string, boolean>;
+  /** Whether a sidequest jack is assigned per character — { charId: true/false }. Required for auto-solve. */
+  sidequestJacksEnabled?: Record<string, boolean>;
   /** Gold-2 bead unlock progress per character — shape varies by character. */
   gold2Progress?: Record<string, unknown>;
   /** Merchant stock market auto-buyer selections — { currencyId: true/false }. */

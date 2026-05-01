@@ -31,6 +31,12 @@
 <!--        (click)="toggleEnableDevTools()">-->
 <!--        [ {{ enableDevTools ? '■' : '□' }} ] Enable Dev Tools-->
 <!--      </button>-->
+      <button *ngIf="devToolsConfigEnabled"
+        class="opt-btn opt-toggle-btn"
+        [class.opt-toggle-active]="enableDevTools"
+        (click)="toggleEnableDevTools()">
+        [ {{ enableDevTools ? '■' : '□' }} ] Enable Dev Tools
+      </button>
     </div>
 
     <!-- Save -->

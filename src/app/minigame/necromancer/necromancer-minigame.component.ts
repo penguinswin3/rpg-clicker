@@ -156,6 +156,8 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled = false;
   @Input() autoSolveGoodMode = false;
+  @Input() isActiveTab = true;
+  @Input() gold1Socketed = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   private autoSolveInterval?: ReturnType<typeof setInterval>;
@@ -248,7 +250,8 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
   // ── Lifecycle ──────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode'] ||
+        changes['isActiveTab'] || changes['gold1Socketed']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -425,7 +428,9 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
 
   private startAutoSolve(): void {
     this.stopAutoSolve();
-    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.NECROMANCER_TICK_MS);
+    const baseMs = AUTO_SOLVE.NECROMANCER_TICK_MS;
+    const tickMs = (!this.isActiveTab && !this.gold1Socketed) ? baseMs * AUTO_SOLVE.OFF_TAB_SLOW_FACTOR : baseMs;
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), tickMs);
   }
 
   private stopAutoSolve(): void {
@@ -846,6 +851,22 @@ export class NecromancerMinigameComponent implements OnInit, OnDestroy, OnChange
       && !this.ritualDone
       && idx === this.startNodeIdx
       && this.selectedPath.length === this.nodes.length;
+  }
+
+  /** Builds a descriptive aria-label for a soul anchor node button. */
+  getNodeAriaLabel(i: number, node: { symbol: string; selected: boolean; order: number; type?: string }): string {
+    const parts: string[] = [`Soul anchor ${i + 1}: ${node.symbol}`];
+    if (node.type) parts.push(`type ${node.type}`);
+    if (node.selected) {
+      parts.push(`selected — visit order ${node.order}`);
+    } else if (this.isClosingTarget(i)) {
+      parts.push('click to close the circle and complete the ritual');
+    } else if (this.isNodeSelectable(i)) {
+      parts.push('available');
+    } else {
+      parts.push('not available');
+    }
+    return parts.join(', ');
   }
 }
 

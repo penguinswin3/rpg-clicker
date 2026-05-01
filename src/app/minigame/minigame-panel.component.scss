@@ -84,6 +84,8 @@ $accent: #0ff;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  // Reserve scrollbar gutter so adding/removing content never shifts button widths.
+  scrollbar-gutter: stable;
   padding: 8px;
   display: flex;
   flex-direction: column;
@@ -93,6 +95,16 @@ $accent: #0ff;
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-track { background: #000; }
   &::-webkit-scrollbar-thumb { background: #333; }
+}
+
+// ── Minigame wrapper ──────────────────────
+// Each minigame is wrapped in a [hidden] div. In a column-flex with
+// align-items:center an unwrapped div shrinks to its content width, which
+// can make the grid/buttons narrow. Forcing full width here ensures every
+// percentage-based child fills the panel correctly.
+.mg-wrapper {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 // ── ASCII art ─────────────────────────────
@@ -167,5 +179,43 @@ $accent: #0ff;
   color: #333;
   font-size: 9px;
   font-style: italic;
+}
+
+// ── Sidequest Jack row ────────────────────
+
+.sidequest-jack-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+
+.sidequest-jack-btn {
+  background: transparent;
+  border: 1px solid #333;
+  color: #666;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  padding: 3px 6px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: color 0.15s, border-color 0.15s;
+  width: 100%;
+
+  &:hover:not(:disabled) {
+    border-color: #888;
+    color: #aaa;
+  }
+
+  &.sj-on {
+    border-color: #0aa;
+    color: #0ff;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 

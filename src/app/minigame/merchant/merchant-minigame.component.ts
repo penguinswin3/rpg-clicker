@@ -52,6 +52,8 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveGoodMode = false;
   @Input() autoSolveEnabled  = false;
+  @Input() isActiveTab = true;
+  @Input() gold1Socketed = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   @Input() gold2Progress: unknown = {};
@@ -223,7 +225,7 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
   /** How many auto-buyers are available based on gold beads. */
   get maxAutoBuyers(): number {
     if (this.autoSolveGoodMode) return Infinity;
-    if (this.autoSolveUnlocked) return 1;
+    if (this.gold1Socketed) return 1;
     return 0;
   }
 
@@ -282,6 +284,16 @@ export class MerchantMinigameComponent implements OnInit, OnDestroy {
     if (item.currentPrice > mid * 1.2) return '#f44336';
     if (item.currentPrice > mid) return '#ff9800';
     return '#e0d8c8';
+  }
+
+  /** Returns a human-readable description of a price relative to the typical range. */
+  getPriceDescription(item: StockMarketItem): string {
+    const mid = (item.minPrice + item.maxPrice) / 2;
+    if (item.currentPrice < mid * 0.8) return 'very cheap';
+    if (item.currentPrice < mid) return 'below average';
+    if (item.currentPrice > mid * 1.2) return 'very expensive';
+    if (item.currentPrice > mid) return 'above average';
+    return 'average price';
   }
 
   // ── Auto-buyers ────────────────────────────────────────────

@@ -52,6 +52,8 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled = false;
   @Input() autoSolveGoodMode = false;
+  @Input() isActiveTab = true;
+  @Input() gold1Socketed = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   private autoSolveInterval?: ReturnType<typeof setInterval>;
@@ -128,7 +130,8 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
   // ── Lifecycle ─────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode'] ||
+        changes['isActiveTab'] || changes['gold1Socketed']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -314,13 +317,25 @@ export class CulinarianMinigameComponent implements OnInit, OnDestroy, OnChanges
     }
   }
 
+  /** Builds a screen-reader label for a history row, describing each peg's meaning. */
+  getHistoryRowAriaLabel(row: { ingredients: string[]; pegs: PegColor[] }, rowIdx: number): string {
+    const slots = row.ingredients.map((id, i) => {
+      const peg = row.pegs[i];
+      const pegDesc = peg === 'green' ? 'correct position' : peg === 'yellow' ? 'wrong position' : 'not in recipe';
+      return `${id}: ${pegDesc}`;
+    });
+    return `Guess ${rowIdx + 1}: ${slots.join(', ')}`;
+  }
+
   // ── Auto-solve helpers ──────────────────
 
   private startAutoSolve(): void {
     this.stopAutoSolve();
     this.autoSolveStep = 0;
     this.autoSolveGuesses = [];
-    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.CULINARIAN_TICK_MS);
+    const baseMs = AUTO_SOLVE.CULINARIAN_TICK_MS;
+    const tickMs = (!this.isActiveTab && !this.gold1Socketed) ? baseMs * AUTO_SOLVE.OFF_TAB_SLOW_FACTOR : baseMs;
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), tickMs);
   }
 
   private stopAutoSolve(): void {

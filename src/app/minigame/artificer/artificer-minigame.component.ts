@@ -32,6 +32,8 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled  = false;
   @Input() autoSolveGoodMode = false;
+  @Input() isActiveTab = true;
+  @Input() gold1Socketed = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
 
@@ -115,10 +117,14 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
       const p = this.gold2Progress as any;
       this.failStreak = p.failStreak ?? 0;
     }
+    // Re-render whenever the wallet changes (e.g. mana loaded from save) so
+    // canAfford / button disabled states are always fresh in OnPush mode.
+    this.sub.add(this.wallet.state$.subscribe(() => this.cdr.markForCheck()));
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode'] ||
+        changes['isActiveTab'] || changes['gold1Socketed']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.ensureAutoSolveLoop();
       } else {
@@ -324,10 +330,13 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
     this.autoSolveEnabledChange.emit(!this.autoSolveEnabled);
   }
 
-  /** Ensure the master auto-solve interval is running (idempotent). */
+  /** Ensure the master auto-solve interval is running (idempotent — restarts if speed changed). */
   private ensureAutoSolveLoop(): void {
-    if (this.autoSolveTimer) return; // already running
-    this.autoSolveTimer = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.ARTIFICER_TICK_MS);
+    // Always restart to apply any updated speed (tab switch, bead socket)
+    if (this.autoSolveTimer) clearInterval(this.autoSolveTimer);
+    const baseMs = AUTO_SOLVE.ARTIFICER_TICK_MS;
+    const tickMs = (!this.isActiveTab && !this.gold1Socketed) ? baseMs * AUTO_SOLVE.OFF_TAB_SLOW_FACTOR : baseMs;
+    this.autoSolveTimer = setInterval(() => this.autoSolveTick(), tickMs);
   }
 
   /** Master tick: start rounds when idle, or feed correct/wrong symbols during input. */
@@ -360,6 +369,21 @@ export class ArtificerMinigameComponent implements OnInit, OnChanges, OnDestroy 
       }
       this.cdr.markForCheck();
     }
+  }
+
+  /** Builds a descriptive aria-label for a sequence progress dot. */
+  getDotAriaLabel(i: number, s: number): string {
+    if (i >= this.playerInput.length) {
+      return `Position ${i + 1}: not yet entered`;
+    }
+    const enteredSymbol = this.symbolNames[this.symbols[this.playerInput[i]]] || this.symbolLabels[this.symbols[this.playerInput[i]]];
+    if (this.wrongPositions.has(i)) {
+      return `Position ${i + 1}: wrong — entered ${enteredSymbol}`;
+    }
+    if (this.playerInput[i] === s) {
+      return `Position ${i + 1}: correct — ${enteredSymbol}`;
+    }
+    return `Position ${i + 1}: ${enteredSymbol}`;
   }
 }
 

@@ -5,13 +5,15 @@
     <div class="idle-block">
       <div class="idle-desc">
         Reveal 3 of 9 hidden boxes.<br>
-        Costs {{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span> per scout.
+        Costs {{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color" aria-hidden="true">{{ currencyFlavor['beast'].symbol }}</span><span class="sr-only"> beast meat</span> per scout.
       </div>
-      <button class="scout-btn" [disabled]="!canScout || autoSolveEnabled" (click)="newRound()">
-        [ SCOUT ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>) ]
+      <button class="scout-btn" [disabled]="!canScout || autoSolveEnabled"
+              [attr.aria-label]="'Scout, costs ' + SCOUT_COST + ' beast meat'"
+              (click)="newRound()">
+        [ SCOUT ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color" aria-hidden="true">{{ currencyFlavor['beast'].symbol }}</span>) ]
       </button>
       <div class="cost-warn" *ngIf="!canScout">
-        need {{ SCOUT_COST - beastMeat }} more <span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].name }}</span>
+        need {{ SCOUT_COST - beastMeat }} more <span [style.color]="currencyFlavor['beast'].color" aria-hidden="true">{{ currencyFlavor['beast'].name }}</span><span class="sr-only"> beast meat</span>
       </div>
     </div>
   </ng-container>
@@ -20,7 +22,7 @@
   <ng-container *ngIf="roundStarted">
 
     <!-- Round status -->
-    <div class="round-status">
+    <div class="round-status" aria-live="polite" aria-atomic="true">
       <span *ngIf="!roundOver">
         picks remaining: <span class="picks-num">{{ picksLeft }}</span>
       </span>
@@ -28,7 +30,7 @@
     </div>
 
     <!-- 3×3 grid -->
-    <div class="grid">
+    <div class="grid" role="grid" aria-label="Scouting grid — 3 by 3">
       <button
         class="cell"
         *ngFor="let cell of cells; let i = index"
@@ -36,21 +38,21 @@
         [class.cell-restart]="roundOver && canScout"
         [ngClass]="cellClass(cell)"
         [disabled]="autoSolveEnabled || (!roundOver && cell.revealed) || (roundOver && !canScout)"
+        [attr.aria-label]="getCellAriaLabel(i, cell)"
         (click)="cellClick(i)">
-        <span class="cell-sym" [style.color]="symbolColor(cell)">{{ symbol(cell) }}</span>
-        <span class="cell-sub" *ngIf="cell.revealed">{{ subLabel(cell) }}</span>
+        <span class="cell-sym" [style.color]="symbolColor(cell)" aria-hidden="true">{{ symbol(cell) }}</span>
+        <span class="cell-sub" *ngIf="cell.revealed" aria-hidden="true">{{ subLabel(cell) }}</span>
         <span class="fairy-sparkle" *ngIf="hasFairyHint(i, cell)" aria-hidden="true">✦</span>
         <span class="x-mark" *ngIf="hasXMark(cell)" aria-hidden="true">✗</span>
       </button>
     </div>
 
-
     <!-- Result message -->
-    <div class="round-msg" *ngIf="lastMsg" [ngClass]="msgClass">
+    <div class="round-msg" *ngIf="lastMsg" [ngClass]="msgClass" aria-live="polite" aria-atomic="true">
       {{ lastMsg }}
       <ng-container *ngFor="let part of resultParts; let i = index">
         <ng-container *ngIf="i > 0">, </ng-container>
-        {{ part.amount }}<span [style.color]="part.color">{{ part.symbol }}</span>
+        {{ part.amount }}<span [style.color]="part.color" aria-hidden="true">{{ part.symbol }}</span><span class="sr-only"> {{ part.symbol }}</span>
       </ng-container>
       <ng-container *ngIf="resultMultiplier > 1"> [×{{ resultMultiplier }} Abundant Lands]</ng-container>
       <ng-container *ngIf="resultXp > 0"> (+{{ resultXp }} XP)</ng-container>
@@ -58,25 +60,20 @@
 
     <!-- Scout again (only when round is over) -->
     <ng-container *ngIf="roundOver">
-      <button class="scout-btn" [disabled]="!canScout || autoSolveEnabled" (click)="newRound()">
-        [ SCOUT AGAIN ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].symbol }}</span>) ]
+      <button class="scout-btn" [disabled]="!canScout || autoSolveEnabled"
+              [attr.aria-label]="'Scout again, costs ' + SCOUT_COST + ' beast meat'"
+              (click)="newRound()">
+        [ SCOUT AGAIN ({{ SCOUT_COST }}<span [style.color]="currencyFlavor['beast'].color" aria-hidden="true">{{ currencyFlavor['beast'].symbol }}</span>) ]
       </button>
       <div class="cost-warn" *ngIf="!canScout">
-        need {{ SCOUT_COST - beastMeat }} more <span [style.color]="currencyFlavor['beast'].color">{{ currencyFlavor['beast'].name }}</span>
+        need {{ SCOUT_COST - beastMeat }} more <span [style.color]="currencyFlavor['beast'].color" aria-hidden="true">{{ currencyFlavor['beast'].name }}</span><span class="sr-only"> beast meat</span>
       </div>
       <div class="round-restart-hint" *ngIf="canScout">-- or click any cell --</div>
     </ng-container>
 
   </ng-container>
 
-  <!-- ── Auto-solve toggle ─────────────── -->
-  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
-    <button class="auto-solve-btn"
-            [class.as-on]="autoSolveEnabled"
-            (click)="toggleAutoSolve()">
-      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
-    </button>
-  </div>
+
 
 </div>
 

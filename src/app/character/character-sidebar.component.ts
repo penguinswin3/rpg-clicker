@@ -24,7 +24,9 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
   /** Passed in from AppComponent so the sidebar can display Jack assignment counts. */
   @Input() jacksAllocations: Record<string, number> = {};
   @Input() jacksOwned = 0;
+  @Input() sidequestJacksEnabled: Record<string, boolean> = {};
   @Output() unassignAllJacks = new EventEmitter<void>();
+  @Output() unassignAllSidequestJacks = new EventEmitter<void>();
 
   // ── Button state mirroring (visual only) ─────────────────
   /** True while the Thief is in a stun lockout. */
@@ -58,6 +60,10 @@ export class CharacterSidebarComponent implements OnInit, OnDestroy {
 
   get totalJacksAssigned(): number {
     return Object.values(this.jacksAllocations).reduce((a, b) => a + b, 0);
+  }
+
+  get totalSidequestJacksAssigned(): number {
+    return Object.values(this.sidequestJacksEnabled).filter(Boolean).length;
   }
 
   emitUnassignAll(): void {

@@ -5,10 +5,12 @@
     <div class="idle-block">
       <div class="idle-desc">
         Crack the safe by finding the sweet spot.<br>
-        Costs {{ DOSSIER_COST }}<span [style.color]="currencyFlavor['dossier'].color">{{ currencyFlavor['dossier'].symbol }}</span> per heist.
+        Costs {{ DOSSIER_COST }}<span [style.color]="currencyFlavor['dossier'].color" aria-hidden="true">{{ currencyFlavor['dossier'].symbol }}</span><span class="sr-only"> dossiers</span> per heist.
       </div>
-      <button class="heist-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startHeist()">
-        [ START HEIST ({{ DOSSIER_COST }}<span [style.color]="currencyFlavor['dossier'].color">{{ currencyFlavor['dossier'].symbol }}</span>) ]
+      <button class="heist-btn" [disabled]="!canStart || autoSolveEnabled"
+              [attr.aria-label]="'Start heist, costs ' + DOSSIER_COST + ' dossiers'"
+              (click)="startHeist()">
+        [ START HEIST ({{ DOSSIER_COST }}<span [style.color]="currencyFlavor['dossier'].color" aria-hidden="true">{{ currencyFlavor['dossier'].symbol }}</span>) ]
       </button>
     </div>
   </ng-container>
@@ -17,8 +19,14 @@
   <ng-container *ngIf="heistActive">
 
     <!-- Dial -->
-    <div class="dial-container" (click)="autoSolveEnabled ? null : attemptCrack()">
-      <svg viewBox="0 0 120 120" class="dial-svg">
+    <div class="dial-container"
+         role="button"
+         tabindex="0"
+         [attr.aria-label]="'Safe dial — pointer at ' + pointerAngle + ' degrees. Click to attempt crack.'"
+         (click)="autoSolveEnabled ? null : attemptCrack()"
+         (keydown.enter)="autoSolveEnabled ? null : attemptCrack()"
+         (keydown.space)="autoSolveEnabled ? null : attemptCrack()">
+      <svg viewBox="0 0 120 120" class="dial-svg" aria-hidden="true">
         <!-- Dial circle -->
         <circle cx="60" cy="60" r="50" class="dial-ring" />
 
@@ -30,7 +38,7 @@
               [attr.y2]="60 + 50 * Math.sin((t - 90) * Math.PI / 180)"
               class="dial-tick" />
 
-        <!-- Locked In: failed click positions (coloured ticks) -->
+        <!-- Locked In: failed click positions (colored ticks) -->
         <line *ngFor="let a of failedAngles"
               [attr.x1]="getFailedTickCoords(a).x1"
               [attr.y1]="getFailedTickCoords(a).y1"
@@ -49,16 +57,26 @@
         <!-- Center dot -->
         <circle cx="60" cy="60" r="3" class="dial-center" />
       </svg>
-      <div class="dial-hint">[ CLICK TO CRACK ]</div>
+      <!-- Screen-reader description of dial state -->
+      <span class="sr-only" aria-live="polite">
+        Pointer at {{ pointerAngle }}°.
+        <ng-container *ngIf="failedAngles.length > 0">{{ failedAngles.length }} failed attempt{{ failedAngles.length > 1 ? 's' : '' }} marked.</ng-container>
+      </span>
+      <div class="dial-hint" aria-hidden="true">[ CLICK TO CRACK ]</div>
     </div>
 
     <!-- Detection meter -->
     <div class="detection-block">
       <div class="det-label">DETECTION</div>
-      <div class="det-bar-track">
-        <div class="det-bar-fill" [style.width.%]="detectionPct"></div>
+      <div class="det-bar-track"
+           role="progressbar"
+           [attr.aria-valuenow]="detection"
+           aria-valuemin="0"
+           [attr.aria-valuemax]="maxDetection"
+           [attr.aria-label]="'Detection: ' + detection + ' of ' + maxDetection">
+        <div class="det-bar-fill" [style.width.%]="detectionPct" aria-hidden="true"></div>
       </div>
-      <div class="det-fraction">{{ detection }} / {{ maxDetection }}</div>
+      <div class="det-fraction" aria-hidden="true">{{ detection }} / {{ maxDetection }}</div>
     </div>
 
   </ng-container>
@@ -66,9 +84,12 @@
   <!-- ── Heist result ──────────────────── -->
   <ng-container *ngIf="!heistActive && (heistWon || heistLost)">
 
-    <!-- Show the dial one more time with the sweet spot revealed; click to restart -->
-    <div class="dial-container dial-result" (click)="autoSolveEnabled ? null : attemptCrack()">
-      <svg viewBox="0 0 120 120" class="dial-svg">
+    <!-- Show the dial one more time with the sweet spot revealed -->
+    <div class="dial-container dial-result"
+         role="img"
+         [attr.aria-label]="heistWon ? 'Safe cracked! Pointer landed in the sweet spot at ' + pointerAngle + ' degrees.' : 'Heist failed. Pointer was at ' + pointerAngle + ' degrees, sweet spot revealed.'"
+         (click)="autoSolveEnabled ? null : attemptCrack()">
+      <svg viewBox="0 0 120 120" class="dial-svg" aria-hidden="true">
         <circle cx="60" cy="60" r="50" class="dial-ring" />
 
         <!-- Sweet spot arc (revealed) -->
@@ -82,7 +103,7 @@
               [attr.y2]="60 + 50 * Math.sin((t - 90) * Math.PI / 180)"
               class="dial-tick" />
 
-        <!-- Locked In: failed click positions (coloured ticks, persist into result) -->
+        <!-- Failed click positions -->
         <line *ngFor="let a of failedAngles"
               [attr.x1]="getFailedTickCoords(a).x1"
               [attr.y1]="getFailedTickCoords(a).y1"
@@ -107,47 +128,47 @@
     <!-- Detection meter (frozen) -->
     <div class="detection-block">
       <div class="det-label">DETECTION</div>
-      <div class="det-bar-track">
-        <div class="det-bar-fill" [class.det-busted]="heistLost" [style.width.%]="detectionPct"></div>
+      <div class="det-bar-track"
+           role="progressbar"
+           [attr.aria-valuenow]="detection"
+           aria-valuemin="0"
+           [attr.aria-valuemax]="maxDetection"
+           [attr.aria-label]="(heistLost ? 'Busted! ' : '') + 'Detection: ' + detection + ' of ' + maxDetection">
+        <div class="det-bar-fill" [class.det-busted]="heistLost" [style.width.%]="detectionPct" aria-hidden="true"></div>
       </div>
-      <div class="det-fraction">{{ detection }} / {{ maxDetection }}</div>
+      <div class="det-fraction" aria-hidden="true">{{ detection }} / {{ maxDetection }}</div>
     </div>
 
     <!-- Reward summary -->
-    <div class="result-msg" [ngClass]="msgClass">
+    <div class="result-msg" [ngClass]="msgClass" aria-live="polite">
       {{ lastMsg }}
     </div>
-    <div class="result-rewards" *ngIf="heistWon && resultParts.length">
+    <div class="result-rewards" *ngIf="heistWon && resultParts.length" aria-live="polite">
       <span class="reward-label">Loot: </span>
       <ng-container *ngFor="let part of resultParts; let i = index">
         <ng-container *ngIf="i > 0">, </ng-container>
-        {{ part.amount }}<span [style.color]="part.color">{{ part.symbol }}</span>
+        {{ part.amount }}<span [style.color]="part.color" aria-hidden="true">{{ part.symbol }}</span><span class="sr-only"> {{ part.symbol }}</span>
       </ng-container>
       <ng-container *ngIf="resultXp > 0"> (+{{ resultXp }} XP)</ng-container>
     </div>
 
     <!-- Try again -->
-    <button class="heist-btn" [disabled]="!canStart || autoSolveEnabled" (click)="startHeist()">
-      [ HEIST AGAIN ({{ DOSSIER_COST }}<span [style.color]="currencyFlavor['dossier'].color">{{ currencyFlavor['dossier'].symbol }}</span>) ]
+    <button class="heist-btn" [disabled]="!canStart || autoSolveEnabled"
+            [attr.aria-label]="'Heist again, costs ' + DOSSIER_COST + ' dossiers'"
+            (click)="startHeist()">
+      [ HEIST AGAIN ({{ DOSSIER_COST }}<span [style.color]="currencyFlavor['dossier'].color" aria-hidden="true">{{ currencyFlavor['dossier'].symbol }}</span>) ]
     </button>
     <div class="cost-warn" *ngIf="dossiers < DOSSIER_COST">
-      need {{ DOSSIER_COST - dossiers }} <span [style.color]="currencyFlavor['dossier'].color">{{ currencyFlavor['dossier'].symbol }}</span>
+      need {{ DOSSIER_COST - dossiers }} <span [style.color]="currencyFlavor['dossier'].color" aria-hidden="true">{{ currencyFlavor['dossier'].symbol }}</span><span class="sr-only"> dossiers</span>
     </div>
   </ng-container>
 
   <!-- ── Last message ─────────────────── -->
-  <div class="heist-msg" *ngIf="heistActive && lastMsg" [ngClass]="msgClass">
+  <div class="heist-msg" *ngIf="heistActive && lastMsg" [ngClass]="msgClass" aria-live="polite" aria-atomic="true">
     {{ lastMsg }}
   </div>
 
-  <!-- ── Auto-solve toggle ─────────────── -->
-  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
-    <button class="auto-solve-btn"
-            [class.as-on]="autoSolveEnabled"
-            (click)="toggleAutoSolve()">
-      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
-    </button>
-  </div>
+
 
 </div>
 

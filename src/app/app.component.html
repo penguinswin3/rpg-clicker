@@ -84,6 +84,22 @@
     }"
     [autoSolveEnabled]="autoSolveEnabled"
     (autoSolveEnabledChange)="autoSolveEnabled[$event.charId] = $event.enabled"
+    [sidequestJacksEnabled]="sidequestJacksEnabled"
+    (sidequestJackToggle)="toggleSidequestJack($event)"
+    [jacksOwned]="jacksOwned"
+    [jacksPoolFree]="jacksPoolFree"
+    [gold1SocketedState]="{
+      fighter: isGold1Socketed('fighter'),
+      ranger: isGold1Socketed('ranger'),
+      apothecary: isGold1Socketed('apothecary'),
+      culinarian: isGold1Socketed('culinarian'),
+      thief: isGold1Socketed('thief'),
+      artisan: isGold1Socketed('artisan'),
+      necromancer: isGold1Socketed('necromancer'),
+      merchant: isGold1Socketed('merchant'),
+      artificer: isGold1Socketed('artificer'),
+      chimeramancer: isGold1Socketed('chimeramancer')
+    }"
     (goldBeadFound)="findMinigameGoldBead($event)"
     [gold2Progress]="gold2Progress"
     (gold2ProgressChange)="onGold2ProgressChange($event.charId, $event.progress)"
@@ -155,10 +171,11 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <div class="upgrade-btn-wrap">
               <button class="upgrade-btn"
                 [class.upgrade-maxed]="upgrades.isMaxed(id)"
-                [disabled]="upgrades.isMaxed(id) || !canAffordMultiBuy(id)"
+                [class.upgrade-cant-afford]="!upgrades.isMaxed(id) && !canAffordMultiBuy(id)"
+                [disabled]="upgrades.isMaxed(id)"
                 (click)="buyUpgrade(id)">
                 <ng-container *ngIf="upgrades.isMaxed(id); else costTpl">[MAXED]</ng-container>
-                <ng-template #costTpl>[BUY<ng-container *ngIf="buyQuantity !== 1"> x{{ effectiveBuyCount(id) }}</ng-container>: <ng-container *ngFor="let c of getMultiCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container><span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></span></ng-container>]</ng-template>
+                <ng-template #costTpl>[BUY<ng-container *ngIf="buyQuantity !== 1"> {{ buyQuantity === 'max' ? 'MAX' : 'x' + effectiveBuyCount(id) }}</ng-container>: <ng-container *ngFor="let c of getMultiCosts(id); let i = index"><ng-container *ngIf="i > 0"> + </ng-container><span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></span></ng-container>]</ng-template>
               </button>
               <span class="upgrade-level">Lv.{{ upgrades.level(id) }}/{{ upgrades.maxLevel(id) }}</span>
             </div>
@@ -232,7 +249,7 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
             <ng-template #standardRelicActions>
               <button class="relic-popup-buy"
                       *ngIf="!upgrades.isMaxed(relicPopupId)"
-                      [disabled]="!upgrades.canAfford(relicPopupId)"
+                      [class.upgrade-cant-afford]="!upgrades.canAfford(relicPopupId)"
                       (click)="buyRelicFromPopup()">
                 [BUY: <ng-container *ngFor="let c of upgrades.allCosts(relicPopupId); let i = index"><ng-container *ngIf="i > 0"> + </ng-container><span [class.cost-met]="canAffordCurrency(c.currency, c.amount)">{{ formatNumber(c.amount) }}<span [style.color]="getCurrencyFlavor(c.currency).color">{{ getCurrencyFlavor(c.currency).symbol }}</span></span></ng-container>]
               </button>
@@ -655,7 +672,9 @@ ____________ _____   _____  _     _____ _____  _   __ ___________
     [charShine]="charShine"
     [artificerInsight]="artificerInsight"
     [artificerMaxInsight]="artificerMaxInsight"
-    (unassignAllJacks)="unassignAllJacks()" />
+    [sidequestJacksEnabled]="sidequestJacksEnabled"
+    (unassignAllJacks)="unassignAllJacks()"
+    (unassignAllSidequestJacks)="unassignAllSidequestJacks()" />
 </div>
 
 <!-- Dev menu moved inside .game-wrapper above -->

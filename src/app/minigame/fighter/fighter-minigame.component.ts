@@ -83,12 +83,16 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
   @Output() stateChange = new EventEmitter<FighterCombatState>();
 
   // ── Auto-solve ──────────────────────────
-  /** Whether auto-solve is unlocked (gold-1 bead socketed). */
+  /** Whether auto-solve is unlocked (sidequest jack assigned). */
   @Input() autoSolveUnlocked = false;
   /** Whether auto-solve is currently active. */
   @Input() autoSolveEnabled = false;
   /** Whether good (upgraded) auto-solve is active (both gold beads socketed). */
   @Input() autoSolveGoodMode = false;
+  /** Whether this is the currently visible minigame tab. */
+  @Input() isActiveTab = true;
+  /** Whether gold-1 bead is socketed — grants full speed even when off-tab. */
+  @Input() gold1Socketed = false;
   /** Emitted when the player toggles auto-solve on/off. */
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   /** Emitted when a gold bead is found from minigame success. */
@@ -230,7 +234,8 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
     if (changes['firstStrikeLevel'] && this.firstStrikeLevel >= 1) {
       this.stats.markFirstStrikeUnlocked();
     }
-    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode'] ||
+        changes['isActiveTab'] || changes['gold1Socketed']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -660,7 +665,8 @@ export class FighterMinigameComponent implements OnInit, OnChanges, OnDestroy {
 
   private startAutoSolve(): void {
     this.stopAutoSolve();
-    const tickMs = this.autoSolveGoodMode ? GOOD_AUTO_SOLVE.FIGHTER_TICK_MS : AUTO_SOLVE.FIGHTER_TICK_MS;
+    const baseMs = this.autoSolveGoodMode ? GOOD_AUTO_SOLVE.FIGHTER_TICK_MS : AUTO_SOLVE.FIGHTER_TICK_MS;
+    const tickMs = (!this.isActiveTab && !this.gold1Socketed) ? baseMs * AUTO_SOLVE.OFF_TAB_SLOW_FACTOR : baseMs;
     this.autoSolveInterval = setInterval(() => this.autoSolveTick(), tickMs);
   }
 

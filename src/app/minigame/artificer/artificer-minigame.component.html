@@ -2,64 +2,81 @@
 
   <!-- ── Etching Level Selector ──────────── -->
   <div class="etching-level-row" *ngIf="extendedEtchingLevel > 0">
-    <button class="elvl-btn" [disabled]="selectedEtchingLevel <= 0" (click)="decreaseEtchingLevel()">[-]</button>
-    <span class="elvl-label">Etching Level: <span class="elvl-num">{{ selectedEtchingLevel }}</span> ({{ sequenceLength }} symbols)</span>
-    <button class="elvl-btn" [disabled]="selectedEtchingLevel >= maxEtchingLevel" (click)="increaseEtchingLevel()">[+]</button>
+    <button class="elvl-btn" [disabled]="selectedEtchingLevel <= 0" (click)="decreaseEtchingLevel()"
+            aria-label="Decrease etching level">[-]</button>
+    <span class="elvl-label" aria-live="polite">Etching Level: <span class="elvl-num">{{ selectedEtchingLevel }}</span> ({{ sequenceLength }} symbols)</span>
+    <button class="elvl-btn" [disabled]="selectedEtchingLevel >= maxEtchingLevel" (click)="increaseEtchingLevel()"
+            aria-label="Increase etching level">[+]</button>
   </div>
 
   <!-- ── Status ──────────────────────────── -->
   <div class="mg-status">
-    <pre class="mg-message">{{ message }}</pre>
+    <pre class="mg-message" aria-live="polite" aria-atomic="true">{{ message }}</pre>
   </div>
 
-  <div class="mg-divider">+----------+</div>
+  <div class="mg-divider" aria-hidden="true">+----------+</div>
 
   <!-- ── Symbol buttons ─────────────────── -->
-  <div class="symbol-grid">
-    <button
-      *ngFor="let sym of symbols; let i = index"
-      class="symbol-btn"
-      [class.flash]="activeFlashIdx === i"
-      [class.disabled]="phase !== 'input' && phase !== 'retry'"
-      (click)="selectSymbol(i)"
-      [disabled]="phase !== 'input' && phase !== 'retry'"
-    >
-      <span class="sym-icon" [style.color]="symbolColors[sym]">{{ symbolLabels[sym] }}</span>
-    </button>
+  <div class="symbol-grid" role="group" aria-label="Etching symbols">
+    <!-- Row 1: first 3 symbols -->
+    <div class="symbol-row">
+      <button
+        *ngFor="let sym of symbols | slice:0:3; let i = index"
+        class="symbol-btn"
+        [class.flash]="activeFlashIdx === i"
+        [class.disabled]="phase !== 'input' && phase !== 'retry'"
+        (click)="selectSymbol(i)"
+        [disabled]="phase !== 'input' && phase !== 'retry'"
+        [attr.aria-label]="'Symbol ' + (i + 1) + ': ' + symbolLabels[sym] + (activeFlashIdx === i ? ' — currently flashing in sequence' : '')"
+      >
+        <span class="sym-icon" [style.color]="symbolColors[sym]" aria-hidden="true">{{ symbolLabels[sym] }}</span>
+      </button>
+    </div>
+    <!-- Row 2: remaining symbols, centered -->
+    <div class="symbol-row">
+      <button
+        *ngFor="let sym of symbols | slice:3; let i = index"
+        class="symbol-btn"
+        [class.flash]="activeFlashIdx === (i + 3)"
+        [class.disabled]="phase !== 'input' && phase !== 'retry'"
+        (click)="selectSymbol(i + 3)"
+        [disabled]="phase !== 'input' && phase !== 'retry'"
+        [attr.aria-label]="'Symbol ' + (i + 4) + ': ' + symbolLabels[sym] + (activeFlashIdx === (i + 3) ? ' — currently flashing in sequence' : '')"
+      >
+        <span class="sym-icon" [style.color]="symbolColors[sym]" aria-hidden="true">{{ symbolLabels[sym] }}</span>
+      </button>
+    </div>
   </div>
 
   <!-- ── Progress ──────────────────────── -->
-  <div class="progress-row" *ngIf="phase === 'input' || phase === 'retry'">
+  <div class="progress-row" *ngIf="phase === 'input' || phase === 'retry'"
+       role="group" aria-label="Sequence input progress">
     <span class="progress-label">Progress:</span>
     <span class="progress-dots">
       <span *ngFor="let s of sequence; let i = index"
             class="dot"
             [class.filled]="i < playerInput.length"
             [class.correct]="i < playerInput.length && playerInput[i] === s"
-            [class.wrong]="wrongPositions.has(i)">●</span>
+            [class.wrong]="wrongPositions.has(i)"
+            [attr.aria-label]="getDotAriaLabel(i, s)">●</span>
     </span>
   </div>
 
-  <div class="mg-divider">+----------+</div>
+  <div class="mg-divider" aria-hidden="true">+----------+</div>
 
   <!-- ── Controls ──────────────────────── -->
   <div class="mg-controls">
-    <button class="mg-btn start" *ngIf="phase === 'idle' || phase === 'result'" (click)="startRound()" [disabled]="!canAfford || autoSolveEnabled">
+    <button class="mg-btn start" *ngIf="phase === 'idle' || phase === 'result'" (click)="startRound()"
+            [disabled]="!canAfford || autoSolveEnabled"
+            [attr.aria-label]="(phase === 'result' ? 'Etch again' : 'Begin etching') + ', costs ' + manaCost + ' mana'">
       {{ phase === 'result' ? '[ ETCH AGAIN ]' : '[ BEGIN ETCHING ]' }}
     </button>
     <span class="mg-cost" *ngIf="phase === 'idle' || phase === 'result'">
-      Cost: {{ manaCost }}<span [style.color]="manaColor">{{ manaSymbol }}</span>
+      Cost: {{ manaCost }}<span [style.color]="manaColor" aria-hidden="true">{{ manaSymbol }}</span><span class="sr-only"> mana</span>
     </span>
   </div>
 
-  <!-- ── Auto-solve toggle ──────────────── -->
-  <div class="auto-solve-row" *ngIf="autoSolveUnlocked">
-    <button class="auto-solve-btn"
-            [class.as-on]="autoSolveEnabled"
-            (click)="toggleAutoSolve()">
-      {{ autoSolveEnabled ? '[ Auto-Solve: ON  ]' : '[ Auto-Solve: OFF ]' }}
-    </button>
-  </div>
+
 
 </div>
 

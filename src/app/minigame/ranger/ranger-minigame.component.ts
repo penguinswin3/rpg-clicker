@@ -74,6 +74,8 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
   @Input() autoSolveUnlocked = false;
   @Input() autoSolveEnabled = false;
   @Input() autoSolveGoodMode = false;
+  @Input() isActiveTab = true;
+  @Input() gold1Socketed = false;
   @Output() autoSolveEnabledChange = new EventEmitter<boolean>();
   @Output() goldBeadFound = new EventEmitter<void>();
   private autoSolveInterval?: ReturnType<typeof setInterval>;
@@ -134,7 +136,8 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
   // ── Lifecycle ─────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode']) {
+    if (changes['autoSolveEnabled'] || changes['autoSolveGoodMode'] ||
+        changes['isActiveTab'] || changes['gold1Socketed']) {
       if (this.autoSolveEnabled && this.autoSolveUnlocked) {
         this.startAutoSolve();
       } else {
@@ -264,11 +267,28 @@ export class RangerMinigameComponent implements OnInit, OnDestroy, OnChanges {
     return this.xMarksTheSpotLevel >= 1 && !cell.revealed && cell.prize === 'chest';
   }
 
+  /** Builds a descriptive aria-label for a grid cell. */
+  getCellAriaLabel(i: number, cell: GridCell): string {
+    const row = Math.floor(i / 3) + 1;
+    const col = (i % 3) + 1;
+    const pos = `Row ${row}, column ${col}`;
+    if (!cell.revealed) {
+      const hints: string[] = [];
+      if (this.hasFairyHint(i, cell)) hints.push('fairy sparkle hint');
+      if (this.hasXMark(cell)) hints.push('X marks the spot — treasure chest here');
+      const hintStr = hints.length ? ` (${hints.join(', ')})` : '';
+      return `${pos} — hidden${hintStr}`;
+    }
+    return `${pos} — ${PRIZE_NAME[cell.prize]}: ${this.subLabel(cell)}`;
+  }
+
   // ── Auto-solve helpers ──────────────────
 
   private startAutoSolve(): void {
     this.stopAutoSolve();
-    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), AUTO_SOLVE.RANGER_TICK_MS);
+    const baseMs = AUTO_SOLVE.RANGER_TICK_MS;
+    const tickMs = (!this.isActiveTab && !this.gold1Socketed) ? baseMs * AUTO_SOLVE.OFF_TAB_SLOW_FACTOR : baseMs;
+    this.autoSolveInterval = setInterval(() => this.autoSolveTick(), tickMs);
   }
 
   private stopAutoSolve(): void {

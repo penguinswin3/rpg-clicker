@@ -175,7 +175,7 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   /** Emitted when the chimera reaches 100% completion — triggers the Slayer endgame. */
   @Output() chimeraCompleted = new EventEmitter<void>();
 
-  /** Per-character auto-solve unlock state (gold-1 bead socketed). */
+  /** Per-character auto-solve unlock state (sidequest jack assigned). */
   @Input() autoSolveUnlocked: Record<string, boolean> = {};
   /** Per-character "good" auto-solve mode (both gold beads socketed). */
   @Input() autoSolveGoodMode: Record<string, boolean> = {};
@@ -185,6 +185,17 @@ export class MinigamePanelComponent implements OnInit, OnDestroy {
   @Output() autoSolveEnabledChange = new EventEmitter<{ charId: string; enabled: boolean }>();
   /** Emitted when a minigame awards a gold bead. */
   @Output() goldBeadFound = new EventEmitter<string>();
+
+  /** Whether a sidequest jack is assigned per character. */
+  @Input() sidequestJacksEnabled: Record<string, boolean> = {};
+  /** Emitted when the player toggles the sidequest jack for a character. */
+  @Output() sidequestJackToggle = new EventEmitter<string>();
+  /** Total jacks owned — used to show/hide the jack toggle UI. */
+  @Input() jacksOwned = 0;
+  /** Free (unallocated) jacks remaining in the pool. */
+  @Input() jacksPoolFree = 0;
+  /** Per-character gold-1 bead socketed state — used for off-tab speed control. */
+  @Input() gold1SocketedState: Record<string, boolean> = {};
 
   /** Per-character gold-2 bead unlock progress. */
   @Input() gold2Progress: Record<string, unknown> = {};

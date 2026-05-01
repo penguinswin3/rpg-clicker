@@ -1,3 +1,15 @@
+# Version Alpha 1.0.4
+
+## Added
+- ARIA labels for accessibility 
+- Jack-based minigame automation 
+## Removed
+
+## Changed
+- reworked the chimera gold bead 2 unlock 
+## Bugfixes
+- fixed some ui issues 
+----------------------------
 # Release  1.0.3
 
 ## Added
