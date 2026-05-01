@@ -177,7 +177,7 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
       { currency: 'monster-trophy',     base: 50,    fromCount: 27, untilCount: 28 },  // Jack 28
       { currency: 'forbidden-tome',     base: 50,    fromCount: 28, untilCount: 29 },  // Jack 29
       { currency: 'magical-implement',  base: 50,    fromCount: 29, untilCount: 30 },  // Jack 30
-      { currency: 'mana',               base: 500,    fromCount: 30, untilCount: 31 },  // Jack 31
+      { currency: 'mana',               base: 1000,    fromCount: 30, untilCount: 31 },  // Jack 31
       { currency: 'construct',          base: 50,    fromCount: 31, untilCount: 32 },  // Jack 32
       { currency: 'kobold-heart',       base: 25,    fromCount: 32, untilCount: 33 },  // Jack 33
       { currency: 'life-thread',        base: 50,    fromCount: 33, untilCount: 34 },  // Jack 34
@@ -253,7 +253,7 @@ export const GLOBAL_PURCHASE_DEFS: readonly GlobalPurchaseDef[] = [
     costs: [
       { currency: 'gold',        base: 10_000_000 },
       { currency: 'construct',   base: 500        },
-      { currency: 'mana',        base: 500_000       },
+      { currency: 'mana',        base: 300_000       },
       { currency: 'soul-stone',  base: 1000       },
       { currency: 'monster-trophy',    base: 3000       },
     ],
@@ -817,8 +817,8 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   // ── Artificer — standard ──────────────────────────────────────
   { id: 'DEEP_STUDY', characterId: 'artificer', category: 'standard', max: 1,
     costs: [
-      { currency: 'forbidden-tome',      base: 50000,  scale: 1.0 },
-      { currency: 'gemstone', base: 25000,   scale: 1.0 },
+      { currency: 'forbidden-tome',      base: 20000,  scale: 1.0 },
+      { currency: 'gemstone', base: 20000,   scale: 1.0 },
     ] },
   { id: 'FOCUSED_REFLECTION', characterId: 'artificer', category: 'standard', max: 7,
     costs: [
@@ -827,12 +827,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     ] },
   { id: 'AMPLIFIED_INSIGHT', characterId: 'artificer', category: 'standard', max: 24,
     costs: [
-      { currency: 'mana',      base: 30000,  scale: 1.25 },
+      { currency: 'mana',      base: 15000,  scale: 1.25 },
       { currency: 'construct', base: 15,   scale: 1.25 },
     ] },
   { id: 'POTION_ARCANE_INTELLECT', characterId: 'artificer', category: 'standard', max: 3,
     costs: [
-      { currency: 'mana',               base: 100000,  scale: 2.0 },
+      { currency: 'mana',               base: 60000,  scale: 2.0 },
       { currency: 'monster-trophy',           base: 100,   scale: 2.0 },
       { currency: 'synaptical-potion',   base: 15,    scale: 1.5 },
     ] },
@@ -841,12 +841,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
   { id: 'EXTENDED_ETCHING', characterId: 'artificer', category: 'minigame', max: 5,
     costs: [
       { currency: 'construct', base: 5,  scale: 1.4 },
-      { currency: 'mana',     base: 50000, scale: 1.5 },
+      { currency: 'mana',     base: 25000, scale: 1.5 },
     ] },
   { id: 'SECOND_CHANCE', characterId: 'artificer', category: 'minigame', max: 1,
     costs: [
       { currency: 'construct', base: 35,  scale: 1.0 },
-      { currency: 'mana',     base: 100000, scale: 1.0 },
+      { currency: 'mana',     base: 70000, scale: 1.0 },
       { currency: 'synaptical-potion',     base: 1000, scale: 1.0 },
     ] },
 
