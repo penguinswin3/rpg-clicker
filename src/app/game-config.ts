@@ -875,7 +875,7 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     costs: [
       { currency: 'construct',     base: 20,  scale: 2.0 },
       { currency: 'life-thread',   base: 100, scale: 2.0 },
-      { currency: 'kobold-pebble', base: 200, scale: 1.8 },
+      { currency: 'kobold-pebble', base: 200, scale: 1.4 },
     ] },
   { id: 'MINOR_TOUCH_UP', characterId: 'chimeramancer', category: 'minigame', max: 20,
     costs: [
@@ -1361,8 +1361,8 @@ export const CHIMERAMANCER_MG = {
     { currencyId: 'soul-stone',         required: 100_000   },
     { currencyId: 'mana',               required: 200_000  },
     { currencyId: 'construct',          required: 20_000   },
-    { currencyId: 'life-thread',        required: 1_000_000   },
-    { currencyId: 'xp',                 required: 2_500_000 },
+    { currencyId: 'life-thread',        required: 1_500_000   },
+    { currencyId: 'xp',                 required: 1_500_000 },
   ] as readonly ChimeraResourceReq[],
 
   /** Amount of a resource contributed per click. */
